@@ -25,3 +25,7 @@ config/FirebasePrivateKey.json
 .env*
 config/FirebasePrivateKey.json
 *.env*
+config/FirebasePrivateKey.json
+.env*
+*.pem
+*.key
