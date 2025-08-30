@@ -1,0 +1,23 @@
+[0;1;32m●[0m php8.2-fpm.service - The PHP 8.2 FastCGI Process Manager
+     Loaded: loaded (/lib/systemd/system/php8.2-fpm.service; enabled; vendor preset: enabled)
+     Active: [0;1;32mactive (running)[0m since Tue 2025-06-24 01:45:08 CEST; 5 days ago
+       Docs: man:php-fpm8.2(8)
+   Main PID: 490 (php-fpm8.2)
+     Status: "Processes active: 0, idle: 3, Requests: 136, slow: 0, Traffic: 0.00req/sec"
+      Tasks: 4 (limit: 7035)
+     Memory: 216.7M
+     CGroup: /system.slice/php8.2-fpm.service
+             ├─   490 php-fpm: master process (/etc/php/8.2/fpm/php-fpm.conf)
+             ├─673725 php-fpm: pool www
+             ├─723032 php-fpm: pool www
+             └─758069 php-fpm: pool www
+
+Jun 28 13:20:05 vmi2430594.contaboserver.net systemd[1]: Reloading The PHP 8.2 FastCGI Process Manager.
+Jun 28 13:20:05 vmi2430594.contaboserver.net systemd[1]: Reloaded The PHP 8.2 FastCGI Process Manager.
+Jun 28 13:20:06 vmi2430594.contaboserver.net php-fpm8.2[490]: [28-Jun-2025 13:20:06] NOTICE: PHP message: PHP Warning:  PHP Startup: Unable to load dynamic library 'pdo_mysql' (tried: /usr/lib/php/20220829/pdo_mysql (/usr/lib/php/20220829/pdo_mysql: cannot open shared object file: No such file or directory), /usr/lib/php/20220829/pdo_mysql.so (/usr/lib/php/20220829/pdo_mysql.so: undefined symbol: pdo_parse_params)) in Unknown on line 0
+Jun 28 13:20:06 vmi2430594.contaboserver.net php-fpm8.2[490]: [28-Jun-2025 13:20:06] NOTICE: using inherited socket fd=8, "/run/php/php8.2-fpm.sock"
+Jun 29 06:07:38 vmi2430594.contaboserver.net systemd[1]: Reloading The PHP 8.2 FastCGI Process Manager.
+Jun 29 06:07:38 vmi2430594.contaboserver.net systemd[1]: Reloaded The PHP 8.2 FastCGI Process Manager.
+Jun 29 06:07:38 vmi2430594.contaboserver.net php-fpm8.2[490]: [29-Jun-2025 06:07:38] NOTICE: PHP message: PHP Warning:  PHP Startup: Unable to load dynamic library 'pdo_mysql' (tried: /usr/lib/php/20220829/pdo_mysql (/usr/lib/php/20220829/pdo_mysql: cannot open shared object file: No such file or directory), /usr/lib/php/20220829/pdo_mysql.so (/usr/lib/php/20220829/pdo_mysql.so: undefined symbol: pdo_parse_params)) in Unknown on line 0
+Jun 29 06:07:39 vmi2430594.contaboserver.net php-fpm8.2[490]: [29-Jun-2025 06:07:39] NOTICE: using inherited socket fd=8, "/run/php/php8.2-fpm.sock"
+Warning: journal has been rotated since unit was started, output may be incomplete.
