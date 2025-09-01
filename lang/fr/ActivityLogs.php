@@ -64,7 +64,7 @@ return [
     'cash_collection'        =>  'Collecte de fonds',
     'selling_price'          =>  'Prix de vente',
     'delivery_charge'        =>   'Frais de livraison',
-    'total_delivery_amount'  =>   'Montant total de la livraison,
+    'total_delivery_amount'  =>   'Montant total de la livraison',
     'current_payable'        =>  'Montant payable actuel',
     'merchantAccount.holder_name'=> 'Nom du titulaire',
     'permissions'            => 'Permissions',

@@ -78,11 +78,26 @@ class NewsOfferRepository implements NewsOfferInterface{
     // Image Store in Upload Model
     public function file($file_id = '', $file)
     {
-        try { 
+        try {
             $file_name = '';
             if(!blank($file)){
+                // Validate file
+                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+                $maxSize = 2048; // 2MB in KB
+
+                $extension = strtolower($file->getClientOriginalExtension());
+                $size = $file->getSize() / 1024; // Size in KB
+
+                if (!in_array($extension, $allowedExtensions)) {
+                    throw new \Exception('Invalid file type. Allowed: ' . implode(', ', $allowedExtensions));
+                }
+
+                if ($size > $maxSize) {
+                    throw new \Exception('File size too large. Max: ' . $maxSize . 'KB');
+                }
+
                 $destinationPath       = public_path('uploads/news_offers');
-                $profileImage          = date('YmdHis') . "." . $file->getClientOriginalExtension();
+                $profileImage          = date('YmdHis') . "." . $extension;
                 $file->move($destinationPath, $profileImage);
                 $file_name            = 'uploads/news_offers/'.$profileImage;
             }

@@ -63,7 +63,7 @@ class PushNotificationService
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($final));
         $result = curl_exec($ch);
         if ($result === FALSE) {
-            die('Curl failed: ' . curl_error($ch));
+            throw new \Exception('Curl failed: ' . curl_error($ch));
         }
         curl_close($ch);
         return $result;

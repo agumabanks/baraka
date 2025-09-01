@@ -38,7 +38,7 @@ class SmsSettingRepository implements SmsSettingInterface {
             }
             return true;
         } catch (\Throwable $th) {
-            dd($th);
+            \Log::error($th);
             return false;
         }
     }
