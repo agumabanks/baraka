@@ -25,6 +25,8 @@ use App\Models\Backend\Parcel;
 use App\Models\Backend\Payment;
 use App\Models\Backend\Fraud;
 use App\Models\MerchantShops;
+use App\Models\Customer;
+use App\Models\Shipment;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -210,6 +212,10 @@ class DashbordController extends Controller
             $data['bank_transactions']      = $this->repo->bankTransaction($fromTo);
             $data['courier_income']         = $this->repo->courierIncome($fromTo);
             $data['courier_expense']         = $this->repo->courierExpense($fromTo);
+
+            // Client Management and Parcel Onboarding KPIs
+            $data['total_customers'] = Customer::count();
+            $data['total_bookings_today'] = Shipment::whereDate('created_at', now()->toDateString())->count();
 
             return view('backend.dashboard', compact('c_income','c_expense','d_income','d_expense','m_income','m_expense','v_income','v_expense','b_income','b_expense','h_income','h_expense','data','request'));
         }

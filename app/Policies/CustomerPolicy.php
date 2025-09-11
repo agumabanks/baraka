@@ -14,7 +14,7 @@ class CustomerPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['hq_admin', 'branch_ops_manager', 'branch_attendant', 'support', 'finance']);
+        return $user->hasRole(['hq_admin', 'branch_ops_manager', 'branch_attendant', 'support', 'finance']);
     }
 
     /**
@@ -46,7 +46,7 @@ class CustomerPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, ['hq_admin', 'branch_ops_manager', 'branch_attendant', 'support']);
+        return $user->hasRole(['hq_admin', 'branch_ops_manager', 'branch_attendant', 'support']);
     }
 
     /**

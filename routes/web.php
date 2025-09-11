@@ -9,6 +9,10 @@
 | Email : info@wemaxdevs.com
 |
 */
+// routes/web.php
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\BookingWizardController;
+
 
 use App\Http\Controllers\AamarpayController;
 use App\Http\Controllers\Backend\AccidentController;
@@ -130,6 +134,13 @@ Route::middleware(['XSS'])->group(function () {
     Route::get('finish',                           [InstallerController::class, 'finish'])->name('final');
 });
 
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('customers', CustomerController::class)->only(['index','create','store','show','edit','update']);
+    Route::get('booking', [BookingWizardController::class, 'step1'])->name('booking.step1');
+});
+
+
 //end installer
 Route::middleware(['XSS', 'IsInstalled'])->group(function () {
     Auth::routes();
@@ -182,9 +193,18 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
             Route::group(['prefix' => 'admin'], function () {
 
                 // New ERP Admin Routes
-                Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class);
-                Route::get('booking', [\App\Http\Controllers\Admin\BookingWizardController::class, 'index'])->name('booking.index');
-                Route::get('booking/step1', [\App\Http\Controllers\Admin\BookingWizardController::class, 'index'])->name('booking.step1');
+                // Customers resource with admin.* names (limited actions)
+                Route::resource(
+                    'customers',
+                    \App\Http\Controllers\Admin\CustomerController::class,
+                    ['as' => 'admin']
+                )->only(['index','create','store','show','edit','update']);
+
+                // Parcel Onboarding - Booking Wizard entry point
+                Route::get(
+                    'booking',
+                    [\App\Http\Controllers\Admin\BookingWizardController::class, 'step1']
+                )->name('admin.booking.step1');
 
                 Route::resource('addons', AddonController::class);
                 Route::post('/addons/activation', [AddonController::class, 'activation'])->name('addons.activation');

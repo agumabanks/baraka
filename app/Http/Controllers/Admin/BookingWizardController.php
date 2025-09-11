@@ -23,6 +23,7 @@ class BookingWizardController extends Controller
      */
     public function index(): View
     {
+        $this->authorize('viewAny', \App\Models\Shipment::class);
         $branches = Hub::active()->get();
         $rateCards = RateCard::active()->get();
 
@@ -30,10 +31,19 @@ class BookingWizardController extends Controller
     }
 
     /**
-     * Step 1: Customer selection/creation
+     * Step 1: Booking wizard entry
+     * - GET: show UI
+     * - POST (API): create/select customer
      */
-    public function step1(Request $request): JsonResponse
+    public function step1(Request $request)
     {
+        if ($request->isMethod('get')) {
+            $this->authorize('create', \App\Models\Shipment::class);
+            $branches = Hub::active()->get();
+            $rateCards = RateCard::active()->get();
+            return view('admin.booking-wizard.index', compact('branches', 'rateCards'));
+        }
+
         $request->validate([
             'customer_id' => 'nullable|exists:users,id',
             'name' => 'required_if:customer_id,null|string|max:255',

@@ -15,7 +15,7 @@ class ShipmentPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['hq_admin', 'branch_ops_manager', 'branch_attendant', 'support', 'finance']);
+        return $user->hasRole(['hq_admin', 'branch_ops_manager', 'branch_attendant', 'support', 'finance']);
     }
 
     /**
@@ -42,7 +42,7 @@ class ShipmentPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, ['hq_admin', 'branch_ops_manager', 'branch_attendant']);
+        return $user->hasRole(['hq_admin', 'branch_ops_manager', 'branch_attendant']);
     }
 
     /**

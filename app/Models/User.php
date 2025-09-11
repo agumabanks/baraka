@@ -142,4 +142,20 @@ class User extends Authenticatable
     public function accounts(){
         return $this->hasMany(Account::class,'user_id','id');
     }
+
+    /**
+     * Check if user has a given role by slug or name.
+     */
+    public function hasRole(string|array $roles): bool
+    {
+        $this->loadMissing('role');
+        $current = strtolower($this->role->slug ?? $this->role->name ?? '');
+
+        if (is_array($roles)) {
+            $needle = array_map(fn($r) => strtolower($r), $roles);
+            return in_array($current, $needle, true);
+        }
+
+        return $current === strtolower($roles);
+    }
 }

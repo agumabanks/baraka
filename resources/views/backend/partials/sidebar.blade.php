@@ -123,7 +123,7 @@
                         <!-- ERP Section -->
                         <li class="nav-divider">ERP System</li>
 
-                        @can('viewAny', \App\Models\User::class)
+                        @can('viewAny', \App\Models\Customer::class)
                             <li class="nav-item ">
                                 <a class="nav-link {{ request()->is('admin/customers*') ? 'active' : '' }}"
                                     href="{{ route('admin.customers.index') }}" aria-expanded="false"
@@ -132,7 +132,7 @@
                             </li>
                         @endcan
 
-                        @can('viewAny', \App\Models\Shipment::class)
+                        @can('create', \App\Models\Shipment::class)
                             <li class="nav-item ">
                                 <a class="nav-link {{ request()->is('admin/booking*') ? 'active' : '' }}"
                                     href="{{ route('admin.booking.step1') }}" aria-expanded="false"
