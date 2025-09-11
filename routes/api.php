@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\V10\DeliverymanController;
 use App\Http\Controllers\Api\V10\GeneralSettingCotroller;
 use App\Http\Controllers\Api\V10\InvoiceController;
 use App\Http\Controllers\Api\V10\ReportController;
+use App\Http\Controllers\Api\V10\SearchController;
+use App\Http\Controllers\Admin\BookingWizardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -143,6 +145,19 @@ Route::prefix('v10')->group(function() {
             Route::get('analytics' ,                                    [AnalyticsController::class, 'index']);
             Route::post('statement-reports',                            [ReportController::class,    'TotalSummeryStatementReports']);
 
+            // Search endpoints
+            Route::get('/search',                                       [SearchController::class, 'search']);
+            Route::get('/search/autocomplete',                          [SearchController::class, 'autocomplete']);
+            Route::get('/search/advanced',                              [SearchController::class, 'advanced']);
+            Route::get('/search/stats',                                 [SearchController::class, 'stats']);
+
+            // Booking wizard endpoints
+            Route::post('/booking/step1',                               [BookingWizardController::class, 'step1']);
+            Route::post('/booking/step2',                               [BookingWizardController::class, 'step2']);
+            Route::post('/booking/step3',                               [BookingWizardController::class, 'step3']);
+            Route::post('/booking/step4',                               [BookingWizardController::class, 'step4']);
+            Route::post('/booking/step5',                               [BookingWizardController::class, 'step5']);
+            Route::get('/booking/download-labels/{shipment_id}',       [BookingWizardController::class, 'downloadLabels']);
 
             //deliveryman
             Route::get('deliveryman/parcel/index',                      [DeliveryManParcelController::class,'index']);

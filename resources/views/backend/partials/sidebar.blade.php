@@ -120,6 +120,27 @@
                             </li>
                         @endif
 
+                        <!-- ERP Section -->
+                        <li class="nav-divider">ERP System</li>
+
+                        @can('viewAny', \App\Models\User::class)
+                            <li class="nav-item ">
+                                <a class="nav-link {{ request()->is('admin/customers*') ? 'active' : '' }}"
+                                    href="{{ route('admin.customers.index') }}" aria-expanded="false"
+                                    data-target="#submenu-1" aria-controls="submenu-1"><i
+                                        class="fa fa-users"></i>Customers</a>
+                            </li>
+                        @endcan
+
+                        @can('viewAny', \App\Models\Shipment::class)
+                            <li class="nav-item ">
+                                <a class="nav-link {{ request()->is('admin/booking*') ? 'active' : '' }}"
+                                    href="{{ route('admin.booking.step1') }}" aria-expanded="false"
+                                    data-target="#submenu-1" aria-controls="submenu-1"><i
+                                        class="fa fa-clipboard-plus"></i>Booking Wizard</a>
+                            </li>
+                        @endcan
+
 
                         @if (hasPermission('news_offer_read') == true)
                             <li class="nav-item ">

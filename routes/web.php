@@ -181,6 +181,11 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
             // Admin Routes
             Route::group(['prefix' => 'admin'], function () {
 
+                // New ERP Admin Routes
+                Route::resource('customers', \App\Http\Controllers\Admin\CustomerController::class);
+                Route::get('booking', [\App\Http\Controllers\Admin\BookingWizardController::class, 'index'])->name('booking.index');
+                Route::get('booking/step1', [\App\Http\Controllers\Admin\BookingWizardController::class, 'index'])->name('booking.step1');
+
                 Route::resource('addons', AddonController::class);
                 Route::post('/addons/activation', [AddonController::class, 'activation'])->name('addons.activation');
 
