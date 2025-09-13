@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,  minimum-scale=0.8, maximum-scale = 0.8, user-scalable = no , shrink-to-fit=no">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <link rel="shortcut icon" href="{{ settings()->favicon_image }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ optional(settings())->favicon_image ?? static_asset('images/default/favicon.png') }}" type="image/x-icon">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{static_asset('backend')}}/vendor/bootstrap-five/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
@@ -31,4 +31,3 @@
 <body >
     <!-- main wrapper -->
     <div class="dashboard-main-wrapper login-dashboard-main-wrapper">
-

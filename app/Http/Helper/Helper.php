@@ -181,7 +181,8 @@ if(!function_exists('hasPermission')){
 
 if(!function_exists('settings')){
     function settings(){
-         return  App\Models\Backend\GeneralSettings::with('rxlogo','rxfavicon')->find(1);
+         $settings = App\Models\Backend\GeneralSettings::with('rxlogo','rxfavicon')->find(1);
+         return $settings ?: App\Models\Backend\GeneralSettings::with('rxlogo','rxfavicon')->first();
     }
 }
 if(!function_exists('notificationSettings')){

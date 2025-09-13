@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,  minimum-scale=1, maximum-scale =1, user-scalable = no , shrink-to-fit=no">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
-    <link rel="shortcut icon" href="{{ settings()->favicon_image }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ optional(settings())->favicon_image ?? static_asset('images/default/favicon.png') }}" type="image/x-icon">
     <title>@yield('title')</title>
     <link rel="stylesheet" href="{{ static_asset('frontend/css/bootstrap.min.css') }}"/>
     <link rel="stylesheet" href="{{ static_asset('frontend/css/style.css') }}"/> 

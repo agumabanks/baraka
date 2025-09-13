@@ -7,7 +7,7 @@
 
             <div class="offcanvas-header w-90 ">
                 <a class="navbar-brand" href="{{ url('/dashboard') }}">
-                    <img src="{{ settings()->logo_image }}" class="logo" />
+                    <img src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo.png') }}" class="logo" />
                 </a>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
                     aria-label="Close"></button>

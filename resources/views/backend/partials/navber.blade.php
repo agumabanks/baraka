@@ -6,7 +6,7 @@
                 <div class="dashboard-header">
                     <nav class="navbar navbar-light  fixed-top   ">
                         <a class="navbar-brand" href="{{ url('/dashboard') }}">
-                            <img src="{{ settings()->logo_image }}" class="logo" />
+                            <img src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo.png') }}" class="logo" />
                         </a> 
                         <div class=" navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav ml-auto navbar-right-top">
@@ -59,7 +59,7 @@
         <div class="navbar-other w-100 d-flex justify-content-between ">
             <div class="d-lg-none">
                 <a href="{{ url('/') }}">
-                    <img src="{{ settings()->logo_image }}" style="margin-top: 10px" width="150"
+                    <img src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo.png') }}" style="margin-top: 10px" width="150"
                         alt="Logo">
                 </a>
             </div>

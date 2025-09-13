@@ -8,7 +8,7 @@
                         <div class="card auth-boxs">
                             <div class="card-header text-center">
                                 <a href="{{url('/')}}" class="navbar-brand">
-                                    <img class="logo-img" src="{{ settings()->logo_image }}"  class="logo" alt="logo">
+                                    <img class="logo-img" src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo.png') }}"  class="logo" alt="logo">
                                 </a>
                                 <span class="splash-description">Please enter your user information.</span>
                                 </div>

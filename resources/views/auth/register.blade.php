@@ -9,7 +9,7 @@
                     <div class="card auth-boxs">
                         <div class="card-header text-center">
                             <a href="{{url('/')}}" class="navbar-brand">
-                                <img src="{{ settings()->logo_image }}" class="logo"/>
+                                <img src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo.png') }}" class="logo"/>
                             </a>
                             <h3 class="mb-1">Registrations Form</h3>
                             <p>Please enter your user information.</p>
