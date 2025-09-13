@@ -894,6 +894,137 @@
                             </li>
                         @endif
 
+                        {{-- NEW DHL-grade modules --}}
+                        {{-- NEW: Sales --}}
+                        <li class="nav-divider">Sales</li>
+                        @can('viewAny', \App\Models\Quotation::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/quotations*') ? 'active' : '' }}" href="{{ route('admin.quotations.index') }}">
+                            <i class="fa fa-file-signature"></i> Quotations
+                          </a>
+                          </li>
+                        @endcan
+                        @can('viewAny', \App\Models\Contract::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/contracts*') ? 'active' : '' }}" href="{{ route('admin.contracts.index') }}">
+                            <i class="fa fa-handshake"></i> Contracts
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\AddressBook::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/address-book*') ? 'active' : '' }}" href="{{ route('admin.address-book.index') }}">
+                            <i class="fa fa-address-book"></i> Address Book
+                          </a>
+                        </li>
+                        @endcan
+
+                        {{-- NEW: Compliance --}}
+                        <li class="nav-divider">Compliance</li>
+                        @can('viewAny', \App\Models\KycRecord::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/kyc*') ? 'active' : '' }}" href="{{ route('admin.kyc.index') }}">
+                            <i class="fa fa-id-card"></i> KYC & Screening
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\DangerousGood::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/dg*') ? 'active' : '' }}" href="{{ route('admin.dg.index') }}">
+                            <i class="fa fa-exclamation-triangle"></i> DG Console
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\Ics2Filing::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/ics2*') ? 'active' : '' }}" href="{{ route('admin.ics2.index') }}">
+                            <i class="fa fa-shield-alt"></i> ICS2 Monitor
+                          </a>
+                        </li>
+                        @endcan
+
+                        {{-- NEW: Linehaul --}}
+                        <li class="nav-divider">Linehaul</li>
+                        @can('viewAny', \App\Models\AwbStock::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/awb-stock*') ? 'active' : '' }}" href="{{ route('admin.awb-stock.index') }}">
+                            <i class="fa fa-ticket-alt"></i> AWB Stock
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\Manifest::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/manifests*') ? 'active' : '' }}" href="{{ route('admin.manifests.index') }}">
+                            <i class="fa fa-list"></i> Manifests
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\Ecmr::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/ecmr*') ? 'active' : '' }}" href="{{ route('admin.ecmr.index') }}">
+                            <i class="fa fa-road"></i> e-CMR
+                          </a>
+                        </li>
+                        @endcan
+
+                        {{-- NEW: Hub Ops --}}
+                        <li class="nav-divider">Hub Ops</li>
+                        @can('viewAny', \App\Models\SortationBin::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/sortation*') ? 'active' : '' }}" href="{{ route('admin.sortation.index') }}">
+                            <i class="fa fa-th-large"></i> Sortation & Cross-dock
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\WhLocation::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/warehouse*') ? 'active' : '' }}" href="{{ route('admin.warehouse.index') }}">
+                            <i class="fa fa-warehouse"></i> Warehouse
+                          </a>
+                        </li>
+                        @endcan
+
+                        {{-- NEW: Customer Care --}}
+                        <li class="nav-divider">Customer Care</li>
+                        @can('viewAny', \App\Models\ReturnOrder::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/returns*') ? 'active' : '' }}" href="{{ route('admin.returns.index') }}">
+                            <i class="fa fa-undo"></i> Returns / RTO
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\Claim::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/claims*') ? 'active' : '' }}" href="{{ route('admin.claims.index') }}">
+                            <i class="fa fa-file-invoice"></i> Claims & Insurance
+                          </a>
+                        </li>
+                        @endcan
+
+                        {{-- NEW: Finance & Rating --}}
+                        <li class="nav-divider">Finance & Rating</li>
+                        @can('viewAny', \App\Models\SurchargeRule::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/surcharges*') ? 'active' : '' }}" href="{{ route('admin.surcharges.index') }}">
+                            <i class="fa fa-calculator"></i> Surcharge Rules
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\CashOffice::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/cash-office*') ? 'active' : '' }}" href="{{ route('admin.cash-office.index') }}">
+                            <i class="fa fa-cash-register"></i> Cash Office
+                          </a>
+                        </li>
+                        @endcan
+                        @can('viewAny', \App\Models\FxRate::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/fx*') ? 'active' : '' }}" href="{{ route('admin.fx.index') }}">
+                            <i class="fa fa-dollar-sign"></i> FX Rates
+                          </a>
+                        </li>
+                        @endcan
+
                     </ul>
                 </div>
             </div>
@@ -906,133 +1037,3 @@
 </div>
 
 <!-- end left sidebar -->
-{{-- NEW DHL-grade modules --}}
-{{-- NEW: Sales --}}
-<li class="nav-divider">Sales</li>
-@can('viewAny', \App\Models\Quotation::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/quotations*') ? 'active' : '' }}" href="{{ route('admin.quotations.index') }}">
-    <i class="fa fa-file-signature"></i> Quotations
-  </a>
-  </li>
-@endcan
-@can('viewAny', \App\Models\Contract::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/contracts*') ? 'active' : '' }}" href="{{ route('admin.contracts.index') }}">
-    <i class="fa fa-handshake"></i> Contracts
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\AddressBook::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/address-book*') ? 'active' : '' }}" href="{{ route('admin.address-book.index') }}">
-    <i class="fa fa-address-book"></i> Address Book
-  </a>
-</li>
-@endcan
-
-{{-- NEW: Compliance --}}
-<li class="nav-divider">Compliance</li>
-@can('viewAny', \App\Models\KycRecord::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/kyc*') ? 'active' : '' }}" href="{{ route('admin.kyc.index') }}">
-    <i class="fa fa-id-card"></i> KYC & Screening
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\DangerousGood::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/dg*') ? 'active' : '' }}" href="{{ route('admin.dg.index') }}">
-    <i class="fa fa-exclamation-triangle"></i> DG Console
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\Ics2Filing::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/ics2*') ? 'active' : '' }}" href="{{ route('admin.ics2.index') }}">
-    <i class="fa fa-shield-alt"></i> ICS2 Monitor
-  </a>
-</li>
-@endcan
-
-{{-- NEW: Linehaul --}}
-<li class="nav-divider">Linehaul</li>
-@can('viewAny', \App\Models\AwbStock::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/awb-stock*') ? 'active' : '' }}" href="{{ route('admin.awb-stock.index') }}">
-    <i class="fa fa-ticket-alt"></i> AWB Stock
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\Manifest::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/manifests*') ? 'active' : '' }}" href="{{ route('admin.manifests.index') }}">
-    <i class="fa fa-list"></i> Manifests
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\Ecmr::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/ecmr*') ? 'active' : '' }}" href="{{ route('admin.ecmr.index') }}">
-    <i class="fa fa-road"></i> e-CMR
-  </a>
-</li>
-@endcan
-
-{{-- NEW: Hub Ops --}}
-<li class="nav-divider">Hub Ops</li>
-@can('viewAny', \App\Models\SortationBin::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/sortation*') ? 'active' : '' }}" href="{{ route('admin.sortation.index') }}">
-    <i class="fa fa-th-large"></i> Sortation & Cross-dock
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\WhLocation::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/warehouse*') ? 'active' : '' }}" href="{{ route('admin.warehouse.index') }}">
-    <i class="fa fa-warehouse"></i> Warehouse
-  </a>
-</li>
-@endcan
-
-{{-- NEW: Customer Care --}}
-<li class="nav-divider">Customer Care</li>
-@can('viewAny', \App\Models\ReturnOrder::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/returns*') ? 'active' : '' }}" href="{{ route('admin.returns.index') }}">
-    <i class="fa fa-undo"></i> Returns / RTO
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\Claim::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/claims*') ? 'active' : '' }}" href="{{ route('admin.claims.index') }}">
-    <i class="fa fa-file-invoice"></i> Claims & Insurance
-  </a>
-</li>
-@endcan
-
-{{-- NEW: Finance & Rating --}}
-<li class="nav-divider">Finance & Rating</li>
-@can('viewAny', \App\Models\SurchargeRule::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/surcharges*') ? 'active' : '' }}" href="{{ route('admin.surcharges.index') }}">
-    <i class="fa fa-calculator"></i> Surcharge Rules
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\CashOffice::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/cash-office*') ? 'active' : '' }}" href="{{ route('admin.cash-office.index') }}">
-    <i class="fa fa-cash-register"></i> Cash Office
-  </a>
-</li>
-@endcan
-@can('viewAny', \App\Models\FxRate::class)
-<li class="nav-item">
-  <a class="nav-link {{ request()->is('admin/fx*') ? 'active' : '' }}" href="{{ route('admin.fx.index') }}">
-    <i class="fa fa-dollar-sign"></i> FX Rates
-  </a>
-</li>
-@endcan
