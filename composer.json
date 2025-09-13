@@ -16,6 +16,7 @@
         "cartalyst/stripe-laravel": "^17.0",
         "components/flag-icon-css": "^3.5",
         "geo-sot/laravel-env-editor": "^3.2.0",
+        "giggsey/libphonenumber-for-php": "^9.0",
         "google/apiclient": "^2.18",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^12.0",

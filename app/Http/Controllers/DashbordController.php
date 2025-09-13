@@ -27,6 +27,7 @@ use App\Models\Backend\Fraud;
 use App\Models\MerchantShops;
 use App\Models\Customer;
 use App\Models\Shipment;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -213,9 +214,13 @@ class DashbordController extends Controller
             $data['courier_income']         = $this->repo->courierIncome($fromTo);
             $data['courier_expense']         = $this->repo->courierExpense($fromTo);
 
-            // Client Management and Parcel Onboarding KPIs
-            $data['total_customers'] = Customer::count();
-            $data['total_bookings_today'] = Shipment::whereDate('created_at', now()->toDateString())->count();
+            // Client Management and Parcel Onboarding KPIs (guard tables)
+            $data['total_customers'] = Schema::hasTable('users')
+                ? Customer::count()
+                : 0;
+            $data['total_bookings_today'] = Schema::hasTable('shipments')
+                ? Shipment::whereDate('created_at', now()->toDateString())->count()
+                : 0;
 
             return view('backend.dashboard', compact('c_income','c_expense','d_income','d_expense','m_income','m_expense','v_income','v_expense','b_income','b_expense','h_income','h_expense','data','request'));
         }

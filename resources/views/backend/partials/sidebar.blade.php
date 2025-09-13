@@ -21,7 +21,7 @@
                 </nav>
                 <div class="nav-left-sidebar sidebar-dark navbar-expand-lg ">
                     <ul class="navbar-nav">
-                        <li class="nav-divider>
+                        <li class="nav-divider">
                             {{ __('menus.menu') }}
                         </li>
                         <li class="nav-item ">
@@ -123,14 +123,41 @@
                         <!-- ERP Section -->
                         <li class="nav-divider">ERP System</li>
 
-                        @can('viewAny', \App\Models\Customer::class)
-                            <li class="nav-item ">
+                        @php(
+                            $isAdminOrSuper = auth()->check() && auth()->user()->hasRole(['super-admin','admin'])
+                        )
+                        @php(
+                            $canSeeCustomers = $isAdminOrSuper || (auth()->check() && (
+                                auth()->user()->can('viewAny', \App\Models\Customer::class) ||
+                                auth()->user()->can('create',  \App\Models\Customer::class)
+                            ))
+                        )
+                        @if($canSeeCustomers)
+                            <li class="nav-item">
                                 <a class="nav-link {{ request()->is('admin/customers*') ? 'active' : '' }}"
-                                    href="{{ route('admin.customers.index') }}" aria-expanded="false"
-                                    data-target="#submenu-1" aria-controls="submenu-1"><i
-                                        class="fa fa-users"></i>Customers</a>
+                                   href="#" data-toggle="collapse" aria-expanded="false"
+                                   data-target="#customers-manage" aria-controls="customers-manage">
+                                    <i class="fa fa-users"></i>Customers
+                                </a>
+                                <div id="customers-manage"
+                                     class="{{ request()->is('admin/customers*') ? '' : 'collapse' }} submenu">
+                                    <ul class="nav flex-column">
+                                        @if($isAdminOrSuper || auth()->user()->can('viewAny', \App\Models\Customer::class))
+                                            <li class="nav-item">
+                                                <a class="nav-link {{ request()->is('admin/customers') ? 'active' : '' }}"
+                                                   href="{{ route('admin.customers.index') }}">All Customers</a>
+                                            </li>
+                                        @endif
+                                        @if($isAdminOrSuper || auth()->user()->can('create', \App\Models\Customer::class))
+                                            <li class="nav-item">
+                                                <a class="nav-link {{ request()->is('admin/customers/create') ? 'active' : '' }}"
+                                                   href="{{ route('admin.customers.create') }}">Create Customer</a>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </div>
                             </li>
-                        @endcan
+                        @endif
 
                         @can('create', \App\Models\Shipment::class)
                             <li class="nav-item ">
@@ -140,6 +167,135 @@
                                         class="fa fa-clipboard-plus"></i>Booking Wizard</a>
                             </li>
                         @endcan
+
+                        @can('viewAny', \App\Models\Shipment::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/shipments*') ? 'active' : '' }}" href="{{ route('admin.shipments.index') }}">
+                            <i class="fa fa-box"></i> Shipments
+                          </a>
+                        </li>
+                        @endcan
+
+                        @can('viewAny', \App\Models\Bag::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/bags*') ? 'active' : '' }}" href="{{ route('admin.bags.index') }}">
+                            <i class="fa fa-layer-group"></i> Bags & Consolidation
+                          </a>
+                        </li>
+                        @endcan
+
+                        @can('viewAny', \App\Models\TransportLeg::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/linehaul-legs*') ? 'active' : '' }}" href="{{ route('admin.linehaul-legs.index') }}">
+                            <i class="fa fa-route"></i> Linehaul (AWB / CMR)
+                          </a>
+                        </li>
+                        @endcan
+
+                        @can('viewAny', \App\Models\ScanEvent::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/scans*') ? 'active' : '' }}" href="{{ route('admin.scans.index') }}">
+                            <i class="fa fa-barcode"></i> Scan Events
+                          </a>
+                        </li>
+                        @endcan
+
+                        @can('viewAny', \App\Models\Route::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/routes*') ? 'active' : '' }}" href="{{ route('admin.routes.index') }}">
+                            <i class="fa fa-truck"></i> Routes & Stops
+                          </a>
+                        </li>
+                        @endcan
+
+                        @can('viewAny', \App\Models\Epod::class)
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/epod*') ? 'active' : '' }}" href="{{ route('admin.epod.index') }}">
+                            <i class="fa fa-file-signature"></i> ePOD Gallery
+                          </a>
+                        </li>
+                        @endcan
+
+                        @if (hasPermission('control_board_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/control-board*') ? 'active' : '' }}" href="{{ route('admin.control.board') }}">
+                            <i class="fa fa-tachometer-alt"></i> Control Board
+                          </a>
+                        </li>
+                        @endif
+
+                        @if (hasPermission('commodities_read') || hasPermission('hscodes_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/commodities*','admin/hs-codes*') ? 'active' : '' }}" href="{{ route('admin.commodities.index') }}">
+                            <i class="fa fa-list"></i> Commodities & HS Codes
+                          </a>
+                        </li>
+                        @endif
+                        @if (hasPermission('customs_docs_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/customs-docs*') ? 'active' : '' }}" href="{{ route('admin.customs-docs.index') }}">
+                            <i class="fa fa-file-invoice"></i> Customs Docs
+                          </a>
+                        </li>
+                        @endif
+                        @if (hasPermission('ics2_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/ics2*') ? 'active' : '' }}" href="{{ route('admin.ics2.index') }}">
+                            <i class="fa fa-shield-alt"></i> ICS2 (ENS)
+                          </a>
+                        </li>
+                        @endif
+                        @if (hasPermission('dps_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/denied-party*') ? 'active' : '' }}" href="{{ route('admin.dps.index') }}">
+                            <i class="fa fa-user-slash"></i> Denied-Party Screening
+                          </a>
+                        </li>
+                        @endif
+
+                        @if (hasPermission('ratecards_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/rate-cards*') ? 'active' : '' }}" href="{{ route('admin.rate-cards.index') }}">
+                            <i class="fa fa-calculator"></i> Rate Cards
+                          </a>
+                        </li>
+                        @endif
+                        @if (hasPermission('invoices_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/invoices*') ? 'active' : '' }}" href="{{ route('admin.invoices.index') }}">
+                            <i class="fa fa-file-invoice-dollar"></i> Invoices
+                          </a>
+                        </li>
+                        @endif
+                        @if (hasPermission('cod_receipts_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/cod-receipts*') ? 'active' : '' }}" href="{{ route('admin.cod-receipts.index') }}">
+                            <i class="fa fa-hand-holding-usd"></i> COD Receipts
+                          </a>
+                        </li>
+                        @endif
+                        @if (hasPermission('settlements_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/settlements*') ? 'active' : '' }}" href="{{ route('admin.settlements.index') }}">
+                            <i class="fa fa-exchange-alt"></i> Settlements
+                          </a>
+                        </li>
+                        @endif
+
+                        @if (hasPermission('global_search_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/search*') ? 'active' : '' }}" href="{{ route('admin.search') }}">
+                            <i class="fa fa-search"></i> Global Search
+                          </a>
+                        </li>
+                        @endif
+                        @if (hasPermission('api_keys_read') || hasPermission('webhooks_read'))
+                        <li class="nav-item">
+                          <a class="nav-link {{ request()->is('admin/api-keys*','admin/webhooks*') ? 'active' : '' }}" href="{{ route('admin.api-keys.index') }}">
+                            <i class="fa fa-key"></i> API Keys & Webhooks
+                          </a>
+                        </li>
+                        @endif
 
 
                         @if (hasPermission('news_offer_read') == true)

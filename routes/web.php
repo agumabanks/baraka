@@ -138,6 +138,39 @@ Route::middleware(['XSS'])->group(function () {
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('customers', CustomerController::class)->only(['index','create','store','show','edit','update']);
     Route::get('booking', [BookingWizardController::class, 'step1'])->name('booking.step1');
+
+    // Operations
+    Route::resource('shipments',     \App\Http\Controllers\Admin\ShipmentController::class)->only(['index','show','edit','update','create','store']);
+    Route::resource('bags',          \App\Http\Controllers\Admin\BagController::class)->only(['index','show','create','store','update']);
+    Route::resource('linehaul-legs', \App\Http\Controllers\Admin\TransportLegController::class)->only(['index','show','create','store','update']);
+    Route::resource('scans',         \App\Http\Controllers\Admin\ScanEventController::class)->only(['index','show','create','store']);
+    Route::resource('routes',        \App\Http\Controllers\Admin\RouteController::class)->only(['index','show','create','store','update']);
+    Route::get('epod',               [\App\Http\Controllers\Admin\EpodController::class,'index'])->name('epod.index');
+
+    // Control board
+    Route::get('control-board', [\App\Http\Controllers\Admin\ControlBoardController::class, 'index'])->name('control.board');
+
+    // Customs & compliance
+    Route::resource('commodities',   \App\Http\Controllers\Admin\CommodityController::class)->only(['index','create','store','update']);
+    Route::resource('hs-codes',      \App\Http\Controllers\Admin\HsCodeController::class)->only(['index']);
+    Route::resource('customs-docs',  \App\Http\Controllers\Admin\CustomsDocController::class)->only(['index','show','store']);
+    Route::get('ics2',               [\App\Http\Controllers\Admin\Ics2Controller::class,'index'])->name('ics2.index');
+    Route::post('dps/run',           [\App\Http\Controllers\Admin\DeniedPartyController::class,'run'])->name('dps.run');
+    Route::get('denied-party',       [\App\Http\Controllers\Admin\DeniedPartyController::class,'index'])->name('dps.index');
+
+    // Rating & finance
+    Route::resource('rate-cards',    \App\Http\Controllers\Admin\RateCardController::class)->only(['index','create','store','update']);
+    Route::resource('invoices',      \App\Http\Controllers\Admin\InvoiceController::class)->only(['index','show']);
+    Route::resource('cod-receipts',  \App\Http\Controllers\Admin\CodReceiptController::class)->only(['index','show']);
+    Route::resource('settlements',   \App\Http\Controllers\Admin\SettlementController::class)->only(['index','show']);
+
+    // Dev & search
+    Route::get('search',             [\App\Http\Controllers\Admin\SearchController::class,'index'])->name('search');
+    Route::resource('api-keys',      \App\Http\Controllers\Admin\ApiKeyController::class)->only(['index','store','destroy']);
+    Route::resource('webhooks',      \App\Http\Controllers\Admin\WebhookController::class)->only(['index','store','destroy']);
+
+    // Labels
+    Route::get('shipments/{shipment}/labels', [\App\Http\Controllers\Admin\ShipmentController::class,'labels'])->name('shipments.labels');
 });
 
 
@@ -149,6 +182,7 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
     Route::controller(FrontendController::class)->group(function () {
         Route::get('/',                      'index')->name('home');
         Route::get('/tracking',              'tracking')->name('tracking.index');
+        Route::get('/track/{tracking}',      'tracking')->name('tracking.show');
         Route::get('/about-us',              'aboutUs')->name('aboutus.index');
         Route::get('/privacy-and-policy',    'privacyPolicy')->name('privacy.policy.index');
         Route::get('/terms-of-condition',    'termsOfCondition')->name('termsof.condition.index');

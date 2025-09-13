@@ -20,6 +20,7 @@ use App\Models\Backend\Merchant;
 use App\Models\Backend\Role;
 use App\Models\Backend\Salary;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -38,7 +39,8 @@ class User extends Authenticatable
         'image_id',
         'facebook_id',
         'google_id',
-        'user_type'
+        'user_type',
+        'phone_e164'
 
     ];
 
@@ -141,6 +143,14 @@ class User extends Authenticatable
 
     public function accounts(){
         return $this->hasMany(Account::class,'user_id','id');
+    }
+
+    /**
+     * Shipments created for this user when acting as a Customer.
+     */
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class, 'customer_id');
     }
 
     /**

@@ -176,18 +176,16 @@
                     </div>
                 @endif
 
-                {{-- ERP: Client Management (Customers) --}}
+                {{-- CLIENT MANAGEMENT --}}
                 @if (hasPermission('total_customers') == true)
                     <div class="col-md-6 col-lg-4 col-xl-3">
                         <a href="{{ route('admin.customers.index') }}" class="d-block">
                             <div class="card border-3 border-top border-top-primary total-card-color">
                                 <div class="card-body total-card-body">
                                     <div class="text-center d-flex">
-                                        <label class="icon p-10px">
-                                            <i class="fa fa-users"></i>
-                                        </label>
+                                        <label class="icon p-10px"><i class="fa fa-user-friends"></i></label>
                                         <div class="box-content w-100 text-left">
-                                            <h5 class="text-muted">Customers</h5>
+                                            <h5 class="text-muted">{{ __('dashboard.total_customers') }}</h5>
                                             <div class="metric-value d-inline-block">
                                                 <h1 class="mb-1">{{ $data['total_customers'] ?? 0 }}</h1>
                                             </div>
@@ -199,18 +197,16 @@
                     </div>
                 @endif
 
-                {{-- ERP: Parcel Onboarding (Booking Wizard) --}}
+                {{-- PARCEL ONBOARDING (BOOKING WIZARD) --}}
                 @if (hasPermission('booking_create') == true)
                     <div class="col-md-6 col-lg-4 col-xl-3">
                         <a href="{{ route('admin.booking.step1') }}" class="d-block">
                             <div class="card border-3 border-top border-top-primary total-card-color">
                                 <div class="card-body total-card-body">
                                     <div class="text-center d-flex">
-                                        <label class="icon p-10px">
-                                            <i class="fa fa-clipboard-plus"></i>
-                                        </label>
+                                        <label class="icon p-10px"><i class="fa fa-clipboard-check"></i></label>
                                         <div class="box-content w-100 text-left">
-                                            <h5 class="text-muted">Booking Wizard</h5>
+                                            <h5 class="text-muted">{{ __('dashboard.book_shipment') }}</h5>
                                             <div class="metric-value d-inline-block">
                                                 <h1 class="mb-1">{{ $data['total_bookings_today'] ?? 0 }}</h1>
                                             </div>

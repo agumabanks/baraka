@@ -30,7 +30,7 @@ class CustomerController extends Controller
             ->with(['hub', 'shipments']);
 
         // Apply ABAC filtering
-        if (!auth()->user()->hasRole('hq_admin')) {
+        if (!auth()->user()->hasRole(['hq_admin','admin','super-admin'])) {
             $query->where(function ($q) {
                 $q->whereHas('shipments', function ($shipmentQuery) {
                     $shipmentQuery->where('origin_branch_id', auth()->user()->hub_id)

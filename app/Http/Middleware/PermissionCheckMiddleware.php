@@ -18,11 +18,19 @@ class PermissionCheckMiddleware
      */
     public function handle(Request $request, Closure $next,$permission=null)
     {
-        if( Auth::check() && in_array($permission,Auth::user()->permissions)){
-            return $next($request);
-        }else{
-            return redirect('/');
-            abort('403');
+        if (Auth::check()) {
+            // Super Admin bypass: allow all permissions
+            if (method_exists(Auth::user(), 'hasRole') && Auth::user()->hasRole('super-admin')) {
+                return $next($request);
+            }
+
+            // Explicit permission check
+            if (in_array($permission, Auth::user()->permissions ?? [], true)) {
+                return $next($request);
+            }
         }
+
+        return redirect('/');
+        abort('403');
     }
 }

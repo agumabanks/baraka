@@ -10,6 +10,16 @@ class CustomerPolicy
     use HandlesAuthorization;
 
     /**
+     * Grant all abilities to super-admin and admin.
+     */
+    public function before(User $user, $ability)
+    {
+        if ($user->hasRole(['super-admin', 'admin'])) {
+            return true;
+        }
+    }
+
+    /**
      * Determine whether the user can view any customers.
      */
     public function viewAny(User $user): bool

@@ -66,6 +66,10 @@ class DatabaseSeeder extends Seeder
         $this->call(BlogSeeder::class);
         $this->call(PageSeeder::class);
         $this->call(SectionSeeder::class);
+
+        // ERP modules permissions and role mappings
+        $this->call(ErpPermissionSeeder::class);
+        $this->call(ErpRoleMapSeeder::class);
  
     }
 }

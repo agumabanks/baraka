@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\V10\InvoiceController;
 use App\Http\Controllers\Api\V10\ReportController;
 use App\Http\Controllers\Api\V10\SearchController;
 use App\Http\Controllers\Admin\BookingWizardController;
+use App\Http\Controllers\Api\V10\CustomerAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +48,13 @@ Route::prefix('v10')->group(function() {
 
         // all apis goes here
         Route::post('/register',                                        [AuthController::class, 'register']);
+        // Customer self-service auth (separate namespace)
+        Route::prefix('auth')->group(function () {
+            Route::post('register', [CustomerAuthController::class, 'register']);
+            Route::post('otp/send', [CustomerAuthController::class, 'sendOtp'])->middleware('throttle:10,1');
+            Route::post('otp/verify', [CustomerAuthController::class, 'verifyOtp'])->middleware('throttle:20,1');
+            Route::post('login', [CustomerAuthController::class, 'login']);
+        });
         Route::post('/signin',                                          [AuthController::class, 'signin']);
         Route::post('/deliveryman/login',                               [AuthController::class, 'deliveryManLogin']);
         Route::post('/otp-verification',                                [AuthController::class, 'otpVerification']);
@@ -60,6 +68,7 @@ Route::prefix('v10')->group(function() {
 
         Route::group(['middleware'=> ['auth:sanctum']], function () {
             Route::get('/refresh',                                      [AuthController::class, 'refresh']);
+            Route::post('/auth/logout',                                  [CustomerAuthController::class, 'logout']);
             Route::get('/dashboard',                                    [DashboardController::class, 'index']);
             Route::get('/dashboard/filter',                             [DashboardController::class, 'filter']);
             Route::get('/profile',                                      [AuthController::class, 'profile']);
@@ -187,5 +196,4 @@ Route::prefix('v10')->group(function() {
     Route::post('/subscribe',                                           [ParcelController::class,'subscribe']);
     Route::get('/delivery-charges',                                     [ParcelController::class, 'DeliveryCharges']);
 });
-
 

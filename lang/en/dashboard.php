@@ -83,4 +83,8 @@ return [
     'par_deliver'                  => 'Partial Delivered',
     'return'                       => 'Return',
 
+    // ERP: Client Management & Booking
+    'total_customers'             => 'Total Customers',
+    'book_shipment'               => 'Book Shipment',
+
 ];

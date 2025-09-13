@@ -56,7 +56,10 @@ class FrontendController extends Controller
         return view('frontend.home',$data);
     }
 
-    public function tracking(Request $request){  
+    public function tracking(Request $request, $trackingId = null){  
+        if ($trackingId) {
+            $request->merge(['tracking_id' => $trackingId]);
+        }
         $parcel         = $this->parcelRepo->parcelTracking($request);
         $parcelevents   = $this->parcelRepo->parcelEvents($parcel->id?? null);
         return view('frontend.pages.tracking',compact('parcelevents','parcel','request'));
