@@ -169,6 +169,40 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('api-keys',      \App\Http\Controllers\Admin\ApiKeyController::class)->only(['index','store','destroy']);
     Route::resource('webhooks',      \App\Http\Controllers\Admin\WebhookController::class)->only(['index','store','destroy']);
 
+    // NEW: DHL-grade modules
+    // Sales
+    Route::resource('quotations',    \App\Http\Controllers\Admin\QuotationController::class)
+        ->only(['index','create','store','show','edit','update']);
+    Route::resource('contracts',     \App\Http\Controllers\Admin\ContractController::class);
+    Route::resource('address-book',  \App\Http\Controllers\Admin\AddressBookController::class);
+
+    // Compliance
+    Route::resource('kyc',           \App\Http\Controllers\Admin\KycController::class)
+        ->only(['index','show','update']);
+    Route::resource('dg',            \App\Http\Controllers\Admin\DangerousGoodsController::class);
+    Route::resource('ics2',          \App\Http\Controllers\Admin\Ics2MonitorController::class)
+        ->only(['index','show']);
+
+    // Linehaul
+    Route::resource('awb-stock',     \App\Http\Controllers\Admin\AwbStockController::class);
+    Route::resource('manifests',     \App\Http\Controllers\Admin\ManifestController::class);
+    Route::resource('ecmr',          \App\Http\Controllers\Admin\EcmrController::class);
+
+    // Hub Ops
+    Route::resource('sortation',     \App\Http\Controllers\Admin\SortationController::class)
+        ->only(['index','update']);
+    Route::resource('warehouse',     \App\Http\Controllers\Admin\WarehouseController::class);
+
+    // Customer Care
+    Route::resource('returns',       \App\Http\Controllers\Admin\ReturnController::class);
+    Route::resource('claims',        \App\Http\Controllers\Admin\ClaimController::class);
+
+    // Finance & Rating
+    Route::resource('surcharges',    \App\Http\Controllers\Admin\SurchargeRuleController::class);
+    Route::resource('cash-office',   \App\Http\Controllers\Admin\CashOfficeController::class)
+        ->only(['index','store']);
+    Route::resource('fx',            \App\Http\Controllers\Admin\FxRateController::class);
+
     // Labels
     Route::get('shipments/{shipment}/labels', [\App\Http\Controllers\Admin\ShipmentController::class,'labels'])->name('shipments.labels');
 });
