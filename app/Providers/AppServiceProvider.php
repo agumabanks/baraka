@@ -36,6 +36,7 @@ use App\Repositories\Vehicles\VehiclesRepository;
 use App\Repositories\Wallet\WalletInterface;
 use App\Repositories\Wallet\WalletRepository;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
 class AppServiceProvider extends ServiceProvider
@@ -134,5 +135,18 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
         Paginator::useBootstrapFour();
         Schema::defaultStringLength(191);
+
+        // Blade helpers for sidebar navigation
+        Blade::directive('navActive', function ($patterns) {
+            return "<?php echo \\App\\Support\\Nav::active($patterns); ?>";
+        });
+
+        Blade::directive('navShow', function ($patterns) {
+            return "<?php echo \\App\\Support\\Nav::show($patterns); ?>";
+        });
+
+        Blade::directive('navExpanded', function ($patterns) {
+            return "<?php echo \\App\\Support\\Nav::expanded($patterns); ?>";
+        });
     }
 }

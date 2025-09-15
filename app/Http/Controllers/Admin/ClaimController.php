@@ -11,7 +11,6 @@ class ClaimController extends Controller
     {
         $this->authorize('viewAny', Claim::class);
         $items = Claim::query()->latest('id')->paginate(15);
-        return view('backend.admin.placeholder', ['title'=>'Claims','items'=>$items]);
+        return view('backend.admin.claims.index', compact('items'));
     }
 }
-

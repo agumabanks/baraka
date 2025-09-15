@@ -9,7 +9,8 @@ class WebhookController extends Controller
 {
     public function index()
     {
-        return view('backend.admin.placeholder', ['title' => 'Webhooks']);
+        $hooks = \App\Models\Webhook::query()->latest('id')->paginate(20);
+        return view('backend.admin.webhooks.index', compact('hooks'));
     }
 
     public function store(Request $request)
@@ -22,4 +23,3 @@ class WebhookController extends Controller
         return back()->with('status','Webhook delete not implemented');
     }
 }
-

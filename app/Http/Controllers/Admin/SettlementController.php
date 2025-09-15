@@ -11,13 +11,12 @@ class SettlementController extends Controller
     {
         $this->authorize('viewAny', Settlement::class);
         $items = Settlement::latest()->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'Settlements', 'items' => $items]);
+        return view('backend.admin.settlements.index', compact('items'));
     }
 
     public function show(Settlement $settlement)
     {
         $this->authorize('view', $settlement);
-        return view('backend.admin.placeholder', ['title' => 'Settlement #'.$settlement->id, 'record' => $settlement]);
+        return view('backend.admin.settlements.show', ['settlement' => $settlement]);
     }
 }
-

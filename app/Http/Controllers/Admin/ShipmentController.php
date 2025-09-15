@@ -22,26 +22,20 @@ class ShipmentController extends Controller
             });
         }
 
-        $shipments = $query->select(['id','tracking','current_status','origin_branch_id','dest_branch_id'])->paginate(15);
-        return view('backend.admin.placeholder', [
-            'title' => 'Shipments',
-            'items' => $shipments,
-        ]);
+        $shipments = $query->select(['id','tracking','current_status','origin_branch_id','dest_branch_id','created_at'])->paginate(15);
+        return view('backend.admin.shipments.index', compact('shipments'));
     }
 
     public function show(Shipment $shipment)
     {
         $this->authorize('view', $shipment);
-        return view('backend.admin.placeholder', [
-            'title' => 'Shipment #'.$shipment->id,
-            'record' => $shipment,
-        ]);
+        return view('backend.admin.shipments.show', compact('shipment'));
     }
 
     public function create()
     {
         $this->authorize('create', Shipment::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Shipment']);
+        return view('backend.admin.shipments.create');
     }
 
     public function store(Request $request)
@@ -53,7 +47,7 @@ class ShipmentController extends Controller
     public function edit(Shipment $shipment)
     {
         $this->authorize('update', $shipment);
-        return view('backend.admin.placeholder', ['title' => 'Edit Shipment #'.$shipment->id, 'record' => $shipment]);
+        return view('backend.admin.shipments.edit', compact('shipment'));
     }
 
     public function update(Request $request, Shipment $shipment)
@@ -68,4 +62,3 @@ class ShipmentController extends Controller
         return response('Label generation not implemented yet', 501);
     }
 }
-

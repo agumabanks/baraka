@@ -15,7 +15,7 @@ class SortationController extends Controller
         $user = $request->user();
         if ($user->hub_id) { $query->where('branch_id', $user->hub_id); }
         $items = $query->orderBy('code')->paginate(30);
-        return view('backend.admin.placeholder', ['title'=>'Sortation','items'=>$items]);
+        return view('backend.admin.sortation.index', compact('items'));
     }
 
     public function update(Request $request, SortationBin $sortation)
@@ -25,4 +25,3 @@ class SortationController extends Controller
         return back()->with('status','Sortation bin updated');
     }
 }
-

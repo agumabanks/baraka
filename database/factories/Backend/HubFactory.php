@@ -15,9 +15,10 @@ class HubFactory extends Factory
             'name' => 'Hub '.$this->faker->city(),
             'address' => $this->faker->address(),
             'status' => 1,
+            'branch_code' => strtoupper($this->faker->bothify('HB####')),
+            'branch_type' => 'regional',
             'created_at' => now(),
             'updated_at' => now(),
         ];
     }
 }
-

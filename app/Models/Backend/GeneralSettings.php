@@ -55,7 +55,7 @@ class GeneralSettings extends Model
 
     public function getLogoImageAttribute()
     {
-        $path = $this->rxlogo?->original['original'] ?? null;
+        $path = $this->rxlogo?->getAttribute('original');
         if (!empty($path) && file_exists(public_path($path))) {
             return static_asset($path);
         }
@@ -63,7 +63,7 @@ class GeneralSettings extends Model
     }
     public function getPLogoImageAttribute()
     {
-        $path = $this->rxlogo?->original['original'] ?? null;
+        $path = $this->rxlogo?->getAttribute('original');
         if (!empty($path) && file_exists(public_path($path))) {
             return public_path($path);
         }
@@ -72,7 +72,7 @@ class GeneralSettings extends Model
 
     public function getLightLogoImageAttribute()
     {
-        $path = $this->lightlogo?->original['original'] ?? null;
+        $path = $this->lightlogo?->getAttribute('original');
         if (!empty($path) && file_exists(public_path($path))) {
             return static_asset($path);
         }
@@ -81,7 +81,7 @@ class GeneralSettings extends Model
 
     public function getFaviconImageAttribute()
     {
-        $path = $this->rxfavicon?->original['original'] ?? null;
+        $path = $this->rxfavicon?->getAttribute('original');
         if (!empty($path) && file_exists(public_path($path))) {
             return static_asset($path);
         }

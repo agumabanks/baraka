@@ -14,7 +14,6 @@ class WarehouseController extends Controller
         $query = WhLocation::query();
         if ($request->user()->hub_id) { $query->where('branch_id', $request->user()->hub_id); }
         $items = $query->orderBy('code')->paginate(30);
-        return view('backend.admin.placeholder', ['title'=>'Warehouse Locations','items'=>$items]);
+        return view('backend.admin.warehouse.index', compact('items'));
     }
 }
-

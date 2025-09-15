@@ -12,13 +12,13 @@ class ContractController extends Controller
     {
         $this->authorize('viewAny', Contract::class);
         $items = Contract::query()->latest('id')->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'Contracts','items'=>$items]);
+        return view('backend.admin.contracts.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', Contract::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Contract']);
+        return view('backend.admin.contracts.create');
     }
 
     public function store(Request $request)
@@ -40,13 +40,13 @@ class ContractController extends Controller
     public function show(Contract $contract)
     {
         $this->authorize('view', $contract);
-        return view('backend.admin.placeholder', ['title' => 'Contract #'.$contract->id, 'record'=>$contract]);
+        return view('backend.admin.contracts.show', compact('contract'));
     }
 
     public function edit(Contract $contract)
     {
         $this->authorize('update', $contract);
-        return view('backend.admin.placeholder', ['title' => 'Edit Contract #'.$contract->id, 'record'=>$contract]);
+        return view('backend.admin.contracts.edit', compact('contract'));
     }
 
     public function update(Request $request, Contract $contract)
@@ -63,4 +63,3 @@ class ContractController extends Controller
         return redirect()->route('admin.contracts.index');
     }
 }
-

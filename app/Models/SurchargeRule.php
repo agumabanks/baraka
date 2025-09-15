@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class SurchargeRule extends Model
 {
@@ -21,5 +22,12 @@ class SurchargeRule extends Model
         'active_to' => 'date',
         'active' => 'boolean',
     ];
-}
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('SurchargeRule')
+            ->logOnly($this->fillable)
+            ->setDescriptionForEvent(fn (string $eventName) => $eventName);
+    }
+}

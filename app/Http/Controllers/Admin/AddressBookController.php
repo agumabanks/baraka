@@ -12,13 +12,13 @@ class AddressBookController extends Controller
     {
         $this->authorize('viewAny', AddressBook::class);
         $items = AddressBook::query()->latest('id')->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'Address Book','items'=>$items]);
+        return view('backend.admin.address_book.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', AddressBook::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Address Book Entry']);
+        return view('backend.admin.address_book.create');
     }
 
     public function store(Request $request)
@@ -42,13 +42,13 @@ class AddressBookController extends Controller
     public function show(AddressBook $address_book)
     {
         $this->authorize('view', $address_book);
-        return view('backend.admin.placeholder', ['title' => 'Address','record'=>$address_book]);
+        return view('backend.admin.address_book.show', ['address' => $address_book]);
     }
 
     public function edit(AddressBook $address_book)
     {
         $this->authorize('update', $address_book);
-        return view('backend.admin.placeholder', ['title' => 'Edit Address','record'=>$address_book]);
+        return view('backend.admin.address_book.edit', ['address' => $address_book]);
     }
 
     public function update(Request $request, AddressBook $address_book)
@@ -65,4 +65,3 @@ class AddressBookController extends Controller
         return redirect()->route('admin.address-book.index');
     }
 }
-

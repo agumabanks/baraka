@@ -17,13 +17,13 @@ class AwbStockController extends Controller
             $query->where('hub_id', $user->hub_id);
         }
         $items = $query->paginate(15);
-        return view('backend.admin.placeholder', ['title'=>'AWB Stock','items'=>$items]);
+        return view('backend.admin.awb_stock.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', AwbStock::class);
-        return view('backend.admin.placeholder', ['title'=>'Add AWB Stock']);
+        return view('backend.admin.awb_stock.create');
     }
 
     public function store(Request $request)
@@ -40,5 +40,29 @@ class AwbStockController extends Controller
         AwbStock::create($data);
         return redirect()->route('admin.awb-stock.index')->with('status','AWB stock created');
     }
-}
 
+    public function edit(AwbStock $awb_stock)
+    {
+        $this->authorize('update', $awb_stock);
+        return view('backend.admin.awb_stock.edit', ['stock' => $awb_stock]);
+    }
+
+    public function update(Request $request, AwbStock $awb_stock)
+    {
+        $this->authorize('update', $awb_stock);
+        $data = $request->validate([
+            'used_count' => 'nullable|integer|min:0',
+            'voided_count' => 'nullable|integer|min:0',
+            'status' => 'required|in:active,exhausted,voided'
+        ]);
+        $awb_stock->update($data);
+        return redirect()->route('admin.awb-stock.index')->with('status','AWB stock updated');
+    }
+
+    public function destroy(AwbStock $awb_stock)
+    {
+        $this->authorize('delete', $awb_stock);
+        $awb_stock->delete();
+        return back()->with('status','AWB stock deleted');
+    }
+}

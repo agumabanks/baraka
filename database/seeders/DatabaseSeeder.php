@@ -75,5 +75,11 @@ class DatabaseSeeder extends Seeder
         $this->call(SurchargeRuleSeeder::class);
         $this->call(SortationAndWarehouseSeeder::class);
         $this->call(AwbStockSeeder::class);
+        $this->call(ZonesAndLanesSeeder::class);
+        $this->call(CarriersAndServicesSeeder::class);
+        $this->call(TransportLegSeeder::class);
+
+        // Ensure an admin user exists with password 'admin'
+        $this->call(AdminUserSeeder::class);
     }
 }

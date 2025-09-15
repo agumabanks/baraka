@@ -11,7 +11,6 @@ class EpodController extends Controller
     {
         $this->authorize('viewAny', Epod::class);
         $items = Epod::latest()->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'ePOD Gallery', 'items' => $items]);
+        return view('backend.admin.epod.index', compact('items'));
     }
 }
-

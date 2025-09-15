@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Hash;
+use App\Enums\Status as UserStatus;
 
 class CustomerController extends Controller
 {
@@ -26,8 +27,7 @@ class CustomerController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $query = User::where('user_type', 'customer')
-            ->with(['hub', 'shipments']);
+        $query = User::with(['hub', 'shipments']);
 
         // Apply ABAC filtering
         if (!auth()->user()->hasRole(['hq_admin','admin','super-admin'])) {
@@ -89,26 +89,32 @@ class CustomerController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:20|unique:users,phone',
+            // Accept either phone or mobile input; store as users.mobile
+            'phone' => 'nullable|string|max:20',
+            'mobile' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8',
             'hub_id' => 'nullable|exists:hubs,id',
-            'pickup_address' => 'nullable|string',
-            'delivery_address' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'address' => 'nullable|string',
         ]);
 
-        $customer = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password ?: 'temp123'),
-            'user_type' => 'customer',
-            'hub_id' => $request->hub_id,
-            'pickup_address' => $request->pickup_address,
-            'delivery_address' => $request->delivery_address,
-            'notes' => $request->notes,
-            'status' => 'ACTIVE',
-        ]);
+        $mobile = $request->mobile ?? $request->phone;
+        if ($mobile && User::where('mobile', $mobile)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The phone number has already been taken.',
+                'errors' => ['mobile' => ['The phone number has already been taken.']],
+            ], 422);
+        }
+
+        $customer = new User();
+        $customer->name = $request->name;
+        $customer->email = $request->email;
+        $customer->password = Hash::make($request->password ?: 'temp123');
+        $customer->hub_id = $request->hub_id;
+        if ($mobile) { $customer->mobile = $mobile; }
+        if ($request->filled('address')) { $customer->address = $request->address; }
+        $customer->status = UserStatus::ACTIVE;
+        $customer->save();
 
         return response()->json([
             'success' => true,
@@ -159,18 +165,23 @@ class CustomerController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $customer->id,
-            'phone' => 'required|string|max:20|unique:users,phone,' . $customer->id,
+            'mobile' => 'nullable|string|max:20|unique:users,mobile,' . $customer->id,
+            'phone' => 'nullable|string|max:20',
             'hub_id' => 'nullable|exists:hubs,id',
-            'pickup_address' => 'nullable|string',
-            'delivery_address' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'status' => 'required|in:ACTIVE,INACTIVE',
+            'address' => 'nullable|string',
+            'status' => 'required|in:0,1',
         ]);
 
-        $customer->update($request->only([
-            'name', 'email', 'phone', 'hub_id', 'pickup_address',
-            'delivery_address', 'notes', 'status'
-        ]));
+        $payload = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'hub_id' => $request->hub_id,
+            'status' => (int) $request->status,
+        ];
+        $mobile = $request->mobile ?? $request->phone;
+        if ($mobile) { $payload['mobile'] = $mobile; }
+        if ($request->filled('address')) { $payload['address'] = $request->address; }
+        $customer->update($payload);
 
         return response()->json([
             'success' => true,
@@ -216,7 +227,7 @@ class CustomerController extends Controller
                 'text' => $customer->name . ' (' . $customer->email . ')',
                 'name' => $customer->name,
                 'email' => $customer->email,
-                'phone' => $customer->phone,
+                'phone' => $customer->mobile,
             ];
         });
 

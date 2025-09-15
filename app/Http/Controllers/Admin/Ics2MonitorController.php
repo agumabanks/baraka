@@ -11,13 +11,12 @@ class Ics2MonitorController extends Controller
     {
         $this->authorize('viewAny', Ics2Filing::class);
         $items = Ics2Filing::query()->latest('id')->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'ICS2 Monitor','items'=>$items]);
+        return view('backend.admin.ics2.index', compact('items'));
     }
 
     public function show(Ics2Filing $ics2)
     {
         $this->authorize('view', $ics2);
-        return view('backend.admin.placeholder', ['title' => 'Filing','record'=>$ics2]);
+        return view('backend.admin.ics2.show', ['filing' => $ics2]);
     }
 }
-

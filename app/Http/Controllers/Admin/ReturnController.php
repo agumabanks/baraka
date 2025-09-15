@@ -11,7 +11,6 @@ class ReturnController extends Controller
     {
         $this->authorize('viewAny', ReturnOrder::class);
         $items = ReturnOrder::query()->latest('id')->paginate(15);
-        return view('backend.admin.placeholder', ['title'=>'Returns','items'=>$items]);
+        return view('backend.admin.returns.index', compact('items'));
     }
 }
-

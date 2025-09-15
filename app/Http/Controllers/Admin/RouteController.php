@@ -12,19 +12,19 @@ class RouteController extends Controller
     {
         $this->authorize('viewAny', RouteModel::class);
         $routes = RouteModel::latest()->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'Routes', 'items' => $routes]);
+        return view('backend.admin.routes.index', compact('routes'));
     }
 
     public function show(RouteModel $route)
     {
         $this->authorize('view', $route);
-        return view('backend.admin.placeholder', ['title' => 'Route #'.$route->id, 'record' => $route]);
+        return view('backend.admin.routes.show', ['routeModel' => $route]);
     }
 
     public function create()
     {
         $this->authorize('create', RouteModel::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Route']);
+        return view('backend.admin.routes.create');
     }
 
     public function store(Request $request)
@@ -39,4 +39,3 @@ class RouteController extends Controller
         return back()->with('status','Route update not yet implemented');
     }
 }
-

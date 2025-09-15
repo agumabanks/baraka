@@ -176,6 +176,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('contracts',     \App\Http\Controllers\Admin\ContractController::class);
     Route::resource('address-book',  \App\Http\Controllers\Admin\AddressBookController::class);
 
+    // Foundation
+    Route::resource('zones',         \App\Http\Controllers\Admin\ZoneController::class);
+    Route::resource('lanes',         \App\Http\Controllers\Admin\LaneController::class)->only(['index','create','store','edit','update']);
+    Route::resource('carriers',      \App\Http\Controllers\Admin\CarrierController::class);
+    Route::resource('carrier-services', \App\Http\Controllers\Admin\CarrierServiceController::class)->parameters(['carrier-services' => 'carrier_service']);
+
     // Compliance
     Route::resource('kyc',           \App\Http\Controllers\Admin\KycController::class)
         ->only(['index','show','update']);
@@ -202,6 +208,15 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::resource('cash-office',   \App\Http\Controllers\Admin\CashOfficeController::class)
         ->only(['index','store']);
     Route::resource('fx',            \App\Http\Controllers\Admin\FxRateController::class);
+    Route::get('gl-export',          [\App\Http\Controllers\Admin\GlExportController::class,'index'])->name('gl-export.index');
+    Route::get('gl-export/csv',      [\App\Http\Controllers\Admin\GlExportController::class,'exportCsv'])->name('gl-export.csv');
+
+    // Tech Ops & Integrations
+    Route::get('dispatch',           [\App\Http\Controllers\Admin\DispatchController::class,'index'])->name('dispatch.index');
+    Route::resource('whatsapp-templates', \App\Http\Controllers\Admin\WhatsappTemplateController::class);
+    Route::resource('edi',           \App\Http\Controllers\Admin\EdiController::class)->only(['index','create','store']);
+    Route::get('observability',      [\App\Http\Controllers\Admin\ObservabilityController::class,'index'])->name('observability.index');
+    Route::get('exception-tower',    [\App\Http\Controllers\Admin\ExceptionTowerController::class,'index'])->name('exception-tower.index');
 
     // Labels
     Route::get('shipments/{shipment}/labels', [\App\Http\Controllers\Admin\ShipmentController::class,'labels'])->name('shipments.labels');
@@ -229,6 +244,9 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
         Route::get('service-details/{id}',   'serviceDetails')->name('service.details');
     });
     //end frontend
+
+    // Customer Portal (stub)
+    Route::get('/portal', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'index'])->name('portal.index');
 
     Route::get('merchant/sign-up',                [MerchantController::class, 'signUp'])->name('merchant.sign-up');
     Route::post('merchant/sign-up-store',         [MerchantController::class, 'signUpStore'])->name('merchant.sign-up-store');

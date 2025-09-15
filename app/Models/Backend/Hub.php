@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Enums\Status;
 
 class Hub extends Model
 {
@@ -32,6 +33,12 @@ class Hub extends Model
     public function getMyStatusAttribute()
     {
         return trans('status.' . $this->status);
+    }
+
+    // Scope: only active hubs
+    public function scopeActive($query)
+    {
+        return $query->where('status', Status::ACTIVE);
     }
 
     public function parcels(){

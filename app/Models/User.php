@@ -40,7 +40,9 @@ class User extends Authenticatable
         'facebook_id',
         'google_id',
         'user_type',
-        'phone_e164'
+        'phone_e164',
+        'mobile',
+        'address'
 
     ];
 

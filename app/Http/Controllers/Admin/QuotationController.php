@@ -19,10 +19,7 @@ class QuotationController extends Controller
             $query->where('origin_branch_id', $user->hub_id);
         }
         $quotes = $query->paginate(15);
-        return view('backend.admin.placeholder', [
-            'title' => 'Quotations',
-            'items' => $quotes,
-        ]);
+        return view('backend.admin.quotations.index', compact('quotes'));
     }
 
     public function create()
@@ -71,19 +68,13 @@ class QuotationController extends Controller
     public function show(Quotation $quotation)
     {
         $this->authorize('view', $quotation);
-        return view('backend.admin.placeholder', [
-            'title' => 'Quotation #'.$quotation->id,
-            'record' => $quotation,
-        ]);
+        return view('backend.admin.quotations.show', compact('quotation'));
     }
 
     public function edit(Quotation $quotation)
     {
         $this->authorize('update', $quotation);
-        return view('backend.admin.placeholder', [
-            'title' => 'Edit Quotation #'.$quotation->id,
-            'record' => $quotation,
-        ]);
+        return view('backend.admin.quotations.edit', compact('quotation'));
     }
 
     public function update(Request $request, Quotation $quotation)
@@ -93,4 +84,3 @@ class QuotationController extends Controller
         return back()->with('status','Quotation updated');
     }
 }
-

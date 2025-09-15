@@ -9,7 +9,7 @@ class DeniedPartyController extends Controller
 {
     public function index()
     {
-        return view('backend.admin.placeholder', ['title' => 'Denied-Party Screening']);
+        return view('backend.admin.dps.index');
     }
 
     public function run(Request $request)
@@ -18,4 +18,3 @@ class DeniedPartyController extends Controller
         return back()->with('status', 'DPS run queued (placeholder)');
     }
 }
-

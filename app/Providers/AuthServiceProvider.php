@@ -48,6 +48,14 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\SurchargeRule::class=> \App\Policies\BranchScopedPolicy::class,
         \App\Models\CashOffice::class   => \App\Policies\BranchScopedPolicy::class,
         \App\Models\FxRate::class       => \App\Policies\BranchScopedPolicy::class,
+        // Zones & Carriers
+        \App\Models\Zone::class         => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Lane::class         => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Carrier::class      => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\CarrierService::class => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\WhatsappTemplate::class => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\EdiProvider::class  => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Survey::class       => \App\Policies\BranchScopedPolicy::class,
     ];
 
     /**
