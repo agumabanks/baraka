@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Enums\UserType;
 use App\Models\RoleUser;
+use App\Models\Backend\Hub;
 
 class UserSeeder extends Seeder
 {
@@ -34,6 +35,8 @@ class UserSeeder extends Seeder
         $user->save();
 
         // // Account user
+        $firstHubId = Hub::query()->orderBy('id')->value('id');
+        $secondHubId = Hub::query()->orderBy('id')->skip(1)->value('id');
         $user                        = new User();
         $user->name                  = "Branch";
         $user->email                 = "branch@wemaxdevs.com";
@@ -42,7 +45,7 @@ class UserSeeder extends Seeder
         $user->nid_number            = "12345678910";
         $user->designation_id        = 2;
         $user->department_id         = 2;
-        $user->hub_id                = 2;
+        $user->hub_id                = $secondHubId ?? $firstHubId; // pick an existing hub id
         $user->user_type             = UserType::ADMIN;
         $user->image_id              = 6;
         $user->salary                =  9000;

@@ -6,12 +6,12 @@
 <form class="splash-container" method="POST" action="{{ route('merchant.sign-up-store') }}">
     @csrf
     <div class="card">
-        <div class="row">
+        <div class="row justify-content-center">
             <div class="col-lg-5">
                 <div class="card auth-boxs">
                     <div class="card-header text-center">
                         <a href="{{url('/')}}" class="navbar-brand">
-                            <img class="logo-img" src="{{ settings()->logo_image }}"  class="logo" alt="logo">
+                            <img class="logo-img" src="{{ static_asset('images/default/logo1.png') }}"  class="logo" alt="logo">
                         </a>
                         <h3 class="mb-1">Registrations Form</h3>
                         <p>Please enter your user information.</p>
@@ -88,9 +88,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-7 footer-img">
-                <img class="img-responsive margin-t-20 py-5" src="{{ static_asset('images/default/we-courier-process.png') }}" width="100%"/>
-            </div>
+             
         </div>
     </div>
 </form>
@@ -101,4 +99,3 @@
         // $( "#hub_id" ).select2();
     </script>
 @include('backend.partials.footer')
-

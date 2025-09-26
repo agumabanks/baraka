@@ -12,7 +12,30 @@ class ShipmentController extends Controller
     {
         $this->authorize('viewAny', Shipment::class);
 
-        $query = Shipment::query()->latest();
+        $query = Shipment::query();
+
+        // Filters: q (tracking/id), status, branch, date_from, date_to
+        if ($q = trim((string) $request->input('q'))) {
+            $query->where(function ($sq) use ($q) {
+                $sq->where('id', $q)
+                   ->orWhere('tracking', 'like', "%$q%");
+            });
+        }
+        if ($status = $request->input('status')) {
+            $query->where('current_status', $status);
+        }
+        if ($branchId = $request->input('branch')) {
+            $query->where(function ($sq) use ($branchId) {
+                $sq->where('origin_branch_id', $branchId)
+                   ->orWhere('dest_branch_id', $branchId);
+            });
+        }
+        if ($from = $request->input('date_from')) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+        if ($to = $request->input('date_to')) {
+            $query->whereDate('created_at', '<=', $to);
+        }
 
         $user = $request->user();
         if (!$user->hasRole('hq_admin') && !is_null($user->hub_id)) {
@@ -22,26 +45,20 @@ class ShipmentController extends Controller
             });
         }
 
-        $shipments = $query->select(['id','tracking','current_status','origin_branch_id','dest_branch_id'])->paginate(15);
-        return view('backend.admin.placeholder', [
-            'title' => 'Shipments',
-            'items' => $shipments,
-        ]);
+        $shipments = $query->latest()->select(['id','current_status','origin_branch_id','dest_branch_id','created_at'])->paginate(15)->withQueryString();
+        return view('backend.admin.shipments.index', compact('shipments'));
     }
 
     public function show(Shipment $shipment)
     {
         $this->authorize('view', $shipment);
-        return view('backend.admin.placeholder', [
-            'title' => 'Shipment #'.$shipment->id,
-            'record' => $shipment,
-        ]);
+        return view('backend.admin.shipments.show', compact('shipment'));
     }
 
     public function create()
     {
         $this->authorize('create', Shipment::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Shipment']);
+        return view('backend.admin.shipments.create');
     }
 
     public function store(Request $request)
@@ -53,7 +70,7 @@ class ShipmentController extends Controller
     public function edit(Shipment $shipment)
     {
         $this->authorize('update', $shipment);
-        return view('backend.admin.placeholder', ['title' => 'Edit Shipment #'.$shipment->id, 'record' => $shipment]);
+        return view('backend.admin.shipments.edit', compact('shipment'));
     }
 
     public function update(Request $request, Shipment $shipment)
@@ -68,4 +85,3 @@ class ShipmentController extends Controller
         return response('Label generation not implemented yet', 501);
     }
 }
-

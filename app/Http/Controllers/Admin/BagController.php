@@ -12,19 +12,19 @@ class BagController extends Controller
     {
         $this->authorize('viewAny', Bag::class);
         $bags = Bag::latest()->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'Bags', 'items' => $bags]);
+        return view('backend.admin.bags.index', compact('bags'));
     }
 
     public function show(Bag $bag)
     {
         $this->authorize('view', $bag);
-        return view('backend.admin.placeholder', ['title' => 'Bag #'.$bag->id, 'record' => $bag]);
+        return view('backend.admin.bags.show', compact('bag'));
     }
 
     public function create()
     {
         $this->authorize('create', Bag::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Bag']);
+        return view('backend.admin.bags.create');
     }
 
     public function store(Request $request)
@@ -39,4 +39,3 @@ class BagController extends Controller
         return back()->with('status','Bag update not yet implemented');
     }
 }
-

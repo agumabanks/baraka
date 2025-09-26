@@ -20,6 +20,7 @@ class CurrencySeeder extends Seeder
 
         $b = '$b';
         $U = '$U';
+        if (!\Illuminate\Support\Facades\DB::table('currencies')->exists()) {
         DB::statement("INSERT INTO `currencies` (`id`, `country`, `name`, `code`, `symbol`, `exchange_rate`, `status`, `position`, `created_at`, `updated_at`) VALUES
         (1, 'Albania', 'Leke', 'ALL', 'Lek', NULL, 1, NULL, '2022-12-14 08:30:09', '2022-12-14 08:30:09'),
         (2, 'America', 'Dollars', 'USD', '$', NULL, 1, NULL, '2022-12-14 08:30:09', '2022-12-14 08:30:09'),
@@ -162,6 +163,7 @@ class CurrencySeeder extends Seeder
         (139, 'Angola', 'Kwanza', 'AOA', 'Kz', NULL, 1, NULL, '2022-12-14 08:30:09', '2022-12-14 08:30:09'),
         (140, 'Kuwait', 'Kuwaiti dinar', 'KWD', 'KD', NULL, 1, NULL, '2022-12-14 08:30:09', '2022-12-14 08:30:09'),
         (141, 'Bahrain', 'Bahraini dinar', 'BHD', 'BD', NULL, 1, NULL, '2022-12-14 08:30:09', '2022-12-14 08:30:09');");
+        }
 
       
     }

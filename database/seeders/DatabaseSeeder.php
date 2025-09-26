@@ -70,6 +70,16 @@ class DatabaseSeeder extends Seeder
         // ERP modules permissions and role mappings
         $this->call(ErpPermissionSeeder::class);
         $this->call(ErpRoleMapSeeder::class);
- 
+
+        // DHL-grade modules seeds
+        $this->call(SurchargeRuleSeeder::class);
+        $this->call(SortationAndWarehouseSeeder::class);
+        $this->call(AwbStockSeeder::class);
+        $this->call(ZonesAndLanesSeeder::class);
+        $this->call(CarriersAndServicesSeeder::class);
+        $this->call(TransportLegSeeder::class);
+
+        // Ensure an admin user exists with password 'admin'
+        $this->call(AdminUserSeeder::class);
     }
 }

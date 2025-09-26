@@ -12,25 +12,35 @@ class ScanEventController extends Controller
     {
         $this->authorize('viewAny', ScanEvent::class);
         $events = ScanEvent::latest()->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'Scan Events', 'items' => $events]);
+        return view('backend.admin.scans.index', compact('events'));
     }
 
     public function show(ScanEvent $scan)
     {
         $this->authorize('view', $scan);
-        return view('backend.admin.placeholder', ['title' => 'Scan #'.$scan->id, 'record' => $scan]);
+        return view('backend.admin.scans.show', ['scan' => $scan]);
     }
 
     public function create()
     {
         $this->authorize('create', ScanEvent::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Scan Event']);
+        return view('backend.admin.scans.create');
     }
 
     public function store(Request $request)
     {
         $this->authorize('create', ScanEvent::class);
-        return back()->with('status','Scan creation not yet implemented');
+        $payload = $request->validate([
+            'sscc' => 'required|string',
+            'type' => 'required|string',
+            'branch_id' => 'nullable|exists:hubs,id',
+            'leg_id' => 'nullable|exists:transport_legs,id',
+            'occurred_at' => 'nullable|date',
+            'note' => 'nullable|string',
+        ]);
+        $payload['user_id'] = $request->user()->id;
+        $payload['occurred_at'] = $payload['occurred_at'] ?? now();
+        ScanEvent::create($payload);
+        return redirect()->route('admin.scans.index')->with('status','Scan created');
     }
 }
-

@@ -54,14 +54,17 @@ class HubSeeder extends Seeder
             ],
         ];
 
-        for($n = 0; $n < sizeof($hubs); $n++)
-        {
-            $hub                  = new Hub();
-            $hub->name            = $hubs[$n]['name'];
-            $hub->phone           = $hubs[$n]['phone'];
-            $hub->address         = $hubs[$n]['address'];
-            $hub->current_balance = $hubs[$n]['current_balance'];
-            $hub->save();
+        for ($n = 0; $n < sizeof($hubs); $n++) {
+            $code = sprintf('BR%03d', $n + 1);
+            Hub::updateOrCreate(
+                ['branch_code' => $code],
+                [
+                    'name'            => $hubs[$n]['name'],
+                    'phone'           => $hubs[$n]['phone'],
+                    'address'         => $hubs[$n]['address'],
+                    'current_balance' => $hubs[$n]['current_balance'],
+                ]
+            );
         }
     }
 }

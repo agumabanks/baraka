@@ -12,13 +12,13 @@ class RateCardController extends Controller
     {
         $this->authorize('viewAny', RateCard::class);
         $items = RateCard::latest()->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'Rate Cards', 'items' => $items]);
+        return view('backend.admin.rate_cards.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', RateCard::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Rate Card']);
+        return view('backend.admin.rate_cards.create');
     }
 
     public function store(Request $request)
@@ -33,4 +33,3 @@ class RateCardController extends Controller
         return back()->with('status','Rate card update not yet implemented');
     }
 }
-

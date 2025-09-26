@@ -133,7 +133,6 @@ class ExpenseRepository implements ExpenseInterface{
             return 1;
         }
         catch (\Exception $e) {
-            dd($e);
             DB::rollBack();
             return false;
         }

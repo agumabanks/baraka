@@ -31,6 +31,31 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\CustomsDoc::class => \App\Policies\ErpModelPolicy::class,
         \App\Models\ApiKey::class => \App\Policies\ErpModelPolicy::class,
         \App\Models\Webhook::class => \App\Policies\ErpModelPolicy::class,
+        // New DHL-grade modules (branch scoped)
+        \App\Models\Quotation::class    => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Contract::class     => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\AddressBook::class  => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\KycRecord::class    => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\DangerousGood::class=> \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Ics2Filing::class   => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\AwbStock::class     => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Manifest::class     => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Ecmr::class         => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\SortationBin::class => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\WhLocation::class   => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\ReturnOrder::class  => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Claim::class        => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\SurchargeRule::class=> \App\Policies\BranchScopedPolicy::class,
+        \App\Models\CashOffice::class   => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\FxRate::class       => \App\Policies\BranchScopedPolicy::class,
+        // Zones & Carriers
+        \App\Models\Zone::class         => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Lane::class         => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Carrier::class      => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\CarrierService::class => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\WhatsappTemplate::class => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\EdiProvider::class  => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\Survey::class       => \App\Policies\BranchScopedPolicy::class,
     ];
 
     /**

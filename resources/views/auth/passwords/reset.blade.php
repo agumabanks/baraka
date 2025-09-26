@@ -5,7 +5,7 @@
         <div class="card">
             <div class="card-header text-center">
                 <a href="{{url('/')}}" class="navbar-brand">
-                    <img class="logo-img" src="{{ settings()->logo_image }}"  class="logo" alt="logo">
+                    <img class="logo-img" src="{{static_asset('images/default/logo1.png') }}"  class="logo" alt="logo">
                 </a>
                 <span class="splash-description">Reset Password</span>
             </div>
@@ -56,4 +56,3 @@
     </div>
     <!-- end forgot password  --> 
 @include('backend.partials.footer')
-

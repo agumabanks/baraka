@@ -8,9 +8,9 @@
         <div class="row align-items-center mt-3">
             <div class="col-lg-8 m-auto"> 
                 <form action="{{ route('tracking.index') }}" method="GET">
-                   
+                    <label for="tracking_id" class="visually-hidden">{{ __('levels.enter_tracking_id') }}</label>
                     <div class="input-group mb-3 tracking-page tracking-form">
-                        <input type="text" class="form-control" placeholder="{{ __('levels.enter_tracking_id') }}" name="tracking_id" value="{{ $request->tracking_id }}"  >
+                        <input type="text" id="tracking_id" class="form-control" placeholder="{{ __('levels.enter_tracking_id') }}" name="tracking_id" value="{{ $request->tracking_id }}"  >
                         <div class="input-group-append">
                             <button type="submit" class="input-group-text bg-primary"  >{{ __('levels.track_now') }}</button>
                         </div>
@@ -331,12 +331,12 @@
                 </div>
             </section>
             <!-- cd-timeline -->
-            @elseif(!empty($request->tracking_id) && !$parcel) 
+            @elseif(!empty($request->tracking_id) && !$parcel)
                 <div class="row my-5">
                     <div class="col-lg-6 m-auto">
-                        <img src="{{ static_asset('frontend/images/parcel-was-not-found.png') }}" width="100%"/>
+                        <img src="{{ static_asset('frontend/images/parcel-was-not-found.png') }}" width="100%" alt="Parcel not found"/>
                     </div>
-                </div> 
+                </div>
             @endif
         </div>
     </div>

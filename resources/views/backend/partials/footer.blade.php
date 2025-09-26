@@ -3,7 +3,6 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 
     <script src="{{static_asset('backend')}}/vendor/bootstrap-five/bootstrap.min.js"></script>
-    <script src="{{static_asset('backend')}}/vendor/bootstrap/js/bootstrap.bundle.js"></script>
     <script src="{{static_asset('backend')}}/vendor/slimscroll/jquery.slimscroll.js"></script>
     <script src="{{static_asset('backend')}}/libs/js/main-js.js"></script>
     <script src="{{static_asset('backend')}}/vendor/charts/sparkline/jquery.sparkline.js"></script>
