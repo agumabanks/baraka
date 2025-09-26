@@ -44,4 +44,21 @@ class Hub extends Model
     public function parcels(){
         return $this->hasMany(Parcel::class,'hub_id','id');
     }
+
+    // Hierarchy
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_hub_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_hub_id');
+    }
+
+    // Scope by branch code
+    public function scopeCode($query, string $code)
+    {
+        return $query->where('branch_code', $code);
+    }
 }

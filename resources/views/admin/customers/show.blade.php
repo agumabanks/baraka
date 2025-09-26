@@ -30,10 +30,16 @@
                         <div class="text-muted">Branch: {{ optional($customer->hub)->name ?? '—' }}</div>
                         <div class="mt-2">Status: {!! $customer->my_status ?? ($customer->status ?? 'ACTIVE') !!}</div>
                     </div>
-                    <div>
+                    <div class="d-flex gap-2">
                         @can('update', $customer)
                             <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i> Edit</a>
                         @endcan
+                        @if(auth()->user()->hasRole(['hq_admin','support','admin']))
+                            <form action="{{ route('admin.impersonate.start', $customer) }}" method="POST" onsubmit="return confirm('Impersonate this customer? You will switch to their account until you stop.');">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-warning btn-sm"><i class="fa fa-user-secret"></i> Impersonate</button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -79,4 +85,3 @@
     </div>
 </div>
 @endsection
-

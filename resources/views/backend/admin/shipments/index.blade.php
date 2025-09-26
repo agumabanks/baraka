@@ -11,7 +11,12 @@
         <tbody>
           @foreach($shipments as $s)
           <tr>
-            <td>{{ $s->id }}</td><td>{{ $s->tracking }}</td><td>{{ $s->current_status }}</td><td>{{ $s->origin_branch_id }}</td><td>{{ $s->dest_branch_id }}</td><td>{{ $s->created_at }}</td>
+            <td>{{ $s->id }}</td>
+            <td>{{ $s->tracking_number }}</td>
+            <td>{{ is_object($s->current_status) ? $s->current_status->value : $s->current_status }}</td>
+            <td>{{ $s->origin_branch_id }}</td>
+            <td>{{ $s->dest_branch_id }}</td>
+            <td>{{ $s->created_at }}</td>
             <td><a href="{{ route('admin.shipments.show',$s) }}" class="btn btn-sm btn-outline-secondary">View</a></td>
           </tr>
           @endforeach
@@ -22,4 +27,3 @@
   </div>
 </div>
 @endsection
-

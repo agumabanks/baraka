@@ -100,8 +100,8 @@ class SslCommerzPaymentController extends Controller
         $account->balance          = ($account->balance + $requestData->amount);
         $account->save();
         if (!is_array($payment_options)) {
-            print_r($payment_options);
-            $payment_options = array();
+            // Ensure variable is an array; avoid printing in controller context
+            $payment_options = [];
         }
     }
 

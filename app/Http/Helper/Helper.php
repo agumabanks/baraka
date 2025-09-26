@@ -29,6 +29,7 @@ use App\Models\Backend\SupportChat;
 use App\Models\Config;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
@@ -181,8 +182,10 @@ if(!function_exists('hasPermission')){
 
 if(!function_exists('settings')){
     function settings(){
-         $settings = App\Models\Backend\GeneralSettings::with('rxlogo','rxfavicon')->find(1);
-         return $settings ?: App\Models\Backend\GeneralSettings::with('rxlogo','rxfavicon')->first();
+         return Cache::remember('settings', 600, function () {
+            $settings = App\Models\Backend\GeneralSettings::with('rxlogo','rxfavicon')->find(1);
+            return $settings ?: App\Models\Backend\GeneralSettings::with('rxlogo','rxfavicon')->first();
+         });
     }
 }
 if(!function_exists('notificationSettings')){

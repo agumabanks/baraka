@@ -5,7 +5,7 @@
                 <div class="col-lg-3 col-sm-6 ">
                     <div class="footer-logo text-left ">
                         <a href="index.html" class="d-inline-block"> 
-                            <img class="logo" src="{{ settings()->light_logo_image }}" width="200"  alt="Logo">
+                            <img class="logo" src="{{ static_asset('images/default/light-logo1.png') }}" width="200"  alt="Logo">
                         </a>
                         <p class="text-white mt-3">{!! section(\App\Enums\SectionType::ABOUT,'about_us') !!}</p>
                     </div>
@@ -46,6 +46,8 @@
                         <li class="list-ite"><a href="{{ route('contact.send.page')}}">{{ __('levels.contact_us') }}</a></li> 
                         <li class="list-ite"><a href="{{ route('privacy.policy.index') }}">{{ __('levels.privacy_policy') }}</a></li>
                         <li class="list-ite"><a href="{{ route('termsof.condition.index') }}">{{ __('levels.terms_of_use') }}</a></li>
+                        <li class="list-ite"><a href="{{ route('login') }}">{{ __('levels.merchant_login') }}</a></li>
+                        <li class="list-ite"><a href="{{ route('merchant.sign-up') }}">{{ __('levels.become_merchant') }}</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3 col-sm-6 ">
@@ -54,16 +56,17 @@
  
                     <form action="{{ route('subscribe.store') }}" method="post">
                         @csrf
+                        <label for="subscribe_email" class="visually-hidden">{{ __('placeholder.enter_email') }}</label>
                         <div class="input-group mb-3 subscribe-form">
-                            <input type="text" class="form-control" placeholder="{{ __('placeholder.enter_email') }}" name="email" value="{{ old('email') }}" required>
+                            <input type="email" id="subscribe_email" class="form-control" placeholder="{{ __('placeholder.enter_email') }}" name="email" value="{{ old('email') }}" required>
                             <div class="input-group-append">
                                 <button type="submit" class="input-group-text btn bg-white text-primary"  ><i class="fa fa-paper-plane"></i></button>
-                            </div> 
+                            </div>
                         </div>
                         @error('email')
                             <p class="text-white text-start">{{ $message }}</p>
                         @enderror
-                    </form> 
+                    </form>
                     
                     <h4 class="title text-white text-start">{{ __('levels.social') }}</h4>
                     <div class="social-media mb-3 ">

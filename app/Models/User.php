@@ -75,7 +75,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'permissions'       =>'array'
+        'permissions' => 'array',
+        'notification_prefs' => 'array',
     ];
 
     // Get single row in Hub table.
@@ -128,6 +129,22 @@ class User extends Authenticatable
 
     public function merchant(){
         return $this->belongsTo(Merchant::class,'id','user_id');
+    }
+
+    // Encrypt phone at rest without breaking existing plain values
+    public function getPhoneE164Attribute($value)
+    {
+        if (is_null($value)) return null;
+        try {
+            return decrypt($value);
+        } catch (\Throwable $e) {
+            return $value; // fallback for legacy plain text
+        }
+    }
+
+    public function setPhoneE164Attribute($value)
+    {
+        $this->attributes['phone_e164'] = is_null($value) ? null : encrypt($value);
     }
 
     public function role(){

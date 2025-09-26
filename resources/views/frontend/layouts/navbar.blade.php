@@ -4,7 +4,7 @@
         <div class="container flex-lg-row flex-nowrap align-items-center">
             <div class="navbar-brand w-100 pt-0">
                 <a href="{{ url('/') }}">
-                    <img class="logo" src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo.png') }}" width="200"  alt="Logo">
+                    <img class="logo" src="{{ static_asset('images/default/logo1.png') }}" width="200"  alt="Logo">
                 </a>
             </div>
             <div class=" navbar-collapse offcanvas offcanvas-nav offcanvas-start text-bg-dark "  tabindex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
@@ -17,6 +17,9 @@
                         <li class="nav-item"><a class="nav-link  @if(request()->is('/')) active @endif " href="{{ url('/') }}">{{ __('levels.home') }}</a></li>
                         <li class="nav-item"><a class="nav-link " href="{{ url('/') }}#pricing"  >{{ __('levels.pricing') }}</a></li>
                         <li class="nav-item"><a class="nav-link @if(request()->is('tracking')) active @endif " href="{{ route('tracking.index') }}"  >{{ __('levels.tracking') }}</a></li>
+                        @if(Auth::check())
+                        <li class="nav-item"><a class="nav-link @if(request()->is('portal*')) active @endif " href="{{ route('portal.index') }}"  >{{ __('levels.ship') }}</a></li>
+                        @endif
                         <li class="nav-item"><a class="nav-link @if(request()->is('get-blogs')) active @endif " href="{{ route('get.blogs') }}"  >{{ __('levels.blogs') }}</a></li>
                         <li class="nav-item"><a class="nav-link @if(request()->is('about-us')) active @endif " href="{{route('aboutus.index')}}" >{{ __('levels.about') }}</a></li>
                         <li class="nav-item"><a class="nav-link @if(request()->is('contact-send')) active @endif " href="{{ route('contact.send.page') }}">{{ __('levels.contact') }}</a></li>
@@ -64,11 +67,19 @@
                             </div>
                         </li>
                     @else
-                        <li class="nav-item login-button"> 
-                            <a href="{{ route('login') }}" class="nav-link auth-btn" >{{ __('levels.login') }}</a>
+                        <li class="nav-item login-button">
+                            <div class="dropdown">
+                                <a class="dropdown-toggle nav-link auth-btn" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {{ __('levels.login') }}
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ route('login') }}">{{ __('levels.customer_portal_login') }}</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('login') }}">{{ __('levels.staff_admin_login') }}</a></li>
+                                </ul>
+                            </div>
                         </li>
                         <li class="nav-item ">
-                            <a href="{{ route('merchant.sign-up') }}" class="btn btn-primary auth-btn" >{{ __('levels.register') }}</a>
+                            <a href="{{ route('customer.sign-up') }}" class="btn btn-primary auth-btn" >{{ __('levels.register') }}</a>
                         </li>
                     @endif
                     <li class="nav-item d-lg-none">

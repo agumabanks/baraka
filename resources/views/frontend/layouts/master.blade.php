@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,  minimum-scale=1, maximum-scale =1, user-scalable = no , shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <link rel="shortcut icon" href="{{ optional(settings())->favicon_image ?? static_asset('images/default/favicon.png') }}" type="image/x-icon">
     <title>@yield('title')</title>
@@ -35,6 +35,7 @@
     <script src="{{ static_asset('frontend/js/theme.js') }}" ></script> 
     <script src="{{ static_asset('backend/vendor') }}/toastr/toastr.min.js"></script> 
     {!! Toastr::message() !!}
+    @stack('scripts')
    
 </body>
 </html>

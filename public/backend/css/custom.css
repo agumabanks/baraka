@@ -42,15 +42,16 @@
 }
 
 .lang-dropdown{
-    left: 0!important;
-    margin-top: 0.5em!important;
+    /* Ensure proper positioning and visibility */
+    position: absolute;
+    z-index: 1050;
 }
 .lang-dropdown .btn{
     color: #212529!important;
     border:none!important;
 }
 .dropdown-menu{
-    min-width: 8.5em!important;
+    min-width: 10em!important;
 }
 .lang-dropdown .dropdown-item{
     padding-left: 15px!important;
@@ -97,6 +98,8 @@
 
 :root{
     --warningcolor:#7e0095;
+    --admin-navbar-height: 60px;
+    --admin-offset-top: 60px;
 }
 .btn-primary{
     color: white!important;
@@ -626,3 +629,97 @@ input[type="radio"].methodInput:checked+label {
 }
 
 
+
+/* Admin Navbar Improvements */
+.admin-navbar {
+    min-height: var(--admin-navbar-height);
+    z-index: 1030;
+    border-bottom: 1px solid #e6e6f2;
+    background-color: #fff !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.admin-navbar .navbar-brand .logo {
+    height: 40px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+}
+
+.admin-navbar .nav-link {
+    color: #455560 !important;
+    transition: color 0.3s ease;
+    padding: 0.5rem 1rem;
+}
+
+.admin-navbar .nav-link:hover {
+    color: #7e0095 !important;
+}
+
+.admin-navbar .badge {
+    font-size: 0.7rem;
+    border-radius: 10px;
+}
+
+.notification-dropdown {
+    min-width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.notification-title {
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e6e6f2;
+    background-color: #f8f9fa;
+    color: #455560;
+}
+
+.notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.admin-sidebar .nav-left-sidebar {
+    top: calc(var(--admin-offset-top) + 16px);
+}
+
+/* Mobile adjustments */
+@media (max-width: 991.98px) {
+    .admin-navbar {
+        padding: 0.5rem 1rem;
+        height: auto;
+        min-height: 60px;
+    }
+
+    .admin-navbar .navbar-brand .logo {
+        height: 30px;
+        max-width: 150px;
+    }
+
+    .admin-navbar .nav-link {
+        padding: 0.5rem;
+    }
+
+    .notification-dropdown {
+        min-width: 280px;
+        left: -200px !important;
+    }
+
+    .admin-sidebar .nav-left-sidebar {
+        top: 0;
+    }
+}
+
+/* Ensure proper spacing for main content */
+.dashboard-main-wrapper {
+    padding-top: calc(var(--admin-offset-top) + 24px);
+}
+
+@media (max-width: 991.98px) {
+    .dashboard-main-wrapper {
+        padding-top: calc(var(--admin-offset-top) + 16px);
+    }
+}

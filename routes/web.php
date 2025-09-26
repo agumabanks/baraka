@@ -245,14 +245,40 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
     });
     //end frontend
 
-    // Customer Portal (stub)
+    // Customer Portal
     Route::get('/portal', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'index'])->name('portal.index');
+    // Authenticated portal actions (enforce verified, rate-limit writes)
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/portal/create-shipment', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'createShipment'])->name('portal.create_shipment');
+        Route::post('/portal/store-shipment', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'storeShipment'])->middleware('throttle:10,1')->name('portal.store_shipment');
+        Route::get('/portal/create-shipment-from-past', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'createShipmentFromPast'])->name('portal.create_shipment_from_past');
+        Route::get('/portal/create-shipment-from-favorite', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'createShipmentFromFavorite'])->name('portal.create_shipment_from_favorite');
+        // Privacy tools
+        Route::get('/portal/privacy/export', [\App\Http\Controllers\Portal\PrivacyController::class, 'export'])->name('portal.privacy.export');
+    });
+    // Public informational portal pages
+    Route::get('/portal/get-rate-quote', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'getRateQuote'])->name('portal.get_rate_quote');
+    Route::get('/portal/schedule-pickup', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'schedulePickup'])->name('portal.schedule_pickup');
+    Route::get('/portal/upload-shipment-file', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'uploadShipmentFile'])->name('portal.upload_shipment_file');
+    Route::get('/portal/order-supplies', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'orderSupplies'])->name('portal.order_supplies');
+    Route::get('/portal/delivery-services', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'deliveryServices'])->name('portal.delivery_services');
+    Route::get('/portal/optional-services', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'optionalServices'])->name('portal.optional_services');
+    Route::get('/portal/customs-services', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'customsServices'])->name('portal.customs_services');
+    Route::get('/portal/surcharges', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'surcharges'])->name('portal.surcharges');
+    Route::get('/portal/solutions', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'solutions'])->name('portal.solutions');
+    Route::get('/portal/learn', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'learn'])->name('portal.learn');
+    Route::get('/portal/about-mybaraka-plus', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'aboutMyBarakaPlus'])->name('portal.about_mybaraka_plus');
+    Route::get('/portal/whats-new', [\App\Http\Controllers\Portal\CustomerPortalController::class, 'whatsNew'])->name('portal.whats_new');
 
     Route::get('merchant/sign-up',                [MerchantController::class, 'signUp'])->name('merchant.sign-up');
     Route::post('merchant/sign-up-store',         [MerchantController::class, 'signUpStore'])->name('merchant.sign-up-store');
     Route::post('merchant/otp-verification',      [MerchantController::class, 'otpVerification'])->name('merchant.otp-verification');
     Route::get('merchant/otp-verification-form',  [MerchantController::class, 'otpVerificationForm'])->name('merchant.otp-verification-form');
     Route::post('merchant/resend-otp',            [MerchantController::class, 'resendOTP'])->name('merchant.resend-otp');
+
+    // Customer Registration
+    Route::get('customer/sign-up',                [\App\Http\Controllers\CustomerController::class, 'signUp'])->name('customer.sign-up');
+    Route::post('customer/sign-up-store',         [\App\Http\Controllers\CustomerController::class, 'signUpStore'])->name('customer.sign-up-store');
     //social authentication
     Route::get('/login/{social}',                 [SocialLoginController::class, 'socialRedirect'])->name('social.login');
     Route::get('/google/login',                   [SocialLoginController::class, 'authGoogleLogin']); //google login , need url add in  your google app
@@ -286,6 +312,12 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                     ['as' => 'admin']
                 )->only(['index','create','store','show','edit','update']);
 
+                // Admin impersonation (support + hq_admin)
+                Route::post('impersonate/{user}', [\App\Http\Controllers\Admin\ImpersonationController::class, 'start'])
+                    ->name('admin.impersonate.start');
+                Route::post('impersonate/stop', [\App\Http\Controllers\Admin\ImpersonationController::class, 'stop'])
+                    ->name('admin.impersonate.stop');
+
                 // Parcel Onboarding - Booking Wizard entry point
                 Route::get(
                     'booking',
@@ -303,6 +335,8 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
                 Route::get('roles/edit/{id}',                                   [RoleController::class, 'edit'])->name('roles.edit')->middleware('hasPermission:role_update');
                 Route::put('roles/update',                                      [RoleController::class, 'update'])->name('roles.update')->middleware('hasPermission:role_update');
                 Route::delete('role/delete/{id}',                               [RoleController::class, 'destroy'])->name('role.delete')->middleware('hasPermission:role_delete');
+// Debug: Log when HubController routes are accessed
+\Log::info('HubController routes being loaded');
                 // Hubs
                 Route::get('hubs',                                              [HubController::class, 'index'])->name('hubs.index')->middleware('hasPermission:hub_read');
                 Route::get('hubs/filter',                                       [HubController::class, 'filter'])->name('hubs.filter')->middleware('hasPermission:hub_read');

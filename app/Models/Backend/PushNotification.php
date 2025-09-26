@@ -11,10 +11,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class PushNotification extends Model
 {
-    use HasFactory,LogsActivity;
+    use HasFactory, LogsActivity;
 
     protected $table       = 'push_notifications';
-    use HasFactory,LogsActivity;
     protected $fillable = ['title', 'description'];
 
     public function getActivitylogOptions(): LogOptions
@@ -38,7 +37,7 @@ class PushNotification extends Model
         if (!empty($this->upload->original['original']) && file_exists(public_path($this->upload->original['original']))) {
             return static_asset($this->upload->original['original']);
         }
-        return static_asset('images/default/logo.png');
+        return static_asset('images/default/logo1.png');
     }
 
     public function user()

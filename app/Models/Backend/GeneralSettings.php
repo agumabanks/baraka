@@ -59,7 +59,7 @@ class GeneralSettings extends Model
         if (!empty($path) && file_exists(public_path($path))) {
             return static_asset($path);
         }
-        return static_asset('images/default/logo.png');
+        return static_asset('images/default/logo1.png');
     }
     public function getPLogoImageAttribute()
     {
@@ -67,7 +67,7 @@ class GeneralSettings extends Model
         if (!empty($path) && file_exists(public_path($path))) {
             return public_path($path);
         }
-        return public_path('images/default/logo.png');
+        return public_path('images/default/logo1.png');
     }
 
     public function getLightLogoImageAttribute()

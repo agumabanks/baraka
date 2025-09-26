@@ -7,6 +7,7 @@ use App\Repositories\Currency\CurrencyInterface;
 use Illuminate\Http\Request;
 use App\Repositories\GeneralSettings\GeneralSettingsInterface;
 use Brian2694\Toastr\Facades\Toastr;
+use Illuminate\Support\Facades\Cache;
 class GeneralSettingsController extends Controller
 {
     protected $repo,$currency;
@@ -29,6 +30,8 @@ class GeneralSettingsController extends Controller
             return redirect()->back();
         endif;
         $settings = $this->repo->update($request);
+        // Invalidate settings cache
+        Cache::forget('settings');
         Toastr::success(__('settings.save_change'),__('message.success'));
         return redirect()->route('general-settings.index');
     }

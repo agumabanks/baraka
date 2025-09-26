@@ -48,9 +48,9 @@ class ParcelRepository implements ParcelInterface {
     public function all(){
         $userHubID = auth()->user()->hub_id;
         if(!blank($userHubID)){
-            return Parcel::with('parcelEvent')->where('hub_id',$userHubID)->orderBy('priority_type_id','asc')->orderBy('id','desc')->paginate(10);
+            return Parcel::with('parcelEvent', 'merchant', 'merchant.user', 'merchantShop', 'deliveryCategory', 'packaging')->where('hub_id',$userHubID)->orderBy('priority_type_id','asc')->orderBy('id','desc')->paginate(10);
         }else{
-           return Parcel::with('parcelEvent')->orderBy('id','desc')->orderBy('priority_type_id','asc')->paginate(10);
+           return Parcel::with('parcelEvent', 'merchant', 'merchant.user', 'merchantShop', 'deliveryCategory', 'packaging')->orderBy('id','desc')->orderBy('priority_type_id','asc')->paginate(10);
         }
     }
 
@@ -87,7 +87,7 @@ class ParcelRepository implements ParcelInterface {
             $to     = Carbon::parse(trim($date[1]))->endOfDay()->toDateTimeString();
         }
         if(!blank($userHubID)){
-            return Parcel::with(['parcelEvent'])->where('hub_id',$userHubID)->orderBy('updated_at')->orderBy('priority_type_id')->orderBy('id','desc')->where(function( $query ) use ( $request ) {
+            return Parcel::with(['parcelEvent', 'merchant', 'merchant.user', 'merchantShop', 'deliveryCategory', 'packaging'])->where('hub_id',$userHubID)->orderBy('updated_at')->orderBy('priority_type_id')->orderBy('id','desc')->where(function( $query ) use ( $request ) {
                 if($request->parcel_date) {
                     $date = explode('To', $request->parcel_date);
                     if(is_array($date)) {
@@ -131,7 +131,7 @@ class ParcelRepository implements ParcelInterface {
                 }
             })->paginate(10);
         }else{
-            return Parcel::with('parcelEvent')->orderBy('updated_at')->orderBy('priority_type_id')->orderBy('id','desc')->where(function( $query ) use ( $request ) {
+            return Parcel::with('parcelEvent', 'merchant', 'merchant.user', 'merchantShop', 'deliveryCategory', 'packaging')->orderBy('updated_at')->orderBy('priority_type_id')->orderBy('id','desc')->where(function( $query ) use ( $request ) {
 
                 if($request->parcel_date) {
                     $date = explode('To', $request->parcel_date);
@@ -184,7 +184,7 @@ class ParcelRepository implements ParcelInterface {
     public function filterPrint($request){
         $userHubID = auth()->user()->hub_id;
         if(!blank($userHubID)){
-            return Parcel::with('parcelEvent')->where('hub_id',$userHubID)->orderBy('updated_at')->orderBy('priority_type_id')->where(function( $query ) use ( $request ) {
+            return Parcel::with('parcelEvent', 'merchant', 'merchant.user', 'merchantShop', 'deliveryCategory', 'packaging')->where('hub_id',$userHubID)->orderBy('updated_at')->orderBy('priority_type_id')->where(function( $query ) use ( $request ) {
                 if($request->parcel_date) {
                     $date = explode('To', $request->parcel_date);
                     if(is_array($date)) {
@@ -231,7 +231,7 @@ class ParcelRepository implements ParcelInterface {
 
             })->get();
         }else{
-            return Parcel::with('parcelEvent')->orderBy('updated_at')->orderBy('priority_type_id')->where(function( $query ) use ( $request ) {
+            return Parcel::with('parcelEvent', 'merchant', 'merchant.user', 'merchantShop', 'deliveryCategory', 'packaging')->orderBy('updated_at')->orderBy('priority_type_id')->where(function( $query ) use ( $request ) {
                 if($request->parcel_date) {
                     $date = explode('To', $request->parcel_date);
                     if(is_array($date)) {
@@ -462,7 +462,6 @@ class ParcelRepository implements ParcelInterface {
             endif;
             //end wallet
 
-            // dd($parcel,$parcel->merchant->user->email);
             try {
 
                 app(PushNotificationService::class)->sendStatusPushNotification($parcel, $parcel->merchant->user->web_token,'','create');

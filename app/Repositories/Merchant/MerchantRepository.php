@@ -564,7 +564,6 @@ class MerchantRepository implements MerchantInterface{
 
 
         protected function linktoAvatarUpload($user=null,$avatar_original){
-            // dd($user,$avatar_original);
             try {
                 //profile upload
                 $file             = file_get_contents($avatar_original);

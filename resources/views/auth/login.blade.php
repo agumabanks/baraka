@@ -1,104 +1,96 @@
-@include('backend.partials.header')
+@extends('frontend.layouts.master')
+@section('title', __('levels.login'))
 @section('content')
- 
-        <div class="splash-container">
-            <div class="card">
-                <div class="row">
-                    <div class="col-lg-5">
-                        <div class="card auth-boxs">
-                            <div class="card-header text-center">
-                                <a href="{{url('/')}}" class="navbar-brand">
-                                    <img class="logo-img" src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo.png') }}"  class="logo" alt="logo">
-                                </a>
-                                <span class="splash-description">Please enter your user information.</span>
-                                </div>
-                            <div class="card-body">
-                                <form method="POST" action="{{ route('login') }}">
-                                    @csrf
-                                    <div class="form-group">
-                                        <input id="email" type="text" class="form-control form-control-lg @error('email') is-invalid @enderror" name="email" required autocomplete="email" autofocus  placeholder="Enter Email or Mobile"
-                                        @if(Cookie::has('useremail')) ? value="{{Cookie::get('useremail')}}" : value="{{ old('email') }}" @endif>
-                                        @error('email')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
-                                    <div class="form-group">
-                                        <input id="password" type="password" class="form-control form-control-lg @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="Password"
-                                        @if(Cookie::has('userpassword')) value="{{Cookie::get('userpassword')}}" @endif>
-                                        @error('password')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="custom-control custom-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}
-                                            @if(Cookie::has('useremail')) checked @endif>
-
-                                            <label class="form-check-label" for="remember">
-                                                {{ __('Remember Me') }}
-                                            </label>
-                                        </label>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary btn-lg btn-block">Sign in</button>
-                                    <div class="text-center p-2">
-                                        <span><b>OR</b></span>
-                                    </div>
-                                    @if(globalSettings('facebook_status') || globalSettings('google_status'))
-                                        <div class="row ">
-                                            @if(globalSettings('facebook_status') == App\Enums\Status::ACTIVE)
-                                            <div class="col-sm-6 m-auto  ">
-                                                <a href="{{ route('social.login','facebook') }}" class="btn w-100 btn-social btn-primary mt-2" type="button"> <i class="fab fa-facebook"></i> Facebook</a>
-                                            </div>
-                                            @endif
-                                            @if(globalSettings('google_status') == App\Enums\Status::ACTIVE)
-                                            <div class="col-sm-6 m-auto  ">
-                                                <a href="{{ route('social.login','google') }}" class="btn  w-100 btn-social btn-primary mt-2" type="button"><i class="fab fa-google"></i> Google</a>
-                                            </div>
-                                            @endif
-                                        </div>
-                                    @endif 
-                                    @if(env('DEMO') && env('DEMO') !=="")
-                                        <div class="text-center p-2">
-                                            <span><b>Demo Login</b></span>
-                                        </div>
-                                        <div class="row  ">
-                                            <div class="col-sm-6">
-                                                <button type="button" class="btn btn-primary btn-lg btn-block mt-2 demo-login-btn" id="demo-admin" data-email="admin@wemaxdevs.com" data-password="12345678">Admin</button>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <button type="button" class="btn btn-primary btn-lg btn-block mt-2 demo-login-btn" id="demo-branch" data-email="branch@wemaxdevs.com" data-password="12345678">Branch</button>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <button type="button" class="btn btn-primary btn-lg btn-block mt-2 demo-login-btn" id="demo-merchant" data-email="merchant@wemaxdevs.com" data-password="12345678">Merchant</button>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                </form>
-                            </div>
-                            <div class="card-footer bg-white p-0  ">
-                                <div class="card-footer-item card-footer-item-bordered">
-                                    <a href="{{ route('merchant.sign-up') }}" class="footer-link">Sign up here</a></div>
-                                <div class="card-footer-item card-footer-item-bordered">
-                                    <a href="{{ route('password.request') }}" class="footer-link">Forgot Password</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-7 footer-img">
-                        <img class="img-responsive margin-t-20 " src="{{ static_asset('images/default/we-courier-process.png') }}" width="100%" />
-                    </div>
-                </div>
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-7">
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+            <div class="text-center mb-3">
+              <a href="{{ url('/') }}" class="navbar-brand d-inline-flex align-items-center justify-content-center">
+                <img class="logo-img" src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo1.png') }}" alt="logo" height="48">
+              </a>
+              <h1 class="h5 mt-3 mb-0">{{ __('levels.login') }}</h1>
+              <p class="text-muted small mb-0">{{ __('messages.sign_in_to_continue') ?? 'Please enter your credentials to continue.' }}</p>
             </div>
+
+            <form method="POST" action="{{ route('login') }}" novalidate>
+              @csrf
+              <div class="mb-3">
+                <label for="email" class="form-label">{{ __('E-Mail Address') }}</label>
+                <input id="email" type="text" class="form-control @error('email') is-invalid @enderror" name="email" required autocomplete="email" autofocus placeholder="{{ __('Enter Email or Mobile') }}" value="{{ old('email') }}">
+                @error('email')
+                  <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+              </div>
+
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <label for="password" class="form-label mb-0">{{ __('Password') }}</label>
+                  <a href="{{ route('password.request') }}" class="small">{{ __('Forgot Password') }}</a>
+                </div>
+                <div class="input-group">
+                  <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="••••••••">
+                  <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-label="Show password"><i class="fa fa-eye"></i></button>
+                  @error('password')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                  @enderror
+                </div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                  <label class="form-check-label" for="remember">{{ __('Remember Me') }}</label>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100">{{ __('levels.login') }}</button>
+
+              @if(globalSettings('facebook_status') || globalSettings('google_status'))
+                <div class="text-center my-3 small text-muted">{{ __('levels.or') ?? 'OR' }}</div>
+                <div class="row g-2">
+                  @if(globalSettings('facebook_status') == App\Enums\Status::ACTIVE)
+                    <div class="col-12 col-sm-6">
+                      <a href="{{ route('social.login','facebook') }}" class="btn w-100 btn-primary" type="button"><i class="fab fa-facebook me-1"></i> Facebook</a>
+                    </div>
+                  @endif
+                  @if(globalSettings('google_status') == App\Enums\Status::ACTIVE)
+                    <div class="col-12 col-sm-6">
+                      <a href="{{ route('social.login','google') }}" class="btn w-100 btn-outline-secondary" type="button"><i class="fab fa-google me-1"></i> Google</a>
+                    </div>
+                  @endif
+                </div>
+              @endif
+            </form>
+          </div>
+          <div class="card-footer bg-white text-center py-3">
+            <span class="small text-muted">{{ __('levels.no_account') ?? 'Don\'t have an account?' }}</span>
+            <a href="{{ route('customer.sign-up') }}" class="ms-1">{{ __('levels.register') }}</a>
+          </div>
         </div>
-@show
-<style  >
-.login-dashboard-main-wrapper{
-    padding-top: 10%!important;
-}
+      </div>
+    </div>
+  </div>
+</section>
+
+@push('styles')
+<style>
+  .logo-img { max-height: 48px; }
 </style>
-@include('backend.partials.footer')
+@endpush
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('togglePassword');
+    const input = document.getElementById('password');
+    if (toggle && input) {
+      toggle.addEventListener('click', function(){
+        const is = input.getAttribute('type') === 'password';
+        input.setAttribute('type', is ? 'text' : 'password');
+        this.innerHTML = is ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+      });
+    }
+  });
+</script>
+@endpush
+@endsection
