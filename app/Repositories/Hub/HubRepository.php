@@ -72,7 +72,36 @@ class HubRepository implements HubInterface{
     }
 
     public function delete($id){
-        return Hub::destroy($id);
+        try {
+            $hub = Hub::findOrFail($id);
+
+            // Preflight dependency checks to avoid FK violations
+            $deps = [];
+            if (\App\Models\User::where('hub_id', $id)->exists()) {
+                $deps[] = 'users';
+            }
+            if (class_exists('App\\Models\\AwbStock') && \App\Models\AwbStock::where('hub_id', $id)->exists()) {
+                $deps[] = 'awb_stocks';
+            }
+            if (class_exists('App\\Models\\Manifest')) {
+                if (\App\Models\Manifest::where('origin_branch_id', $id)->exists()) $deps[] = 'manifests(origin)';
+                if (\App\Models\Manifest::where('destination_branch_id', $id)->exists()) $deps[] = 'manifests(destination)';
+            }
+            if (class_exists('App\\Models\\Shipment')) {
+                if (\App\Models\Shipment::where('origin_branch_id', $id)->exists()) $deps[] = 'shipments(origin)';
+                if (\App\Models\Shipment::where('dest_branch_id', $id)->exists()) $deps[] = 'shipments(destination)';
+            }
+
+            if (!empty($deps)) {
+                throw new \RuntimeException('Cannot delete hub: it is referenced by '.implode(', ', $deps).'. Please reassign or remove dependencies first.');
+            }
+
+            $hub->delete();
+            return true;
+        } catch (\Throwable $e) {
+            // Let caller handle messaging; return false to indicate failure
+            throw $e;
+        }
     }
 
 

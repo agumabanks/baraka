@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Enums\Status;
 
 class Hub extends Model
 {
@@ -34,7 +35,30 @@ class Hub extends Model
         return trans('status.' . $this->status);
     }
 
+    // Scope: only active hubs
+    public function scopeActive($query)
+    {
+        return $query->where('status', Status::ACTIVE);
+    }
+
     public function parcels(){
         return $this->hasMany(Parcel::class,'hub_id','id');
+    }
+
+    // Hierarchy
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_hub_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_hub_id');
+    }
+
+    // Scope by branch code
+    public function scopeCode($query, string $code)
+    {
+        return $query->where('branch_code', $code);
     }
 }

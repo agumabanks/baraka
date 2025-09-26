@@ -27,7 +27,12 @@ class SearchController extends Controller
               WHERE to_tsvector('simple', coalesce(s.tracking,'') || ' ' || coalesce(c.name,'') || ' ' || coalesce(c.phone_e164,'')) @@ {$tsq}
               ORDER BY s.id DESC LIMIT 50
             ", [$q]);
-            $results = collect($rows);
+            $results = collect($rows)->map(function ($r) {
+                $r->url = route('admin.shipments.show', $r->id);
+                $r->title = $r->tracking ?: ('Shipment #'.$r->id);
+                $r->subtitle = trim(($r->customer ?? '').' · '.($r->current_status ?? ''));
+                return $r;
+            });
         } else {
             // Fallback naive search (for MySQL or others)
             $rows = DB::table('shipments as s')
@@ -41,10 +46,14 @@ class SearchController extends Controller
                 ->orderByDesc('s.id')
                 ->limit(50)
                 ->get();
-            $results = collect($rows);
+            $results = collect($rows)->map(function ($r) {
+                $r->url = route('admin.shipments.show', $r->id);
+                $r->title = $r->tracking ?: ('Shipment #'.$r->id);
+                $r->subtitle = trim(($r->customer ?? '').' · '.($r->current_status ?? ''));
+                return $r;
+            });
         }
 
         return view('backend.admin.search.index', ['results' => $results, 'q' => $q]);
     }
 }
-

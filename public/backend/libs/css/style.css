@@ -7232,7 +7232,9 @@ html[dir="rtl"] .offcanvas.offcanvas-start{
 }
 .btn:focus
 {
-    box-shadow: none!important;
+    box-shadow: 0 0 0 0.2rem rgba(126, 0, 149, 0.25) !important;
+    outline: 2px solid #7e0095 !important;
+    outline-offset: 2px !important;
 }
 
 @media screen and (min-width: 992px) {

@@ -28,7 +28,6 @@ class SignUpRequest extends FormRequest
      */
     public function rules()
     {
-        // dd(Request::all());
         return [
             'business_name'     => ['required','string','unique:merchants'],
             'full_name'         => ['required','string','max:191'],

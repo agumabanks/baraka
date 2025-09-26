@@ -1,73 +1,85 @@
-@include('backend.partials.header')
-
-    <!-- signup form  -->
-    <form class="splash-container" method="POST" action="{{ route('register') }}">
-        @csrf
-        <div class="card">
-            <div class="row">
-                <div class="col-lg-5">
-                    <div class="card auth-boxs">
-                        <div class="card-header text-center">
-                            <a href="{{url('/')}}" class="navbar-brand">
-                                <img src="{{ settings()->logo_image }}" class="logo"/>
-                            </a>
-                            <h3 class="mb-1">Registrations Form</h3>
-                            <p>Please enter your user information.</p>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group">
-                                <input id="name" type="text" class="form-control form-control-lg @error('name') is-invalid @enderror" name="name" value="{{ old('name') }}" required autocomplete="name" autofocus placeholder="Username">
-                                @error('name')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            <div class="form-group">
-                                <input id="email" type="email" class="form-control form-control-lg @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="Email Address">
-                                @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            <div class="form-group">
-                                <input id="password" type="password" class="form-control form-control-lg @error('password') is-invalid @enderror" name="password" required autocomplete="new-password" placeholder="Password">
-                                @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            <div class="form-group">
-                                <input id="password-confirm" type="password" class="form-control form-control-lg" name="password_confirmation" required autocomplete="new-password" placeholder="Confirm Password">
-                            </div>
-                            <div class="form-group pt-2">
-                                <button class="btn btn-block btn-primary" type="submit">Register My Account</button>
-                            </div>
-                            <div class="form-group">
-                                <label class="custom-control custom-checkbox">
-                                    <input class="custom-control-input" type="checkbox"><span class="custom-control-label">By creating an account, you agree the <a href="#">terms and conditions</a></span>
-                                </label>
-                            </div>
-                            <div class="form-group row pt-0">
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mb-2">
-                                    <button class="btn btn-block btn-social btn-facebook " type="button">Facebook</button>
-                                </div>
-                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                    <button class="btn  btn-block btn-social btn-twitter" type="button">Twitter</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-white">
-                            <p>Already member? <a href="{{ route('login') }}" class="text-secondary">Login Here.</a></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-7">
-                </div>
+@extends('frontend.layouts.master')
+@section('title', __('levels.register'))
+@section('content')
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+            <div class="text-center mb-3">
+              <a href="{{ url('/') }}" class="navbar-brand d-inline-flex align-items-center justify-content-center">
+                <img src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo1.png') }}" alt="Logo" height="48"/>
+              </a>
+              <h1 class="h5 mt-3 mb-0">{{ __('levels.register') }}</h1>
+              <p class="text-muted small mb-0">{{ __('messages.create_account') ?? 'Create your account' }}</p>
             </div>
+
+            <form method="POST" action="{{ route('register') }}" novalidate>
+              @csrf
+              <div class="mb-3">
+                <label for="name" class="form-label">{{ __('Name') }}</label>
+                <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name') }}" required autocomplete="name" autofocus placeholder="{{ __('Username') }}">
+                @error('name')
+                  <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+              </div>
+
+              <div class="mb-3">
+                <label for="email" class="form-label">{{ __('E-Mail Address') }}</label>
+                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="name@example.com">
+                @error('email')
+                  <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+              </div>
+
+              <div class="mb-3">
+                <label for="password" class="form-label">{{ __('Password') }}</label>
+                <div class="input-group">
+                  <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password" placeholder="••••••••">
+                  <button class="btn btn-outline-secondary" type="button" id="togglePasswordReg" aria-label="Show password"><i class="fa fa-eye"></i></button>
+                  @error('password')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                  @enderror
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="password-confirm" class="form-label">{{ __('Confirm Password') }}</label>
+                <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password" placeholder="••••••••">
+              </div>
+
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="terms" required>
+                <label class="form-check-label" for="terms">{{ __('By creating an account, you agree to the') }} <a href="{{ route('privacy.policy.index') }}">{{ __('terms and privacy policy') }}</a></label>
+              </div>
+
+              <button class="btn btn-primary w-100" type="submit">{{ __('levels.register') }}</button>
+            </form>
+          </div>
+          <div class="card-footer bg-white text-center py-3">
+            <span class="small text-muted">{{ __('levels.already_member') ?? 'Already a member?' }}</span>
+            <a href="{{ route('login') }}" class="ms-1">{{ __('levels.login') }}</a>
+          </div>
         </div>
-    </form>
-    <!-- end signup form  --> 
-@include('backend.partials.footer')
+      </div>
+    </div>
+  </div>
+</section>
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('togglePasswordReg');
+    const input = document.getElementById('password');
+    if (toggle && input) {
+      toggle.addEventListener('click', function(){
+        const is = input.getAttribute('type') === 'password';
+        input.setAttribute('type', is ? 'text' : 'password');
+        this.innerHTML = is ? '<i class="fa fa-eye-slash"></i>' : '<i class="fa fa-eye"></i>';
+      });
+    }
+  });
+  </script>
+@endpush
+@endsection

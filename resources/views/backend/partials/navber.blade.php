@@ -1,109 +1,129 @@
 <!-- navbar -->
-<nav class="navbar navbar-expand-lg center-nav transparent navbar-light p-3 fixed-top">
-    <div class="container flex-lg-row flex-nowrap align-items-center">
-        <div class=" d-none d-lg-block navbar-collapse text-bg-dark"  > 
-            <div class="ms-lg-auto d-flex flex-column h-100 w-90">
-                <div class="dashboard-header">
-                    <nav class="navbar navbar-light  fixed-top   ">
-                        <a class="navbar-brand" href="{{ url('/dashboard') }}">
-                            <img src="{{ settings()->logo_image }}" class="logo" />
-                        </a> 
-                        <div class=" navbar-collapse" id="navbarSupportedContent">
-                            <ul class="navbar-nav ml-auto navbar-right-top">
-                                <li class="nav-item lang">
-                                    <div class="form-group col-12 pt-1">
-                                        <div class="dropdown lang-dropdown">
-                                           @include('backend.partials.language')
-                                        </div>
-                                    </div>
-                                </li>
-                           
-                                <li class="nav-item dropdown admin-panel notification  d-lg-block">
-                                    <a href="{{ url('/') }}" target="_blank" class="me-2"><i class="fa fa-globe navbar-globe"></i></a>
-                                </li>
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top admin-navbar">
+    <div class="container-fluid">
+        <!-- Mobile menu button -->
+        <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" 
+                data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-                                <li class="nav-item dropdown admin-panel notification d-lg-block">
-                                    <a class="nav-link nav-icons mt-md-3" href="#" id="navbarDropdownMenuLink1"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                                            class="fas fa-fw fa-bell"></i> <span class="indicator"></span></a>
-                                    <ul class="dropdown-menu dropdown-menu-right notification-dropdown">
-                                        <li>
-                                            <div class="notification-title"> Notification</div>
-                                            <div class="notification-list">
-                                                <div class="list-group">
-                                                    @include('backend.partials.notification')
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-                                 
-                                @if (hasPermission('todo_create') == true)
-                                    <li class="nav-item dropdown connection mt-xl-2 mt-md-2 mt-lg-2 d-lg-block">
-                                        <label id="todoModal1" data-target="#todoModal"
-                                            class="btn btn-primary btn-sm mr-2" data-toggle="modal"
-                                            data-url="{{ route('todo.modal') }}"><i class="fa fa-edit"></i>
-                                            {{ __('to_do.to_do') }}</label>
-                                    </li>
-                                @endif
-                             
-                                <li class="nav-item dropdown nav-user d-lg-block"> 
-                                    @include('backend.partials.profile_menu') 
-                                </li>
-                            </ul>
-                        </div>
-                    </nav>
-                </div>
+        <!-- Logo -->
+        <a class="navbar-brand" href="{{ url('/dashboard') }}">
+            <img src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo1.png') }}" 
+                 class="logo" alt="Logo" />
+        </a>
+
+        <!-- Desktop Navigation Items -->
+        <div class="d-none d-lg-flex ms-auto align-items-center">
+            <!-- Language Switcher -->
+            <div class="nav-item dropdown me-3">
+                @include('backend.partials.language')
+            </div>
+
+            <!-- Frontend Link -->
+            <a href="{{ url('/') }}" class="nav-link me-3" target="_blank">
+                <i class="fas fa-globe"></i>
+            </a>
+
+            <!-- Notifications -->
+            <div class="nav-item dropdown me-3">
+                <a class="nav-link position-relative" href="#" id="notificationDropdown" 
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">3</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end notification-dropdown" 
+                    aria-labelledby="notificationDropdown">
+                    <li><div class="notification-title">Notifications</div></li>
+                    <li><div class="notification-list">@include('backend.partials.notification')</div></li>
+                </ul>
+            </div>
+
+            <!-- Todo Button -->
+            @if (hasPermission('todo_create') == true)
+                <button class="btn btn-primary btn-sm me-3" data-bs-toggle="modal" 
+                        data-bs-target="#todoModal" data-url="{{ route('todo.modal') }}">
+                    <i class="fas fa-edit"></i> {{ __('to_do.to_do') }}
+                </button>
+            @endif
+
+            <!-- User Menu -->
+            <div class="nav-item dropdown">
+                @include('backend.partials.profile_menu')
             </div>
         </div>
-        <div class="navbar-other w-100 d-flex justify-content-between ">
-            <div class="d-lg-none">
-                <a href="{{ url('/') }}">
-                    <img src="{{ settings()->logo_image }}" style="margin-top: 10px" width="150"
-                        alt="Logo">
+
+        <!-- Mobile Navigation Items -->
+        <div class="d-lg-none d-flex align-items-center">
+            <a href="{{ url('/') }}" class="nav-link me-2" target="_blank">
+                <i class="fas fa-globe"></i>
+            </a>
+            
+            <div class="dropdown me-2">
+                <a class="nav-link" href="#" data-bs-toggle="dropdown">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge bg-danger">3</span>
                 </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><div class="notification-title">Notifications</div></li>
+                    <li><div class="notification-list">@include('backend.partials.notification')</div></li>
+                </ul>
             </div>
-            <ul class="navbar-nav flex-row align-items-center ">
-                <li class="nav-item dropdown admin-panel notification  d-lg-none">
-                    <a href="{{ url('/') }}" class="me-2"><i class="fa fa-globe"></i></a>
-                </li>
-                <li class="nav-item dropdown admin-panel notification  d-lg-none">
-                    <a class="nav-link nav-icons mt-md-3" href="#" id="navbarDropdownMenuLink1"
-                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
-                            class="fas fa-fw fa-bell"></i> <span
-                            class="mobile-notification indicator admin"></span></a>
-                    <ul class="dropdown-menu dropdown-menu-right notification-dropdown">
-                        <li>
-                            <div class="notification-title"> Notification</div>
-                            <div class="notification-list">
-                                <div class="list-group">
-                                   @include('backend.partials.notification')
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </li>
-                
-                @if (hasPermission('todo_create') == true)
-                    <li class="nav-item dropdown connection mt-lg-3 d-lg-none">
-                        <label id="todoModal1" data-target="#todoModal" class="btn btn-primary btn-sm mr-2"
-                            data-toggle="modal" data-url="{{ route('todo.modal') }}"><i class="fa fa-edit"></i>
-                            {{ __('to_do.to_do') }}</label>
-                    </li>
-                @endif
-               
-                <li class="nav-item dropdown nav-user mobile d-lg-none">
-                   @include('backend.partials.profile_menu')
-                </li>
-                <li class="nav-item d-lg-none">
-                    <button class="offcanvas-nav-btn" type="button" data-bs-toggle="offcanvas"
-                        data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar"><span
-                            class="navbar-toggler-icon"></span></button>
-                </li>
-            </ul>
+
+            @if (hasPermission('todo_create') == true)
+                <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" 
+                        data-bs-target="#todoModal" data-url="{{ route('todo.modal') }}">
+                    <i class="fas fa-edit"></i>
+                </button>
+            @endif
+
+            <div class="dropdown">
+                @include('backend.partials.profile_menu')
+            </div>
         </div>
     </div>
 </nav>
- 
 
 @include('backend.todo.to_do_list')
+
+@push('scripts')
+    @once
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const root = document.documentElement;
+                const navbar = document.querySelector('.admin-navbar');
+                const banner = document.querySelector('[data-impersonation-banner]');
+
+                if (!navbar) {
+                    return;
+                }
+
+                const updateOffsets = () => {
+                    const navHeight = navbar.offsetHeight || 0;
+                    const navStyle = window.getComputedStyle(navbar);
+                    const isFixed = navStyle.position === 'fixed';
+                    const bannerHeight = banner ? (banner.offsetHeight || 0) : 0;
+                    const effectiveOffset = (isFixed ? navHeight : 0) + bannerHeight;
+
+                    root.style.setProperty('--admin-navbar-height', navHeight + 'px');
+                    root.style.setProperty('--admin-offset-top', effectiveOffset + 'px');
+                };
+
+                updateOffsets();
+
+                const observedElements = [navbar];
+                if (banner) {
+                    observedElements.push(banner);
+                }
+
+                if ('ResizeObserver' in window) {
+                    const observer = new ResizeObserver(() => updateOffsets());
+                    observedElements.forEach((element) => observer.observe(element));
+                }
+
+                window.addEventListener('resize', updateOffsets, { passive: true });
+                window.addEventListener('load', updateOffsets, { once: true });
+            });
+        </script>
+    @endonce
+@endpush

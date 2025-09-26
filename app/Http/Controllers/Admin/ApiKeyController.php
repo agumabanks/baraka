@@ -9,17 +9,23 @@ class ApiKeyController extends Controller
 {
     public function index()
     {
-        return view('backend.admin.placeholder', ['title' => 'API Keys']);
+        $keys = \App\Models\ApiKey::query()->latest('id')->paginate(20);
+        return view('backend.admin.api_keys.index', compact('keys'));
     }
 
     public function store(Request $request)
     {
-        return back()->with('status','API key generation not implemented');
+        $name = $request->input('name', 'Key '.now()->format('Y-m-d H:i'));
+        $token = bin2hex(random_bytes(20));
+        \App\Models\ApiKey::create(['name'=>$name,'token'=>$token]);
+        return back()->with('status','API key generated');
     }
 
     public function destroy($id)
     {
-        return back()->with('status','API key delete not implemented');
+        if ($key = \App\Models\ApiKey::find($id)) {
+            $key->delete();
+        }
+        return back()->with('status','API key deleted');
     }
 }
-

@@ -157,7 +157,9 @@ class Parcel extends Model
         }elseif($this->status == ParcelStatus::RECEIVED_BY_PICKUP_MAN){
             $status = '<span class="badge badge-pill badge-success">'.trans("parcelStatus." . $this->status).'</span>';
         }elseif($this->status == ParcelStatus::TRANSFER_TO_HUB){
-            $status = '<span class="badge badge-pill badge-info">'.trans("parcelStatus." . $this->status).'</span>'.'<br><span class="badge badge-pill badge-danger mt-1">'.$this->hub->name.' To '.$this->transferhub->name.'</span>';
+            $hubName = $this->hub ? $this->hub->name : 'Unknown Hub';
+            $transferHubName = $this->transferhub ? $this->transferhub->name : 'Unknown Hub';
+            $status = '<span class="badge badge-pill badge-info">'.trans("parcelStatus." . $this->status).'</span>'.'<br><span class="badge badge-pill badge-danger mt-1">'.$hubName.' To '.$transferHubName.'</span>';
         }elseif($this->status == ParcelStatus::RECEIVED_BY_HUB){
             $status = '<span class="badge badge-pill badge-info">'.trans("parcelStatus." . $this->status).'</span>';
         }

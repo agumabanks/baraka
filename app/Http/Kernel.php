@@ -24,6 +24,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\Cors::class,
+        \App\Http\Middleware\SecurityHeaders::class,
     ];
 
     /**
@@ -75,6 +76,7 @@ class Kernel extends HttpKernel
         'headersCheck'      =>\App\Http\Middleware\ModifyHeaderMiddleware::class,
         'IsInstalled'       =>\App\Http\Middleware\IsInstalledMiddleware::class,
         'IsNotInstalled'    =>\App\Http\Middleware\IsNotInstalledMiddleware::class,
+        'impersonationBanner' => \App\Http\Middleware\ImpersonationBanner::class,
 
     ];
 }

@@ -11,7 +11,6 @@ class HsCodeController extends Controller
     {
         $this->authorize('viewAny', HsCode::class);
         $items = HsCode::latest()->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'HS Codes', 'items' => $items]);
+        return view('backend.admin.hscodes.index', compact('items'));
     }
 }
-

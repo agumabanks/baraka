@@ -1,4 +1,5 @@
 @include('backend.partials.header')
+@include('backend.partials.impersonation_banner')
 @if (Auth::user()->user_type == \App\Enums\UserType::MERCHANT)
     @include('backend.merchant_panel.partials.navber')
     @include('backend.merchant_panel.partials.sidebar')

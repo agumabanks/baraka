@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
+use App\Enums\UserType;
 
 class LoginController extends Controller
 {
@@ -30,18 +31,7 @@ class LoginController extends Controller
     // Auth login 
     public function login(Request $request)
     {
-        // Active Remember me 24 houre
-        if($request->remember != null)
-        {
-            Cookie::queue('useremail',$request->email,1440);
-            Cookie::queue('userpassword',$request->password,1440);
-        }
-        else
-        {
-            Cookie::queue(Cookie::forget('useremail'));
-            Cookie::queue(Cookie::forget('userpassword'));
-        }
-        
+        // Use Laravel's built-in remember_token instead of storing credentials in cookies
         $this->validateLogin($request);
 
         // If the class is using the ThrottlesLogins trait, we can automatically throttle
@@ -99,6 +89,27 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
+    }
+
+    /**
+     * Determine where to redirect users after login.
+     */
+    protected function redirectTo()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return RouteServiceProvider::HOME;
+        }
+
+        // Staff/admin to admin dashboard
+        if (method_exists($user, 'hasRole') && $user->hasRole([
+            'hq_admin','admin','super-admin','branch_ops_manager','branch_attendant','support','finance','driver'
+        ])) {
+            return RouteServiceProvider::HOME;
+        }
+
+        // Non-staff (clients/merchants/customers) to client portal
+        return route('portal.index');
     }
 
     protected function credentials(Request $request)

@@ -12,13 +12,13 @@ class CommodityController extends Controller
     {
         $this->authorize('viewAny', Commodity::class);
         $items = Commodity::latest()->paginate(15);
-        return view('backend.admin.placeholder', ['title' => 'Commodities', 'items' => $items]);
+        return view('backend.admin.commodities.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', Commodity::class);
-        return view('backend.admin.placeholder', ['title' => 'Create Commodity']);
+        return view('backend.admin.commodities.create');
     }
 
     public function store(Request $request)
@@ -33,4 +33,3 @@ class CommodityController extends Controller
         return back()->with('status','Commodity update not yet implemented');
     }
 }
-

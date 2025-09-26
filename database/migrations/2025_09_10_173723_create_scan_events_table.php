@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('scan_events')) {
+            return; // Table already exists (e.g., from imported dump)
+        }
+
         Schema::create('scan_events', function (Blueprint $table) {
             $table->id();
             $table->string('sscc'); // GS1 SSCC code

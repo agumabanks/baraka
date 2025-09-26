@@ -134,7 +134,12 @@ class ParcelController extends Controller
         //wallet use checking
         $merchant      = Merchant::find($request->merchant_id);
         if ($request->parcel_payment_method == ParcelPaymentMethod::PREPAID) :
-            $chargeDetails = json_decode($request->chargeDetails);
+            $chargeDetailsJson = $request->chargeDetails;
+            if (!is_string($chargeDetailsJson) || json_decode($chargeDetailsJson) === null) {
+                Toastr::error('Invalid charge details format.', 'Error');
+                return redirect()->back()->withInput($request->all());
+            }
+            $chargeDetails = json_decode($chargeDetailsJson);
             if ($chargeDetails->totalDeliveryChargeAmount > $merchant->wallet_balance) :
                 Toastr::error('This merchant has a low balance.', 'Error');
                 return redirect()->back()->withInput($request->all());
@@ -475,12 +480,13 @@ class ParcelController extends Controller
 
 
         $parcelEvent = ParcelEvent::where(['parcel_id'=>$request->parcel_id,'parcel_status'=>ParcelStatus::RECEIVED_WAREHOUSE])->first();
-        $hubs        = Hub::orderByDesc('id')->whereNotIn('id',[$parcelEvent->hub_id])->get();
-             $response = '';
+        $excludedHubIds = $parcelEvent ? [$parcelEvent->hub_id] : [];
+        $hubs        = Hub::orderByDesc('id')->whereNotIn('id', $excludedHubIds)->get();
+        $data = [];
         foreach ($hubs as $hub){
-            $response .= '<option value="'.$hub->id.'" selected> '.$hub->name.'</option>';
+            $data[] = ['id' => $hub->id, 'name' => $hub->name];
         }
-        return $response;
+        return response()->json($data);
     }
 
 
@@ -494,13 +500,11 @@ class ParcelController extends Controller
                 ])->first();
 
             if(isset($deliveryMan->deliveryMan) && !blank($deliveryMan->deliveryMan)){
-                $response = '<option value="'.$deliveryMan->delivery_man_id.'" selected> '.$deliveryMan->deliveryMan->user->name.'</option>';
-
+                $data = ['id' => $deliveryMan->delivery_man_id, 'name' => $deliveryMan->deliveryMan->user->name];
             }else {
-                $response = '<option value="'.$deliveryMan->pickup_man_id.'" selected> '.$deliveryMan->pickupman->user->name.'</option>';
-
+                $data = ['id' => $deliveryMan->pickup_man_id, 'name' => $deliveryMan->pickupman->user->name];
             }
-            return $response;
+            return response()->json($data);
         }else{
             if($search == ''){
                 $deliverymans = [];
@@ -1367,29 +1371,16 @@ class ParcelController extends Controller
 
     //received warehouse hub auto selected
     public function warehouseHubSelected(Request $request){
-        $hubs_list  = "";
-        $hubs_list .= "<option>".__("menus.select")." ". __("hub.title") ."</option>";
+        $hubs = Hub::all();
+        $data = [];
+        $data[] = ['id' => '', 'name' => __("menus.select")." ". __("hub.title")];
 
-        if($request->hub_id):
-            $hubs=Hub::all();
-            foreach ($hubs as $hub) {
+        foreach ($hubs as $hub) {
+            $selected = ($request->hub_id && $hub->id == $request->hub_id) ? true : false;
+            $data[] = ['id' => $hub->id, 'name' => $hub->name, 'selected' => $selected];
+        }
 
-                if($hub->id == $request->hub_id){
-                    $hubs_list .= "<option selected value=".$hub->id." >".$hub->name."</option>";
-                }else{
-                    $hubs_list .= "<option   value='".$hub->id."' >".$hub->name."</option>";
-                }
-            }
-          else:
-            $hubs=Hub::all();
-            foreach ($hubs as $key => $hub) {
-
-                $hubs_list .= "<option   value='".$hub->id."' >".$hub->name."</option>";
-
-            }
-          endif;
-
-          return $hubs_list;
+        return response()->json($data);
     }
 
 
@@ -1431,7 +1422,8 @@ class ParcelController extends Controller
     // Parcel parcelDeliveryMan
     public function parcelDeliveryMan()
     {
-        $pickupAssignParcels = ParcelEvent::whereNotNull('pickup_man_id')
+        $pickupAssignParcels = ParcelEvent::with(['parcel', 'deliveryMan', 'pickupman', 'transferDeliveryman', 'user'])
+            ->whereNotNull('pickup_man_id')
             ->whereIn('parcel_status', [
                 ParcelStatus::PICKUP_ASSIGN,
                 ParcelStatus::PICKUP_RE_SCHEDULE
@@ -1446,7 +1438,8 @@ class ParcelController extends Controller
             });
 
 
-        $deliverymanAssignParcels = ParcelEvent::whereNotNull('delivery_man_id')
+        $deliverymanAssignParcels = ParcelEvent::with(['parcel', 'deliveryMan', 'pickupman', 'transferDeliveryman', 'user'])
+            ->whereNotNull('delivery_man_id')
             ->whereIn('parcel_status', [
                 ParcelStatus::DELIVERY_MAN_ASSIGN,
                 ParcelStatus::DELIVERY_RE_SCHEDULE
@@ -1460,7 +1453,8 @@ class ParcelController extends Controller
                 return $group->last(); // Get the first item in each group
             });
 
-        $transfertohubAssignParcels = ParcelEvent::whereNotNull('transfer_delivery_man_id')
+        $transfertohubAssignParcels = ParcelEvent::with(['parcel', 'deliveryMan', 'pickupman', 'transferDeliveryman', 'user'])
+            ->whereNotNull('transfer_delivery_man_id')
             ->whereIn('parcel_status', [
                 ParcelStatus::TRANSFER_TO_HUB
             ])
@@ -1479,50 +1473,27 @@ class ParcelController extends Controller
         $allDriver      = $allParcels->groupBy('pickup_man_id');
         $mapParcels = [];
 
+        $driverIds = $allDriver->keys();
+        $deliverymen = DeliveryMan::with('user')->whereIn('id', $driverIds)->get()->keyBy('id');
+
+        $pickupCounts = $pickupAssignParcels->groupBy('pickup_man_id')->map->count();
+        $deliveryCounts = $deliverymanAssignParcels->groupBy('delivery_man_id')->map->count();
+        $transferCounts = $transfertohubAssignParcels->groupBy('transfer_delivery_man_id')->map->count();
 
         if (!blank($allDriver)) {
             foreach ($allDriver as $key => $driverParcels) {
-                $deliveryman     = DeliveryMan::find($key);
+                $deliveryman = $deliverymen->get($key);
 
                 //total collected
-                $collectedfromMerchant = ParcelEvent::where('pickup_man_id', $key)
-                    ->whereIn('parcel_status', [
-                        ParcelStatus::PICKUP_ASSIGN,
-                        ParcelStatus::PICKUP_RE_SCHEDULE
-                    ])
-                    ->get()
-                    ->groupBy('parcel_id')
-                    ->map(function ($group) {
-                        return $group->last(); // Get the first item in each group
-                    })->count();
-
-
-                $deliveryCollectedFromHub = ParcelEvent::where('delivery_man_id', $key)
-                    ->whereIn('parcel_status', [
-                        ParcelStatus::DELIVERY_MAN_ASSIGN,
-                        ParcelStatus::DELIVERY_RE_SCHEDULE
-                    ])
-                    ->get()
-                    ->groupBy('parcel_id')
-                    ->map(function ($group) {
-                        return $group->last(); // Get the first item in each group
-                    })->count();
-
-                $transferCollectedFromHub = ParcelEvent::where('transfer_delivery_man_id', $key)
-                    ->whereIn('parcel_status', [
-                        ParcelStatus::TRANSFER_TO_HUB
-                    ])
-                    ->get()
-                    ->groupBy('parcel_id')
-                    ->map(function ($group) {
-                        return $group->last(); // Get the last item in each group
-                    })->count();
+                $collectedfromMerchant = $pickupCounts->get($key, 0);
+                $deliveryCollectedFromHub = $deliveryCounts->get($key, 0);
+                $transferCollectedFromHub = $transferCounts->get($key, 0);
 
                 $totalCollectedFromHub   = $deliveryCollectedFromHub + $transferCollectedFromHub;
 
                 //end total collected
 
-                if ($deliveryman->current_location_lat && $deliveryman->current_location_long) :
+                if ($deliveryman && $deliveryman->current_location_lat && $deliveryman->current_location_long) :
                     $mapParcels[$key]['deliveryMan']      = optional($deliveryman->user)->name;
                     $mapParcels[$key]['deliveryPhone']    = optional($deliveryman->user)->mobile;
                     $mapParcels[$key]['deliveryImage']    = optional($deliveryman->user)->image;

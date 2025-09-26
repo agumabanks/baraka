@@ -88,7 +88,6 @@ class AccidentRepository implements AccidentInterface{
             $upload->save();
             return $upload->id;
         } catch (\Exception $e) {
-            dd($e);
             return false;
         }
     }

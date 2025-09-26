@@ -24,7 +24,6 @@ class StoreRequest extends FormRequest
      */
     public function rules()
     {
-// dd(Request::all());
         if (Request::input('gateway') == 1) {
             return [
                 'type'                => ['required'],

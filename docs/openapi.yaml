@@ -1,0 +1,41 @@
+openapi: 3.1.0
+info:
+  title: ERP API
+  version: 0.1.0
+paths:
+  /api/v10/booking/step1:
+    post:
+      summary: Booking wizard step1
+      tags: [Booking]
+      responses:
+        '200': { description: OK }
+  /admin/zones:
+    get:
+      summary: List zones (admin)
+      tags: [Zones]
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create zone (admin)
+      tags: [Zones]
+      responses:
+        '201': { description: Created }
+  /admin/lanes:
+    get:
+      summary: List lanes (admin)
+      tags: [Lanes]
+      responses:
+        '200': { description: OK }
+  /admin/carriers:
+    get:
+      summary: List carriers (admin)
+      tags: [Carriers]
+      responses:
+        '200': { description: OK }
+  /admin/carrier-services:
+    get:
+      summary: List carrier services (admin)
+      tags: [Carriers]
+      responses:
+        '200': { description: OK }
+

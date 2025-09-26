@@ -75,7 +75,6 @@ class AssetRepository implements AssetInterface
             $asset->save();
             return true;
         } catch (\Exception $e) {
-            dump($e->getMessage());
             return false;
         }
     }

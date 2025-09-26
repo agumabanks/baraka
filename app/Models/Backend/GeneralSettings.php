@@ -55,31 +55,35 @@ class GeneralSettings extends Model
 
     public function getLogoImageAttribute()
     {
-        if (!empty($this->rxlogo->original['original']) && file_exists(public_path($this->rxlogo->original['original']))) {
-            return static_asset($this->rxlogo->original['original']);
+        $path = $this->rxlogo?->getAttribute('original');
+        if (!empty($path) && file_exists(public_path($path))) {
+            return static_asset($path);
         }
-        return static_asset('images/default/logo.png');
+        return static_asset('images/default/logo1.png');
     }
     public function getPLogoImageAttribute()
     {
-        if (!empty($this->rxlogo->original['original']) && file_exists(public_path($this->rxlogo->original['original']))) {
-            return public_path($this->rxlogo->original['original']);
+        $path = $this->rxlogo?->getAttribute('original');
+        if (!empty($path) && file_exists(public_path($path))) {
+            return public_path($path);
         }
-        return public_path('images/default/logo.png');
+        return public_path('images/default/logo1.png');
     }
 
     public function getLightLogoImageAttribute()
     {
-        if (!empty($this->lightlogo->original['original']) && file_exists(public_path($this->lightlogo->original['original']))) {
-            return static_asset($this->lightlogo->original['original']);
+        $path = $this->lightlogo?->getAttribute('original');
+        if (!empty($path) && file_exists(public_path($path))) {
+            return static_asset($path);
         }
         return static_asset('images/default/light-logo.png');
     }
 
     public function getFaviconImageAttribute()
     {
-        if (!empty($this->rxfavicon->original['original']) && file_exists(public_path($this->rxfavicon->original['original']))) {
-            return static_asset($this->rxfavicon->original['original']);
+        $path = $this->rxfavicon?->getAttribute('original');
+        if (!empty($path) && file_exists(public_path($path))) {
+            return static_asset($path);
         }
         return static_asset('images/default/favicon.png');
     }
