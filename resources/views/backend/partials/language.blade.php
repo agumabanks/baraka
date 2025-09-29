@@ -1,4 +1,8 @@
-<a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+@php
+    $languageDropdownId = $languageDropdownId ?? 'languageDropdown-' . uniqid();
+@endphp
+<a class="nav-link dropdown-toggle" href="#" id="{{ $languageDropdownId }}" role="button" data-bs-toggle="dropdown"
+    aria-expanded="false">
     @if (app()->getLocale() == 'en')
     <i class="flag-icon flag-icon-us"></i> {{ __('levels.english') }}
     @elseif(app()->getLocale() == 'bn')
@@ -15,7 +19,7 @@
     <i class="flag-icon flag-icon-cn"></i> {{ __('levels.chinese') }}
     @endif
 </a>
-<ul class="dropdown-menu lang-dropdown" aria-labelledby="languageDropdown">
+<ul class="dropdown-menu lang-dropdown" aria-labelledby="{{ $languageDropdownId }}">
     <li><a class="dropdown-item" href="{{ route('setlocalization', 'en') }}"> <i class="flag-icon flag-icon-us"></i>
         {{ __('levels.english') }}</a></li>
     <li><a class="dropdown-item" href="{{ route('setlocalization', 'bn') }}"> <i class="flag-icon flag-icon-bd"></i>
