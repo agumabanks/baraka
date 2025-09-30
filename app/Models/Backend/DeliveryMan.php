@@ -73,4 +73,14 @@ class DeliveryMan extends Model
     {
         return $this->belongsTo(Hub::class, 'hub_id', 'id');
     }
+
+    public function locations()
+    {
+        return $this->hasMany(DriverLocation::class, 'driver_id');
+    }
+
+    public function currentLocation()
+    {
+        return $this->hasOne(DriverLocation::class, 'driver_id')->latestOfMany('timestamp');
+    }
 }

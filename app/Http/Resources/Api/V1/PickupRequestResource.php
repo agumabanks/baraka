@@ -14,11 +14,18 @@ class PickupRequestResource extends JsonResource
             'merchant_id' => $this->merchant_id,
             'pickup_date' => $this->pickup_date,
             'pickup_time' => $this->pickup_time,
-            'address' => $this->address,
             'contact_person' => $this->contact_person,
             'contact_phone' => $this->contact_phone,
+            'address' => $this->address,
+            'instructions' => $this->instructions,
             'status' => $this->status,
+            'merchant' => [
+                'id' => $this->merchant->id,
+                'name' => $this->merchant->name,
+                'company_name' => $this->merchant->company_name,
+            ],
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

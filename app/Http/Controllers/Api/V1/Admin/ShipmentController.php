@@ -83,6 +83,36 @@ class ShipmentController extends Controller
             $query->where('customer_id', $request->customer_id);
         }
 
+        if ($request->origin_branch_id) {
+            $query->where('origin_branch_id', $request->origin_branch_id);
+        }
+
+        if ($request->dest_branch_id) {
+            $query->where('dest_branch_id', $request->dest_branch_id);
+        }
+
+        if ($request->driver_id) {
+            $query->where('driver_id', $request->driver_id);
+        }
+
+        if ($request->date_from) {
+            $query->where('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->where('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('id', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('customer', function ($customerQuery) use ($request) {
+                      $customerQuery->where('name', 'like', '%' . $request->search . '%')
+                                   ->orWhere('email', 'like', '%' . $request->search . '%');
+                  });
+            });
+        }
+
         $shipments = $query->paginate($request->per_page ?? 15);
 
         return $this->responseWithSuccess('Shipments retrieved', [

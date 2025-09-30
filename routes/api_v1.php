@@ -5,6 +5,12 @@ use App\Http\Controllers\Api\V1\Admin\MetricsController;
 use App\Http\Controllers\Api\V1\Admin\ShipmentController as AdminShipmentController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Client\ShipmentController as ClientShipmentController;
+use App\Http\Controllers\Api\V1\DispatchController;
+use App\Http\Controllers\Api\V1\PickupController;
+use App\Http\Controllers\Api\V1\PodController;
+use App\Http\Controllers\Api\V1\QuotesController;
+use App\Http\Controllers\Api\V1\ShipmentEventController;
+use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TrackingController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +45,28 @@ Route::middleware(['auth:api', 'bind_device'])->group(function () {
     // Other client routes without idempotency
     Route::get('shipments', [ClientShipmentController::class, 'index']);
     Route::get('shipments/{shipment}', [ClientShipmentController::class, 'show']);
+    Route::get('shipments/{shipment}/events', [ShipmentEventController::class, 'index']);
+    Route::get('shipments/{shipment}/pod', [PodController::class, 'show']);
+    Route::get('quotes', [QuotesController::class, 'index']);
+    Route::get('quotes/{quote}', [QuotesController::class, 'show']);
+    Route::get('pickups', [PickupController::class, 'index']);
+    Route::get('pickups/{pickup}', [PickupController::class, 'show']);
+    Route::get('tasks', [TaskController::class, 'index']);
+    Route::get('tasks/{task}', [TaskController::class, 'show']);
+    Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus']);
+
+    // Routes with idempotency for write operations
+    Route::middleware('idempotency')->group(function () {
+        Route::post('quotes', [QuotesController::class, 'store']);
+        Route::post('pickups', [PickupController::class, 'store']);
+        Route::post('shipments/{shipment}/events', [ShipmentEventController::class, 'store']);
+    });
+
+    // POD routes with idempotency
+    Route::middleware('idempotency')->group(function () {
+        Route::post('tasks/{task}/pod', [PodController::class, 'store']);
+        Route::post('pod/{pod}/verify', [PodController::class, 'verify']);
+    });
 });
 
 // Authenticated admin routes (admin guard with role check)
@@ -56,6 +84,14 @@ Route::middleware(['auth:admin'])->group(function () {
         Route::get('shipments', [AdminShipmentController::class, 'index']);
         Route::get('shipments/{shipment}', [AdminShipmentController::class, 'show']);
         Route::post('shipments/export', [AdminShipmentController::class, 'export']);
+        Route::get('dispatch/unassigned', [DispatchController::class, 'unassigned']);
+        Route::get('dispatch/drivers', [DispatchController::class, 'drivers']);
         Route::get('metrics', [MetricsController::class, 'index']);
+
+        // Routes with idempotency for write operations
+        Route::middleware('idempotency')->group(function () {
+            Route::post('dispatch/assign', [DispatchController::class, 'assign']);
+            Route::post('dispatch/optimize', [DispatchController::class, 'optimize']);
+        });
     });
 });
