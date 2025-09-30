@@ -42,21 +42,236 @@
     <x-breadcrumb :breadcrumbs="$breadcrumbs" :contextualActions="$contextualActions" />
 @endsection
 
+@push('styles')
+    <style>
+        .dashboard-content {
+            background: linear-gradient(180deg, #fafafa 0%, #f3f4f6 100%);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 32px 70px rgba(15, 23, 42, 0.08);
+        }
+
+        .dashboard-content .card {
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.05);
+            background: #ffffff;
+        }
+
+        .dashboard-content .card-header {
+            background: transparent;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .dashboard-content .card-body {
+            padding: 1.5rem;
+        }
+
+        .dashboard-filter {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .dashboard-filter__form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .dashboard-filter__input {
+            min-width: 200px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+        }
+
+        .dashboard-filter__input:focus {
+            border-color: #111827;
+            box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.1);
+        }
+
+        .dashboard-filter__submit {
+            border-radius: 999px;
+            background: #111111;
+            border-color: #111111;
+            padding: 0.45rem 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .dashboard-filter__submit:hover,
+        .dashboard-filter__submit:focus {
+            background: #000000;
+            border-color: #000000;
+        }
+
+        .kpi-card--skeleton,
+        .chart--skeleton {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+        }
+
+        .kpi-card--skeleton {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            gap: 1rem;
+        }
+
+        .kpi-card--skeleton .skeleton-icon {
+            height: 48px;
+            width: 48px;
+            border-radius: 50%;
+        }
+
+        .kpi-card--skeleton .skeleton-content {
+            flex: 1;
+        }
+
+        .chart--skeleton {
+            padding: 1.75rem;
+        }
+
+        .chart--skeleton .skeleton-chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart--skeleton .skeleton-chart-area {
+            min-height: 160px;
+        }
+
+        .chart--skeleton .skeleton-chart-bars {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(12px, 1fr));
+            gap: 0.75rem;
+            height: 160px;
+            align-items: end;
+        }
+
+        .chart--skeleton .skeleton-chart-bar {
+            border-radius: 12px 12px 4px 4px;
+        }
+
+        .dashboard-content .skeleton {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 999px;
+        }
+
+        .dashboard-content .skeleton-title {
+            height: 12px;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-content .skeleton-value {
+            height: 18px;
+            margin-bottom: 0.4rem;
+        }
+
+        .dashboard-content .skeleton-subtitle {
+            height: 10px;
+            width: 60%;
+        }
+
+        .dashboard-content .skeleton-chart-control {
+            height: 28px;
+            width: 48px;
+            border-radius: 999px;
+        }
+
+        .quick-actions-row .quick-action-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            color: inherit;
+        }
+
+        .quick-action-card:hover,
+        .quick-action-card:focus {
+            transform: translateY(-3px);
+            box-shadow: 0 22px 44px rgba(0, 0, 0, 0.08);
+            color: inherit;
+        }
+
+        .quick-action-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            background: #111111;
+            color: #ffffff;
+            font-size: 1.35rem;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+
+        .quick-action-title {
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #1f2937;
+        }
+
+        .header-summary {
+            --bs-gutter-y: 1.5rem;
+        }
+
+        .header-summary > [class*='col-'] {
+            display: flex;
+        }
+
+        .header-summary > [class*='col-'] > * {
+            width: 100%;
+        }
+
+        @media (max-width: 1199.98px) {
+            .dashboard-content {
+                padding: 1.75rem;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-content {
+                padding: 1.25rem;
+                border-radius: 18px;
+            }
+
+            .dashboard-filter__form {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+@endpush
+
 @section('maincontent')
     <div class="container-fluid dashboard-content ">
         <div class="ecommerce-widget">
 
-            <div class="row ">
-                <div class="col-lg-12 dashboard-filter mb-3">
-                    <form action="{{ route('dashboard.index', ['test' => 'custom']) }}" method="get">
-                        <button type="submit" class="btn btn-sm btn-primary float-right group-btn ml-0"
-                            style="margin-left: 0px">{{ __('levels.filter') }}</button>
-                        <input type="hidden" name="days" value="custom" />
-                        <input type="text" name="filter_date" placeholder="YYYY-MM-DD" autocomplete="off"
-                            class="form-control dashboard-filter-input date_range_picker float-right group-input"
-                            value="{{ $request->filter_date }}" style="width: 15%;" required />
-                    </form>
-
+            <div class="row">
+                <div class="col-lg-12 mb-3">
+                    <div class="dashboard-filter">
+                        <form action="{{ route('dashboard.index', ['test' => 'custom']) }}" method="get"
+                            class="dashboard-filter__form">
+                            <input type="text" name="filter_date" placeholder="YYYY-MM-DD" autocomplete="off"
+                                class="form-control dashboard-filter__input date_range_picker"
+                                value="{{ $request->filter_date }}" required />
+                            <input type="hidden" name="days" value="custom" />
+                            <button type="submit" class="btn btn-sm btn-dark dashboard-filter__submit">
+                                {{ __('levels.filter') }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
             <!-- Row 1: Business Health KPIs -->
@@ -235,13 +450,15 @@
             </div>
 
             <!-- Row 5: Quick Actions -->
-            <div class="row">
+            <div class="row g-3 quick-actions-row">
                 @if (hasPermission('booking_create') == true)
                     <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                        <a href="{{ route('admin.booking.step1') }}" class="card h-100 text-decoration-none">
+                        <a href="{{ route('admin.booking.step1') }}" class="card quick-action-card h-100 text-decoration-none">
                             <div class="card-body text-center">
-                                <i class="fas fa-clipboard-check fa-2x text-primary mb-3"></i>
-                                <h6 class="card-title">{{ __('dashboard.book_shipment') }}</h6>
+                                <span class="quick-action-icon">
+                                    <i class="fas fa-clipboard-check" aria-hidden="true"></i>
+                                </span>
+                                <h6 class="card-title quick-action-title">{{ __('dashboard.book_shipment') }}</h6>
                             </div>
                         </a>
                     </div>
@@ -249,10 +466,12 @@
 
                 @if (hasPermission('parcel_create') == true)
                     <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                        <a href="{{ route('parcel.parcel-import') }}" class="card h-100 text-decoration-none">
+                        <a href="{{ route('parcel.parcel-import') }}" class="card quick-action-card h-100 text-decoration-none">
                             <div class="card-body text-center">
-                                <i class="fas fa-file-upload fa-2x text-success mb-3"></i>
-                                <h6 class="card-title">Bulk Upload</h6>
+                                <span class="quick-action-icon">
+                                    <i class="fas fa-file-upload" aria-hidden="true"></i>
+                                </span>
+                                <h6 class="card-title quick-action-title">{{ __('dashboard.bulk_upload') }}</h6>
                             </div>
                         </a>
                     </div>
@@ -261,16 +480,18 @@
 
                 @if (hasPermission('parcel_read') == true)
                     <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                        <a href="{{ route('parcel.index') }}" class="card h-100 text-decoration-none">
+                        <a href="{{ route('parcel.index') }}" class="card quick-action-card h-100 text-decoration-none">
                             <div class="card-body text-center">
-                                <i class="fa fa-dolly fa-2x text-warning mb-3"></i>
-                                <h6 class="card-title">View All Parcels</h6>
+                                <span class="quick-action-icon">
+                                    <i class="fas fa-dolly" aria-hidden="true"></i>
+                                </span>
+                                <h6 class="card-title quick-action-title">{{ __('dashboard.view_all_parcels') }}</h6>
                             </div>
                         </a>
                     </div>
                 @endif
             </div>
-            <div class="row header-summery">
+            <div class="row g-3 header-summary">
 
 
                 @if (hasPermission('total_parcel') == true)
