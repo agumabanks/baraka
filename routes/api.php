@@ -71,6 +71,8 @@ Route::prefix('v10')->group(function () {
             Route::post('/auth/logout', [CustomerAuthController::class, 'logout']);
             Route::get('/dashboard', [DashboardController::class, 'index']);
             Route::get('/dashboard/filter', [DashboardController::class, 'filter']);
+            Route::get('/dashboard/updates', [DashboardController::class, 'updates']);
+            Route::get('/dashboard/realtime-status', [DashboardController::class, 'realtimeStatus']);
             Route::get('/profile', [AuthController::class, 'profile']);
             Route::post('/profile/update', [AuthController::class, 'profileUpdate']);
             // push notification

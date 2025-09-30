@@ -15,6 +15,7 @@ use App\Repositories\Dashboard\DashboardInterface;
 use App\Traits\ApiReturnFormatTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -271,5 +272,110 @@ class DashboardController extends Controller
         $parcels = ParcelResource::collection($available_parcel);
 
         return $parcels;
+    /**
+     * Get real-time dashboard updates for WebSocket broadcasting
+     */
+    public function updates(Request $request)
+    {
+        try {
+            // Get cached or fresh KPI data
+            $updates = Cache::remember('dashboard_updates_' . auth()->id(), 30, function () {
+                return [
+                    'kpis' => $this->getRealtimeKpis(),
+                    'queue' => $this->getRealtimeQueue(),
+                    'charts' => $this->getRealtimeCharts(),
+                    'timestamp' => now()->toISOString()
+                ];
+            });
+
+            return $this->responseWithSuccess('Real-time dashboard updates', $updates, 200);
+        } catch (\Exception $exception) {
+            return $this->responseWithError('Failed to fetch real-time updates', [], 500);
+        }
+    }
+
+    /**
+     * Get real-time connection status
+     */
+    public function realtimeStatus(Request $request)
+    {
+        try {
+            $status = [
+                'websocket_enabled' => config('broadcasting.default') === 'pusher' || config('broadcasting.default') === 'redis',
+                'connection_status' => 'connected', // This would be checked in real implementation
+                'last_update' => now()->toISOString(),
+                'features' => [
+                    'kpi_updates' => true,
+                    'queue_updates' => true,
+                    'chart_updates' => true,
+                    'sse_fallback' => true
+                ]
+            ];
+
+            return $this->responseWithSuccess('Real-time status', $status, 200);
+        } catch (\Exception $exception) {
+            return $this->responseWithError('Failed to get status', [], 500);
+        }
+    }
+
+    /**
+     * Get real-time KPI data
+     */
+    private function getRealtimeKpis()
+    {
+        $merchantId = auth()->user()->merchant->id;
+
+        return [
+            'total_parcels' => Parcel::where('merchant_id', $merchantId)->count(),
+            'total_delivered' => Parcel::where('status', ParcelStatus::DELIVERED)->where('merchant_id', $merchantId)->count(),
+            'total_pending' => Parcel::where('status', ParcelStatus::PENDING)->where('merchant_id', $merchantId)->count(),
+            'total_returns' => Parcel::where('status', ParcelStatus::RETURN_RECEIVED_BY_MERCHANT)->where('merchant_id', $merchantId)->count(),
+            'total_revenue' => Parcel::where('merchant_id', $merchantId)->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])->sum('cash_collection'),
+            'total_balance' => Payment::where('merchant_id', $merchantId)->where('status', ApprovalStatus::PENDING)->sum('amount')
+        ];
+    }
+
+    /**
+     * Get real-time queue data
+     */
+    private function getRealtimeQueue()
+    {
+        $merchantId = auth()->user()->merchant->id;
+
+        return [
+            'pending_pickup' => Parcel::where('merchant_id', $merchantId)->where('status', ParcelStatus::PENDING)->count(),
+            'in_transit' => Parcel::where('merchant_id', $merchantId)->where('status', ParcelStatus::DELIVERY_MAN_ASSIGN)->count(),
+            'out_for_delivery' => Parcel::where('merchant_id', $merchantId)->where('status', ParcelStatus::DELIVERY_MAN_ASSIGN)->count(),
+            'delivered_today' => Parcel::where('merchant_id', $merchantId)->where('status', ParcelStatus::DELIVERED)->whereDate('updated_at', today())->count()
+        ];
+    }
+
+    /**
+     * Get real-time chart data
+     */
+    private function getRealtimeCharts()
+    {
+        $merchantId = auth()->user()->merchant->id;
+
+        // Last 7 days data
+        $dates = [];
+        $totals = [];
+        $delivered = [];
+        $pending = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $dates[] = $date;
+            $totals[] = Parcel::where('merchant_id', $merchantId)->whereDate('created_at', $date)->count();
+            $delivered[] = Parcel::where('merchant_id', $merchantId)->where('status', ParcelStatus::DELIVERED)->whereDate('updated_at', $date)->count();
+            $pending[] = Parcel::where('merchant_id', $merchantId)->where('status', ParcelStatus::PENDING)->whereDate('created_at', $date)->count();
+        }
+
+        return [
+            'dates' => $dates,
+            'totals' => $totals,
+            'delivered' => $delivered,
+            'pending' => $pending
+        ];
     }
 }

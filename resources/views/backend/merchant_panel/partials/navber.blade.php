@@ -26,14 +26,14 @@
                                      <div class="form-group col-12 pt-1">
                                          <div class="dropdown lang-dropdown  changeLocale ">
                                              <button class="btn  dropdown-toggle merchantpanelAddbutton" type="button"
-                                                 id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
+                                                 id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true"
                                                  aria-expanded="false" style=" color:#455560!important;">
                                                  <i class="fa fa-plus"></i>
                                              </button>
                                              <div class="dropdown-menu merchantpanelAddDropdown"
                                                  aria-labelledby="dropdownMenuButton">
-                                                 <button type="button" class="dropdown-item" data-toggle="modal"
-                                                     data-target="#pickup-request">{{ __('pickupRequest.pickup_request') }}</button>
+                                                 <button type="button" class="dropdown-item" data-bs-toggle="modal"
+                                                     data-bs-target="#pickup-request">{{ __('pickupRequest.pickup_request') }}</button>
                                                  <a class="dropdown-item "
                                                      href="{{ route('merchant-panel.parcel.index') }}">{{ __('menus.parcel') }}</a>
                                                  <a class="dropdown-item "
@@ -59,7 +59,7 @@
 
                                  <li class="nav-item dropdown nav-user navbar_menus">
                                      <a class="dropdown-item" href="#" id="navbarDropdownMenuLinkAccounts"
-                                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                          <div class="d-flex justify-content-between">
                                              <span><i class="fa fa-users"></i> {{ __('account.title') }}</span>
                                              <span><i class="fa fa-angle-down"></i></span>
@@ -98,7 +98,7 @@
 
                                  <li class="nav-item dropdown nav-user navbar_menus">
                                      <a class="dropdown-item" href="#" id="navbarDropdownMenuLinkReports"
-                                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                          <div class="d-flex justify-content-between">
                                              <span><i class="fas fa-print"></i> {{ __('reports.title') }}</span>
                                              <span><i class="fa fa-angle-down"></i></span>
@@ -127,7 +127,7 @@
 
                                  <li class="nav-item dropdown nav-user navbar_menus">
                                      <a class="dropdown-item" href="#" id="navbarDropdownMenuLinkSettings"
-                                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                          <div class="d-flex justify-content-between">
                                              <span><i class="fa fa-fw fa-cogs"></i> {{ __('menus.settings') }}</span>
                                              <span><i class="fa fa-angle-down"></i></span>
@@ -155,7 +155,7 @@
 
                                  <li class="nav-item dropdown merchant-panel notification d-lg-block ">
                                      <a class="nav-link nav-icons mt-md-3" href="#"
-                                         id="navbarDropdownMenuLink1" data-toggle="dropdown" aria-haspopup="true"
+                                         id="navbarDropdownMenuLink1" data-bs-toggle="dropdown" aria-haspopup="true"
                                          aria-expanded="false"><i class="fas fa-fw fa-bell"></i> <span
                                              class="indicator"></span></a>
                                      <ul class="dropdown-menu dropdown-menu-right notification-dropdown">
@@ -205,7 +205,7 @@
 
                  <li class="nav-item dropdown  merchant-panel notification  ">
                      <a class="nav-link nav-icons mt-md-3" href="#" id="navbarDropdownMenuLink1"
-                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
+                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i
                              class="fas fa-fw fa-bell"></i> <span class="indicator merchant-indicator "></span></a>
                      <ul class="dropdown-menu dropdown-menu-right notification-dropdown">
                          <li>
@@ -229,13 +229,13 @@
                  <li class="nav-item dropdown nav-user mobile mobilePlusBtn">
                      <button class="mtext-color btn nav-link dropdown-toggle merchantpanelAddbutton "
                          style="color:#455560!important;padding: 5px 10px!important;" type="button"
-                         id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                         id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                          <i class="fa fa-plus"></i>
                      </button>
                      <div class="dropdown-menu  dropdown-menu-right nav-user-dropdown"
                          aria-labelledby="dropdownMenuButton">
-                         <button type="button" class="dropdown-item" data-toggle="modal"
-                             data-target="#pickup-request">{{ __('pickupRequest.pickup_request') }}</button>
+                         <button type="button" class="dropdown-item" data-bs-toggle="modal"
+                             data-bs-target="#pickup-request">{{ __('pickupRequest.pickup_request') }}</button>
                          <a class="dropdown-item "
                              href="{{ route('merchant-panel.parcel.index') }}">{{ __('menus.parcel') }}</a>
                          <a class="dropdown-item "

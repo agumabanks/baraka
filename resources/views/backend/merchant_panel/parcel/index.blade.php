@@ -140,7 +140,7 @@
                                     </td>
                                     <td>
                                         <div class="row">
-                                            <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-sm ml-2 bnone">...</button>
+                                            <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-sm ml-2 bnone">...</button>
                                             <div class="dropdown-menu">
                                                 <a href="{{ route('merchant-panel.parcel.details',$parcel->id) }}" class="dropdown-item"><i class="fa fa-eye" aria-hidden="true"></i> {{__('levels.view')}}</a>
                                                 <a href="{{ route('merchant-panel.parcel.logs',$parcel->id) }}" class="dropdown-item"><i class="fas fa-history" aria-hidden="true"></i> {{__('levels.parcel_logs')}}</a>

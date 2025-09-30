@@ -3,7 +3,7 @@
         <div class="modal-content" id="data-modal">
             <div class="modal-header">
             <h5 class="modal-title" id="exampleModalLabel">{{ __('salary.salary_generate') }}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
             </div>
@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('menus.cancel') }}</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('menus.cancel') }}</button>
                     <button type="submit" class="btn btn-primary">{{ __('menus.submit') }}</button>
                 </div>
             </form>

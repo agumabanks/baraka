@@ -75,7 +75,7 @@
                 <div id="accordion">
                     <div class="card">
                         <div class="card-header" id="headingOne">
-                            <a href="#" class="text-primary" data-toggle="collapse" data-target="#collapseOne"
+                            <a href="#" class="text-primary" data-bs-toggle="collapse" data-bs-target="#collapseOne"
                                 aria-expanded="@if ($errors->has('message')) true @else false @endif"
                                 aria-controls="collapseOne"><i class="fa fa-reply m-2 "></i>{{ __('support.reply') }}</a>
                         </div>

@@ -85,5 +85,8 @@ return [
     // ERP: Client Management & Booking
     'total_customers' => 'Total Customers',
     'book_shipment' => 'Book Shipment',
+    'bulk_upload' => 'Bulk Upload',
+    'view_all_parcels' => 'View All Parcels',
+    'trends' => 'Trends',
 
 ];

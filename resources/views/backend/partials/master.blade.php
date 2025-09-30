@@ -8,6 +8,12 @@
     @include('backend.partials.sidebar')
 @endif
     <main class="dashboard-ecommerce">
+         {{-- Breadcrumb Navigation --}}
+         @hasSection('breadcrumb')
+           @yield('breadcrumb')
+         @else
+           @include('components.breadcrumb', ['breadcrumbs' => $breadcrumbs ?? []])
+         @endif
       <div class="main-content">
         @yield('maincontent')
 @include('backend.partials.dynamic-modal')

@@ -3,7 +3,7 @@
         <div class="modal-content" id="data-modal">
             <div class="modal-header">
             <h5 class="modal-title" id="exampleModalLabel">{{ __('parcel.received_by_pickup') }}</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
             </div>
@@ -19,7 +19,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ __('levels.cancel') }}</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('levels.cancel') }}</button>
                 <button type="submit" class="btn btn-primary">{{ __('levels.save') }}</button>
                 </div>
             </form>

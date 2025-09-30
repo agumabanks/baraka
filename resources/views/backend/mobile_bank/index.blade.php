@@ -81,7 +81,7 @@
                                             <td>{{ $mobile_bank->name }}</td>
                                             <td>
                                                 <div class="row">
-                                                    <button tabindex="-1" data-toggle="dropdown" type="button"
+                                                    <button tabindex="-1" data-bs-toggle="dropdown" type="button"
                                                         class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span
                                                             class="sr-only">Toggle Dropdown</span></button>
                                                     <div class="dropdown-menu">

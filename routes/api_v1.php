@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\QuotesController;
 use App\Http\Controllers\Api\V1\ShipmentEventController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TrackingController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -91,6 +92,9 @@ Route::middleware(['auth:admin'])->group(function () {
         // Routes with idempotency for write operations
         Route::middleware('idempotency')->group(function () {
             Route::post('dispatch/assign', [DispatchController::class, 'assign']);
+        Route::get('dashboard/kpis', [DashboardController::class, 'kpis']);
+        Route::get('dashboard/statements', [DashboardController::class, 'statements']);
+        Route::get('dashboard/charts/income-expense', [DashboardController::class, 'incomeExpenseChart']);
             Route::post('dispatch/optimize', [DispatchController::class, 'optimize']);
         });
     });
