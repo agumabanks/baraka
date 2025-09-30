@@ -15,7 +15,7 @@ class TransportLegSeeder extends Seeder
                 'shipment_id' => $s->id,
                 'mode' => 'AIR',
                 'carrier' => 'KQ',
-                'awb' => '123-'.str_pad((string)rand(10000000,99999999), 8, '0', STR_PAD_LEFT),
+                'awb' => '123-'.str_pad((string) rand(10000000, 99999999), 8, '0', STR_PAD_LEFT),
                 'status' => 'PLANNED',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -23,4 +23,3 @@ class TransportLegSeeder extends Seeder
         }
     }
 }
-

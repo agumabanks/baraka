@@ -24,20 +24,20 @@ class UpdateRequest extends FormRequest
      */
     public function rules()
     {
-        if(Request::input('isprocess')){
+        if (Request::input('isprocess')) {
             return [
-                'merchant'        =>['required'],
-                'amount'          =>['required','numeric'],
-                'merchant_account' =>['required'],
-                'transaction_id'  =>['required'],
-                'from_account'    =>['required']
+                'merchant' => ['required'],
+                'amount' => ['required', 'numeric'],
+                'merchant_account' => ['required'],
+                'transaction_id' => ['required'],
+                'from_account' => ['required'],
             ];
-        }else{
+        } else {
 
             return [
-                'merchant'       =>['required'],
-                'amount'         =>['required','numeric'],
-                'merchant_account'=>['required']
+                'merchant' => ['required'],
+                'amount' => ['required', 'numeric'],
+                'merchant_account' => ['required'],
             ];
         }
     }

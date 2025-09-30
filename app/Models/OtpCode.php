@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class OtpCode extends Model
 {
@@ -22,4 +22,3 @@ class OtpCode extends Model
         'meta' => 'array',
     ];
 }
-

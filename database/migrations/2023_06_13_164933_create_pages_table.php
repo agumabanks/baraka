@@ -24,7 +24,7 @@ return new class extends Migration
 
             $table->index('page');
             $table->index('status');
- 
+
         });
     }
 

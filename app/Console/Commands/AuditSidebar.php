@@ -3,13 +3,13 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 
 class AuditSidebar extends Command
 {
     protected $signature = 'audit:sidebar';
+
     protected $description = 'Audit admin_nav config for missing routes and policy mappings';
 
     public function handle(): int
@@ -27,13 +27,13 @@ class AuditSidebar extends Command
             $route = $row['route'] ?? null;
             $model = $row['model'] ?? null;
             $problems = [];
-            if ($route && !Route::has($route)) {
+            if ($route && ! Route::has($route)) {
                 $problems[] = "missing-route:$route";
             }
             if ($model && Gate::getPolicyFor($model) === null) {
-                $problems[] = "missing-policy:".$model;
+                $problems[] = 'missing-policy:'.$model;
             }
-            if (!empty($problems)) {
+            if (! empty($problems)) {
                 $lines[] = '['.$row['bucket'].'] '.$row['label'].' => '.implode(', ', $problems);
             }
         }
@@ -44,6 +44,7 @@ class AuditSidebar extends Command
         }
         file_put_contents($path, implode(PHP_EOL, $lines).PHP_EOL);
         $this->info('Sidebar audit written to '.$path);
+
         return self::SUCCESS;
     }
 
@@ -61,4 +62,3 @@ class AuditSidebar extends Command
         }
     }
 }
-

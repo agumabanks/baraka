@@ -9,10 +9,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Contract extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'customer_id','name','start_date','end_date','rate_card_id','sla_json','status','notes'
+        'customer_id', 'name', 'start_date', 'end_date', 'rate_card_id', 'sla_json', 'status', 'notes',
     ];
 
     protected $casts = [
@@ -21,6 +21,8 @@ class Contract extends Model
         'end_date' => 'date',
     ];
 
-    public function customer() { return $this->belongsTo(Customer::class); }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }
-

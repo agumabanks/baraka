@@ -26,34 +26,31 @@ class UpdateExpenseRequest extends FormRequest
     {
         // $merchant     = ['required'];
         $delivery_man = ['required'];
-        $title        = ['required'];
-        
-        if (Request::input('account_head') == "4") {
+        $title = ['required'];
+
+        if (Request::input('account_head') == '4') {
             // $merchant     = ['required'];
             $delivery_man = ['nullable'];
-            $title        = ['nullable'];
-        }
-        else if (Request::input('account_head') == "5"){
+            $title = ['nullable'];
+        } elseif (Request::input('account_head') == '5') {
             // $merchant     = ['nullable'];
             $delivery_man = ['required'];
-            $title        = ['nullable'];
-        }
-        else if (Request::input('account_head') == "6"){
+            $title = ['nullable'];
+        } elseif (Request::input('account_head') == '6') {
             // $merchant     = ['nullable'];
             $delivery_man = ['nullable'];
-            $title        = ['required'];
-        };
-
+            $title = ['required'];
+        }
 
         return [
-            'account_head'      => ['required'],
+            'account_head' => ['required'],
             // 'merchant_id'       => $merchant ,
-            'delivery_man_id'   => $delivery_man,
-            'title'             => $title,
-            'account_id'        => ['required'],
-            'amount'            => ['required','numeric'],
-            'date'              => ['required'],
-            'receipt'           => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
+            'delivery_man_id' => $delivery_man,
+            'title' => $title,
+            'account_id' => ['required'],
+            'amount' => ['required', 'numeric'],
+            'date' => ['required'],
+            'receipt' => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
         ];
     }
 }

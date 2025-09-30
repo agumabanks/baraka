@@ -26,32 +26,30 @@ class StoreExpenseRequest extends FormRequest
     {
         // $merchant     = ['required'];
         $delivery_man = ['required'];
-        $title        = ['required'];
-        $user         = '';
+        $title = ['required'];
+        $user = '';
 
-        if (Request::input('account_head') == "4") {
+        if (Request::input('account_head') == '4') {
             $delivery_man = ['nullable'];
-            $title        = ['nullable'];
-        }
-        else if (Request::input('account_head') == "5"){
+            $title = ['nullable'];
+        } elseif (Request::input('account_head') == '5') {
             $delivery_man = ['required'];
-            $title        = ['nullable'];
-        }
-        else if (Request::input('account_head') == "6"){
+            $title = ['nullable'];
+        } elseif (Request::input('account_head') == '6') {
             $delivery_man = ['nullable'];
-            $title        = ['required'];
-            $user         = ['required'];
-        };
+            $title = ['required'];
+            $user = ['required'];
+        }
 
         return [
-            'account_head'      => ['required'],
-            'delivery_man_id'   => $delivery_man,
-            'title'             => $title,
-            'user_id'           => $user,
-            'account_id'        => ['required'],
-            'amount'            => ['required','numeric'],
-            'date'              => ['required'],
-            'receipt'           => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
+            'account_head' => ['required'],
+            'delivery_man_id' => $delivery_man,
+            'title' => $title,
+            'user_id' => $user,
+            'account_id' => ['required'],
+            'amount' => ['required', 'numeric'],
+            'date' => ['required'],
+            'receipt' => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
         ];
     }
 }

@@ -75,7 +75,7 @@
                         <div class="card">
                             <div class="card-header p-2" id="headingOne">
                                 <h5 class="mb-0">
-                                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne"
+                                    <button class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#collapseOne"
                                         aria-expanded="@if ($errors->has('message')) true @else false @endif"
                                         aria-controls="collapseOne">
                                         <i class="fa fa-reply m-2 "></i>{{ __('support.reply') }}

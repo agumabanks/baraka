@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('attached_file')->nullable();
             $table->longText('message')->nullable();
             $table->timestamps();
- 
+
             $table->index('support_id');
             $table->index('user_id');
 

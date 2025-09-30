@@ -24,11 +24,11 @@ class UpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'user_id'   => ['required'],
-            'account_id'=> ['required'],
-            'month'     => ['required'],
-            'date'      => ['required'],
-            'amount'    => ['required','numeric'],
+            'user_id' => ['required'],
+            'account_id' => ['required'],
+            'month' => ['required'],
+            'date' => ['required'],
+            'amount' => ['required', 'numeric'],
 
         ];
     }

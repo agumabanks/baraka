@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\User;
 
 class ZoneLaneFeatureTest extends TestCase
 {
@@ -18,15 +18,15 @@ class ZoneLaneFeatureTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('admin.zones.store'), [
-                'code' => 'EU', 'name' => 'European Union', 'countries' => ['DE','FR']
+                'code' => 'EU', 'name' => 'European Union', 'countries' => ['DE', 'FR'],
             ])->assertStatus(302);
 
         $this->actingAs($user)
             ->post(route('admin.zones.store'), [
-                'code' => 'UG', 'name' => 'Uganda', 'countries' => ['UG']
+                'code' => 'UG', 'name' => 'Uganda', 'countries' => ['UG'],
             ])->assertStatus(302);
 
-        $zones = \DB::table('zones')->pluck('id','code');
+        $zones = \DB::table('zones')->pluck('id', 'code');
 
         $this->actingAs($user)
             ->post(route('admin.lanes.store'), [
@@ -41,4 +41,3 @@ class ZoneLaneFeatureTest extends TestCase
         $this->assertDatabaseHas('lanes', ['std_transit_days' => 4, 'dim_divisor' => 6000]);
     }
 }
-

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\DeliveryType;
 
 use Illuminate\Foundation\Http\FormRequest;
+
 class StoreRequest extends FormRequest
 {
     /**
@@ -23,8 +24,8 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'title'    => ['required'], 
-            'position' => ['required']
+            'title' => ['required'],
+            'position' => ['required'],
         ];
     }
 }

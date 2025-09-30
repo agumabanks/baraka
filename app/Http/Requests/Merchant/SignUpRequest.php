@@ -2,15 +2,16 @@
 
 namespace App\Http\Requests\Merchant;
 
+use App\Traits\ApiReturnFormatTrait;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Contracts\Validation\Validator;
-use App\Traits\ApiReturnFormatTrait;
 use Illuminate\Support\Facades\Request;
 
 class SignUpRequest extends FormRequest
 {
     use ApiReturnFormatTrait;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -29,13 +30,13 @@ class SignUpRequest extends FormRequest
     public function rules()
     {
         return [
-            'business_name'     => ['required','string','unique:merchants'],
-            'full_name'         => ['required','string','max:191'],
+            'business_name' => ['required', 'string', 'unique:merchants'],
+            'full_name' => ['required', 'string', 'max:191'],
             // 'first_name'        => ['required','string','max:191'],
             // 'last_name'         => ['nullable','string','max:191'],
-            'address'           => ['required','string','max:191'],
-            'mobile'            => ['required','numeric','digits_between:11,14','unique:users'],
-            'password'          => ['required','min:6']
+            'address' => ['required', 'string', 'max:191'],
+            'mobile' => ['required', 'numeric', 'digits_between:11,14', 'unique:users'],
+            'password' => ['required', 'min:6'],
         ];
     }
 

@@ -9,94 +9,97 @@ use App\Models\Backend\Merchant;
 use App\Models\Backend\MerchantOnlinePaymentReceived;
 use App\Models\User;
 use App\Repositories\Account\AccountInterface;
-use App\Repositories\Merchant\MerchantInterface;
-use App\Repositories\MerchantPayment\PaymentInterface;
-use Brian2694\Toastr\Facades\Toastr;
-use Database\Seeders\SettingSeeder;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Razorpay\Api\Api;
-use Stripe\PaymentIntent;
-use Obydul\LaraSkrill\SkrillClient;
-use Obydul\LaraSkrill\SkrillRequest;
-use Redirect;
-use App\Models\Backend\MerchantOnlinePayment;
 use Cartalyst\Stripe\Laravel\Facades\Stripe;
-use Illuminate\Support\Facades\Redirect as FacadesRedirect;
-use Unicodeveloper\Paystack\Paystack;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PayoutController extends Controller
 {
-    protected $MOPRModel,$merchantAccountRepo, $accountRepo;
-    public function __construct(MerchantOnlinePaymentReceived $MOPRModel,AccountInterface $accountRepo){
-        $this->MOPRModel           = $MOPRModel;
-        $this->accountRepo         = $accountRepo;
+    protected $MOPRModel;
+
+    protected $merchantAccountRepo;
+
+    protected $accountRepo;
+
+    public function __construct(MerchantOnlinePaymentReceived $MOPRModel, AccountInterface $accountRepo)
+    {
+        $this->MOPRModel = $MOPRModel;
+        $this->accountRepo = $accountRepo;
 
     }
 
-    //start stripe payment gateway
-    public function index(){
-        $oPayments        = $this->MOPRModel->orderByDesc('id')->paginate(10);
+    // start stripe payment gateway
+    public function index()
+    {
+        $oPayments = $this->MOPRModel->orderByDesc('id')->paginate(10);
 
-        return view('backend.payout.payment_list',compact('oPayments'));
+        return view('backend.payout.payment_list', compact('oPayments'));
     }
 
-    public function merchantPayout(Request $request){
+    public function merchantPayout(Request $request)
+    {
         $merchant_id = $request->get('merchant_id');
-        $oPayments   = $this->MOPRModel->where('merchant_id',$merchant_id)->orderByDesc('id')->paginate(10);
-      return view('backend.payout.payment_list',compact('merchant_id','oPayments'));
-    }
-    public function stripe(Request $request){
-        $accounts = $this->accountRepo->getAll();
-        $merchant_id      = $request->get('merchant_id');
-        return view('backend.payout.stripe',compact('accounts','merchant_id'));
+        $oPayments = $this->MOPRModel->where('merchant_id', $merchant_id)->orderByDesc('id')->paginate(10);
+
+        return view('backend.payout.payment_list', compact('merchant_id', 'oPayments'));
     }
 
-    public function stripePost(Request $request){
+    public function stripe(Request $request)
+    {
+        $accounts = $this->accountRepo->getAll();
+        $merchant_id = $request->get('merchant_id');
+
+        return view('backend.payout.stripe', compact('accounts', 'merchant_id'));
+    }
+
+    public function stripePost(Request $request)
+    {
 
         \Config([
-            'services.stripe.secret'        => MerchantSearchSettings($request->merchantId,'stripe_secret_key'),
+            'services.stripe.secret' => MerchantSearchSettings($request->merchantId, 'stripe_secret_key'),
         ]);
 
         $stripe = Stripe::charges()->create([
             'source' => $request->get('tokenId'),
             'currency' => 'BDT',
-            'amount' => $request->get('amount')
+            'amount' => $request->get('amount'),
         ]);
 
         $paymnet = DB::table('merchant_online_payment_receiveds')
-        ->updateOrInsert([
-            'payment_type'   => PaymentType::STRIPE,
-            'amount'         => $request->get('amount'),
-            'note'           => 'Payment',
-            'transaction_id' => $request->get('tokenId'),
-            'account_id'    => $request->accountId,
-            'merchant_id'    => $request->merchantId,
-            'created_at'     => Date('Y-m-d H:i:s'),
-            'updated_at'     => Date('Y-m-d H:i:s'),
-        ]);
+            ->updateOrInsert([
+                'payment_type' => PaymentType::STRIPE,
+                'amount' => $request->get('amount'),
+                'note' => 'Payment',
+                'transaction_id' => $request->get('tokenId'),
+                'account_id' => $request->accountId,
+                'merchant_id' => $request->merchantId,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
 
-        $merchant                   = Merchant::find($request->merchantId);
-        $merchant->current_balance  =($merchant->current_balance - $request->get('amount'));
+        $merchant = Merchant::find($request->merchantId);
+        $merchant->current_balance = ($merchant->current_balance - $request->get('amount'));
         $merchant->save();
         $account = Account::find($request->accountId);
-        $account->balance   = ($account->balance - $request->get('amount'));
+        $account->balance = ($account->balance - $request->get('amount'));
         $account->save();
 
-        return response()->json(['success'=>true],200);
+        return response()->json(['success' => true], 200);
 
     }
 
-    public function razorpay(Request $request){
+    public function razorpay(Request $request)
+    {
         $accounts = $this->accountRepo->getAll();
-        $merchant_id      = $request->get('merchant_id');
+        $merchant_id = $request->get('merchant_id');
         $merchant = User::find($merchant_id);
         $amount = null;
-        return view('backend.payout.razorpay',compact('accounts','merchant_id','amount','merchant'));
+
+        return view('backend.payout.razorpay', compact('accounts', 'merchant_id', 'amount', 'merchant'));
     }
 
-    public function razorpayPost(Request $request){
+    public function razorpayPost(Request $request)
+    {
 
         try {
             $paymnet = DB::table('merchant_online_payment_receiveds')
@@ -107,8 +110,8 @@ class PayoutController extends Controller
                     'transaction_id' => $request->get('payment_id'),
                     'account_id' => $request->get('account_id'),
                     'merchant_id' => $request->get('merchantId'),
-                    'created_at' => Date('Y-m-d H:i:s'),
-                    'updated_at' => Date('Y-m-d H:i:s'),
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
                 ]);
 
             $merchant = Merchant::find($request->merchantId);
@@ -125,40 +128,42 @@ class PayoutController extends Controller
         }
     }
 
-    //Start Paypal Payment Gateway ==================
-        public function paypalIndex(Request $request){
-            $merchant_id = $request->get('merchant_id');
-            $accounts = $this->accountRepo->getAll();
-            return view('backend.payout.paypal',compact('merchant_id','accounts'));
-        }
-        public function paypalpayment(Request $request)
-        {
-            try {
+    // Start Paypal Payment Gateway ==================
+    public function paypalIndex(Request $request)
+    {
+        $merchant_id = $request->get('merchant_id');
+        $accounts = $this->accountRepo->getAll();
 
-                $payment = DB::table('merchant_online_payment_receiveds')
+        return view('backend.payout.paypal', compact('merchant_id', 'accounts'));
+    }
+
+    public function paypalpayment(Request $request)
+    {
+        try {
+
+            $payment = DB::table('merchant_online_payment_receiveds')
                 ->updateOrInsert([
-                    'payment_type'   => PaymentType::PAYPAL,
-                    'amount'         => $request->get('amount'),
-                    'note'           => 'Payment',
+                    'payment_type' => PaymentType::PAYPAL,
+                    'amount' => $request->get('amount'),
+                    'note' => 'Payment',
                     'transaction_id' => $request->get('orderID'),
-                    'account_id'     => $request->accountId,
-                    'merchant_id'    => $request->merchantId,
-                    'created_at'     => Date('Y-m-d H:i:s'),
-                    'updated_at'     => Date('Y-m-d H:i:s'),
+                    'account_id' => $request->accountId,
+                    'merchant_id' => $request->merchantId,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
                 ]);
 
-                $merchant                   = Merchant::find($request->merchantId);
-                $merchant->current_balance  =($merchant->current_balance - $request->get('amount'));
-                $merchant->save();
+            $merchant = Merchant::find($request->merchantId);
+            $merchant->current_balance = ($merchant->current_balance - $request->get('amount'));
+            $merchant->save();
 
-                $account = Account::find($request->accountId);
-                $account->balance   = ($account->balance - $request->get('amount'));
-                $account->save();
+            $account = Account::find($request->accountId);
+            $account->balance = ($account->balance - $request->get('amount'));
+            $account->save();
 
-                return response()->json(['success' => true, 'data'=>[] ],200);
-            } catch (\Throwable $th) {
-                return response()->json(['success' => false, 'data'=>[] ],500);
-            }
+            return response()->json(['success' => true, 'data' => []], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'data' => []], 500);
         }
-
+    }
 }

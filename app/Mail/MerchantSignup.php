@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -17,7 +16,8 @@ class MerchantSignup extends Mailable
      * @return void
      */
     protected $data;
-    public function __construct($data=null)
+
+    public function __construct($data = null)
     {
         $this->data = $data;
     }
@@ -31,6 +31,7 @@ class MerchantSignup extends Mailable
     {
         $data = $this->data;
         $courier_email = settings()->email;
-        return $this->subject('Welcome to new merchant')->view('backend.merchant.mail.signup',compact('data'));
+
+        return $this->subject('Welcome to new merchant')->view('backend.merchant.mail.signup', compact('data'));
     }
 }

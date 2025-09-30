@@ -6,5 +6,4 @@ return [
     StatementType::INCOME => 'Income',
     StatementType::EXPENSE => 'Expense',
 
-
 ];

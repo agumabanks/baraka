@@ -10,7 +10,7 @@ class Permission extends Model
     use HasFactory;
 
     protected $casts =
-    [
-        'keywords'=>'array'
-    ];
+        [
+            'keywords' => 'array',
+        ];
 }

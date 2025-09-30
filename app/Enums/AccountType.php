@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Enums;
-Interface AccountType
+
+interface AccountType
 {
+    const ADMIN = 1;
 
-        const ADMIN    = 1;
-        const USER     = 2;
-
+    const USER = 2;
 }

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 class ModulesAudit extends Command
 {
     protected $signature = 'modules:audit';
+
     protected $description = 'Audit new admin modules from sidebar and create AUDIT.md';
 
     public function handle(): int
@@ -21,7 +22,7 @@ class ModulesAudit extends Command
             'admin.returns.', 'admin.claims.',
             'admin.surcharges.', 'admin.cash-office.', 'admin.fx.',
             'admin.zones.', 'admin.lanes.', 'admin.carriers.', 'admin.carrier-services.',
-            'admin.dispatch.', 'admin.whatsapp-templates.', 'admin.edi.', 'admin.observability.', 'admin.exception-tower.', 'admin.gl-export.'
+            'admin.dispatch.', 'admin.whatsapp-templates.', 'admin.edi.', 'admin.observability.', 'admin.exception-tower.', 'admin.gl-export.',
         ];
 
         // get all routes
@@ -38,7 +39,9 @@ class ModulesAudit extends Command
         foreach ($targets as $prefix) {
             $found = $routes->firstWhere('name', $prefix.'index');
             $controller = $found['action'] ?? '';
-            if ($controller && str_contains($controller, '@')) [$controller] = explode('@',$controller,2);
+            if ($controller && str_contains($controller, '@')) {
+                [$controller] = explode('@', $controller, 2);
+            }
             $controllerFile = $this->classToFile($controller);
             $controllerOk = $controller && File::exists($controllerFile);
 
@@ -48,7 +51,7 @@ class ModulesAudit extends Command
                 $model = 'App\\Models\\'.$m[1];
             }
             $modelOk = $model && File::exists($this->classToFile($model));
-            $policyOk = $model && isset($policies[ltrim($model,'\\\\')]);
+            $policyOk = $model && isset($policies[ltrim($model, '\\\\')]);
 
             $viewsOk = false;
             if ($model) {
@@ -65,7 +68,7 @@ class ModulesAudit extends Command
                 $policyOk ? '✅' : '⬜',
                 $viewsOk ? '✅' : '⬜',
                 $migOk ? '✅' : '⬜',
-                $found ? '' : 'Missing route(s)'
+                $found ? '' : 'Missing route(s)',
             ]).'|';
         }
 
@@ -73,11 +76,14 @@ class ModulesAudit extends Command
         File::put(base_path('AUDIT.md'), $md);
         $this->line($md);
         $this->info('Wrote AUDIT.md');
+
         return self::SUCCESS;
     }
 
     protected function classToFile(string $class): string
-    { return base_path(str_replace('\\', '/', ltrim($class,'\\\\')).'.php'); }
+    {
+        return base_path(str_replace('\\', '/', ltrim($class, '\\\\')).'.php');
+    }
 
     protected function getPolicies(): array
     {
@@ -86,28 +92,41 @@ class ModulesAudit extends Command
         $map = [];
         if ($content && preg_match('/protected \$policies\s*=\s*\[(.*?)\];/s', $content, $m)) {
             preg_match_all('/(\\\\?[A-Za-z0-9_\\\\\\\\]+)::class\s*=>\s*(\\\\?[A-Za-z0-9_\\\\\\\\]+)::class/', $m[1], $pairs, PREG_SET_ORDER);
-            foreach ($pairs as $p) $map[ltrim($p[1],'\\')] = ltrim($p[2],'\\');
+            foreach ($pairs as $p) {
+                $map[ltrim($p[1], '\\')] = ltrim($p[2], '\\');
+            }
         }
+
         return $map;
     }
 
     protected function searchViews(string $name): bool
     {
         $dir = resource_path('views/backend/admin');
-        if (!File::exists($dir)) return false;
-        foreach (File::directories($dir) as $d) {
-            if (str_contains(basename($d), $name)) return true;
+        if (! File::exists($dir)) {
+            return false;
         }
+        foreach (File::directories($dir) as $d) {
+            if (str_contains(basename($d), $name)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     protected function searchMigrations(?string $modelClass): bool
     {
-        if (!$modelClass) return false;
+        if (! $modelClass) {
+            return false;
+        }
         $name = strtolower(class_basename($modelClass));
         foreach (File::files(database_path('migrations')) as $f) {
-            if (str_contains($f->getFilename(), $name) || str_contains($f->getFilename(), $name.'s')) return true;
+            if (str_contains($f->getFilename(), $name) || str_contains($f->getFilename(), $name.'s')) {
+                return true;
+            }
         }
+
         return false;
     }
 }

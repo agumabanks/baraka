@@ -16,32 +16,33 @@ use Illuminate\Support\Facades\Auth;
 
 class BkashController extends Controller
 {
-
     use PaymentTrait;
 
-    public function __construct(AccountInterface $accountRepo){
+    public function __construct(AccountInterface $accountRepo)
+    {
         $this->accountRepo = $accountRepo;
     }
-    public function index(){
-        $accounts         = $this->accountRepo->getAll();
-        return view('backend.merchant_panel.onlinepayment.bkash',compact('accounts'));
+
+    public function index()
+    {
+        $accounts = $this->accountRepo->getAll();
+
+        return view('backend.merchant_panel.onlinepayment.bkash', compact('accounts'));
     }
 
     public function bkashRedirect(Request $request)
     {
 
         try {
-            if (globalSettings('bkash_test_mode') == Status::ACTIVE)
-            {
+            if (globalSettings('bkash_test_mode') == Status::ACTIVE) {
                 $base_url = 'https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized';
-            }
-            else{
+            } else {
                 $base_url = 'https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized';
             }
 
             $trx_id = uniqid();
             $amount = $request->amount;
-            $client = new \GuzzleHttp\Client();
+            $client = new \GuzzleHttp\Client;
 
             $bkash_token = $this->bKashTokenGenerator($client);
 
@@ -56,9 +57,8 @@ class BkashController extends Controller
                     'payerReference' => settings()->name,
                     'InvoiceNumber' => date('YmdHis'),
                     'callbackURL' => url("bkash/execute?trx_id=$trx_id"),
-                    'account_id'  => $request->account_id
+                    'account_id' => $request->account_id,
                 ];
-
 
                 $requestbodyJson = json_encode($requestbody);
                 $response = $client->request('POST', "$base_url/checkout/create", [
@@ -72,13 +72,16 @@ class BkashController extends Controller
                 ]);
 
                 $obj = json_decode($response->getBody()->getContents());
+
                 return redirect($obj->bkashURL);
 
             }
             Toastr::error(__('parcel.error_msg'), __('message.error'));
+
             return redirect()->back();
         } catch (\Exception $e) {
             Toastr::error(__('parcel.error_msg'), __('message.error'));
+
             return redirect()->back();
         }
     }
@@ -86,39 +89,41 @@ class BkashController extends Controller
     public function bkashExecute(Request $request)
     {
         try {
-            $data      = $request->all();
-            $trx_id    = $request->trx_id;
-            $auth      = session()->get('id_token');
-            $amount    = $request->amount;
+            $data = $request->all();
+            $trx_id = $request->trx_id;
+            $auth = session()->get('id_token');
+            $amount = $request->amount;
             $db_amount = $amount;
-            if (!$trx_id || $request->status != 'success' || !$auth) {
+            if (! $trx_id || $request->status != 'success' || ! $auth) {
                 Toastr::error(__('parcel.error_msg'), __('message.error'));
+
                 return redirect()->route('online.payment.index');
             }
-            $payment  = new MerchantOnlinePayment();
-            $payment->payment_type    = PaymentType::BKASH;
-            $payment->amount          = $amount;
-            $payment->note            = 'Payment';
-            $payment->transaction_id  = $trx_id;
-            $payment->merchant_id     = Auth::user()->merchant->id;
-            $payment->account_id      = $request->account_id;
+            $payment = new MerchantOnlinePayment;
+            $payment->payment_type = PaymentType::BKASH;
+            $payment->amount = $amount;
+            $payment->note = 'Payment';
+            $payment->transaction_id = $trx_id;
+            $payment->merchant_id = Auth::user()->merchant->id;
+            $payment->account_id = $request->account_id;
             $payment->save();
 
-            $merchant                   = Merchant::find(Auth::user()->merchant->id);
-            $merchant->current_balance  =($merchant->current_balance - $request->amount);
+            $merchant = Merchant::find(Auth::user()->merchant->id);
+            $merchant->current_balance = ($merchant->current_balance - $request->amount);
             $merchant->save();
 
-            $account                   = Account::find($request->account_id);
-            $account->balance          = ($account->balance + $request->get('amount'));
+            $account = Account::find($request->account_id);
+            $account->balance = ($account->balance + $request->get('amount'));
             $account->save();
             Toastr::success('Payment successfully completed.', __('message.success'));
+
             return redirect()->route('online.payment.index');
 
         } catch (\Exception $e) {
             Toastr::error(__('parcel.error_msg'), __('message.error'));
+
             return redirect()->route('online.payment.index');
 
         }
     }
-
 }

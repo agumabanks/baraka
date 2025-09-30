@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 class ReadinessAudit extends Command
 {
     protected $signature = 'readiness:audit';
+
     protected $description = 'Audit repository against DHL-style ERP checklist and emit readiness.json';
 
     public function handle(): int
@@ -23,13 +24,13 @@ class ReadinessAudit extends Command
 
         foreach ($checks as $key => $artifacts) {
             $score = [
-                'model'      => $this->hasModel($artifacts['model'] ?? null),
-                'migration'  => $this->hasMigration($artifacts['migration'] ?? null),
+                'model' => $this->hasModel($artifacts['model'] ?? null),
+                'migration' => $this->hasMigration($artifacts['migration'] ?? null),
                 'controller' => $this->hasController($artifacts['controller'] ?? null),
-                'route'      => $this->hasRoute($routeJson, $artifacts['route'] ?? null),
-                'policy'     => $this->hasPolicy($policies, $artifacts['model'] ?? null),
-                'view'       => $this->hasView($artifacts['view'] ?? null),
-                'test'       => $this->hasTest($artifacts['test'] ?? null),
+                'route' => $this->hasRoute($routeJson, $artifacts['route'] ?? null),
+                'policy' => $this->hasPolicy($policies, $artifacts['model'] ?? null),
+                'view' => $this->hasView($artifacts['view'] ?? null),
+                'test' => $this->hasTest($artifacts['test'] ?? null),
             ];
 
             // Determine status
@@ -52,6 +53,7 @@ class ReadinessAudit extends Command
         $this->line($this->renderMarkdown($results));
 
         $this->info("Wrote: {$path}");
+
         return self::SUCCESS;
     }
 
@@ -64,6 +66,7 @@ class ReadinessAudit extends Command
         } catch (\Throwable $e) {
             $routes = [];
         }
+
         return $routes;
     }
 
@@ -83,74 +86,116 @@ class ReadinessAudit extends Command
                 }
             }
         }
+
         return $map;
     }
 
     protected function hasModel(?string $class): bool
     {
-        if (!$class) return false;
-        $path = base_path('app/Models/' . basename(str_replace('App\\Models\\', '', $class)) . '.php');
+        if (! $class) {
+            return false;
+        }
+        $path = base_path('app/Models/'.basename(str_replace('App\\Models\\', '', $class)).'.php');
+
         return File::exists($path);
     }
 
     protected function hasMigration($needle): bool
     {
-        if (!$needle) return false;
+        if (! $needle) {
+            return false;
+        }
         $files = File::files(database_path('migrations'));
         foreach ($files as $f) {
-            if (stripos($f->getFilename(), (string)$needle) !== false) return true;
+            if (stripos($f->getFilename(), (string) $needle) !== false) {
+                return true;
+            }
         }
+
         return false;
     }
 
     protected function hasController(?string $class): bool
     {
-        if (!$class) return false;
+        if (! $class) {
+            return false;
+        }
         $classOnly = basename(str_replace('App\\Http\\Controllers\\', '', $class));
         $paths = [
-            base_path('app/Http/Controllers/' . $classOnly . '.php'),
-            base_path('app/Http/Controllers/Admin/' . $classOnly . '.php'),
-            base_path('app/Http/Controllers/Api/' . $classOnly . '.php'),
+            base_path('app/Http/Controllers/'.$classOnly.'.php'),
+            base_path('app/Http/Controllers/Admin/'.$classOnly.'.php'),
+            base_path('app/Http/Controllers/Api/'.$classOnly.'.php'),
         ];
-        foreach ($paths as $p) if (File::exists($p)) return true;
+        foreach ($paths as $p) {
+            if (File::exists($p)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     protected function hasView($needle): bool
     {
-        if (!$needle) return false;
+        if (! $needle) {
+            return false;
+        }
         $dir = resource_path('views');
         $files = collect(File::allFiles($dir))->map->getPathname();
-        foreach ($files as $f) if (stripos($f, (string)$needle) !== false) return true;
+        foreach ($files as $f) {
+            if (stripos($f, (string) $needle) !== false) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     protected function hasRoute(array $routes, ?string $needle): bool
     {
-        if (!$needle) return false;
-        foreach ($routes as $r) {
-            if (isset($r['uri']) && stripos($r['uri'], $needle) !== false) return true;
-            if (isset($r['name']) && stripos($r['name'] ?? '', $needle) !== false) return true;
+        if (! $needle) {
+            return false;
         }
+        foreach ($routes as $r) {
+            if (isset($r['uri']) && stripos($r['uri'], $needle) !== false) {
+                return true;
+            }
+            if (isset($r['name']) && stripos($r['name'] ?? '', $needle) !== false) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     protected function hasPolicy(array $policies, ?string $modelClass): bool
     {
-        if (!$modelClass) return false;
+        if (! $modelClass) {
+            return false;
+        }
         $key = ltrim($modelClass, '\\');
+
         return isset($policies[$key]);
     }
 
     protected function hasTest($needle): bool
     {
-        if (!$needle) return false;
-        $dir = base_path('tests');
-        if (!File::exists($dir)) return false;
-        foreach (File::allFiles($dir) as $f) {
-            if (stripos($f->getFilename(), (string)$needle) !== false) return true;
-            if (stripos($f->getPathname(), (string)$needle) !== false) return true;
+        if (! $needle) {
+            return false;
         }
+        $dir = base_path('tests');
+        if (! File::exists($dir)) {
+            return false;
+        }
+        foreach (File::allFiles($dir) as $f) {
+            if (stripos($f->getFilename(), (string) $needle) !== false) {
+                return true;
+            }
+            if (stripos($f->getPathname(), (string) $needle) !== false) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -427,9 +472,9 @@ class ReadinessAudit extends Command
         $lines[] = '| Module | Status |';
         $lines[] = '|---|---|';
         foreach ($results as $k => $v) {
-            $lines[] = '|' . $k . '|' . $v . '|';
+            $lines[] = '|'.$k.'|'.$v.'|';
         }
+
         return implode("\n", $lines);
     }
 }
-

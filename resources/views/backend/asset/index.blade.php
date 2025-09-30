@@ -92,7 +92,7 @@
                                             @if (hasPermission('assets_update') == true || hasPermission('assets_delete') == true)
                                                 <td>
                                                     <div class="row">
-                                                        <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split">
+                                                        <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split">
                                                             <span class="sr-only">Toggle Dropdown</span>
                                                         </button>
                                                         <div class="dropdown-menu">

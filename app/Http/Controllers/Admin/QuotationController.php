@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Quotation;
 use App\Models\Customer;
+use App\Models\Quotation;
 use App\Services\RatingService;
 use Illuminate\Http\Request;
 
@@ -15,17 +15,19 @@ class QuotationController extends Controller
         $this->authorize('viewAny', Quotation::class);
         $query = Quotation::query()->latest('id');
         $user = $request->user();
-        if (!$user->hasRole(['hq_admin','admin','super-admin']) && !is_null($user->hub_id)) {
+        if (! $user->hasRole(['hq_admin', 'admin', 'super-admin']) && ! is_null($user->hub_id)) {
             $query->where('origin_branch_id', $user->hub_id);
         }
         $quotes = $query->paginate(15);
+
         return view('backend.admin.quotations.index', compact('quotes'));
     }
 
     public function create()
     {
         $this->authorize('create', Quotation::class);
-        $customers = Customer::query()->select('id','name')->orderBy('name')->limit(100)->get();
+        $customers = Customer::query()->select('id', 'name')->orderBy('name')->limit(100)->get();
+
         return view('backend.admin.quotations.create', compact('customers'));
     }
 
@@ -53,34 +55,38 @@ class QuotationController extends Controller
         $data['dim_factor'] = $data['dim_factor'] ?? 5000;
 
         $volume = $data['volume_cm3'] ?? null;
-        $dimWeight = $volume ? $rating->dimWeightKg($volume, (int)$data['dim_factor']) : 0;
-        $billable = max((float)$data['weight_kg'], (float)$dimWeight);
+        $dimWeight = $volume ? $rating->dimWeightKg($volume, (int) $data['dim_factor']) : 0;
+        $billable = max((float) $data['weight_kg'], (float) $dimWeight);
 
-        $pricing = $rating->priceWithSurcharges((float)$data['base_charge'], $billable, now());
+        $pricing = $rating->priceWithSurcharges((float) $data['base_charge'], $billable, now());
         $data['surcharges_json'] = $pricing['applied'] ?? [];
         $data['total_amount'] = $pricing['total'];
         $data['status'] = 'draft';
 
         $quote = Quotation::create($data);
-        return redirect()->route('admin.quotations.show', $quote)->with('status','Quotation created');
+
+        return redirect()->route('admin.quotations.show', $quote)->with('status', 'Quotation created');
     }
 
     public function show(Quotation $quotation)
     {
         $this->authorize('view', $quotation);
+
         return view('backend.admin.quotations.show', compact('quotation'));
     }
 
     public function edit(Quotation $quotation)
     {
         $this->authorize('update', $quotation);
+
         return view('backend.admin.quotations.edit', compact('quotation'));
     }
 
     public function update(Request $request, Quotation $quotation)
     {
         $this->authorize('update', $quotation);
-        $quotation->update($request->only(['status','valid_until']));
-        return back()->with('status','Quotation updated');
+        $quotation->update($request->only(['status', 'valid_until']));
+
+        return back()->with('status', 'Quotation updated');
     }
 }

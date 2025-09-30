@@ -24,8 +24,8 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'merchant_id' => ['required','nullable'],
-            'amount'      => ['required','nullable'],
+            'merchant_id' => ['required', 'nullable'],
+            'amount' => ['required', 'nullable'],
         ];
     }
 }

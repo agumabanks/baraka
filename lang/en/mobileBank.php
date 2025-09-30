@@ -1,7 +1,8 @@
 <?php
-return array(
-    'name'=> 'Name',
-    'title'=> 'Bank',
+
+return [
+    'name' => 'Name',
+    'title' => 'Bank',
     'bank' => 'Bank',
     'mobile_bank' => 'Mobile Bank',
     'bank_name' => 'Bank Name',
@@ -14,4 +15,4 @@ return array(
     'edit_mobile_bank' => 'Edit Mobile Bank',
     'delete_bank' => 'Delete Bank',
     'delete_mobile_bank' => 'Delete Mobile Bank',
-);
+];

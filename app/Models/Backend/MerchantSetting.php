@@ -8,5 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class MerchantSetting extends Model
 {
     use HasFactory;
-    protected $fillable = ['key','value'];
+
+    protected $fillable = ['key', 'value'];
 }

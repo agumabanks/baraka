@@ -16,11 +16,11 @@ class InvoiceResource extends JsonResource
     public function toArray($request)
     {
         return [
-            "id"                => $this->id,
-            "invoice_id"        => $this->invoice_id,
-            "status"            => $this->InvoiceStatus,
-            "amount"            => ((($this->parcels->sum('current_payable') + $this->PartialParcelsReturnMerchant->sum('current_payable'))  - $this->parcels_return_merchant_fees->sum('current_payable')) - $this->parcels_return_merchant_fees->sum('return_charges')),
-            "invoice_date"        =>Carbon::parse($this->invoice_date)->format('d M Y'),
+            'id' => $this->id,
+            'invoice_id' => $this->invoice_id,
+            'status' => $this->InvoiceStatus,
+            'amount' => ((($this->parcels->sum('current_payable') + $this->PartialParcelsReturnMerchant->sum('current_payable')) - $this->parcels_return_merchant_fees->sum('current_payable')) - $this->parcels_return_merchant_fees->sum('return_charges')),
+            'invoice_date' => Carbon::parse($this->invoice_date)->format('d M Y'),
         ];
     }
 }

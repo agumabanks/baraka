@@ -13,7 +13,7 @@ class Config extends Model
 
     protected $fillable = [
         'key',
-        'value'
+        'value',
 
     ];
 
@@ -22,11 +22,12 @@ class Config extends Model
 
         $logAttributes = [
             'key',
-            'value'
+            'value',
         ];
+
         return LogOptions::defaults()
-        ->useLogName('Config')
-        ->logOnly($logAttributes)
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Config')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 }

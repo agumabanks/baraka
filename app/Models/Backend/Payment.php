@@ -2,7 +2,6 @@
 
 namespace App\Models\Backend;
 
-use App\Enums\Status;
 use App\Models\MerchantPayment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +11,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Payment extends Model
 {
     use HasFactory,LogsActivity;
-
 
     protected $fillable = [
         'merchant_id',
@@ -36,31 +34,36 @@ class Payment extends Model
             'description',
 
         ];
+
         return LogOptions::defaults()
-        ->useLogName('Merchant Payment')
-        ->logOnly($logAttributes)
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Merchant Payment')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
-
-
 
     // Get all row. Descending order using scope.
     public function scopeOrderByDesc($query, $data)
     {
         $query->orderBy($data, 'desc');
     }
-    public function merchant(){
-        return $this->belongsTo(Merchant::class,'merchant_id','id');
+
+    public function merchant()
+    {
+        return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
 
-    public function merchantAccount(){
-        return $this->belongsTo(MerchantPayment::class,'merchant_account','id');
-    }
-    public function frompayment(){
-        return $this->belongsTo(Account::class,'from_account','id');
-    }
-    public function referencefile(){
-        return $this->belongsTo(Upload::class,'reference_file','id');
+    public function merchantAccount()
+    {
+        return $this->belongsTo(MerchantPayment::class, 'merchant_account', 'id');
     }
 
+    public function frompayment()
+    {
+        return $this->belongsTo(Account::class, 'from_account', 'id');
+    }
+
+    public function referencefile()
+    {
+        return $this->belongsTo(Upload::class, 'reference_file', 'id');
+    }
 }

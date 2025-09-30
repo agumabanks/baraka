@@ -12,30 +12,35 @@ class RouteController extends Controller
     {
         $this->authorize('viewAny', RouteModel::class);
         $routes = RouteModel::latest()->paginate(15);
+
         return view('backend.admin.routes.index', compact('routes'));
     }
 
     public function show(RouteModel $route)
     {
         $this->authorize('view', $route);
+
         return view('backend.admin.routes.show', ['routeModel' => $route]);
     }
 
     public function create()
     {
         $this->authorize('create', RouteModel::class);
+
         return view('backend.admin.routes.create');
     }
 
     public function store(Request $request)
     {
         $this->authorize('create', RouteModel::class);
-        return back()->with('status','Route creation not yet implemented');
+
+        return back()->with('status', 'Route creation not yet implemented');
     }
 
     public function update(Request $request, RouteModel $route)
     {
         $this->authorize('update', $route);
-        return back()->with('status','Route update not yet implemented');
+
+        return back()->with('status', 'Route update not yet implemented');
     }
 }

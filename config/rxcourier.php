@@ -7,38 +7,37 @@ use App\Enums\ApprovalStatus;
 return [
 
     'cod_charges' => [
-        'inside_city'    => 1,
-        'sub_city'       => 2,
-        'outside_city'   => 3,
+        'inside_city' => 1,
+        'sub_city' => 2,
+        'outside_city' => 3,
     ],
 
-
-    'account_type' =>[
-        'admin'       => AccountType::ADMIN,
-        'user'        => AccountType::USER
+    'account_type' => [
+        'admin' => AccountType::ADMIN,
+        'user' => AccountType::USER,
     ],
-    'delivery_types'=>[
-        'same_day'    =>  'same_day',
-        'next_day'    =>  'next_day',
-        'sub_city'    =>  'sub_city',
-        'outside_City'=>  'outside_City'
-    ],
-
-    'account_heads_type' =>[
-        'income'      => AccountHeads::INCOME,
-        'expense'     => AccountHeads::EXPENSE
+    'delivery_types' => [
+        'same_day' => 'same_day',
+        'next_day' => 'next_day',
+        'sub_city' => 'sub_city',
+        'outside_City' => 'outside_City',
     ],
 
-    'approval_status' =>[
-        'Reject'      => ApprovalStatus::REJECT   ,
-        'Approved'    => ApprovalStatus::APPROVED ,
-        'Pending'     => ApprovalStatus::PENDING  ,
-        'Processed'   => ApprovalStatus::PROCESSED,
+    'account_heads_type' => [
+        'income' => AccountHeads::INCOME,
+        'expense' => AccountHeads::EXPENSE,
     ],
 
-    'delivery_weights' => [1,2,3,4,5,6,7,8,9,10], // in kg
+    'approval_status' => [
+        'Reject' => ApprovalStatus::REJECT,
+        'Approved' => ApprovalStatus::APPROVED,
+        'Pending' => ApprovalStatus::PENDING,
+        'Processed' => ApprovalStatus::PROCESSED,
+    ],
+
+    'delivery_weights' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // in kg
     'delivery_charges' => [
-        'inside_city_same_day'    => [
+        'inside_city_same_day' => [
             '1' => 40, // kg
             '2' => 100,
             '3' => 150,
@@ -50,7 +49,7 @@ return [
             '9' => 450,
             '10' => 500,
         ],
-        'inside_city_next_day'    => [
+        'inside_city_next_day' => [
             '1' => 30,
             '2' => 60,
             '3' => 90,
@@ -87,6 +86,6 @@ return [
             '10' => 500,
         ],
     ],
-    'api_key' => '123456rx-ecourier123456'
+    'api_key' => '123456rx-ecourier123456',
 
 ];

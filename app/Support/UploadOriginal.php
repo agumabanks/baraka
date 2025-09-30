@@ -39,4 +39,3 @@ class UploadOriginal implements ArrayAccess
         unset($this->data[$offset]);
     }
 }
-

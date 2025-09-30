@@ -10,11 +10,11 @@ class BranchScopedPolicy
     use HandlesAuthorization;
 
     protected array $viewAnyRoles = [
-        'hq_admin','branch_ops_manager','branch_ops','admin','super-admin','support','finance'
+        'hq_admin', 'branch_ops_manager', 'branch_ops', 'admin', 'super-admin', 'support', 'finance',
     ];
 
     protected array $writeRoles = [
-        'hq_admin','branch_ops_manager','branch_ops','admin'
+        'hq_admin', 'branch_ops_manager', 'branch_ops', 'admin',
     ];
 
     public function viewAny(User $user): bool
@@ -24,7 +24,7 @@ class BranchScopedPolicy
 
     public function view(User $user, $model): bool
     {
-        if ($user->hasRole(['hq_admin','admin','super-admin'])) {
+        if ($user->hasRole(['hq_admin', 'admin', 'super-admin'])) {
             return true;
         }
 
@@ -34,6 +34,7 @@ class BranchScopedPolicy
         }
 
         $ids = $this->extractHubIds($model);
+
         return in_array($hubId, $ids, true);
     }
 
@@ -44,9 +45,10 @@ class BranchScopedPolicy
 
     public function update(User $user, $model): bool
     {
-        if ($user->hasRole(['hq_admin','admin','super-admin'])) {
+        if ($user->hasRole(['hq_admin', 'admin', 'super-admin'])) {
             return true;
         }
+
         return $user->hasRole($this->writeRoles) && $this->view($user, $model);
     }
 
@@ -57,14 +59,14 @@ class BranchScopedPolicy
 
     private function extractHubIds($model): array
     {
-        $fields = ['hub_id','branch_id','origin_branch_id','destination_branch_id'];
+        $fields = ['hub_id', 'branch_id', 'origin_branch_id', 'destination_branch_id'];
         $ids = [];
         foreach ($fields as $f) {
-            if (isset($model->{$f}) && !is_null($model->{$f})) {
+            if (isset($model->{$f}) && ! is_null($model->{$f})) {
                 $ids[] = (int) $model->{$f};
             }
         }
+
         return array_values(array_unique($ids));
     }
 }
-

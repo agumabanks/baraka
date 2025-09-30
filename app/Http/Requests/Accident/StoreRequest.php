@@ -22,24 +22,25 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         $document = '';
-        if(request()->multi_documents):
+        if (request()->multi_documents) {
             $document = ['required'];
-        endif;
+        }
+
         return [
-            'asset_id'             => ['required'],
-            'date_of_accident'     => ['required'],
-            'driver_responsible'   => ['required'],
-            'cost_of_repair'       => ['required','numeric'],
-            'spare_parts'          => ['required'],
-            'multi_documents'      => $document,
+            'asset_id' => ['required'],
+            'date_of_accident' => ['required'],
+            'driver_responsible' => ['required'],
+            'cost_of_repair' => ['required', 'numeric'],
+            'spare_parts' => ['required'],
+            'multi_documents' => $document,
         ];
     }
 
     public function attributes()
     {
         return [
-            'asset_id'         => 'asset',
-            'multi_documents'   => 'upload documents'
+            'asset_id' => 'asset',
+            'multi_documents' => 'upload documents',
         ];
     }
 }

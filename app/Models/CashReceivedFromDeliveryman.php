@@ -36,24 +36,26 @@ class CashReceivedFromDeliveryman extends Model
             'date',
             'note',
         ];
-        return LogOptions::defaults()
-        ->useLogName('CashReceivedFromDeliveryman')
-        ->logOnly($logAttributes)
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
-    }
 
+        return LogOptions::defaults()
+            ->useLogName('CashReceivedFromDeliveryman')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
+    }
 
     public function account()
     {
         return $this->belongsTo(Account::class, 'account_id', 'id');
     }
 
-    public function user(){
-        return $this->belongsTo(User::class,'user_id','id');
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function deliveryman(){
-        return $this->belongsTo(DeliveryMan::class,'delivery_man_id','id');
+    public function deliveryman()
+    {
+        return $this->belongsTo(DeliveryMan::class, 'delivery_man_id', 'id');
     }
 
     // Get single row in Upload table.

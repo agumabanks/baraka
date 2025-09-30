@@ -2,16 +2,25 @@
 
 namespace App\Enums;
 
+interface PaymentType
+{
+    const STRIPE = 1; //
 
-interface PaymentType {
-    const STRIPE       = 1;//
-    CONST SSL_COMMERZ  = 2;//
-    CONST PAYPAL       = 3;//
-    CONST PAYONEER     = 4;
-    CONST BKASH        = 5;//
-    CONST VISA         = 6;
-    CONST SKRILL       = 7;//
-    CONST AAMARPAY     = 8;//
-    CONST RAZORPAY     = 9;//
-    CONST PAYSTACK     = 10;
+    const SSL_COMMERZ = 2; //
+
+    const PAYPAL = 3; //
+
+    const PAYONEER = 4;
+
+    const BKASH = 5; //
+
+    const VISA = 6;
+
+    const SKRILL = 7; //
+
+    const AAMARPAY = 8; //
+
+    const RAZORPAY = 9; //
+
+    const PAYSTACK = 10;
 }

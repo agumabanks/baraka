@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Backend\Hub;
+use Illuminate\Database\Seeder;
 
 class HubSeeder extends Seeder
 {
@@ -17,51 +16,51 @@ class HubSeeder extends Seeder
     {
         $hubs = [
             [
-                'name'            =>'Mirpur-10',
-                'phone'           =>'01000000001',
-                'address'         =>'Dhaka, Bangladesh',
-                'current_balance' => '00'
+                'name' => 'Mirpur-10',
+                'phone' => '01000000001',
+                'address' => 'Dhaka, Bangladesh',
+                'current_balance' => '00',
             ],
             [
-                'name'            =>'Uttara',
-                'phone'           =>'01000000002',
-                'address'         =>'Dhaka, Bangladesh',
-                'current_balance' => '00'
+                'name' => 'Uttara',
+                'phone' => '01000000002',
+                'address' => 'Dhaka, Bangladesh',
+                'current_balance' => '00',
             ],
             [
-                'name'            =>'Dhanmundi',
-                'phone'           =>'01000000003',
-                'address'         =>'Dhaka, Bangladesh',
-                'current_balance' => '00'
+                'name' => 'Dhanmundi',
+                'phone' => '01000000003',
+                'address' => 'Dhaka, Bangladesh',
+                'current_balance' => '00',
             ],
             [
-                'name'            =>'Old Dhaka',
-                'phone'           =>'01000000004',
-                'address'         =>'Dhaka, Bangladesh',
-                'current_balance' => '00'
+                'name' => 'Old Dhaka',
+                'phone' => '01000000004',
+                'address' => 'Dhaka, Bangladesh',
+                'current_balance' => '00',
             ],
             [
-                'name'            =>'Jatrabari',
-                'phone'           =>'01000000005',
-                'address'         =>'Dhaka, Bangladesh',
-                'current_balance' => '00'
+                'name' => 'Jatrabari',
+                'phone' => '01000000005',
+                'address' => 'Dhaka, Bangladesh',
+                'current_balance' => '00',
             ],
             [
-                'name'            =>'Badda',
-                'phone'           =>'01000000006',
-                'address'         =>'Dhaka, Bangladesh',
-                'current_balance' => '00'
+                'name' => 'Badda',
+                'phone' => '01000000006',
+                'address' => 'Dhaka, Bangladesh',
+                'current_balance' => '00',
             ],
         ];
 
-        for ($n = 0; $n < sizeof($hubs); $n++) {
+        for ($n = 0; $n < count($hubs); $n++) {
             $code = sprintf('BR%03d', $n + 1);
             Hub::updateOrCreate(
                 ['branch_code' => $code],
                 [
-                    'name'            => $hubs[$n]['name'],
-                    'phone'           => $hubs[$n]['phone'],
-                    'address'         => $hubs[$n]['address'],
+                    'name' => $hubs[$n]['name'],
+                    'phone' => $hubs[$n]['phone'],
+                    'address' => $hubs[$n]['address'],
                     'current_balance' => $hubs[$n]['current_balance'],
                 ]
             );

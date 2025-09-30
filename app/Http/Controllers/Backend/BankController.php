@@ -8,14 +8,14 @@ use Illuminate\Http\Request;
 
 class BankController extends Controller
 {
- 
     public function __construct(
         protected BankInterface $repo
-    ){}
+    ) {}
 
     public function index()
     {
         $banks = $this->repo->all();
+
         return view('backend.bank.index', [
             'banks' => $banks,
         ]);
@@ -32,13 +32,15 @@ class BankController extends Controller
             'name' => 'required|string|max:255|unique:banks,name',
         ]);
 
-        $this->repo->create($data); 
+        $this->repo->create($data);
+
         return redirect()->route('bank.index');
     }
 
     public function edit($id)
     {
         $bank = $this->repo->find($id);
+
         return view('backend.bank.edit', [
             'bank' => $bank,
         ]);
@@ -58,16 +60,17 @@ class BankController extends Controller
     public function destroy($id)
     {
         $this->repo->delete($id);
+
         return redirect()->route('bank.index');
     }
 
     public function filter(Request $request)
     {
         $banks = $this->repo->filter($request);
+
         return view('backend.bank.index', [
-            'banks'   => $banks,
+            'banks' => $banks,
             'request' => $request,
         ]);
     }
-
 }

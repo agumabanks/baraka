@@ -2,10 +2,8 @@
 
 use App\Enums\Status;
 
-return array (
-  Status::ACTIVE => 'Activa',
-  Status::INACTIVE => 'Inactiva',
+return [
+    Status::ACTIVE => 'Activa',
+    Status::INACTIVE => 'Inactiva',
 
-
-
-);
+];

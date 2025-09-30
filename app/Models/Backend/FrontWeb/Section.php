@@ -12,7 +12,6 @@ class Section extends Model
 {
     use HasFactory;
 
-
     public function upload()
     {
         return $this->belongsTo(Upload::class, 'value', 'id');
@@ -20,40 +19,41 @@ class Section extends Model
 
     public function getImageAttribute()
     {
-       
-        if (!empty($this->upload->original['original']) && File::exists(public_path($this->upload->original['original']))) {
+
+        if (! empty($this->upload->original['original']) && File::exists(public_path($this->upload->original['original']))) {
             return static_asset($this->upload->original['original']);
         }
-        if(SectionType::BANNER == $this->type && $this->key == 'banner'):
+        if ($this->type == SectionType::BANNER && $this->key == 'banner') {
             return static_asset('frontend/images/banner.png');
-        else:
+        } else {
             return static_asset('images/default/blank-image.jpg');
-        endif;
+        }
     }
- 
-    public function getMyTypeAttribute(){
+
+    public function getMyTypeAttribute()
+    {
         switch ($this->type) {
             case SectionType::BANNER:
                 return __('levels.banner');
-            break;
+                break;
             case SectionType::ACHIEVEMENT:
                 return __('levels.happy_achievement');
-            break;
+                break;
             case SectionType::ABOUT:
                 return __('levels.about_us');
-            break;
+                break;
             case SectionType::SUBSCRIBE:
                 return __('levels.subscribe');
-            break;
+                break;
             case SectionType::APP_LINK:
                 return __('levels.app_download_link');
-            break; 
+                break;
             case SectionType::MAP_LINK:
                 return __('levels.map_link');
-            break; 
+                break;
             default:
                 return '';
-            break;
+                break;
         }
     }
 }

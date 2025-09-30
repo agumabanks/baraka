@@ -49,9 +49,226 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## API v1 Documentation
+
+This project includes a REST API v1 for DHL-style logistics operations, supporting both mobile clients and admin dashboards.
+
+### Setup
+
+1. **Environment Variables**
+   Add the following to your `.env` file:
+
+   ```env
+   FEATURE_MOBILE_API=true
+   API_RATE_LIMIT=60
+   API_RATE_LIMIT_ADMIN=120
+   L5_SWAGGER_GENERATE_ALWAYS=false
+   ```
+
+2. **Run Migrations**
+   ```bash
+   php artisan migrate
+   ```
+
+3. **Seed Demo Data** (optional)
+   ```bash
+   php artisan db:seed --class=ApiV1DemoSeeder
+   ```
+
+4. **Generate API Documentation**
+   ```bash
+   php artisan l5-swagger:generate
+   ```
+
+### API Endpoints
+
+#### Public Endpoints
+- `GET /api/v1/tracking/{token}` - Public shipment tracking
+
+#### Authentication (Mobile Client)
+- `POST /api/v1/login` - Login with device binding
+- `POST /api/v1/logout` - Logout and revoke token
+- `GET /api/v1/me` - Get user profile
+- `PATCH /api/v1/me` - Update user profile
+
+#### Client Shipments
+- `GET /api/v1/shipments` - List user's shipments
+- `POST /api/v1/shipments` - Create new shipment
+- `GET /api/v1/shipments/{id}` - Get shipment details
+- `GET /api/v1/shipments/{id}/events` - Get shipment events
+- `POST /api/v1/shipments/{id}/cancel` - Cancel shipment
+
+#### Client Quotes
+- `GET /api/v1/quotes` - List user's quotations
+- `POST /api/v1/quotes` - Create new quotation
+- `GET /api/v1/quotes/{id}` - Get quotation details
+
+#### Client Pickup Requests
+- `GET /api/v1/pickups` - List user's pickup requests
+- `POST /api/v1/pickups` - Create new pickup request
+- `GET /api/v1/pickups/{id}` - Get pickup request details
+
+#### Client Tasks (Drivers)
+- `GET /api/v1/tasks` - List driver's tasks
+- `GET /api/v1/tasks/{id}` - Get task details
+- `PATCH /api/v1/tasks/{id}/status` - Update task status
+- `POST /api/v1/tasks/{id}/pod` - Submit proof of delivery
+- `POST /api/v1/pod/{id}/verify` - Verify POD with OTP
+
+#### Driver Location Tracking
+- `POST /api/v1/driver/locations` - Submit GPS location batch
+
+#### Admin Endpoints (Dashboard)
+- `GET /api/v1/admin/customers` - List customers
+- `GET /api/v1/admin/customers/{id}` - Get customer details
+- `PATCH /api/v1/admin/customers/{id}` - Update customer
+- `GET /api/v1/admin/shipments` - List all shipments (with advanced filters)
+- `GET /api/v1/admin/shipments/{id}` - Get shipment details
+- `PATCH /api/v1/admin/shipments/{id}/status` - Update shipment status
+- `POST /api/v1/admin/shipments/export` - Export shipments
+- `GET /api/v1/admin/dispatch/unassigned` - Get unassigned shipments
+- `GET /api/v1/admin/dispatch/drivers` - Get available drivers
+- `POST /api/v1/admin/dispatch/assign` - Assign driver to shipment
+- `POST /api/v1/admin/dispatch/optimize` - Optimize dispatch routes
+- `GET /api/v1/admin/metrics` - Get dashboard metrics
+
+### Authentication
+
+#### Mobile Client
+Use Sanctum personal access tokens with device binding:
+
+```bash
+# Login
+curl -X POST http://localhost/api/v1/login \
+  -H "Content-Type: application/json" \
+  -H "device_uuid: your-device-uuid" \
+  -d '{"email":"merchant@demo.com","password":"password"}'
+
+# Use token in subsequent requests
+curl -X GET http://localhost/api/v1/shipments \
+  -H "Authorization: Bearer your-token-here"
+```
+
+#### Admin Dashboard
+Use session-based authentication (existing web login).
+
+### Sample Requests
+
+#### Create Shipment
+```bash
+curl -X POST http://localhost/api/v1/shipments \
+  -H "Authorization: Bearer your-token" \
+  -H "Idempotency-Key: unique-key-123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origin_branch_id": 1,
+    "dest_branch_id": 2,
+    "service_level": "standard",
+    "incoterm": "DDP",
+    "price_amount": 50.00,
+    "currency": "USD"
+  }'
+```
+
+#### Track Shipment
+```bash
+curl -X GET http://localhost/api/v1/tracking/your-public-token
+```
+
+#### Admin: Update Customer
+```bash
+curl -X PATCH http://localhost/api/v1/admin/customers/1 \
+  -H "Cookie: laravel_session=your-session-cookie" \
+  -H "Idempotency-Key: update-customer-123" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Updated Name","status":"active"}'
+```
+
+#### Create Quotation
+```bash
+curl -X POST http://localhost/api/v1/quotes \
+  -H "Authorization: Bearer your-token" \
+  -H "Idempotency-Key: quote-key-123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origin_branch_id": 1,
+    "destination_country": "US",
+    "service_type": "standard",
+    "pieces": 2,
+    "weight_kg": 5.5,
+    "currency": "USD"
+  }'
+```
+
+#### Submit Driver Location
+```bash
+curl -X POST http://localhost/api/v1/driver/locations \
+  -H "Authorization: Bearer driver-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "locations": [
+      {
+        "latitude": 40.7128,
+        "longitude": -74.0060,
+        "timestamp": "2025-01-01T10:00:00Z",
+        "accuracy": 10.0,
+        "speed": 15.5
+      }
+    ]
+  }'
+```
+
+#### Submit POD
+```bash
+curl -X POST http://localhost/api/v1/tasks/1/pod \
+  -H "Authorization: Bearer driver-token" \
+  -H "Idempotency-Key: pod-key-123" \
+  -F "signature=@signature.png" \
+  -F "photo=@delivery_photo.jpg" \
+  -F "notes=Delivered successfully"
+```
+
+#### Assign Driver to Shipment
+```bash
+curl -X POST http://localhost/api/v1/dispatch/assign \
+  -H "Cookie: laravel_session=admin-session" \
+  -H "Idempotency-Key: assign-key-123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shipment_id": 1,
+    "driver_id": 2,
+    "priority": "high",
+    "scheduled_at": "2025-01-01T14:00:00Z"
+  }'
+```
+
+### API Documentation
+
+- **Swagger UI**: Visit `/api/docs` in your browser
+- **OpenAPI JSON**: Available at `/api-docs.json`
+- **OpenAPI YAML**: Available at `/api-docs.yaml`
+
+### Security Features
+
+- **Idempotency**: All write operations require `Idempotency-Key` header
+- **Device Binding**: Mobile login requires `device_uuid` header
+- **Rate Limiting**: Configurable per role (client/admin)
+- **Activity Logging**: All state changes are audited via Spatie ActivityLog
+- **Authorization**: Shipment ownership and admin role enforcement
+
+### Testing
+
+Run the API tests:
+
+```bash
+php artisan test tests/Feature/Api/V1/
+```
+
+### Feature Flags
+
+- Set `FEATURE_MOBILE_API=false` to disable API v1 routes
+- Useful for staging/production deployments
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# baraka
-# baraka
-# baraka

@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Enums;
 
-Interface PickupRequestType{
+interface PickupRequestType
+{
     const REGULAR = 1;
-    const EXPRESS = 2;
 
+    const EXPRESS = 2;
 }

@@ -25,8 +25,8 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'fcm_secret_key'                => ['required','string','max:800'],
-            'fcm_topic'                => ['required','string','max:20'],
+            'fcm_secret_key' => ['required', 'string', 'max:800'],
+            'fcm_topic' => ['required', 'string', 'max:20'],
         ];
     }
 }

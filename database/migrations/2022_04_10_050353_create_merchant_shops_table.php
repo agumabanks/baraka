@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('merchant_lat')->nullable();
             $table->string('merchant_long')->nullable();
-            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', ' .Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
-            $table->unsignedTinyInteger('default_shop')->default(Status::INACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', ' .Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
+            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', '.Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
+            $table->unsignedTinyInteger('default_shop')->default(Status::INACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', '.Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
             $table->timestamps();
 
             $table->index('merchant_id');

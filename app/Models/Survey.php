@@ -9,6 +9,5 @@ class Survey extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['shipment_id','score','comment','channel'];
+    protected $fillable = ['shipment_id', 'score', 'comment', 'channel'];
 }
-

@@ -2,8 +2,6 @@
 
 namespace Database\Seeders\Backend\FrontWeb;
 
-use App\Models\Backend\Upload;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -16,8 +14,6 @@ class SectionSeeder extends Seeder
      */
     public function run()
     {
-         
-
 
         DB::statement("INSERT INTO `sections` ( `type`, `key`, `value`, `created_at`, `updated_at`) VALUES
             ( 1, 'title_1','WE PROVIDE', '2023-01-27 17:30:40', '2023-01-27 17:30:40'),

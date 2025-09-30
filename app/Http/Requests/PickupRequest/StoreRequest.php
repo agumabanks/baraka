@@ -24,11 +24,11 @@ class StoreRequest extends FormRequest
     public function rules()
     {
 
-            return [
-                 'weight'     => ['numeric'],
-                 'phone'      => ['numeric'],
-                 'cod_amount' => ['numeric'],
-            ];
+        return [
+            'weight' => ['numeric'],
+            'phone' => ['numeric'],
+            'cod_amount' => ['numeric'],
+        ];
 
     }
 }

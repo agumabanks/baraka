@@ -6,24 +6,32 @@ use App\Http\Controllers\Controller;
 use App\Repositories\Currency\CurrencyInterface;
 use App\Repositories\GeneralSettings\GeneralSettingsInterface;
 use App\Traits\ApiReturnFormatTrait;
-use Illuminate\Http\Request;
 
 class GeneralSettingCotroller extends Controller
 {
     use ApiReturnFormatTrait;
-    protected $repo,$currencies;
+
+    protected $repo;
+
+    protected $currencies;
+
     public function __construct(GeneralSettingsInterface $repo, CurrencyInterface $currencies)
     {
-        $this->repo   = $repo;
+        $this->repo = $repo;
         $this->currencies = $currencies;
     }
-    public function index(){
+
+    public function index()
+    {
         $generalSettings = $this->repo->all();
-        return $this->responseWithSuccess('General settings information.',$generalSettings,200);
+
+        return $this->responseWithSuccess('General settings information.', $generalSettings, 200);
     }
 
-    public function currencies(){
+    public function currencies()
+    {
         $currencies = $this->currencies->getActive();
-        return $this->responseWithSuccess('All Currency.',$currencies,200);
+
+        return $this->responseWithSuccess('All Currency.', $currencies, 200);
     }
 }

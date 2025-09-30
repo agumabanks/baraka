@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Repositories\NotificationSettings;
 
-interface NotificationSettingsInterface {
-
+interface NotificationSettingsInterface
+{
     public function all();
-    public function update($request);
 
+    public function update($request);
 }

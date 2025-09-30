@@ -9,9 +9,9 @@ class SendShipmentStatusNotification
 {
     public function handle(ShipmentStatusChanged $event): void
     {
-        $shipment = $event->shipment->loadMissing(['customer','originBranch','destBranch']);
+        $shipment = $event->shipment->loadMissing(['customer', 'originBranch', 'destBranch']);
         $customer = $shipment->customer;
-        if (!$customer) {
+        if (! $customer) {
             return;
         }
 
@@ -24,4 +24,3 @@ class SendShipmentStatusNotification
         $customer->notify(new ShipmentStatusChangedNotification($shipment));
     }
 }
-

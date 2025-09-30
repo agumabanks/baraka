@@ -1,0 +1,627 @@
+/**
+ * Monochrome Black & White Theme
+ * Inspired by Steve Jobs' minimalist design philosophy
+ * Clean, simple, focused on content and functionality
+ */
+
+:root {
+    /* Monochrome Color Palette */
+    --mono-black: #000000;
+    --mono-gray-900: #1a1a1a;
+    --mono-gray-800: #2d2d2d;
+    --mono-gray-700: #404040;
+    --mono-gray-600: #666666;
+    --mono-gray-500: #808080;
+    --mono-gray-400: #999999;
+    --mono-gray-300: #b3b3b3;
+    --mono-gray-200: #cccccc;
+    --mono-gray-100: #e6e6e6;
+    --mono-gray-50: #f5f5f5;
+    --mono-white: #ffffff;
+    
+    /* Accent - Use sparingly */
+    --mono-accent: var(--mono-black);
+    
+    /* Functional colors */
+    --mono-border: var(--mono-gray-200);
+    --mono-hover: var(--mono-gray-100);
+    --mono-active: var(--mono-gray-900);
+    --mono-disabled: var(--mono-gray-400);
+    
+    /* Shadows */
+    --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-normal: 0 2px 8px rgba(0, 0, 0, 0.12);
+    --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.16);
+    
+    /* Typography */
+    --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    
+    /* Remove all color variables */
+    --warningcolor: var(--mono-black) !important;
+    --primary-500: var(--mono-black) !important;
+    --success: var(--mono-gray-700) !important;
+    --warning: var(--mono-gray-600) !important;
+    --error: var(--mono-black) !important;
+}
+
+/* Global Reset */
+body {
+    font-family: var(--font-primary);
+    background-color: var(--mono-white);
+    color: var(--mono-gray-900);
+    line-height: 1.6;
+}
+
+/* Remove all colorful backgrounds and borders */
+* {
+    border-color: var(--mono-border) !important;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--mono-black);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+/* Cards */
+.card {
+    background: var(--mono-white);
+    border: 1px solid var(--mono-border) !important;
+    box-shadow: var(--shadow-subtle);
+    border-radius: 8px;
+    transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-normal);
+}
+
+.card-header {
+    background: var(--mono-white) !important;
+    border-bottom: 1px solid var(--mono-border) !important;
+    color: var(--mono-black);
+    font-weight: 600;
+}
+
+.card-body {
+    color: var(--mono-gray-900);
+}
+
+.card-footer {
+    background: var(--mono-gray-50) !important;
+    border-top: 1px solid var(--mono-border) !important;
+}
+
+/* Buttons */
+.btn {
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border: 1px solid var(--mono-border) !important;
+}
+
+.btn-primary {
+    background-color: var(--mono-black) !important;
+    border-color: var(--mono-black) !important;
+    color: var(--mono-white) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--mono-gray-800) !important;
+    border-color: var(--mono-gray-800) !important;
+    box-shadow: var(--shadow-normal);
+}
+
+.btn-secondary {
+    background-color: var(--mono-white) !important;
+    border-color: var(--mono-gray-300) !important;
+    color: var(--mono-gray-900) !important;
+}
+
+.btn-secondary:hover {
+    background-color: var(--mono-gray-50) !important;
+    border-color: var(--mono-gray-400) !important;
+}
+
+.btn-outline-light {
+    background-color: transparent !important;
+    border-color: var(--mono-border) !important;
+    color: var(--mono-gray-900) !important;
+}
+
+.btn-outline-light:hover {
+    background-color: var(--mono-black) !important;
+    border-color: var(--mono-black) !important;
+    color: var(--mono-white) !important;
+}
+
+/* Forms */
+.form-control,
+.form-select {
+    background-color: var(--mono-white);
+    border: 1px solid var(--mono-border) !important;
+    color: var(--mono-gray-900);
+    border-radius: 6px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--mono-black) !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08) !important;
+    background-color: var(--mono-white);
+}
+
+/* Badges */
+.badge {
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 0.35em 0.65em;
+}
+
+.badge-primary,
+.bg-primary {
+    background-color: var(--mono-black) !important;
+    color: var(--mono-white) !important;
+}
+
+.badge-success,
+.bg-success {
+    background-color: var(--mono-gray-700) !important;
+    color: var(--mono-white) !important;
+}
+
+.badge-warning,
+.bg-warning {
+    background-color: var(--mono-gray-500) !important;
+    color: var(--mono-white) !important;
+}
+
+.badge-danger,
+.bg-danger {
+    background-color: var(--mono-black) !important;
+    color: var(--mono-white) !important;
+}
+
+/* Text Colors */
+.text-primary {
+    color: var(--mono-black) !important;
+}
+
+.text-secondary {
+    color: var(--mono-gray-600) !important;
+}
+
+.text-success,
+.text-warning,
+.text-danger,
+.text-info {
+    color: var(--mono-gray-700) !important;
+}
+
+.text-muted {
+    color: var(--mono-gray-500) !important;
+}
+
+/* Navbar */
+.admin-navbar,
+.navbar {
+    background-color: var(--mono-white) !important;
+    border-bottom: 1px solid var(--mono-border) !important;
+    box-shadow: var(--shadow-subtle);
+}
+
+.navbar-brand {
+    color: var(--mono-black) !important;
+}
+
+.nav-link {
+    color: var(--mono-gray-700) !important;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    color: var(--mono-black) !important;
+}
+
+/* Sidebar - Monochrome Steve Jobs Style */
+.admin-sidebar .offcanvas-nav {
+    background: var(--mono-white) !important;
+    color: var(--mono-gray-900) !important;
+    border-right: 1px solid var(--mono-border) !important;
+    box-shadow: var(--shadow-elevated) !important;
+}
+
+.admin-sidebar .nav-left-sidebar {
+    background: var(--mono-white) !important;
+    border: 1px solid var(--mono-border) !important;
+    border-radius: 8px;
+    backdrop-filter: none;
+}
+
+.admin-sidebar .sidebar-utilities {
+    background: var(--mono-gray-50) !important;
+    border: 1px solid var(--mono-border) !important;
+    border-radius: 8px;
+}
+
+.admin-sidebar .nav-divider {
+    color: var(--mono-gray-600) !important;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.admin-sidebar .nav-link {
+    color: var(--mono-gray-900) !important;
+    background: transparent !important;
+    font-weight: 500;
+}
+
+.admin-sidebar .nav-link > i {
+    background: var(--mono-gray-100) !important;
+    color: var(--mono-gray-700) !important;
+    box-shadow: none !important;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link:focus {
+    background: var(--mono-gray-50) !important;
+    color: var(--mono-black) !important;
+}
+
+.admin-sidebar .nav-link:hover > i,
+.admin-sidebar .nav-link:focus > i {
+    background: var(--mono-gray-200) !important;
+    color: var(--mono-black) !important;
+}
+
+.admin-sidebar .nav-link.active {
+    background: var(--mono-black) !important;
+    color: var(--mono-white) !important;
+    box-shadow: var(--shadow-normal) !important;
+}
+
+.admin-sidebar .nav-link.active > i {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: var(--mono-white) !important;
+}
+
+.admin-sidebar .submenu {
+    border-left: 2px solid var(--mono-border) !important;
+}
+
+.admin-sidebar .submenu .nav-link {
+    font-size: 0.9rem;
+    color: var(--mono-gray-700) !important;
+}
+
+.admin-sidebar .submenu .nav-link.active {
+    background: var(--mono-gray-900) !important;
+}
+
+/* Nav Badges */
+.admin-sidebar .nav-badge {
+    background: var(--mono-black) !important;
+    color: var(--mono-white) !important;
+    box-shadow: none !important;
+}
+
+.admin-sidebar .nav-badge--success {
+    background: var(--mono-gray-700) !important;
+}
+
+.admin-sidebar .nav-badge--warning {
+    background: var(--mono-gray-600) !important;
+    color: var(--mono-white) !important;
+}
+
+.admin-sidebar .nav-badge--attention {
+    background: var(--mono-black) !important;
+    animation: pulse-mono 2s infinite;
+}
+
+@keyframes pulse-mono {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.4);
+    }
+    50% {
+        opacity: 0.9;
+        box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Dropdowns */
+.dropdown-menu {
+    background: var(--mono-white);
+    border: 1px solid var(--mono-border) !important;
+    box-shadow: var(--shadow-elevated);
+    border-radius: 8px;
+}
+
+.dropdown-item {
+    color: var(--mono-gray-900) !important;
+    transition: background-color 0.15s ease;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--mono-gray-100) !important;
+    color: var(--mono-black) !important;
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+    background-color: var(--mono-black) !important;
+    color: var(--mono-white) !important;
+}
+
+/* Tables */
+.table {
+    color: var(--mono-gray-900);
+}
+
+.table thead th {
+    background-color: var(--mono-gray-50);
+    border-bottom: 2px solid var(--mono-border) !important;
+    color: var(--mono-black);
+    font-weight: 600;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid var(--mono-border) !important;
+}
+
+.table tbody tr:hover {
+    background-color: var(--mono-gray-50);
+}
+
+/* Alerts */
+.alert {
+    border: 1px solid var(--mono-border) !important;
+    border-radius: 8px;
+}
+
+.alert-success,
+.alert-info,
+.alert-warning,
+.alert-danger {
+    background-color: var(--mono-gray-50) !important;
+    color: var(--mono-gray-900) !important;
+    border-left: 4px solid var(--mono-black) !important;
+}
+
+/* List Groups */
+.list-group-item {
+    background-color: var(--mono-white);
+    border: 1px solid var(--mono-border) !important;
+    color: var(--mono-gray-900);
+}
+
+.list-group-item:hover {
+    background-color: var(--mono-gray-50);
+}
+
+/* Progress Bars */
+.progress {
+    background-color: var(--mono-gray-200);
+    border-radius: 4px;
+}
+
+.progress-bar {
+    background-color: var(--mono-black) !important;
+}
+
+/* Charts */
+.apexcharts-canvas {
+    filter: grayscale(1);
+}
+
+/* Remove colored backgrounds */
+.bg-light {
+    background-color: var(--mono-gray-50) !important;
+}
+
+.bg-dark {
+    background-color: var(--mono-gray-900) !important;
+}
+
+/* Modal */
+.modal-content {
+    background-color: var(--mono-white);
+    border: 1px solid var(--mono-border) !important;
+    box-shadow: var(--shadow-elevated);
+    border-radius: 12px;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--mono-border) !important;
+    background-color: var(--mono-white);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--mono-border) !important;
+    background-color: var(--mono-gray-50);
+}
+
+/* Pagination */
+.pagination .page-link {
+    color: var(--mono-gray-900) !important;
+    background-color: var(--mono-white);
+    border: 1px solid var(--mono-border) !important;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--mono-gray-50);
+    color: var(--mono-black) !important;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--mono-black) !important;
+    border-color: var(--mono-black) !important;
+    color: var(--mono-white) !important;
+}
+
+/* Icons - Make monochrome */
+i, .fa, .fas, .far, .fab {
+    color: inherit;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--mono-gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--mono-gray-400);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--mono-gray-600);
+}
+
+/* Focus States */
+*:focus,
+*:focus-visible {
+    outline: 2px solid var(--mono-black) !important;
+    outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+    background-color: var(--mono-black);
+    color: var(--mono-white);
+}
+
+/* Links */
+a {
+    color: var(--mono-gray-900);
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--mono-black);
+}
+
+/* Shadows - Subtle and elegant */
+.shadow-sm {
+    box-shadow: var(--shadow-subtle) !important;
+}
+
+.shadow {
+    box-shadow: var(--shadow-normal) !important;
+}
+
+.shadow-lg {
+    box-shadow: var(--shadow-elevated) !important;
+}
+
+/* Dashboard specific */
+.ecommerce-widget .card {
+    border: 1px solid var(--mono-border) !important;
+}
+
+.dashboard-content {
+    background-color: var(--mono-white);
+}
+
+/* KPI Cards */
+.kpi-card--skeleton,
+.chart--skeleton {
+    background: var(--mono-white);
+    border: 1px solid var(--mono-border) !important;
+}
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--mono-gray-200) 25%,
+        var(--mono-gray-100) 50%,
+        var(--mono-gray-200) 75%
+    );
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+/* Remove all color gradients */
+*[style*="gradient"] {
+    background: var(--mono-white) !important;
+}
+
+/* Toastr - Monochrome */
+.toast {
+    background-color: var(--mono-white) !important;
+    color: var(--mono-gray-900) !important;
+    border: 1px solid var(--mono-border) !important;
+    box-shadow: var(--shadow-elevated);
+}
+
+/* SweetAlert2 - Monochrome */
+.swal2-popup {
+    background: var(--mono-white) !important;
+    border: 1px solid var(--mono-border) !important;
+}
+
+.swal2-confirm {
+    background: var(--mono-black) !important;
+    border: none !important;
+}
+
+.swal2-cancel {
+    background: var(--mono-white) !important;
+    border: 1px solid var(--mono-border) !important;
+    color: var(--mono-gray-900) !important;
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .card {
+        border: 1px solid black !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Dark mode override - Make it light */
+[data-theme="dark"],
+[data-theme="dark"] * {
+    background-color: var(--mono-white) !important;
+    color: var(--mono-gray-900) !important;
+}
+
+/* High Contrast Support */
+@media (prefers-contrast: high) {
+    :root {
+        --mono-border: var(--mono-black);
+    }
+    
+    .card,
+    .btn,
+    .form-control {
+        border-width: 2px !important;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* The essence of Steve Jobs' design: Simplicity, Elegance, Focus */

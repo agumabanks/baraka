@@ -9,8 +9,7 @@ class SsccGenerator
      * Format: (00) + 18 digits + check digit
      * Total: 20 digits
      *
-     * @param int|null $companyPrefix GS1 company prefix (usually 7-10 digits)
-     * @return string
+     * @param  int|null  $companyPrefix  GS1 company prefix (usually 7-10 digits)
      */
     public static function generate(?int $companyPrefix = null): string
     {
@@ -22,13 +21,13 @@ class SsccGenerator
         $serial = self::generateRandomDigits($serialLength);
 
         // Combine company prefix and serial
-        $ssccWithoutCheck = $companyPrefix . $serial;
+        $ssccWithoutCheck = $companyPrefix.$serial;
 
         // Calculate check digit
         $checkDigit = self::calculateCheckDigit($ssccWithoutCheck);
 
         // Return full SSCC with GS1 Application Identifier (00)
-        return '(00)' . $ssccWithoutCheck . $checkDigit;
+        return '(00)'.$ssccWithoutCheck.$checkDigit;
     }
 
     /**
@@ -40,6 +39,7 @@ class SsccGenerator
         for ($i = 0; $i < $length; $i++) {
             $digits .= mt_rand(0, 9);
         }
+
         return $digits;
     }
 
@@ -53,7 +53,7 @@ class SsccGenerator
 
         // Process digits from right to left
         for ($i = $length - 1; $i >= 0; $i--) {
-            $digit = (int)$number[$i];
+            $digit = (int) $number[$i];
 
             // Alternate multiplication by 3
             if (($length - 1 - $i) % 2 === 0) {
@@ -65,6 +65,7 @@ class SsccGenerator
 
         // Find the smallest number that makes sum divisible by 10
         $remainder = $sum % 10;
+
         return $remainder === 0 ? 0 : 10 - $remainder;
     }
 
@@ -81,7 +82,7 @@ class SsccGenerator
         }
 
         $number = substr($sscc, 0, 17);
-        $checkDigit = (int)substr($sscc, 17, 1);
+        $checkDigit = (int) substr($sscc, 17, 1);
 
         return self::calculateCheckDigit($number) === $checkDigit;
     }
@@ -109,8 +110,9 @@ class SsccGenerator
     {
         $clean = self::clean($sscc);
         if (strlen($clean) === 18) {
-            return '(00)' . $clean;
+            return '(00)'.$clean;
         }
+
         return $sscc;
     }
 }

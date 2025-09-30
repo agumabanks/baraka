@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Permission;
+use Illuminate\Database\Seeder;
 
 class ErpPermissionSeeder extends Seeder
 {
@@ -87,11 +87,10 @@ class ErpPermissionSeeder extends Seeder
         ];
 
         foreach ($map as $attribute => $keywords) {
-            $perm = new Permission();
+            $perm = new Permission;
             $perm->attribute = $attribute;
             $perm->keywords = $keywords;
             $perm->save();
         }
     }
 }
-

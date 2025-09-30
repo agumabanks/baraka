@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 class MerchantStatement extends Model
 {
     use HasFactory;
-    public function parcel(){
-        return $this->belongsTo(Parcel::class,'parcel_id','id');
+
+    public function parcel()
+    {
+        return $this->belongsTo(Parcel::class, 'parcel_id', 'id');
     }
 }

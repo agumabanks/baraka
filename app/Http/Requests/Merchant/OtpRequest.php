@@ -24,7 +24,7 @@ class OtpRequest extends FormRequest
     public function rules()
     {
         return [
-            'otp' => ['required','numeric','digits_between:5,5'],
+            'otp' => ['required', 'numeric', 'digits_between:5,5'],
         ];
     }
 }

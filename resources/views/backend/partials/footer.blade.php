@@ -1,7 +1,9 @@
 </div>
     <script src="{{static_asset('backend')}}/vendor/jquery/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-
+    
+    {{-- Popper.js is required for Bootstrap 5 dropdowns --}}
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="{{static_asset('backend')}}/vendor/bootstrap-five/bootstrap.min.js"></script>
     <script src="{{static_asset('backend')}}/vendor/slimscroll/jquery.slimscroll.js"></script>
     <script src="{{static_asset('backend')}}/libs/js/main-js.js"></script>
@@ -111,5 +113,11 @@
 </script>
 
     {!! Toastr::message() !!}
+    
+    {{-- Keyboard Shortcuts Help Overlay --}}
+    @include('components.keyboard-shortcuts-help')
+    
+    {{-- Keyboard Shortcuts Script --}}
+    <script src="{{ static_asset('js/keyboard-shortcuts.js') }}" defer></script>
 </body>
 </html>

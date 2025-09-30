@@ -25,7 +25,7 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'map_key'  => ['required','string','max:800'],
-            ];
+            'map_key' => ['required', 'string', 'max:800'],
+        ];
     }
 }

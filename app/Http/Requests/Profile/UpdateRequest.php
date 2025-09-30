@@ -24,9 +24,9 @@ class UpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'    => ['required'],
+            'name' => ['required'],
             'address' => ['required'],
-            'image'   => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
         ];
     }
 }

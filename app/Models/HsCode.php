@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class HsCode extends Model
 {
     protected $table = 'hs_codes';
-    protected $fillable = ['code','description'];
-}
 
+    protected $fillable = ['code', 'description'];
+}

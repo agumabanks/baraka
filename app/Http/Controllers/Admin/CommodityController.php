@@ -12,24 +12,28 @@ class CommodityController extends Controller
     {
         $this->authorize('viewAny', Commodity::class);
         $items = Commodity::latest()->paginate(15);
+
         return view('backend.admin.commodities.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', Commodity::class);
+
         return view('backend.admin.commodities.create');
     }
 
     public function store(Request $request)
     {
         $this->authorize('create', Commodity::class);
-        return back()->with('status','Commodity creation not yet implemented');
+
+        return back()->with('status', 'Commodity creation not yet implemented');
     }
 
     public function update(Request $request, Commodity $commodity)
     {
         $this->authorize('update', $commodity);
-        return back()->with('status','Commodity update not yet implemented');
+
+        return back()->with('status', 'Commodity update not yet implemented');
     }
 }

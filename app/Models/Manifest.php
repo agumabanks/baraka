@@ -9,10 +9,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Manifest extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'number','mode','carrier_id','departure_at','arrival_at','origin_branch_id','destination_branch_id','legs_json','bags_json','status','docs'
+        'number', 'mode', 'carrier_id', 'departure_at', 'arrival_at', 'origin_branch_id', 'destination_branch_id', 'legs_json', 'bags_json', 'status', 'docs',
     ];
 
     protected $casts = [
@@ -23,4 +23,3 @@ class Manifest extends Model
         'arrival_at' => 'datetime',
     ];
 }
-

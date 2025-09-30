@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class CodReceipt extends Model
 {
@@ -32,7 +32,7 @@ class CodReceipt extends Model
         return LogOptions::defaults()
             ->useLogName('cod_receipt')
             ->logOnly(['shipment_id', 'amount', 'method', 'collected_by'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} COD receipt");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} COD receipt");
     }
 
     public function shipment(): BelongsTo

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('hub_id')->nullable()->constrained('hubs')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('account_id')->nullable()->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('delivery_man_id')->nullable()->constrained('delivery_man')->onUpdate('cascade')->onDelete('cascade');
-            $table->decimal('amount',16, 2)->nullable();
+            $table->decimal('amount', 16, 2)->nullable();
             $table->dateTime('date')->nullable();
             $table->foreignId('receipt')->nullable()->constrained('uploads')->onUpdate('cascade')->onDelete('cascade');
             $table->text('note')->nullable();

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('ip')->nullable();
             $table->string('user_agent')->nullable();
             $table->timestamps();
-            $table->index(['admin_id','impersonated_user_id']);
+            $table->index(['admin_id', 'impersonated_user_id']);
         });
     }
 
@@ -28,4 +28,3 @@ return new class extends Migration
         Schema::dropIfExists('impersonation_logs');
     }
 };
-

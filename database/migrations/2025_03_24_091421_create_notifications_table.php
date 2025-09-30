@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('type')->nullable();
             $table->string('title')->nullable();
-            $table->string('model_id')->nullable(); 
+            $table->string('model_id')->nullable();
             $table->foreignId('merchant_id')->nullable()->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('created_by')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();

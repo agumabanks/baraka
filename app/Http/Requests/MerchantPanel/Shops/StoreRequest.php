@@ -24,10 +24,10 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'       =>['required'],
-            'contact_no' =>['required','numeric','digits_between:11,14'],
-            'address'    =>['required'],
-            'status'     =>['required','numeric']
+            'name' => ['required'],
+            'contact_no' => ['required', 'numeric', 'digits_between:11,14'],
+            'address' => ['required'],
+            'status' => ['required', 'numeric'],
         ];
     }
 }

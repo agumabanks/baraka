@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ImpersonationController extends Controller
 {
@@ -14,7 +14,7 @@ class ImpersonationController extends Controller
     {
         $admin = $request->user();
         // Authorize via role
-        if (!$admin->hasRole(['hq_admin','support','admin'])) {
+        if (! $admin->hasRole(['hq_admin', 'support', 'admin'])) {
             abort(403);
         }
 
@@ -49,7 +49,7 @@ class ImpersonationController extends Controller
     public function stop(Request $request)
     {
         $impersonatorId = session('impersonator_id');
-        if (!$impersonatorId) {
+        if (! $impersonatorId) {
             return back()->with('error', 'No impersonation session active.');
         }
 
@@ -62,15 +62,16 @@ class ImpersonationController extends Controller
             ->limit(1)
             ->update(['status' => 'stopped', 'ended_at' => now(), 'updated_at' => now()]);
 
-        session()->forget(['impersonator_id','impersonation_started_at']);
+        session()->forget(['impersonator_id', 'impersonation_started_at']);
 
         if ($admin) {
             Auth::login($admin);
+
             return redirect()->route('admin.customers.index')->with('success', 'Impersonation ended.');
         }
 
         Auth::logout();
+
         return redirect()->route('login');
     }
 }
-

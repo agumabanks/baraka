@@ -24,15 +24,15 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'                  => ['required','string','max:191'],
-            'business_name'         => ['required','string','unique:merchants'],
-            'mobile'                => ['required','numeric','digits_between:11,14','unique:users'],
+            'name' => ['required', 'string', 'max:191'],
+            'business_name' => ['required', 'string', 'unique:merchants'],
+            'mobile' => ['required', 'numeric', 'digits_between:11,14', 'unique:users'],
             // 'email'                 => ['required','string','unique:users'],
-            'hub'                   => ['required','numeric'],
-            'status'                => ['required','numeric'],
-            'password'              => ['required','min:6'],
-            'address'               => ['required','string','max:191'],
-            'payment_period'        => ['numeric']
+            'hub' => ['required', 'numeric'],
+            'status' => ['required', 'numeric'],
+            'password' => ['required', 'min:6'],
+            'address' => ['required', 'string', 'max:191'],
+            'payment_period' => ['numeric'],
 
         ];
     }

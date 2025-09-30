@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Shipment;
-use App\Models\Backend\Parcel;
-use App\Models\User;
 use App\Models\Backend\Hub;
+use App\Models\Backend\Parcel;
 use App\Models\RateCard;
-use App\Services\SsccGenerator;
+use App\Models\Shipment;
+use App\Models\User;
 use App\Services\Gs1LabelGenerator;
-use Illuminate\Http\Request;
+use App\Services\SsccGenerator;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class BookingWizardController extends Controller
 {
@@ -41,6 +41,7 @@ class BookingWizardController extends Controller
             $this->authorize('create', \App\Models\Shipment::class);
             $branches = Hub::active()->get();
             $rateCards = RateCard::active()->get();
+
             return view('admin.booking-wizard.index', compact('branches', 'rateCards'));
         }
 
@@ -68,7 +69,7 @@ class BookingWizardController extends Controller
         return response()->json([
             'success' => true,
             'customer' => $customer,
-            'next_step' => 2
+            'next_step' => 2,
         ]);
     }
 
@@ -98,7 +99,7 @@ class BookingWizardController extends Controller
 
         return response()->json([
             'success' => true,
-            'next_step' => 3
+            'next_step' => 3,
         ]);
     }
 
@@ -126,7 +127,7 @@ class BookingWizardController extends Controller
         return response()->json([
             'success' => true,
             'pricing' => $pricing,
-            'next_step' => 4
+            'next_step' => 4,
         ]);
     }
 
@@ -178,27 +179,28 @@ class BookingWizardController extends Controller
             $labelPdf = Gs1LabelGenerator::generateBulkLabels(collect($parcels));
 
             // Save labels to storage
-            $labelPath = 'labels/shipment_' . $shipment->id . '.pdf';
+            $labelPath = 'labels/shipment_'.$shipment->id.'.pdf';
             Storage::put($labelPath, $labelPdf);
 
             DB::commit();
 
             // Clear session
             session()->forget(['booking_customer_id', 'booking_origin_branch_id', 'booking_dest_branch_id',
-                              'booking_service_level', 'booking_incoterm', 'booking_parcels', 'booking_total_price']);
+                'booking_service_level', 'booking_incoterm', 'booking_parcels', 'booking_total_price']);
 
             return response()->json([
                 'success' => true,
                 'shipment' => $shipment->load(['parcels', 'customer']),
                 'label_url' => Storage::url($labelPath),
-                'next_step' => 5
+                'next_step' => 5,
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create shipment: ' . $e->getMessage()
+                'message' => 'Failed to create shipment: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -232,7 +234,7 @@ class BookingWizardController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Shipment handed over successfully',
-            'tracking_url' => route('tracking.show', $shipment->tracking_number)
+            'tracking_url' => route('tracking.show', $shipment->tracking_number),
         ]);
     }
 
@@ -245,13 +247,13 @@ class BookingWizardController extends Controller
             'shipment_id' => 'required|exists:shipments,id',
         ]);
 
-        $labelPath = 'labels/shipment_' . $request->shipment_id . '.pdf';
+        $labelPath = 'labels/shipment_'.$request->shipment_id.'.pdf';
 
-        if (!Storage::exists($labelPath)) {
+        if (! Storage::exists($labelPath)) {
             abort(404, 'Labels not found');
         }
 
-        return Storage::download($labelPath, 'shipment_' . $request->shipment_id . '_labels.pdf');
+        return Storage::download($labelPath, 'shipment_'.$request->shipment_id.'_labels.pdf');
     }
 
     /**
@@ -264,7 +266,7 @@ class BookingWizardController extends Controller
             ->where('dest_country', 'CD')   // Default to DRC
             ->first();
 
-        if (!$rateCard) {
+        if (! $rateCard) {
             return ['error' => 'No rate card found'];
         }
 
@@ -307,7 +309,7 @@ class BookingWizardController extends Controller
     private function generateTrackingId(): string
     {
         do {
-            $trackingId = 'BK' . date('Y') . strtoupper(substr(md5(microtime()), 0, 8));
+            $trackingId = 'BK'.date('Y').strtoupper(substr(md5(microtime()), 0, 8));
         } while (Parcel::where('tracking_id', $trackingId)->exists());
 
         return $trackingId;

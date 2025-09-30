@@ -122,6 +122,7 @@
         border-radius: 16px;
         position: relative;
         transition: color 0.25s ease, background-color 0.25s ease, transform 0.25s ease;
+        justify-content: flex-start;
     }
 
     .admin-sidebar .nav-link > i {
@@ -137,6 +138,7 @@
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
         color: inherit;
         transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+        flex-shrink: 0;
     }
 
     .admin-sidebar .nav-link:hover,
@@ -217,6 +219,65 @@
         outline-offset: 2px;
     }
 
+    /* Badge Styles */
+    .admin-sidebar .nav-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1;
+        border-radius: 10px;
+        background: var(--color-error-500);
+        color: #ffffff;
+        margin-left: auto;
+        margin-right: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.25s ease, transform 0.25s ease;
+    }
+
+    .admin-sidebar .nav-badge--success {
+        background: var(--color-success-500);
+    }
+
+    .admin-sidebar .nav-badge--warning {
+        background: var(--color-warning-500);
+        color: #000000;
+    }
+
+    .admin-sidebar .nav-badge--info {
+        background: var(--color-info-500);
+    }
+
+    .admin-sidebar .nav-badge--attention {
+        background: var(--color-error-500);
+        animation: pulse-attention 2s infinite;
+    }
+
+    @keyframes pulse-attention {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+    }
+
+    .admin-sidebar .nav-link:hover .nav-badge,
+    .admin-sidebar .nav-link:focus .nav-badge {
+        transform: scale(1.05);
+    }
+
+    .admin-sidebar .nav-link-text {
+        flex: 1;
+        text-align: left;
+    }
+
     @media (max-width: 991.98px) {
         .admin-sidebar .offcanvas-nav {
             border-right: 0;
@@ -274,22 +335,51 @@
                         <li class="nav-item ">
                             @if (hasPermission('dashboard_read') == true)
                                 <a class="nav-link {{ request()->is('/dashboard*') ? 'active' : '' }}"
-                                    href="{{ url('/dashboard') }}"><i aria-hidden="true" class="fa fa-home"></i>{{ __('menus.dashboard') }}</a>
+                                    href="{{ url('/dashboard') }}">
+                                    <i aria-hidden="true" class="fa fa-home"></i>
+                                    <span class="nav-link-text">{{ __('menus.dashboard') }}</span>
+                                    @php
+                                        // SLA alerts badge - show if any SLA breaches today
+                                        $slaAlerts = 0; // TODO: Fetch from cache/API
+                                    @endphp
+                                    @if($slaAlerts > 0)
+                                        <span class="nav-badge nav-badge--attention"
+                                              aria-label="{{ $slaAlerts }} SLA alerts"
+                                              title="{{ $slaAlerts }} SLA alerts today">
+                                            {{ $slaAlerts }}
+                                        </span>
+                                    @endif
+                                </a>
                             @endif
                         </li>
                         @if (hasPermission('delivery_man_read') == true)
                             <li class="nav-item ">
                                 <a class="nav-link {{ request()->is('admin/deliveryman*') ? 'active' : '' }}"
-                                    href="{{ route('deliveryman.index') }}"><i aria-hidden="true"
-                                        class="fa fa-people-carry"></i>{{ __('menus.deliveryman') }}</a>
+                                    href="{{ route('deliveryman.index') }}">
+                                    <i aria-hidden="true" class="fa fa-people-carry"></i>
+                                    <span class="nav-link-text">{{ __('menus.deliveryman') }}</span>
+                                    @php
+                                        // Active drivers badge
+                                        $activeDrivers = 0; // TODO: Fetch from cache/API
+                                    @endphp
+                                    @if($activeDrivers > 0)
+                                        <span class="nav-badge nav-badge--success"
+                                              aria-label="{{ $activeDrivers }} active drivers"
+                                              title="{{ $activeDrivers }} active drivers">
+                                            {{ $activeDrivers }}
+                                        </span>
+                                    @endif
+                                </a>
                             </li>
                         @endif
                         @if (hasPermission('hub_read') == true || hasPermission('hub_payment_read') == true)
                             <li class="nav-item">
                                 <a class="nav-link @navActive(['hubs.*','hub.hub-payment.*','admin.hub.*'])"
                                     href="#" data-bs-toggle="collapse" data-bs-target="#hub-manage" aria-expanded="@navExpanded(['hubs.*','hub.hub-payment.*','admin.hub.*'])"
-                                    aria-controls="hub-manage"><i aria-hidden="true"
-                                        class="fas fa-warehouse"></i>{{ __('menus.hub_mange') }}</a>
+                                    aria-controls="hub-manage">
+                                    <i aria-hidden="true" class="fas fa-warehouse"></i>
+                                    <span class="nav-link-text">{{ __('menus.hub_mange') }}</span>
+                                </a>
                                 <div id="hub-manage" class="collapse submenu @navShow(['hubs.*','hub.hub-payment.*','admin.hub.*'])">
                                     <ul class="nav flex-column sidebar-submenu">
                                         @if (hasPermission('hub_read') == true)
@@ -313,8 +403,10 @@
                             <li class="nav-item">
                                 <a class="nav-link @navActive(['merchant.*','merchant.manage.payment.*'])"
                                     href="#" data-bs-toggle="collapse" data-bs-target="#merchant-manage" aria-expanded="@navExpanded(['merchant.*','merchant.manage.payment.*'])"
-                                    aria-controls="merchant-manage"><i aria-hidden="true"
-                                        class="fas fa-users"></i>{{ __('menus.merchant_manage') }}</a>
+                                    aria-controls="merchant-manage">
+                                    <i aria-hidden="true" class="fas fa-users"></i>
+                                    <span class="nav-link-text">{{ __('menus.merchant_manage') }}</span>
+                                </a>
                                 <div id="merchant-manage" class="collapse submenu @navShow(['merchant.*','merchant.manage.payment.*'])">
                                     <ul class="nav flex-column sidebar-submenu">
                                         @if (hasPermission('merchant_read') == true)
@@ -337,24 +429,63 @@
                         @if (hasPermission('todo_read') == true)
                             <li class="nav-item ">
                                 <a class="nav-link @navActive(['todo.*'])"
-                                    href="{{ route('todo.index') }}"><i aria-hidden="true" class="fas fa-tasks"></i>{{ __('menus.todo_list') }}</a>
+                                    href="{{ route('todo.index') }}">
+                                    <i aria-hidden="true" class="fas fa-tasks"></i>
+                                    <span class="nav-link-text">{{ __('menus.todo_list') }}</span>
+                                    @php
+                                        // Open todos badge
+                                        $openTodos = 0; // TODO: Fetch from cache/API
+                                    @endphp
+                                    @if($openTodos > 0)
+                                        <span class="nav-badge nav-badge--warning"
+                                              aria-label="{{ $openTodos }} open tasks"
+                                              title="{{ $openTodos }} open tasks">
+                                            {{ $openTodos }}
+                                        </span>
+                                    @endif
+                                </a>
                             </li>
                         @endif
-
 
                         @if (hasPermission('support_read') == true)
                             <li class="nav-item ">
                                 <a class="nav-link @navActive(['support.*'])"
-                                    href="{{ route('support.index') }}"><i aria-hidden="true" class="fa fa-comments"></i>{{ __('menus.support') }}</a>
+                                    href="{{ route('support.index') }}">
+                                    <i aria-hidden="true" class="fa fa-comments"></i>
+                                    <span class="nav-link-text">{{ __('menus.support') }}</span>
+                                    @php
+                                        // Urgent tickets badge
+                                        $urgentTickets = 0; // TODO: Fetch from cache/API
+                                    @endphp
+                                    @if($urgentTickets > 0)
+                                        <span class="nav-badge nav-badge--attention"
+                                              aria-label="{{ $urgentTickets }} urgent tickets"
+                                              title="{{ $urgentTickets }} urgent support tickets">
+                                            {{ $urgentTickets }}
+                                        </span>
+                                    @endif
+                                </a>
                             </li>
                         @endif
-
-
 
                         @if (hasPermission('parcel_read') == true)
                             <li class="nav-item ">
                                 <a class="nav-link @navActive(['parcel.*'])"
-                                    href="{{ route('parcel.index') }}"><i aria-hidden="true" class="fa fa-dolly"></i>{{ __('menus.parcel') }}</a>
+                                    href="{{ route('parcel.index') }}">
+                                    <i aria-hidden="true" class="fa fa-dolly"></i>
+                                    <span class="nav-link-text">{{ __('menus.parcel') }}</span>
+                                    @php
+                                        // Exception parcels badge
+                                        $exceptionParcels = 0; // TODO: Fetch from cache/API
+                                    @endphp
+                                    @if($exceptionParcels > 0)
+                                        <span class="nav-badge nav-badge--error"
+                                              aria-label="{{ $exceptionParcels }} exception parcels"
+                                              title="{{ $exceptionParcels }} parcels requiring attention">
+                                            {{ $exceptionParcels }}
+                                        </span>
+                                    @endif
+                                </a>
                             </li>
                         @endif
 

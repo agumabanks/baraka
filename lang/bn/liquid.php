@@ -1,6 +1,6 @@
 <?php
 
-return[
+return [
     'title' => 'শিরোনাম',
-    'charge'=> 'চার্জ'
+    'charge' => 'চার্জ',
 ];

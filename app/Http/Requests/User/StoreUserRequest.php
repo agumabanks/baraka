@@ -24,18 +24,18 @@ class StoreUserRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'           => ['required','string','max:191'],
-            'email'          => ['required','string','unique:users'],
-            'password'       => ['required','string'],
-            'mobile'         => ['required','numeric','digits_between:11,14','unique:users'],
-            'nid_number'     => ['nullable','numeric','digits_between:1,20'],
-            'designation_id' => ['required','numeric'],
-            'department_id'  => ['required','numeric'],
-            'image'          => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
-            'joining_date'   => ['required'],
-            'salary'         => ['numeric'],
-            'address'        => ['required','string','max:191'],
-            'status'         => ['required','numeric'],
+            'name' => ['required', 'string', 'max:191'],
+            'email' => ['required', 'string', 'unique:users'],
+            'password' => ['required', 'string'],
+            'mobile' => ['required', 'numeric', 'digits_between:11,14', 'unique:users'],
+            'nid_number' => ['nullable', 'numeric', 'digits_between:1,20'],
+            'designation_id' => ['required', 'numeric'],
+            'department_id' => ['required', 'numeric'],
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
+            'joining_date' => ['required'],
+            'salary' => ['numeric'],
+            'address' => ['required', 'string', 'max:191'],
+            'status' => ['required', 'numeric'],
         ];
     }
 }

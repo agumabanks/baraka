@@ -10,7 +10,7 @@ class Carrier extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name','code','mode'
+        'name', 'code', 'mode',
     ];
 
     public function services()
@@ -18,4 +18,3 @@ class Carrier extends Model
         return $this->hasMany(CarrierService::class);
     }
 }
-

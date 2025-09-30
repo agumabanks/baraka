@@ -7,8 +7,8 @@ return [
     ParcelStatus::PICKUP_RE_SCHEDULE => 'Reprogrammation du ramassage de colis',
     ParcelStatus::RECEIVED_BY_PICKUP_MAN => 'Colis reçu par le livreur de ramassage',
     ParcelStatus::RECEIVED_WAREHOUSE => 'Colis reçu à l\'entrepôt',
-    ParcelStatus::TRANSFER_TO_HUB        => 'Colis transféré au hub',
-    ParcelStatus::RECEIVED_BY_HUB        => 'Reçu par le hub',
+    ParcelStatus::TRANSFER_TO_HUB => 'Colis transféré au hub',
+    ParcelStatus::RECEIVED_BY_HUB => 'Reçu par le hub',
     ParcelStatus::DELIVERY_MAN_ASSIGN => 'Livreur affecté',
     ParcelStatus::DELIVERY_RE_SCHEDULE => 'Reprogrammation de la livraison',
 
@@ -24,10 +24,9 @@ return [
     ParcelStatus::RETURNED_MERCHANT => 'Retourné au marchand',
     ParcelStatus::RETURN_RECEIVED_BY_MERCHANT => 'Retour reçu par le marchand',
 
-    'hub_name'                      => 'Nom du hub',
-    'hub_phone'                     => 'Téléphone du hub',
-    'delivery_man'                  => 'Livreur',
-    'delivery_man_phone'            => 'Téléphone du livreur'
-
+    'hub_name' => 'Nom du hub',
+    'hub_phone' => 'Téléphone du hub',
+    'delivery_man' => 'Livreur',
+    'delivery_man_phone' => 'Téléphone du livreur',
 
 ];

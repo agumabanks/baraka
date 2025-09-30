@@ -26,11 +26,10 @@ class Categorys extends Model
             'slug',
             'description',
         ];
+
         return LogOptions::defaults()
-        ->useLogName('Categories')
-        ->logOnly($logAttributes)
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Categories')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
-
-
 }

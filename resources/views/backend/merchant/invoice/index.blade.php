@@ -71,7 +71,7 @@
                                                 @else
                                                     <div class="input-group mb-3">
                                                         <div class="input-group-prepend be-addon">
-                                                            <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
+                                                            <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
                                                             <div class="dropdown-menu">
                                                                 {!! $invoice->update_status !!}
                                                             </div>

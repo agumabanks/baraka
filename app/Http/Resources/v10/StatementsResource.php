@@ -15,15 +15,15 @@ class StatementsResource extends JsonResource
     public function toArray($request)
     {
         return [
-            "id"                => $this->id,
-            "note"              => $this->note,
-            "date"              => (string) dateFormat($this->date),
-            "amount"            => (string) number_format($this->amount,2),
-            "currency"          => (string) settings()->currency,
-            "type"              => (int)$this->type,
-            "typeName"          => trans("AccountHeads.".$this->type),
-            'created_at'        => $this->created_at->format('d M Y, h:i A'),
-            'updated_at'        => $this->updated_at->format('d M Y, h:i A'),
+            'id' => $this->id,
+            'note' => $this->note,
+            'date' => (string) dateFormat($this->date),
+            'amount' => (string) number_format($this->amount, 2),
+            'currency' => (string) settings()->currency,
+            'type' => (int) $this->type,
+            'typeName' => trans('AccountHeads.'.$this->type),
+            'created_at' => $this->created_at->format('d M Y, h:i A'),
+            'updated_at' => $this->updated_at->format('d M Y, h:i A'),
         ];
     }
 }

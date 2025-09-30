@@ -9,14 +9,13 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class DangerousGood extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'shipment_id','un_number','dg_class','packing_group','proper_shipping_name','net_qty','pkg_type','status','docs'
+        'shipment_id', 'un_number', 'dg_class', 'packing_group', 'proper_shipping_name', 'net_qty', 'pkg_type', 'status', 'docs',
     ];
 
     protected $casts = [
         'docs' => 'array',
     ];
 }
-
