@@ -1,7 +1,7 @@
 <?php
 
-return array (
-    'packaging_title'   => 'Premium Packaging',
+return [
+    'packaging_title' => 'Premium Packaging',
     'packaging_message' => 'Worried about your parcel packaging? We\'ve got you covered. Find the right fit on RX and order today.',
     'here_is_overview' => 'Here\'s a quick overview of your activity.',
     'no_recent_shipments' => 'No recent shipments yet.',
@@ -80,4 +80,4 @@ return array (
     'weight_result' => 'Weight',
     'customer_portal_login' => 'Customer Portal Login',
     'staff_admin_login' => 'Staff/Admin Login',
-);
+];

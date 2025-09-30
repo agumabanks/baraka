@@ -16,9 +16,9 @@ class SmsSendSettingsSeeder extends Seeder
     public function run()
     {
         foreach (trans('SmsSendStatus') as $key => $status) {
-            $smsSendSetting                       = new SmsSendSetting();
-            $smsSendSetting->sms_send_status      = $key;
-            $smsSendSetting->status               = Status::INACTIVE;
+            $smsSendSetting = new SmsSendSetting;
+            $smsSendSetting->sms_send_status = $key;
+            $smsSendSetting->status = Status::INACTIVE;
             $smsSendSetting->save();
         }
 

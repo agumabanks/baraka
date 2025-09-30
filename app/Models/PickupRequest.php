@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 class PickupRequest extends Model
 {
     use HasFactory;
-    public function merchant(){
-        return $this->belongsTo(Merchant::class,'merchant_id','id');
+
+    public function merchant()
+    {
+        return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
 }

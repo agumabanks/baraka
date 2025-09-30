@@ -22,17 +22,17 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'asset_id'        => ['required'],
-            'fuel_type'       => ['required'],
+            'asset_id' => ['required'],
+            'fuel_type' => ['required'],
             'invoice_of_fuel' => ['required'],
-            'amount'          => ['required','numeric'],
+            'amount' => ['required', 'numeric'],
         ];
     }
 
     public function attributes()
     {
         return [
-            'asset_id' => 'asset'
+            'asset_id' => 'asset',
         ];
     }
 }

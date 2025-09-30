@@ -10,7 +10,7 @@ class CarrierService extends Model
     use HasFactory;
 
     protected $fillable = [
-        'carrier_id','code','name','requires_eawb'
+        'carrier_id', 'code', 'name', 'requires_eawb',
     ];
 
     public function carrier()
@@ -18,4 +18,3 @@ class CarrierService extends Model
         return $this->belongsTo(Carrier::class);
     }
 }
-

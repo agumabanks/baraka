@@ -2,14 +2,11 @@
 
 namespace App\Models\Backend;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-use App\Models\Backend\Upload;
-use App\Models\Backend\Account;
-use App\Models\Backend\Parcel;
-use App\Models\User;
 
 class Expense extends Model
 {
@@ -33,18 +30,18 @@ class Expense extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->useLogName('Expense')
-        ->logOnly([
+            ->useLogName('Expense')
+            ->logOnly([
 
-            'merchant.business_name',
-            'parcel.tracking_id',
-            'account.account_no',
-            'amount',
-            'date',
-            'receipt',
-            'note',
-        ])
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+                'merchant.business_name',
+                'parcel.tracking_id',
+                'account.account_no',
+                'amount',
+                'date',
+                'receipt',
+                'note',
+            ])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     // Get all row. Descending order using scope.
@@ -61,22 +58,26 @@ class Expense extends Model
 
     public function getImageAttribute()
     {
-        if (!empty($this->upload->original['original']) && file_exists(public_path($this->upload->original['original']))) {
+        if (! empty($this->upload->original['original']) && file_exists(public_path($this->upload->original['original']))) {
             return static_asset($this->upload->original['original']);
         }
+
         return static_asset('images/default/user.png');
     }
 
-    public function merchant(){
-        return $this->belongsTo(Merchant::class,'merchant_id','id');
+    public function merchant()
+    {
+        return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
 
-    public function deliveryman(){
-        return $this->belongsTo(DeliveryMan::class,'delivery_man_id','id');
+    public function deliveryman()
+    {
+        return $this->belongsTo(DeliveryMan::class, 'delivery_man_id', 'id');
     }
 
-    public function user(){
-        return $this->belongsTo(User::class,'user_id','id');
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function account()

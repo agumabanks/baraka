@@ -10,7 +10,6 @@ class SortationBin extends Model
     use HasFactory;
 
     protected $fillable = [
-        'branch_id','code','lane','status'
+        'branch_id', 'code', 'lane', 'status',
     ];
 }
-

@@ -44,14 +44,14 @@ class MerchantPayment extends Model
         ];
 
         return LogOptions::defaults()
-        ->useLogName('MerchantPayment')
-        ->logOnly($logAttributes)
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('MerchantPayment')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
+
     // Merchant details
     public function merchant()
     {
         return $this->belongsTo(Merchant::class);
     }
-
 }

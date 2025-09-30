@@ -11,8 +11,9 @@ class SurchargeRuleFactory extends Factory
 
     public function definition(): array
     {
-        $triggers = ['fuel','security','remote_area','oversize','weekend','dg','re_attempt','custom'];
-        $rateType = $this->faker->randomElement(['flat','percent']);
+        $triggers = ['fuel', 'security', 'remote_area', 'oversize', 'weekend', 'dg', 're_attempt', 'custom'];
+        $rateType = $this->faker->randomElement(['flat', 'percent']);
+
         return [
             'code' => strtoupper($this->faker->bothify('SRG-###')),
             'name' => ucfirst($this->faker->randomElement($triggers)).' Surcharge',
@@ -25,4 +26,3 @@ class SurchargeRuleFactory extends Factory
         ];
     }
 }
-

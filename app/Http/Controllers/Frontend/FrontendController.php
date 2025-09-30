@@ -17,156 +17,207 @@ use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Http;
+
 class FrontendController extends Controller
 {
-    protected $serviceRepo,$whycourierRepo,$deliveryChargeRepo,$partnerRepo,$parcelRepo,$pageRepo,$faqRepo,$MerchantParcelRepo,$blogRepo;
+    protected $serviceRepo;
+
+    protected $whycourierRepo;
+
+    protected $deliveryChargeRepo;
+
+    protected $partnerRepo;
+
+    protected $parcelRepo;
+
+    protected $pageRepo;
+
+    protected $faqRepo;
+
+    protected $MerchantParcelRepo;
+
+    protected $blogRepo;
+
     public function __construct(
-        ServiceInterface        $serviceRepo,
-        WhyCourierInterface     $whycourierRepo,
+        ServiceInterface $serviceRepo,
+        WhyCourierInterface $whycourierRepo,
         DeliveryChargeInterface $deliveryChargeRepo,
-        PartnerInterface        $partnerRepo,
-        ParcelInterface         $parcelRepo,
-        PagesInterface          $pageRepo,
-        FaqInterface            $faqRepo,
+        PartnerInterface $partnerRepo,
+        ParcelInterface $parcelRepo,
+        PagesInterface $pageRepo,
+        FaqInterface $faqRepo,
         MerchantParcelInterface $MerchantParcelRepo,
-        BlogsInterface          $blogRepo
-        )
-    {
-        $this->serviceRepo        = $serviceRepo;
-        $this->whycourierRepo     = $whycourierRepo;
+        BlogsInterface $blogRepo
+    ) {
+        $this->serviceRepo = $serviceRepo;
+        $this->whycourierRepo = $whycourierRepo;
         $this->deliveryChargeRepo = $deliveryChargeRepo;
-        $this->partnerRepo        = $partnerRepo;
-        $this->parcelRepo         = $parcelRepo;
-        $this->pageRepo           = $pageRepo;
-        $this->faqRepo            = $faqRepo;
+        $this->partnerRepo = $partnerRepo;
+        $this->parcelRepo = $parcelRepo;
+        $this->pageRepo = $pageRepo;
+        $this->faqRepo = $faqRepo;
         $this->MerchantParcelRepo = $MerchantParcelRepo;
-        $this->blogRepo           = $blogRepo;
+        $this->blogRepo = $blogRepo;
     }
-    public function index(){ 
- 
+
+    public function index()
+    {
 
         $data = [];
-        $data['services']     = $this->serviceRepo->getAll(); 
-        $data['whycouriers']  = $this->whycourierRepo->getAll();
-        $data['pricing']      = $this->deliveryChargeRepo->getAllCharge(); 
-        $data['partners']     = $this->partnerRepo->getAll(); 
-        $data['blogs']        = $this->blogRepo->getActive(3); 
-        
-        return view('frontend.home',$data);
+        $data['services'] = $this->serviceRepo->getAll();
+        $data['whycouriers'] = $this->whycourierRepo->getAll();
+        $data['pricing'] = $this->deliveryChargeRepo->getAllCharge();
+        $data['partners'] = $this->partnerRepo->getAll();
+        $data['blogs'] = $this->blogRepo->getActive(3);
+
+        return view('frontend.home', $data);
     }
 
-    public function tracking(Request $request, $trackingId = null){  
+    public function tracking(Request $request, $trackingId = null)
+    {
         if ($trackingId) {
             $request->merge(['tracking_id' => $trackingId]);
         }
-        $parcel         = $this->parcelRepo->parcelTracking($request);
-        $parcelevents   = $this->parcelRepo->parcelEvents($parcel->id?? null);
-        return view('frontend.pages.tracking',compact('parcelevents','parcel','request'));
+        $parcel = $this->parcelRepo->parcelTracking($request);
+        $parcelevents = $this->parcelRepo->parcelEvents($parcel->id ?? null);
+
+        return view('frontend.pages.tracking', compact('parcelevents', 'parcel', 'request'));
     }
 
-    public function aboutUs(){
+    public function aboutUs()
+    {
         $page = $this->pageRepo->get('about_us');
-        if(!$page):
-            Toastr::error(__('parcel.error_msg'),__('message.error'));
+        if (! $page) {
+            Toastr::error(__('parcel.error_msg'), __('message.error'));
+
             return redirect()->back();
-        endif;
-        return view('frontend.pages.page',compact('page'));
+        }
+
+        return view('frontend.pages.page', compact('page'));
     }
-    public function privacyPolicy(){
+
+    public function privacyPolicy()
+    {
         $page = $this->pageRepo->get('privacy_policy');
-        if(!$page):
-            Toastr::error(__('parcel.error_msg'),__('message.error'));
+        if (! $page) {
+            Toastr::error(__('parcel.error_msg'), __('message.error'));
+
             return redirect()->back();
-        endif;
-        return view('frontend.pages.page',compact('page'));
+        }
+
+        return view('frontend.pages.page', compact('page'));
     }
- 
-    public function termsOfCondition(){
+
+    public function termsOfCondition()
+    {
         $page = $this->pageRepo->get('terms_conditions');
-        if(!$page):
-            Toastr::error(__('parcel.error_msg'),__('message.error'));
+        if (! $page) {
+            Toastr::error(__('parcel.error_msg'), __('message.error'));
+
             return redirect()->back();
-        endif;
-        return view('frontend.pages.page',compact('page'));
+        }
+
+        return view('frontend.pages.page', compact('page'));
     }
-    public function faq(){
+
+    public function faq()
+    {
         $page = $this->pageRepo->get('faq');
         $faqs = $this->faqRepo->getActive();
-        if(!$page):
-            Toastr::error(__('parcel.error_msg'),__('message.error'));
+        if (! $page) {
+            Toastr::error(__('parcel.error_msg'), __('message.error'));
+
             return redirect()->back();
-        endif;
-        return view('frontend.pages.faq',compact('page','faqs'));
+        }
+
+        return view('frontend.pages.faq', compact('page', 'faqs'));
     }
 
-    public function subscribe(Request $request){
-        try { 
-            $validator  = Validator::make($request->all(),[
-                'email'=>['required','email']
+    public function subscribe(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => ['required', 'email'],
             ]);
-            if($validator->fails()):
-                Toastr::error(__('parcel.error_msg'),__('message.error'));  
+            if ($validator->fails()) {
+                Toastr::error(__('parcel.error_msg'), __('message.error'));
+
                 return redirect()->back()->withInput($request->all())->withErrors($validator->errors());
-            endif;
-            if($this->MerchantParcelRepo->subscribe($request) === true):
-                Toastr::success(__('levels.successfully_subscribed'),__('message.success')); 
+            }
+            if ($this->MerchantParcelRepo->subscribe($request) === true) {
+                Toastr::success(__('levels.successfully_subscribed'), __('message.success'));
+
                 return redirect()->back();
-            elseif($this->MerchantParcelRepo->subscribe($request) == 1):
-                Toastr::error(__('levels.already_subscribed'),__('message.error'));  
+            } elseif ($this->MerchantParcelRepo->subscribe($request) == 1) {
+                Toastr::error(__('levels.already_subscribed'), __('message.error'));
+
                 return redirect()->back()->withInput($request->all());
-            endif;
-         } catch (\Throwable $th) { 
-            Toastr::error(__('parcel.error_msg'),__('message.error'));  
-            return redirect()->back()->withInput($request->all());
-         }
-    }
+            }
+        } catch (\Throwable $th) {
+            Toastr::error(__('parcel.error_msg'), __('message.error'));
 
-
-    public function contactSendPage(){
-        $page = $this->pageRepo->get('contact'); 
-        if(!$page):
-            Toastr::error(__('parcel.error_msg'),__('message.error'));
-            return redirect()->back();
-        endif;
-        return view('frontend.pages.contact',compact('page'));
-    }
-
-    public function contactMessageSend(Request $request){
-        try { 
-            $validator    =  Validator::make($request->all(),[
-                'name'    => ['required'],
-                'email'   => ['required','email'],
-                'subject' => ['required'],
-                'message' => ['required','min:10']
-            ]);
-            if($validator->fails()):
-                Toastr::error(__('parcel.error_msg'),__('message.error'));  
-                return redirect()->back()->withInput($request->all())->withErrors($validator->errors());
-            endif;
-            Mail::send(new ContactMail($request->all()));
-            Toastr::success(__('levels.message_sended_successfully'),__('message.success')); 
-            return redirect()->back(); 
-        } catch (\Throwable $th) { 
-            Toastr::error(__('parcel.error_msg'),__('message.error'));  
             return redirect()->back()->withInput($request->all());
         }
     }
 
-    public function blogs(){ 
-        $blogs         = $this->blogRepo->getActive(); 
-        return view('frontend.pages.blogs_page',compact('blogs'));
-    }
-    public function blogDetails($id){
-        $this->blogRepo->viewcount($id);
-        $blog         = $this->blogRepo->getFind($id);
-        $latest_blogs = $this->blogRepo->getLatestBlogs();
-        return view('frontend.pages.blog_details',compact('blog','latest_blogs'));
+    public function contactSendPage()
+    {
+        $page = $this->pageRepo->get('contact');
+        if (! $page) {
+            Toastr::error(__('parcel.error_msg'), __('message.error'));
+
+            return redirect()->back();
+        }
+
+        return view('frontend.pages.contact', compact('page'));
     }
 
-    public function serviceDetails($id){
-        $service         = $this->serviceRepo->getFind($id);
-        $latest_services = $this->serviceRepo->latest_services(); 
+    public function contactMessageSend(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => ['required'],
+                'email' => ['required', 'email'],
+                'subject' => ['required'],
+                'message' => ['required', 'min:10'],
+            ]);
+            if ($validator->fails()) {
+                Toastr::error(__('parcel.error_msg'), __('message.error'));
+
+                return redirect()->back()->withInput($request->all())->withErrors($validator->errors());
+            }
+            Mail::send(new ContactMail($request->all()));
+            Toastr::success(__('levels.message_sended_successfully'), __('message.success'));
+
+            return redirect()->back();
+        } catch (\Throwable $th) {
+            Toastr::error(__('parcel.error_msg'), __('message.error'));
+
+            return redirect()->back()->withInput($request->all());
+        }
+    }
+
+    public function blogs()
+    {
+        $blogs = $this->blogRepo->getActive();
+
+        return view('frontend.pages.blogs_page', compact('blogs'));
+    }
+
+    public function blogDetails($id)
+    {
+        $this->blogRepo->viewcount($id);
+        $blog = $this->blogRepo->getFind($id);
+        $latest_blogs = $this->blogRepo->getLatestBlogs();
+
+        return view('frontend.pages.blog_details', compact('blog', 'latest_blogs'));
+    }
+
+    public function serviceDetails($id)
+    {
+        $service = $this->serviceRepo->getFind($id);
+        $latest_services = $this->serviceRepo->latest_services();
+
         return view('frontend.pages.service_details',compact('service','latest_services'));
     }
 }

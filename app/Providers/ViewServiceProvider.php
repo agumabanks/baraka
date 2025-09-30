@@ -26,7 +26,7 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-     
+
         View::composer('frontend.layouts.footer', ServiceComposer::class);
         View::composer('frontend.layouts.footer', SocialLinkComposer::class);
         View::composer('frontend.layouts.navbar', SocialLinkComposer::class);

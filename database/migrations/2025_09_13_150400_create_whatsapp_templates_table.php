@@ -4,10 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
-        if (!Schema::hasTable('whatsapp_templates')) {
+        if (! Schema::hasTable('whatsapp_templates')) {
             Schema::create('whatsapp_templates', function (Blueprint $table) {
                 $table->id();
                 $table->string('name')->unique();
@@ -24,4 +25,3 @@ return new class extends Migration {
         Schema::dropIfExists('whatsapp_templates');
     }
 };
-

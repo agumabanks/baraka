@@ -11,5 +11,4 @@ return [
     ParcelType::SWEET => 'मीठा',
     ParcelType::COSMETICS => 'प्रसाधन सामग्री',
 
-
 ];

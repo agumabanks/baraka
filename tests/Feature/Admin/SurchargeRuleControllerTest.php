@@ -25,6 +25,7 @@ class SurchargeRuleControllerTest extends TestCase
     private function makeAdmin(): User
     {
         $role = Role::create(['name' => 'Admin', 'slug' => 'admin']);
+
         return User::factory()->create(['role_id' => $role->id]);
     }
 
@@ -46,7 +47,7 @@ class SurchargeRuleControllerTest extends TestCase
         $admin = $this->makeAdmin();
         $this->actingAs($admin);
 
-        $this->post(route('admin.surcharges.store'), [])->assertSessionHasErrors(['code','name','trigger','rate_type','amount','active_from']);
+        $this->post(route('admin.surcharges.store'), [])->assertSessionHasErrors(['code', 'name', 'trigger', 'rate_type', 'amount', 'active_from']);
 
         $payload = [
             'code' => 'FUEL-001',
@@ -86,7 +87,7 @@ class SurchargeRuleControllerTest extends TestCase
             'active' => true,
         ]);
 
-        $this->put(route('admin.surcharges.update',$rule), [
+        $this->put(route('admin.surcharges.update', $rule), [
             'name' => 'Remote Area Fee',
             'trigger' => 'remote_area',
             'rate_type' => 'flat',

@@ -9,15 +9,14 @@ class AssetAssign extends Model
 {
     use HasFactory;
 
-    protected $fillable  = [
-    'asset_id',
-    'driver_id',
-    'from_date',
-    'to_date'];
+    protected $fillable = [
+        'asset_id',
+        'driver_id',
+        'from_date',
+        'to_date'];
 
-    public function driver(){
-        return $this->belongsTo(DeliveryMan::class,'driver_id','id');
+    public function driver()
+    {
+        return $this->belongsTo(DeliveryMan::class, 'driver_id', 'id');
     }
-
-
 }

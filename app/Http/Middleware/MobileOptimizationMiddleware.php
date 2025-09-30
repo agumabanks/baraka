@@ -12,7 +12,6 @@ class MobileOptimizationMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
@@ -57,7 +56,7 @@ class MobileOptimizationMiddleware
         // Check for mobile user agents
         $mobileAgents = [
             'Mobile', 'Android', 'iPhone', 'iPad', 'Windows Phone',
-            'BlackBerry', 'webOS', 'Opera Mini', 'IEMobile'
+            'BlackBerry', 'webOS', 'Opera Mini', 'IEMobile',
         ];
 
         foreach ($mobileAgents as $agent) {
@@ -84,7 +83,7 @@ class MobileOptimizationMiddleware
         $request->merge(['mobile_optimized' => true]);
 
         // Set mobile-specific pagination limits
-        if (!$request->has('per_page')) {
+        if (! $request->has('per_page')) {
             $request->merge(['per_page' => 20]); // Smaller pages for mobile
         }
 
@@ -105,7 +104,7 @@ class MobileOptimizationMiddleware
             'api.login' => ['attempts' => 5, 'decay' => 60], // 5 attempts per minute
             'api.register' => ['attempts' => 3, 'decay' => 60],
             'api.tracking' => ['attempts' => 30, 'decay' => 60],
-            'default' => ['attempts' => 60, 'decay' => 60]
+            'default' => ['attempts' => 60, 'decay' => 60],
         ];
 
         $limit = $limits[$route] ?? $limits['default'];
@@ -132,16 +131,16 @@ class MobileOptimizationMiddleware
             'ip' => $request->ip(),
             'user_id' => auth()->id(),
             'route' => $request->route() ? $request->route()->getName() : 'unknown',
-            'user_agent' => $request->userAgent()
+            'user_agent' => $request->userAgent(),
         ]);
 
         return response()->json([
             'success' => false,
             'message' => 'Too many requests. Please try again later.',
-            'error_code' => 'RATE_LIMIT_EXCEEDED'
+            'error_code' => 'RATE_LIMIT_EXCEEDED',
         ], 429, [
             'Retry-After' => 60,
-            'X-Rate-Limit-Reset' => now()->addMinute()->timestamp
+            'X-Rate-Limit-Reset' => now()->addMinute()->timestamp,
         ]);
     }
 
@@ -152,6 +151,7 @@ class MobileOptimizationMiddleware
     {
         // Check if client supports gzip
         $acceptEncoding = $request->header('Accept-Encoding', '');
+
         return stripos($acceptEncoding, 'gzip') !== false;
     }
 }

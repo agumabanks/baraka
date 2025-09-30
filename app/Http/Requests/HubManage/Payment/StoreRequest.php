@@ -25,19 +25,19 @@ class StoreRequest extends FormRequest
     public function rules()
     {
 
-        if(Request::input('isprocess')){
+        if (Request::input('isprocess')) {
             return [
-                'hub_id'              =>['required','numeric'],
-                'amount'              =>['required','numeric'],
-                'transaction_id'      =>['required','string'],
-                'from_account'        =>['required','numeric'],
-                'description'         => ['required','string','max:500']
+                'hub_id' => ['required', 'numeric'],
+                'amount' => ['required', 'numeric'],
+                'transaction_id' => ['required', 'string'],
+                'from_account' => ['required', 'numeric'],
+                'description' => ['required', 'string', 'max:500'],
             ];
-        }else{
+        } else {
             return [
-                'hub_id'             =>['required','numeric'],
-                'amount'             =>['required','numeric'],
-                'description'        => ['required','string','max:500']
+                'hub_id' => ['required', 'numeric'],
+                'amount' => ['required', 'numeric'],
+                'description' => ['required', 'string', 'max:500'],
             ];
         }
 

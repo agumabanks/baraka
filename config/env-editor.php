@@ -9,7 +9,7 @@ return [
     'paths' => [
         // .env file directory
         'env' => base_path(),
-        //backup files directory
+        // backup files directory
         'backupDirectory' => storage_path('env-editor'),
     ],
     // .env file name

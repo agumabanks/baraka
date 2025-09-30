@@ -24,20 +24,20 @@ class UpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'merchant_id'       => ['required','numeric'],
-            'category_id'       => ['required','numeric'],
-            'delivery_type_id'  => ['required','numeric'],
-            'customer_name'     => ['required','string','max:191'],
-            'customer_address'  => ['required','string','max:191'],
-            'customer_phone'    => ['required','string','max:191'],
-            'parcel_payment_method' => ['required','numeric']
+            'merchant_id' => ['required', 'numeric'],
+            'category_id' => ['required', 'numeric'],
+            'delivery_type_id' => ['required', 'numeric'],
+            'customer_name' => ['required', 'string', 'max:191'],
+            'customer_address' => ['required', 'string', 'max:191'],
+            'customer_phone' => ['required', 'string', 'max:191'],
+            'parcel_payment_method' => ['required', 'numeric'],
         ];
     }
 
-    public function messages() 
+    public function messages()
     {
         return [
-            'parcel_payment_method'  => 'Please select your payment method'
+            'parcel_payment_method' => 'Please select your payment method',
         ];
     }
 }

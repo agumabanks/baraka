@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class AdminUserSeeder extends Seeder
@@ -13,8 +13,8 @@ class AdminUserSeeder extends Seeder
         $email = 'info@baraka.co';
 
         $user = User::query()->where('email', $email)->first();
-        if (!$user) {
-            $user = new User();
+        if (! $user) {
+            $user = new User;
             $user->name = 'baraka Administrator';
             $user->email = $email;
         }
@@ -29,4 +29,3 @@ class AdminUserSeeder extends Seeder
         $user->save();
     }
 }
-

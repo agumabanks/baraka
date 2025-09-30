@@ -3,12 +3,11 @@
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
-if (strpos(php_sapi_name(), 'cli') !== false):
+if (strpos(php_sapi_name(), 'cli') !== false) {
 
-else:
-    define("LARAVEL_START_FROM_PUBLIC","YES");
-endif;
-
+} else {
+    define('LARAVEL_START_FROM_PUBLIC', 'YES');
+}
 
 define('LARAVEL_START', microtime(true));
 

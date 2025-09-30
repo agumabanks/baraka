@@ -20,7 +20,6 @@ use Illuminate\Http\Request;
 
 class AssetController extends Controller
 {
-
     /**
      * Display a listing of the resource.
      *
@@ -32,9 +31,11 @@ class AssetController extends Controller
     {
         $this->repo = $repo;
     }
+
     public function index()
     {
         $assets = $this->repo->all();
+
         return view('backend.asset.index', compact('assets'));
     }
 
@@ -46,8 +47,9 @@ class AssetController extends Controller
     public function create()
     {
         $assetcategorys = $this->repo->assetcategorys();
-        $hubs           = $this->repo->hubs();
-        $vehicles           = Vehicle::all();
+        $hubs = $this->repo->hubs();
+        $vehicles = Vehicle::all();
+
         return view('backend.asset.create', compact('assetcategorys', 'hubs', 'vehicles'));
     }
 
@@ -61,9 +63,11 @@ class AssetController extends Controller
     {
         if ($this->repo->store($request)) {
             Toastr::success('Asset successfully added.', __('message.success'));
+
             return redirect()->route('asset.index');
         } else {
             Toastr::error('Something went wrong.', __('message.error'));
+
             return redirect()->back()->withInput();
         }
     }
@@ -76,7 +80,8 @@ class AssetController extends Controller
      */
     public function view($id)
     {
-        $asset             = $this->repo->get($id);
+        $asset = $this->repo->get($id);
+
         return view('backend.asset.view', compact('asset'));
     }
 
@@ -88,10 +93,11 @@ class AssetController extends Controller
      */
     public function edit($id)
     {
-        $assets             = $this->repo->get($id);
-        $assetcategorys     = $this->repo->assetcategorys();
-        $hubs               = $this->repo->hubs();
-        $vehicles           = Vehicle::all();
+        $assets = $this->repo->get($id);
+        $assetcategorys = $this->repo->assetcategorys();
+        $hubs = $this->repo->hubs();
+        $vehicles = Vehicle::all();
+
         return view('backend.asset.edit', compact('assetcategorys', 'hubs', 'assets', 'vehicles'));
     }
 
@@ -106,9 +112,11 @@ class AssetController extends Controller
     {
         if ($this->repo->update($request)) {
             Toastr::success('Asset successfully Update.', __('message.success'));
+
             return redirect()->route('asset.index');
         } else {
             Toastr::error('Something went wrong.', __('message.success'));
+
             return redirect()->back()->withInput();
         }
     }
@@ -123,105 +131,116 @@ class AssetController extends Controller
     {
         $this->repo->delete($id);
         Toastr::success('Asset successfully deleted.', __('message.success'));
+
         return back();
     }
 
-    public function assignDriver($id){
-        $asset             = Asset::find($id);
-        $AssignedDrivers  = AssetAssign::where('asset_id',$asset->id)->orderBy('id','desc')->paginate(10);
-        $deliverymans = DeliveryMan::where('status',Status::ACTIVE)->get();
-        return view('backend.asset.assign_driver',compact('asset','AssignedDrivers','deliverymans'));
+    public function assignDriver($id)
+    {
+        $asset = Asset::find($id);
+        $AssignedDrivers = AssetAssign::where('asset_id', $asset->id)->orderBy('id', 'desc')->paginate(10);
+        $deliverymans = DeliveryMan::where('status', Status::ACTIVE)->get();
+
+        return view('backend.asset.assign_driver', compact('asset', 'AssignedDrivers', 'deliverymans'));
     }
 
-    public function assignedDriverStore(Request $request){
+    public function assignedDriverStore(Request $request)
+    {
         $request->validate([
-                'asset_id' =>['required'],
-                'driver_id' =>['required'],
-                'from_date'=>['required'],
-                'to_date'=>['required'],
-        ],[],['driver_id'=>'driver']);
+            'asset_id' => ['required'],
+            'driver_id' => ['required'],
+            'from_date' => ['required'],
+            'to_date' => ['required'],
+        ], [], ['driver_id' => 'driver']);
 
-
-        $AssetAssign  = AssetAssign::create($request->all());
-        if($AssetAssign):
+        $AssetAssign = AssetAssign::create($request->all());
+        if ($AssetAssign) {
             Toastr::success('Asset assigned successfully.', __('message.success'));
-            return redirect()->route('asset.assign.driver',$request->asset_id);
-        else:
+
+            return redirect()->route('asset.assign.driver', $request->asset_id);
+        } else {
             Toastr::error('Something went wrong.', __('message.success'));
+
             return redirect()->back()->withInput();
-        endif;
+        }
 
     }
 
-    public function assignedDriverUpdate(Request $request){
+    public function assignedDriverUpdate(Request $request)
+    {
         $request->validate([
-                'asset_id' =>['required'],
-                'driver_id' =>['required'],
-                'from_date'=>['required'],
-                'to_date'=>['required'],
-        ],[],['driver_id'=>'driver']);
+            'asset_id' => ['required'],
+            'driver_id' => ['required'],
+            'from_date' => ['required'],
+            'to_date' => ['required'],
+        ], [], ['driver_id' => 'driver']);
 
-
-        $AssetAssign            = AssetAssign::find($request->id);
-        $AssetAssign->asset_id  = $request->asset_id;
+        $AssetAssign = AssetAssign::find($request->id);
+        $AssetAssign->asset_id = $request->asset_id;
         $AssetAssign->driver_id = $request->driver_id;
         $AssetAssign->from_date = $request->from_date;
-        $AssetAssign->to_date   = $request->to_date;
+        $AssetAssign->to_date = $request->to_date;
         $AssetAssign->save();
 
-        if($AssetAssign):
+        if ($AssetAssign) {
             Toastr::success('Asset assigned successfully Updated.', __('message.success'));
-            return redirect()->route('asset.assign.driver',$request->asset_id);
-        else:
+
+            return redirect()->route('asset.assign.driver', $request->asset_id);
+        } else {
             Toastr::error('Something went wrong.', __('message.success'));
+
             return redirect()->back()->withInput();
-        endif;
+        }
     }
 
-    public function assignDriverEdit($id){
-        $assetAssigned     = AssetAssign::find($id);
-        $asset             = Asset::find($assetAssigned->asset_id);
-        $AssignedDrivers   = AssetAssign::where('asset_id',$assetAssigned->asset_id)->orderBy('id','desc')->paginate(10);
-        $deliverymans      = DeliveryMan::where('status',Status::ACTIVE)->get();
-        return view('backend.asset.assign_driver',compact('asset','AssignedDrivers','deliverymans','assetAssigned'));
+    public function assignDriverEdit($id)
+    {
+        $assetAssigned = AssetAssign::find($id);
+        $asset = Asset::find($assetAssigned->asset_id);
+        $AssignedDrivers = AssetAssign::where('asset_id', $assetAssigned->asset_id)->orderBy('id', 'desc')->paginate(10);
+        $deliverymans = DeliveryMan::where('status', Status::ACTIVE)->get();
+
+        return view('backend.asset.assign_driver', compact('asset', 'AssignedDrivers', 'deliverymans', 'assetAssigned'));
     }
 
-    public function assignedDriverDelete($id){
+    public function assignedDriverDelete($id)
+    {
         $assigned = AssetAssign::destroy($id);
-        if($assigned):
+        if ($assigned) {
             Toastr::success('Asset assigned successfully deleted.', __('message.success'));
+
             return redirect()->back();
-        else:
+        } else {
             Toastr::error('Something went wrong.', __('message.success'));
+
             return redirect()->back()->withInput();
-        endif;
+        }
 
     }
 
-
-
-    public function reports(Request $request){
-        $data =[];
+    public function reports(Request $request)
+    {
+        $data = [];
         $data['request'] = $request;
-        $data['assets'] = Asset::orderBy('id','desc')->get();
+        $data['assets'] = Asset::orderBy('id', 'desc')->get();
 
-        if($request->asset_id && !empty($request->asset_id)):
+        if ($request->asset_id && ! empty($request->asset_id)) {
             $start_date = Carbon::parse($request->from_date)->startOfDay()->toDateTimeString();
-            $end_date   = Carbon::parse($request->to_date)->endOfDay()->toDateTimeString();
-            $data['asset']            = Asset::find($request->asset_id);
-            $data['fuels']            = Fuel::where('asset_id',$request->asset_id)->whereBetween('created_at',[$start_date,$end_date])->orderBy('id','desc')->get();
-            $data['accidents']        = Accident::where('asset_id',$request->asset_id)->whereBetween('date_of_accident',[$start_date,$end_date])->orderBy('id','desc')->get();
-            if($request->from_date  && $request->to_date):
-                $data['maintenances']     = Maintenance::where('asset_id',$request->asset_id)->whereDate('start_date','>=' ,$start_date)->whereDate('end_date','<=',$end_date)->orderBy('id','desc')->get();
-            else:
-                $data['maintenances']     = Maintenance::where('asset_id',$request->asset_id)->orderBy('id','desc')->get();
-            endif;
-            if($request->from_date  && $request->to_date):
-                $data['assigned_drivers'] = AssetAssign::where('asset_id',$request->asset_id)->whereDate('from_date','>=',$start_date)->whereDate('to_date','<=',$end_date)->orderBy('id','desc')->get();
-            else:
+            $end_date = Carbon::parse($request->to_date)->endOfDay()->toDateTimeString();
+            $data['asset'] = Asset::find($request->asset_id);
+            $data['fuels'] = Fuel::where('asset_id', $request->asset_id)->whereBetween('created_at', [$start_date, $end_date])->orderBy('id', 'desc')->get();
+            $data['accidents'] = Accident::where('asset_id', $request->asset_id)->whereBetween('date_of_accident', [$start_date, $end_date])->orderBy('id', 'desc')->get();
+            if ($request->from_date && $request->to_date) {
+                $data['maintenances'] = Maintenance::where('asset_id', $request->asset_id)->whereDate('start_date', '>=', $start_date)->whereDate('end_date', '<=', $end_date)->orderBy('id', 'desc')->get();
+            } else {
+                $data['maintenances'] = Maintenance::where('asset_id', $request->asset_id)->orderBy('id', 'desc')->get();
+            }
+            if ($request->from_date && $request->to_date) {
+                $data['assigned_drivers'] = AssetAssign::where('asset_id', $request->asset_id)->whereDate('from_date', '>=', $start_date)->whereDate('to_date', '<=', $end_date)->orderBy('id', 'desc')->get();
+            } else {
                 $data['assigned_drivers'] = AssetAssign::where('asset_id',$request->asset_id)->orderBy('id','desc')->get();
-            endif;
-        endif;
+            }
+        }
 
         return view('backend.asset.reports',$data);
     }

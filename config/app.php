@@ -17,7 +17,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-    'app_installed'=>env('APP_INSTALLED'),
+    'app_installed' => env('APP_INSTALLED'),
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -43,6 +43,8 @@ return [
     */
 
     'debug' => (bool) env('APP_DEBUG', false),
+
+    'feature_mobile_api' => env('FEATURE_MOBILE_API', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -160,22 +162,21 @@ return [
          * Package Service Providers...
          */
 
-         Maatwebsite\Excel\ExcelServiceProvider::class,
-         RealRashid\SweetAlert\SweetAlertServiceProvider::class,
-         Barryvdh\Debugbar\ServiceProvider::class,
-         Milon\Barcode\BarcodeServiceProvider::class,
-         Brian2694\Toastr\ToastrServiceProvider::class,
-         Cartalyst\Stripe\Laravel\StripeServiceProvider::class ,
-         Srmklive\PayPal\Providers\PayPalServiceProvider::class,
-         // Anand\LaravelPaytmWallet\PaytmWalletServiceProvider::class,
-         Obydul\LaraSkrill\LaraSkrillServiceProvider::class,
-
+        Maatwebsite\Excel\ExcelServiceProvider::class,
+        RealRashid\SweetAlert\SweetAlertServiceProvider::class,
+        Barryvdh\Debugbar\ServiceProvider::class,
+        Milon\Barcode\BarcodeServiceProvider::class,
+        Brian2694\Toastr\ToastrServiceProvider::class,
+        Cartalyst\Stripe\Laravel\StripeServiceProvider::class,
+        Srmklive\PayPal\Providers\PayPalServiceProvider::class,
+        // Anand\LaravelPaytmWallet\PaytmWalletServiceProvider::class,
+        Obydul\LaraSkrill\LaraSkrillServiceProvider::class,
 
         /*
          * Application Service Providers...
          */
         App\Providers\AppServiceProvider::class,
-        \App\Providers\ViewServiceProvider::class,//custom service provider
+        \App\Providers\ViewServiceProvider::class, // custom service provider
         App\Providers\AuthServiceProvider::class,
         // App\Providers\Broadcast  ServiceProvider::class,
         App\Providers\EventServiceProvider::class,
@@ -201,7 +202,7 @@ return [
         'Debugbar' => Barryvdh\Debugbar\Facades\Debugbar::class,
         'DNS1D' => Milon\Barcode\Facades\DNS1DFacade::class,
         'DNS2D' => Milon\Barcode\Facades\DNS2DFacade::class,
-        'Toastr'  => Brian2694\Toastr\Facades\Toastr::class,
+        'Toastr' => Brian2694\Toastr\Facades\Toastr::class,
         'Stripe' => Cartalyst\Stripe\Laravel\Facades\Stripe::class,
 
         // 'PaytmWallet' => Anand\LaravelPaytmWallet\Facades\PaytmWallet::class,

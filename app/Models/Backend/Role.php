@@ -2,17 +2,19 @@
 
 namespace App\Models\Backend;
 
+use App\Enums\Status;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use App\Enums\Status;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Role extends Model
 {
     use HasFactory, LogsActivity;
-    protected $fillable = ['name','slug','active'];
-    protected $casts=['permissions'=>'array'];
+
+    protected $fillable = ['name', 'slug', 'active'];
+
+    protected $casts = ['permissions' => 'array'];
 
     // Get all row. Descending order using scope.
     public function scopeOrderByDesc($query, $data)
@@ -21,23 +23,24 @@ class Role extends Model
     }
 
     /**
-    * Activity Log
-    */
+     * Activity Log
+     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->useLogName('Role')
-        ->logOnly(['name', 'permissions'])
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Role')
+            ->logOnly(['name', 'permissions'])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     public function getMyStatusAttribute()
     {
-        if($this->status == Status::ACTIVE){
-            $status = '<span class="badge badge-pill badge-success">'.trans("status." . $this->status).'</span>';
-        }else {
-            $status = '<span class="badge badge-pill badge-danger">'.trans("status." . $this->status).'</span>';
+        if ($this->status == Status::ACTIVE) {
+            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
+        } else {
+            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
         }
+
         return $status;
     }
 }

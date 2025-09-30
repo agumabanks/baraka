@@ -12,6 +12,7 @@ class CashOfficeController extends Controller
     {
         $this->authorize('viewAny', CashOffice::class);
         $items = CashOffice::query()->where('branch_id', $request->user()->hub_id)->orderByDesc('business_date')->paginate(15);
+
         return view('backend.admin.cash_office.index', compact('items'));
     }
 
@@ -29,7 +30,7 @@ class CashOfficeController extends Controller
         $data['variance'] = ($data['cod_collected'] + $data['cash_on_hand']) - $data['banked_amount'];
         $data['submitted_at'] = now();
         CashOffice::create($data);
-        return back()->with('status','Cash office day submitted');
+
+        return back()->with('status', 'Cash office day submitted');
     }
 }
-

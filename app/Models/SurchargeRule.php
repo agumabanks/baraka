@@ -5,15 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class SurchargeRule extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'code','name','trigger','rate_type','amount','currency','applies_to','active_from','active_to','active'
+        'code', 'name', 'trigger', 'rate_type', 'amount', 'currency', 'applies_to', 'active_from', 'active_to', 'active',
     ];
 
     protected $casts = [

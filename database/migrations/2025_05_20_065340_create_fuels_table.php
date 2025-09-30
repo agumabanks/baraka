@@ -16,7 +16,7 @@ return new class extends Migration
             $table->bigInteger('asset_id')->nullable();
             $table->string('fuel_type')->nullable();
             $table->bigInteger('invoice_of_fuel')->nullable();
-            $table->decimal('amount',16,2)->nullable();
+            $table->decimal('amount', 16, 2)->nullable();
             $table->timestamps();
         });
     }

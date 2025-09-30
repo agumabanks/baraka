@@ -3,7 +3,6 @@
 namespace App\Models\Backend;
 
 use App\Enums\Status;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
@@ -14,8 +13,8 @@ class MerchantDeliveryCharge extends Model
     use HasFactory,LogsActivity;
 
     protected $table = 'merchant_delivery_charges';
-    protected $fillable = ['merchant_id','status','delivery_charge_id','weight','same_day','next_day','sub_city','outside_city'];
 
+    protected $fillable = ['merchant_id', 'status', 'delivery_charge_id', 'weight', 'same_day', 'next_day', 'sub_city', 'outside_city'];
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -27,22 +26,20 @@ class MerchantDeliveryCharge extends Model
             'same_day',
             'next_day',
             'sub_city',
-            'outside_city'
+            'outside_city',
         ];
+
         return LogOptions::defaults()
-        ->useLogName('MerchantDeliveryCharge')
-        ->logOnly($logAttributes)
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('MerchantDeliveryCharge')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
-
-
 
     // Get active row this model.
     public function scopeActive($query)
     {
         $query->where('status', Status::ACTIVE);
     }
-
 
     public function merchant()
     {
@@ -56,11 +53,12 @@ class MerchantDeliveryCharge extends Model
 
     public function getMyStatusAttribute()
     {
-        if($this->status == Status::ACTIVE){
-            $status = '<span class="badge badge-pill badge-success">'.trans("status." . $this->status).'</span>';
-        }else {
-            $status = '<span class="badge badge-pill badge-danger">'.trans("status." . $this->status).'</span>';
+        if ($this->status == Status::ACTIVE) {
+            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
+        } else {
+            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
         }
+
         return $status;
     }
 }

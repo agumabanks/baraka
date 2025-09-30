@@ -25,24 +25,24 @@ class StoreRequest extends FormRequest
      */
     public function rules()
     {
-        if(request()->smsMethod == SmsSetup::REVE){
+        if (request()->smsMethod == SmsSetup::REVE) {
             return [
-                'reve_api_key'                => ['required','string','max:191'],
-                'reve_secret_key'             => ['required','string','max:191'],
-                'reve_api_url'                => ['required','string','max:1000'],
+                'reve_api_key' => ['required', 'string', 'max:191'],
+                'reve_secret_key' => ['required', 'string', 'max:191'],
+                'reve_api_url' => ['required', 'string', 'max:1000'],
             ];
-        }elseif(request()->smsMethod == SmsSetup::TWILIO) {
+        } elseif (request()->smsMethod == SmsSetup::TWILIO) {
             return [
-                'twilio_sid'                => ['required','string','max:191'],
-                'twilio_token'             => ['required','string','max:191'],
-                'twilio_from'                => ['required','string','max:1000'],
+                'twilio_sid' => ['required', 'string', 'max:191'],
+                'twilio_token' => ['required', 'string', 'max:191'],
+                'twilio_from' => ['required', 'string', 'max:1000'],
             ];
-        }elseif(request()->smsMethod == SmsSetup::NEXMO) {
+        } elseif (request()->smsMethod == SmsSetup::NEXMO) {
             return [
-                'nexmo_key'                => ['required','string','max:1000'],
-                'nexmo_secret_key'         => ['required','string','max:1000'],
+                'nexmo_key' => ['required', 'string', 'max:1000'],
+                'nexmo_secret_key' => ['required', 'string', 'max:1000'],
             ];
-        }else {
+        } else {
             return [];
         }
 

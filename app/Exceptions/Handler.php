@@ -42,41 +42,40 @@ class Handler extends ExceptionHandler
         parent::report($e);
     }
 
-
     public function render($request, Throwable $e)
     {
-        if($this->isHttpException($e)){
+        if ($this->isHttpException($e)) {
 
-            if($e->getStatusCode()       == 401){
+            if ($e->getStatusCode() == 401) {
 
                 return response()->view('errors.401');
-            }elseif($e->getStatusCode()   == 404){
+            } elseif ($e->getStatusCode() == 404) {
 
                 return response()->view('errors.404');
 
-            }elseif($e->getStatusCode()  == 403){
+            } elseif ($e->getStatusCode() == 403) {
 
                 return response()->view('errors.403');
 
-            }elseif($e->getStatusCode() == 405){
+            } elseif ($e->getStatusCode() == 405) {
 
                 return response()->view('errors.405');
 
-            }elseif($e->getStatusCode() == 419){
+            } elseif ($e->getStatusCode() == 419) {
 
                 return response()->view('errors.419');
 
-            }elseif($e->getStatusCode() == 429){
+            } elseif ($e->getStatusCode() == 429) {
 
                 return response()->view('errors.429');
 
-            }elseif($e->getStatusCode() == 500){
+            } elseif ($e->getStatusCode() == 500) {
 
                 return response()->view('errors.500');
 
             }
-        }else{
-           return  parent::render($request,$e);
+        } else {
+            return parent::render($request, $e);
         }
     }
 }

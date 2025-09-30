@@ -1,16 +1,14 @@
 <?php
 
 namespace App\Http\Controllers\Backend;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Support\StoreRequest;
-use App\Models\Backend\SupportChat;
-use App\Models\User;
-
 use App\Repositories\Support\SupportInterface;
-
+use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Brian2694\Toastr\Facades\Toastr;
+
 class SupportController extends Controller
 {
     /**
@@ -24,10 +22,12 @@ class SupportController extends Controller
     {
         $this->repo = $repo;
     }
+
     public function index()
     {
         $supports = $this->repo->all();
-        return view('backend.support.index',compact('supports'));
+
+        return view('backend.support.index', compact('supports'));
     }
 
     /**
@@ -38,6 +38,7 @@ class SupportController extends Controller
     public function create()
     {
         $departments = $this->repo->departments();
+
         return view('backend.support.create', compact('departments'));
     }
 
@@ -49,11 +50,13 @@ class SupportController extends Controller
      */
     public function store(StoreRequest $request)
     {
-        if($this->repo->store($request)){
-            Toastr::success(__('support.added_msg'),__('message.success'));
+        if ($this->repo->store($request)) {
+            Toastr::success(__('support.added_msg'), __('message.success'));
+
             return redirect()->route('support.index');
-        }else{
-            Toastr::error(__('support.error_msg'),__('message.error'));
+        } else {
+            Toastr::error(__('support.error_msg'), __('message.error'));
+
             return redirect()->back()->withInput($request->all());
         }
     }
@@ -77,9 +80,10 @@ class SupportController extends Controller
      */
     public function edit($id)
     {
-        $departments   = $this->repo->departments();
+        $departments = $this->repo->departments();
         $singleSupport = $this->repo->get($id);
-        return view('backend.support.edit',compact('departments','singleSupport'));
+
+        return view('backend.support.edit', compact('departments', 'singleSupport'));
     }
 
     /**
@@ -92,11 +96,13 @@ class SupportController extends Controller
     public function update(StoreRequest $request)
     {
 
-        if($this->repo->update($request->id,$request)){
-            Toastr::success(__('support.update_msg'),__('message.success'));
+        if ($this->repo->update($request->id, $request)) {
+            Toastr::success(__('support.update_msg'), __('message.success'));
+
             return redirect()->route('support.index');
-        }else{
-            Toastr::error(__('support.error_msg'),__('message.error'));
+        } else {
+            Toastr::error(__('support.error_msg'), __('message.error'));
+
             return redirect()->back()->withInput($request->all());
         }
     }
@@ -107,50 +113,57 @@ class SupportController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-
-     public function view($id){
+    public function view($id)
+    {
         $singleSupport = $this->repo->get($id);
         $chats = $this->repo->chats($id);
-        return view('backend.support.view',compact('singleSupport','chats'));
-     }
 
-     public function supportReply(Request $request){
-        $validator  = Validator::make($request->all(),[
-            'message'   => 'required'
+        return view('backend.support.view', compact('singleSupport', 'chats'));
+    }
+
+    public function supportReply(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'message' => 'required',
         ]);
-        if($validator->fails()):
+        if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
-        endif;
-        if($this->repo->reply($request)){
-            Toastr::success(__('support.reply_msg'),__('message.success'));
-            return redirect()->route('support.view',$request->support_id);
-        }else{
-            Toastr::error(__('support.error_msg'),__('message.error'));
+        }
+        if ($this->repo->reply($request)) {
+            Toastr::success(__('support.reply_msg'), __('message.success'));
+
+            return redirect()->route('support.view', $request->support_id);
+        } else {
+            Toastr::error(__('support.error_msg'), __('message.error'));
+
             return redirect()->back()->withInput($request->all());
         }
 
-     }
+    }
+
     public function destroy($id)
     {
-        if($this->repo->delete($id)):
-            Toastr::success(__('support.delete_msg'),__('message.success'));
+        if ($this->repo->delete($id)) {
+            Toastr::success(__('support.delete_msg'), __('message.success'));
+
             return redirect()->route('support.index');
-        else:
-            Toastr::error(__('support.error_msg'),__('message.error'));
+        } else {
+            Toastr::error(__('support.error_msg'), __('message.error'));
+
             return redirect()->back();
-        endif;
+        }
     }
 
+    public function statusUpdate(Request $request, $id)
+    {
+        if ($this->repo->statusUpdate($id, $request)) {
+            Toastr::success('Status updated successfully.', __('message.success'));
 
-    public function statusUpdate(Request $request,$id){
-        if($this->repo->statusUpdate($id,$request)):
-            Toastr::success('Status updated successfully.',__('message.success'));
             return redirect()->route('support.index');
-        else:
-            Toastr::error(__('support.error_msg'),__('message.error'));
-            return redirect()->back();
-        endif;
-    }
- 
+        } else {
+            Toastr::error(__('support.error_msg'), __('message.error'));
 
+            return redirect()->back();
+        }
+    }
 }

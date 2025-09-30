@@ -3,15 +3,15 @@
 namespace App\Models\Backend;
 
 use App\Enums\Status;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Deliverycategory extends Model
 {
     use HasFactory, LogsActivity;
+
     protected $fillable = ['title'];
 
     // Get all row. Descending order using scope.
@@ -21,14 +21,14 @@ class Deliverycategory extends Model
     }
 
     /**
-    * Activity Log
-    */
+     * Activity Log
+     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->useLogName('Deliverycategory')
-        ->logOnly(['title', 'description',])
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Deliverycategory')
+            ->logOnly(['title', 'description'])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     // Get active row this model.
@@ -36,14 +36,16 @@ class Deliverycategory extends Model
     {
         $query->where('status', '1');
     }
-    //for status index blade
+
+    // for status index blade
     public function getMyStatusAttribute()
     {
-        if($this->status == Status::ACTIVE){
-            $status = '<span class="badge badge-pill badge-success">'.trans("status." . $this->status).'</span>';
-        }else {
-            $status = '<span class="badge badge-pill badge-danger">'.trans("status." . $this->status).'</span>';
+        if ($this->status == Status::ACTIVE) {
+            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
+        } else {
+            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
         }
+
         return $status;
     }
 }

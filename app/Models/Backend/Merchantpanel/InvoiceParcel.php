@@ -10,13 +10,13 @@ class InvoiceParcel extends Model
 {
     use HasFactory;
 
-    
-    public function parcel(){
-        return $this->belongsTo(Parcel::class,'parcel_id','id');
+    public function parcel()
+    {
+        return $this->belongsTo(Parcel::class, 'parcel_id', 'id');
     }
 
-    public function invoice (){
-        return $this->belongsTo(Invoice::class,'invoice_id','id');
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class, 'invoice_id', 'id');
     }
-
 }

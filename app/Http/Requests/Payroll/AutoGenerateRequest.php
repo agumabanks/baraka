@@ -24,7 +24,7 @@ class AutoGenerateRequest extends FormRequest
     public function rules()
     {
         return [
-            'month'=>['required']
+            'month' => ['required'],
         ];
     }
 }

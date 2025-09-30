@@ -24,9 +24,9 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'phone'    => ['required'],
-            'name'     => ['required'],
-            'details'  => ['required'],
+            'phone' => ['required'],
+            'name' => ['required'],
+            'details' => ['required'],
         ];
     }
 }

@@ -10,11 +10,10 @@ class FxRate extends Model
     use HasFactory;
 
     protected $fillable = [
-        'base','counter','rate','provider','effective_at'
+        'base', 'counter', 'rate', 'provider', 'effective_at',
     ];
 
     protected $casts = [
         'effective_at' => 'datetime',
     ];
 }
-

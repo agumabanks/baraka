@@ -10,7 +10,7 @@ class Lane extends Model
     use HasFactory;
 
     protected $fillable = [
-        'origin_zone_id','dest_zone_id','mode','std_transit_days','dim_divisor','eawb_required'
+        'origin_zone_id', 'dest_zone_id', 'mode', 'std_transit_days', 'dim_divisor', 'eawb_required',
     ];
 
     public function origin()
@@ -23,4 +23,3 @@ class Lane extends Model
         return $this->belongsTo(Zone::class, 'dest_zone_id');
     }
 }
-

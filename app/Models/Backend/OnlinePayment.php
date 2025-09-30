@@ -12,20 +12,19 @@ class OnlinePayment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'payer_details','source','parcel_id','wallet_id','merchant_id','transaction_id','amount','payment_method','status','order_id'
+        'payer_details', 'source', 'parcel_id', 'wallet_id', 'merchant_id', 'transaction_id', 'amount', 'payment_method', 'status', 'order_id',
     ];
-   
-    protected $casts = ['payer_details'=>AsArrayObject::class];
 
+    protected $casts = ['payer_details' => AsArrayObject::class];
 
-    public function getPaidStatusAttribute(){
-        if($this->is_paid == BooleanStatus::YES):
-            $status  = '<span class="badge badge-success">Paid</span>';
-        else:
-            $status  = '<span class="badge badge-warning">Unpaid</span>';
-        endif;
+    public function getPaidStatusAttribute()
+    {
+        if ($this->is_paid == BooleanStatus::YES) {
+            $status = '<span class="badge badge-success">Paid</span>';
+        } else {
+            $status = '<span class="badge badge-warning">Unpaid</span>';
+        }
+
         return $status;
     }
-
-
 }

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('delivery_man_id')->nullable()->constrained('delivery_man')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('hub_id')->nullable()->constrained('hubs')->onUpdate('cascade')->onDelete('cascade');
             $table->unsignedTinyInteger('type')->comment('income=1,expense=2')->nullable();
-            $table->decimal('amount',16, 2)->nullable();
+            $table->decimal('amount', 16, 2)->nullable();
             $table->unsignedTinyInteger('cash_collection')->default(0)->comment('true=1,false=0')->nullable();
             $table->date('date')->nullable();
             $table->text('note')->nullable();

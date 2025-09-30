@@ -16,10 +16,10 @@ return new class extends Migration
     {
         Schema::create('faqs', function (Blueprint $table) {
             $table->id();
-            $table->string('question')->nullable(); 
-            $table->longText('answer')->nullable(); 
+            $table->string('question')->nullable();
+            $table->longText('answer')->nullable();
             $table->string('position')->nullable();
-            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'= Active, '.Status::INACTIVE.'= Inactive'); 
+            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'= Active, '.Status::INACTIVE.'= Inactive');
             $table->timestamps();
         });
     }

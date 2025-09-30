@@ -9,9 +9,10 @@ class SurchargeRuleSeeder extends Seeder
 {
     public function run(): void
     {
-        if (SurchargeRule::count() > 0) return;
+        if (SurchargeRule::count() > 0) {
+            return;
+        }
 
         SurchargeRule::factory()->count(3)->create();
     }
 }
-

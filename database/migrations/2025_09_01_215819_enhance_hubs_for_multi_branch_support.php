@@ -89,7 +89,7 @@ return new class extends Migration
                 'has_tracking_system',
                 'has_security_system',
                 'kpi_targets',
-                'performance_metrics'
+                'performance_metrics',
             ]);
         });
     }

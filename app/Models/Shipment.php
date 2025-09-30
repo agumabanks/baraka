@@ -2,21 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\ScanType;
+use App\Enums\ShipmentStatus;
+use App\Events\ShipmentStatusChanged;
+use App\Models\Backend\Hub;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use App\Enums\ShipmentStatus;
-use App\Enums\ScanType;
-use App\Models\Backend\Hub;
-use App\Events\ShipmentStatusChanged;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Shipment extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'customer_id',
@@ -29,6 +29,7 @@ class Shipment extends Model
         'current_status',
         'created_by',
         'metadata',
+        'public_token',
     ];
 
     protected $casts = [
@@ -36,6 +37,17 @@ class Shipment extends Model
         'current_status' => ShipmentStatus::class,
         'metadata' => 'array',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($shipment) {
+            if (! $shipment->public_token) {
+                $shipment->public_token = \Illuminate\Support\Facades\Crypt::encryptString($shipment->id ?? uniqid());
+            }
+        });
+    }
 
     /**
      * Activity Log
@@ -45,7 +57,7 @@ class Shipment extends Model
         return LogOptions::defaults()
             ->useLogName('shipment')
             ->logOnly(['customer_id', 'origin_branch_id', 'dest_branch_id', 'current_status', 'price_amount'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} shipment");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} shipment");
     }
 
     // Relationships
@@ -144,7 +156,7 @@ class Shipment extends Model
     public function scopeByBranch($query, $branchId)
     {
         return $query->where('origin_branch_id', $branchId)
-                    ->orWhere('dest_branch_id', $branchId);
+            ->orWhere('dest_branch_id', $branchId);
     }
 
     public function scopeByStatus($query, ShipmentStatus $status)
@@ -165,7 +177,7 @@ class Shipment extends Model
 
     private function calculateStatusFromScan(ScanEvent $scanEvent): ?ShipmentStatus
     {
-        return match($scanEvent->type) {
+        return match ($scanEvent->type) {
             ScanType::ARRIVE => ShipmentStatus::ARRIVE,
             ScanType::DEPART => ShipmentStatus::DEPART,
             ScanType::ARRIVE_DEST => ShipmentStatus::ARRIVE_DEST,

@@ -12,4 +12,3 @@ class DispatchController extends Controller
         return view('backend.admin.dispatch.index');
     }
 }
-

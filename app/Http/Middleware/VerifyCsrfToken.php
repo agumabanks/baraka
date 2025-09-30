@@ -18,15 +18,15 @@ class VerifyCsrfToken extends Middleware
         '/ipn',
         '/pay-via-ajax', // only required to run example codes. Please see bellow.
 
-        //admin
+        // admin
         '/admin/payout/success',
         '/admin/payout/cancel',
         '/admin/payout/fail',
         '/admin/payout/ipn',
         '/admin/payout/pay-via-ajax', // only required to run example codes. Please see bellow.
 
-        //aamarpay
+        // aamarpay
         '/aamarpay-success',
-        '/aamarpay-fail'
+        '/aamarpay-fail',
     ];
 }

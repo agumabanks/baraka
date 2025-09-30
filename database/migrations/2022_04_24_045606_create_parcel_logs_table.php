@@ -25,10 +25,10 @@ return new class extends Migration
             $table->string('customer_phone')->nullable();
             $table->longtext('customer_address')->nullable();
             $table->string('invoice_no')->nullable();
-            $table->decimal('cash_collection',13,2)->nullable();
-            $table->decimal('selling_price',13,2)->nullable();
-            $table->decimal('total_delivery_amount',13,2)->nullable();
-            $table->decimal('current_payable',13,2)->nullable();
+            $table->decimal('cash_collection', 13, 2)->nullable();
+            $table->decimal('selling_price', 13, 2)->nullable();
+            $table->decimal('total_delivery_amount', 13, 2)->nullable();
+            $table->decimal('current_payable', 13, 2)->nullable();
             $table->longtext('note')->nullable();
             $table->timestamps();
 

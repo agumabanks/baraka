@@ -12,12 +12,14 @@ class SurchargeRuleController extends Controller
     {
         $this->authorize('viewAny', SurchargeRule::class);
         $items = SurchargeRule::query()->latest('id')->paginate(20);
+
         return view('backend.admin.surcharge_rules.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', SurchargeRule::class);
+
         return view('backend.admin.surcharge_rules.create');
     }
 
@@ -36,12 +38,14 @@ class SurchargeRuleController extends Controller
             'active' => 'sometimes|boolean',
         ]);
         SurchargeRule::create($data);
-        return redirect()->route('admin.surcharges.index')->with('status','Rule created');
+
+        return redirect()->route('admin.surcharges.index')->with('status', 'Rule created');
     }
 
     public function edit(SurchargeRule $surcharge)
     {
         $this->authorize('update', $surcharge);
+
         return view('backend.admin.surcharge_rules.edit', ['rule' => $surcharge]);
     }
 
@@ -59,13 +63,15 @@ class SurchargeRuleController extends Controller
             'active' => 'sometimes|boolean',
         ]);
         $surcharge->update($data);
-        return redirect()->route('admin.surcharges.index')->with('status','Rule updated');
+
+        return redirect()->route('admin.surcharges.index')->with('status', 'Rule updated');
     }
 
     public function destroy(SurchargeRule $surcharge)
     {
         $this->authorize('delete', $surcharge);
         $surcharge->delete();
-        return back()->with('status','Rule deleted');
+
+        return back()->with('status', 'Rule deleted');
     }
 }

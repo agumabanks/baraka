@@ -2,10 +2,9 @@
 
 namespace App\Models\Backend;
 
+use App\Enums\Status;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Enums\Status;
-use App\Models\Backend\Deliverycategory;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -13,49 +12,49 @@ class DeliveryCharge extends Model
 {
     use HasFactory,LogsActivity;
 
+    protected $fillable = [
+        'category_id',
+        'weight',
+        'same_day',
+        'next_day',
+        'sub_city',
+        'outside_city',
+        'position',
+    ];
 
-        protected $fillable = [
-                'category_id',
-                'weight',
-                'same_day',
-                'next_day',
-                'sub_city',
-                'outside_city',
-                'position',
-            ];
+    public function getActivitylogOptions(): LogOptions
+    {
 
-        public function getActivitylogOptions(): LogOptions
-        {
+        $logAttributes = [
+            'category.name',
+            'weight',
+            'same_day',
+            'next_day',
+            'sub_city',
+            'outside_city',
+            'position',
+        ];
 
-            $logAttributes = [
-                'category.name',
-                'weight',
-                'same_day',
-                'next_day',
-                'sub_city',
-                'outside_city',
-                'position',
-            ];
-            return LogOptions::defaults()
+        return LogOptions::defaults()
             ->useLogName('DeliveryCharge')
             ->logOnly($logAttributes)
-                ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
-        }
-
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
+    }
 
     public function getMyStatusAttribute()
     {
-        if($this->status == Status::ACTIVE){
-            $status = '<span class="badge badge-pill badge-success">'.trans("status." . $this->status).'</span>';
-        }else {
-            $status = '<span class="badge badge-pill badge-danger">'.trans("status." . $this->status).'</span>';
+        if ($this->status == Status::ACTIVE) {
+            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
+        } else {
+            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
         }
+
         return $status;
     }
 
-     // Get single row in Delivery Category table.
-     public function category()
-     {
-         return $this->belongsTo(Deliverycategory::class, 'category_id', 'id');
-     }
+    // Get single row in Delivery Category table.
+    public function category()
+    {
+        return $this->belongsTo(Deliverycategory::class, 'category_id', 'id');
+    }
 }

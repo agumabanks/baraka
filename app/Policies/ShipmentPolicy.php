@@ -4,34 +4,22 @@ namespace App\Policies;
 
 use App\Models\Shipment;
 use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ShipmentPolicy
 {
-    use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any shipments.
-     */
-    public function viewAny(User $user): bool
-    {
-        return $user->hasRole(['hq_admin', 'branch_ops_manager', 'branch_attendant', 'support', 'finance']);
-    }
-
     /**
      * Determine whether the user can view the shipment.
      */
     public function view(User $user, Shipment $shipment): bool
     {
-        // HQ Admin can view all shipments
-        if ($user->hasRole('hq_admin')) {
+        // Users can view their own shipments
+        if ($shipment->customer_id === $user->id) {
             return true;
         }
 
-        // Branch users can view shipments from their branches
-        if ($this->isBranchUser($user)) {
-            return $shipment->origin_branch_id === $user->hub_id ||
-                   $shipment->dest_branch_id === $user->hub_id;
+        // Admins can view all shipments
+        if ($user->hasRole('admin')) {
+            return true;
         }
 
         return false;
@@ -42,70 +30,34 @@ class ShipmentPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole(['hq_admin', 'branch_ops_manager', 'branch_attendant']);
+        // Only merchants and customers can create shipments
+        return in_array($user->user_type, ['merchant', 'customer']);
     }
 
     /**
-     * Determine whether the user can update the shipment.
+     * Determine whether the user can cancel the shipment.
      */
-    public function update(User $user, Shipment $shipment): bool
+    public function cancel(User $user, Shipment $shipment): bool
     {
-        // HQ Admin can update all shipments
-        if ($user->hasRole('hq_admin')) {
-            return true;
+        // Users can cancel their own shipments if not yet processed
+        if ($shipment->customer_id === $user->id) {
+            return in_array($shipment->current_status, ['created', 'handed_over']);
         }
 
-        // Branch ops can update shipments from their branch
-        if ($this->isBranchOps($user)) {
-            return $shipment->origin_branch_id === $user->hub_id ||
-                   $shipment->dest_branch_id === $user->hub_id;
+        // Admins can cancel any shipment
+        if ($user->hasRole('admin')) {
+            return true;
         }
 
         return false;
     }
 
     /**
-     * Determine whether the user can delete the shipment.
+     * Determine whether the user can update the shipment status.
      */
-    public function delete(User $user, Shipment $shipment): bool
+    public function updateStatus(User $user, Shipment $shipment): bool
     {
-        // Only HQ Admin can delete shipments (soft delete)
-        return $user->hasRole('hq_admin');
-    }
-
-    /**
-     * Determine whether the user can restore the shipment.
-     */
-    public function restore(User $user, Shipment $shipment): bool
-    {
-        return $user->hasRole('hq_admin');
-    }
-
-    /**
-     * Determine whether the user can permanently delete the shipment.
-     */
-    public function forceDelete(User $user, Shipment $shipment): bool
-    {
-        return $user->hasRole('hq_admin');
-    }
-
-    // Helper methods
-    private function isBranchUser(User $user): bool
-    {
-        return !is_null($user->hub_id) && (
-            $user->hasRole('branch_ops_manager') ||
-            $user->hasRole('branch_attendant') ||
-            $user->hasRole('driver') ||
-            $user->hasRole('finance') ||
-            $user->hasRole('support')
-        );
-    }
-
-    private function isBranchOps(User $user): bool
-    {
-        return !is_null($user->hub_id) && (
-            $user->hasRole('branch_ops_manager') ||
-            $user->hasRole('branch_attendant')
-        );
+        // Only admins can update shipment status
+        return $user->hasRole('admin');
     }
 }

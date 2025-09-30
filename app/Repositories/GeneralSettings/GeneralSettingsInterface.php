@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Repositories\GeneralSettings;
 
-interface GeneralSettingsInterface {
-
+interface GeneralSettingsInterface
+{
     public function all();
-    public function update($request);
 
+    public function update($request);
 }

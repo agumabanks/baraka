@@ -7,11 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Services\SmsService;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cookie;
-use App\Enums\UserType;
 
 class LoginController extends Controller
 {
@@ -28,7 +25,7 @@ class LoginController extends Controller
 
     use AuthenticatesUsers;
 
-    // Auth login 
+    // Auth login
     public function login(Request $request)
     {
         // Use Laravel's built-in remember_token instead of storing credentials in cookies
@@ -46,19 +43,20 @@ class LoginController extends Controller
 
         if ($this->attemptLogin($request)) {
 
-            //login security 
-            if(auth()->user()->status == Status::ACTIVE && auth()->user()->verification_status == Status::INACTIVE):
+            // login security
+            if (auth()->user()->status == Status::ACTIVE && auth()->user()->verification_status == Status::INACTIVE) {
                 session([
-                    'otp'     => auth()->user()->otp,
-                    'mobile'  => auth()->user()->mobile,
-                    'password'=> $request->password
+                    'otp' => auth()->user()->otp,
+                    'mobile' => auth()->user()->mobile,
+                    'password' => $request->password,
                 ]);
-                $response =  app(SmsService::class)->sendOtp(auth()->user()->mobile,auth()->user()->otp);
+                $response = app(SmsService::class)->sendOtp(auth()->user()->mobile, auth()->user()->otp);
                 auth()->logout();
+
                 return redirect()->route('merchant.otp-verification-form');
-            endif;
-            //end login security 
- 
+            }
+            // end login security
+
             if ($request->hasSession()) {
                 $request->session()->put('auth.password_confirmed_at', time());
             }
@@ -97,13 +95,13 @@ class LoginController extends Controller
     protected function redirectTo()
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return RouteServiceProvider::HOME;
         }
 
         // Staff/admin to admin dashboard
         if (method_exists($user, 'hasRole') && $user->hasRole([
-            'hq_admin','admin','super-admin','branch_ops_manager','branch_attendant','support','finance','driver'
+            'hq_admin', 'admin', 'super-admin', 'branch_ops_manager', 'branch_attendant', 'support', 'finance', 'driver',
         ])) {
             return RouteServiceProvider::HOME;
         }
@@ -114,10 +112,10 @@ class LoginController extends Controller
 
     protected function credentials(Request $request)
     {
-        if(is_numeric($request->get('email')))
-        {
-            return ['mobile' => $request->get('email'),'password' => $request->get('password'), 'status' => '1', ];
+        if (is_numeric($request->get('email'))) {
+            return ['mobile' => $request->get('email'), 'password' => $request->get('password'), 'status' => '1'];
         }
-        return ['email' => $request->get('email'),'password' => $request->get('password'), 'status' => '1', ];
+
+        return ['email' => $request->get('email'), 'password' => $request->get('password'), 'status' => '1'];
     }
 }

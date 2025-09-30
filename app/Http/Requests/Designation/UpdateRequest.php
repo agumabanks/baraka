@@ -25,8 +25,8 @@ class UpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'title'  => 'required|string|max:191|unique:designations,title,'.Request::input('id'),
-            'status' => ['required','numeric'],
+            'title' => 'required|string|max:191|unique:designations,title,'.Request::input('id'),
+            'status' => ['required', 'numeric'],
         ];
     }
 }

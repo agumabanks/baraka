@@ -2,12 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Shipment;
 use App\Models\Backend\Parcel;
+use App\Models\Shipment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Laravel\Scout\Builder as ScoutBuilder;
 
 class SearchService
 {
@@ -27,7 +26,7 @@ class SearchService
 
         // Search shipments
         $shipmentResults = $this->searchShipments($query, $filters, $user);
-        $results = $results->merge($shipmentResults->map(fn($item) => [
+        $results = $results->merge($shipmentResults->map(fn ($item) => [
             'type' => 'shipment',
             'model' => $item,
             'title' => $item->tracking_number ?? 'Shipment',
@@ -37,7 +36,7 @@ class SearchService
 
         // Search parcels
         $parcelResults = $this->searchParcels($query, $filters, $user);
-        $results = $results->merge($parcelResults->map(fn($item) => [
+        $results = $results->merge($parcelResults->map(fn ($item) => [
             'type' => 'parcel',
             'model' => $item,
             'title' => $item->sscc ?? $item->tracking_id,
@@ -47,7 +46,7 @@ class SearchService
 
         // Search customers
         $customerResults = $this->searchCustomers($query, $filters, $user);
-        $results = $results->merge($customerResults->map(fn($item) => [
+        $results = $results->merge($customerResults->map(fn ($item) => [
             'type' => 'customer',
             'model' => $item,
             'title' => $item->name,
@@ -80,10 +79,10 @@ class SearchService
         $queryBuilder = Shipment::with(['customer', 'originBranch', 'destBranch']);
 
         // Apply ABAC filtering
-        if ($user && !$user->hasRole('hq_admin')) {
+        if ($user && ! $user->hasRole('hq_admin')) {
             $queryBuilder->where(function ($q) use ($user) {
                 $q->where('origin_branch_id', $user->hub_id)
-                  ->orWhere('dest_branch_id', $user->hub_id);
+                    ->orWhere('dest_branch_id', $user->hub_id);
             });
         }
 
@@ -102,10 +101,10 @@ class SearchService
         $queryBuilder = Parcel::with(['shipment.customer']);
 
         // Apply ABAC filtering through shipment
-        if ($user && !$user->hasRole('hq_admin')) {
+        if ($user && ! $user->hasRole('hq_admin')) {
             $queryBuilder->whereHas('shipment', function ($q) use ($user) {
                 $q->where('origin_branch_id', $user->hub_id)
-                  ->orWhere('dest_branch_id', $user->hub_id);
+                    ->orWhere('dest_branch_id', $user->hub_id);
             });
         }
 
@@ -124,10 +123,10 @@ class SearchService
         $queryBuilder = User::where('user_type', 'customer');
 
         // Apply ABAC filtering - customers linked to user's shipments
-        if ($user && !$user->hasRole('hq_admin')) {
+        if ($user && ! $user->hasRole('hq_admin')) {
             $queryBuilder->whereHas('shipments', function ($q) use ($user) {
                 $q->where('origin_branch_id', $user->hub_id)
-                  ->orWhere('dest_branch_id', $user->hub_id);
+                    ->orWhere('dest_branch_id', $user->hub_id);
             })->orWhere('hub_id', $user->hub_id); // Created by user's branch
         }
 
@@ -144,7 +143,7 @@ class SearchService
     protected function postgresFtsSearch($queryBuilder, string $query, string $table): Collection
     {
         // Create tsvector from searchable fields
-        $searchVector = match($table) {
+        $searchVector = match ($table) {
             'shipments' => "concat_ws(' ', tracking_number, customer_name, customer_phone, customer_email)",
             'parcels' => "concat_ws(' ', sscc, tracking_id, customer_name, customer_phone)",
             'users' => "concat_ws(' ', name, email, phone)",
@@ -163,13 +162,13 @@ class SearchService
      */
     protected function scoutSearch($queryBuilder, string $query, string $modelClass): Collection
     {
-        if (!in_array(\Laravel\Scout\Searchable::class, class_uses_recursive($modelClass))) {
+        if (! in_array(\Laravel\Scout\Searchable::class, class_uses_recursive($modelClass))) {
             // Fallback to basic search if Scout not configured
             return $queryBuilder
                 ->where(function ($q) use ($query) {
                     $q->where('name', 'ILIKE', "%{$query}%")
-                      ->orWhere('email', 'ILIKE', "%{$query}%")
-                      ->orWhere('phone', 'ILIKE', "%{$query}%");
+                        ->orWhere('email', 'ILIKE', "%{$query}%")
+                        ->orWhere('phone', 'ILIKE', "%{$query}%");
                 })
                 ->limit(50)
                 ->get();
@@ -189,16 +188,28 @@ class SearchService
         $subtitle = strtolower($item['subtitle']);
 
         // Exact matches get highest score
-        if ($title === $query) $score += 100;
-        if ($subtitle === $query) $score += 80;
+        if ($title === $query) {
+            $score += 100;
+        }
+        if ($subtitle === $query) {
+            $score += 80;
+        }
 
         // Starts with query
-        if (str_starts_with($title, $query)) $score += 50;
-        if (str_starts_with($subtitle, $query)) $score += 40;
+        if (str_starts_with($title, $query)) {
+            $score += 50;
+        }
+        if (str_starts_with($subtitle, $query)) {
+            $score += 40;
+        }
 
         // Contains query
-        if (str_contains($title, $query)) $score += 30;
-        if (str_contains($subtitle, $query)) $score += 20;
+        if (str_contains($title, $query)) {
+            $score += 30;
+        }
+        if (str_contains($subtitle, $query)) {
+            $score += 20;
+        }
 
         // Type priority
         $typePriority = ['shipment' => 10, 'parcel' => 5, 'customer' => 1];
@@ -213,6 +224,7 @@ class SearchService
     public function setDriver(string $driver): self
     {
         $this->driver = $driver;
+
         return $this;
     }
 }

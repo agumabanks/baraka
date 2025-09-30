@@ -9,10 +9,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class ReturnOrder extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'shipment_id','reason_code','initiated_by','status','rto_label_path'
+        'shipment_id', 'reason_code', 'initiated_by', 'status', 'rto_label_path',
     ];
 }
-

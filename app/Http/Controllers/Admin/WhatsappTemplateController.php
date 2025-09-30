@@ -11,6 +11,7 @@ class WhatsappTemplateController extends Controller
     public function index()
     {
         $templates = WhatsappTemplate::paginate(20);
+
         return view('backend.admin.whatsapp_templates.index', compact('templates'));
     }
 
@@ -27,9 +28,9 @@ class WhatsappTemplateController extends Controller
             'body' => 'required|string',
             'approved' => 'nullable|boolean',
         ]);
-        $data['approved'] = (bool)($data['approved'] ?? false);
+        $data['approved'] = (bool) ($data['approved'] ?? false);
         WhatsappTemplate::create($data);
+
         return redirect()->route('admin.whatsapp-templates.index')->with('status', 'Template created');
     }
 }
-

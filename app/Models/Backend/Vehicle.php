@@ -31,17 +31,19 @@ class Vehicle extends Model
     //     ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
     // }
 
-    public function driver(){
-        return $this->belongsTo(DeliveryMan::class,'driver_id','id');
+    public function driver()
+    {
+        return $this->belongsTo(DeliveryMan::class, 'driver_id', 'id');
     }
 
     public function getMyStatusAttribute()
     {
-        if($this->status == Status::ACTIVE){
-            $status = '<span class="badge badge-pill badge-success">'.trans("status." . $this->status).'</span>';
-        }else {
-            $status = '<span class="badge badge-pill badge-danger">'.trans("status." . $this->status).'</span>';
+        if ($this->status == Status::ACTIVE) {
+            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
+        } else {
+            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
         }
+
         return $status;
     }
 

@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Carrier;
 use App\Models\CarrierService;
+use Illuminate\Database\Seeder;
 
 class CarriersAndServicesSeeder extends Seeder
 {
@@ -37,4 +37,3 @@ class CarriersAndServicesSeeder extends Seeder
         }
     }
 }
-

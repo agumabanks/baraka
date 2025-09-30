@@ -10,14 +10,17 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class GoogleMapSetting extends Model
 {
     use HasFactory,LogsActivity;
+
     protected $fillable = ['map_key'];
+
     public function getActivitylogOptions(): LogOptions
     {
 
         $logAttributes = ['map_key'];
+
         return LogOptions::defaults()
-        ->useLogName('Google map Settings')
-        ->logOnly($logAttributes)
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Google map Settings')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 }

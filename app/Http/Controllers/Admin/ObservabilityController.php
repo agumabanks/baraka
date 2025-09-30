@@ -10,7 +10,7 @@ class ObservabilityController extends Controller
     public function index()
     {
         $failedJobs = DB::table('failed_jobs')->count();
+
         return view('backend.admin.observability.index', compact('failedJobs'));
     }
 }
-

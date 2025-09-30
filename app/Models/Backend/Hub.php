@@ -2,16 +2,17 @@
 
 namespace App\Models\Backend;
 
+use App\Enums\Status;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use App\Enums\Status;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Hub extends Model
 {
     use HasFactory, LogsActivity;
-    protected $fillable = ['name','phone','address'];
+
+    protected $fillable = ['name', 'phone', 'address'];
 
     // Get all row. Descending order using scope.
     public function scopeOrderByDesc($query, $data)
@@ -20,19 +21,19 @@ class Hub extends Model
     }
 
     /**
-    * Activity Log
-    */
+     * Activity Log
+     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->useLogName('Hub')
-        ->logOnly(['name', 'phone', 'address'])
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Hub')
+            ->logOnly(['name', 'phone', 'address'])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     public function getMyStatusAttribute()
     {
-        return trans('status.' . $this->status);
+        return trans('status.'.$this->status);
     }
 
     // Scope: only active hubs
@@ -41,8 +42,9 @@ class Hub extends Model
         return $query->where('status', Status::ACTIVE);
     }
 
-    public function parcels(){
-        return $this->hasMany(Parcel::class,'hub_id','id');
+    public function parcels()
+    {
+        return $this->hasMany(Parcel::class, 'hub_id', 'id');
     }
 
     // Hierarchy

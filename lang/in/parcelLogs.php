@@ -7,8 +7,8 @@ return [
     ParcelStatus::PICKUP_RE_SCHEDULE => 'पार्सल पिकअप फिर से शेड्यूल किया गया',
     ParcelStatus::RECEIVED_BY_PICKUP_MAN => 'पार्सल प्राप्त पिक मैन',
     ParcelStatus::RECEIVED_WAREHOUSE => 'गोदाम को मिला पार्सल',
-    ParcelStatus::TRANSFER_TO_HUB        => 'हब में पार्सल स्थानांतरण',
-    ParcelStatus::RECEIVED_BY_HUB        => 'हब द्वारा प्राप्त',
+    ParcelStatus::TRANSFER_TO_HUB => 'हब में पार्सल स्थानांतरण',
+    ParcelStatus::RECEIVED_BY_HUB => 'हब द्वारा प्राप्त',
     ParcelStatus::DELIVERY_MAN_ASSIGN => 'डिलीवरी मैन असाइन किया गया',
     ParcelStatus::DELIVERY_RE_SCHEDULE => 'वितरण समय में परिवर्तन',
 
@@ -24,10 +24,9 @@ return [
     ParcelStatus::RETURNED_MERCHANT => 'लौटा हुआ व्यापारी',
     ParcelStatus::RETURN_RECEIVED_BY_MERCHANT => 'व्यापारी द्वारा प्राप्त रिटर्न',
 
-    'hub_name'                      => 'हब का नाम',
-    'hub_phone'                      => 'हब फोन',
-    'delivery_man'                  => 'डिलीवरी मैन',
-    'delivery_man_phone'            => 'डिलीवरी मैन फोन'
-
+    'hub_name' => 'हब का नाम',
+    'hub_phone' => 'हब फोन',
+    'delivery_man' => 'डिलीवरी मैन',
+    'delivery_man_phone' => 'डिलीवरी मैन फोन',
 
 ];

@@ -11,6 +11,7 @@ class EdiController extends Controller
     public function index()
     {
         $providers = EdiProvider::all();
+
         return view('backend.admin.edi.index', compact('providers'));
     }
 
@@ -27,7 +28,7 @@ class EdiController extends Controller
             'config' => 'nullable|array',
         ]);
         EdiProvider::create($data);
+
         return redirect()->route('admin.edi.index')->with('status', 'Provider created');
     }
 }
-
