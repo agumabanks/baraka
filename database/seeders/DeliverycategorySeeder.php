@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use App\Models\Backend\Deliverycategory;
 use App\Enums\Status;
+use App\Models\Backend\Deliverycategory;
+use Illuminate\Database\Seeder;
 
 class DeliverycategorySeeder extends Seeder
 {
@@ -22,14 +21,13 @@ class DeliverycategorySeeder extends Seeder
             'Laptop',
             'Tabs',
             'Gaming Kybord',
-            'Cosmetices',];
+            'Cosmetices', ];
         $i = 0;
-        for($n = 0; $n < sizeof($deliverycategorys); $n++)
-        {
-            $dep           = new Deliverycategory;
-            $dep->title    = $deliverycategorys[$n];
+        for ($n = 0; $n < count($deliverycategorys); $n++) {
+            $dep = new Deliverycategory;
+            $dep->title = $deliverycategorys[$n];
             $dep->position = ++$i;
-            $dep->status   = Status::ACTIVE;
+            $dep->status = Status::ACTIVE;
             $dep->save();
         }
     }

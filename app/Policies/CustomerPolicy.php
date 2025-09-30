@@ -42,7 +42,7 @@ class CustomerPolicy
             return $customer->shipments()
                 ->where(function ($query) use ($user) {
                     $query->where('origin_branch_id', $user->hub_id)
-                          ->orWhere('dest_branch_id', $user->hub_id);
+                        ->orWhere('dest_branch_id', $user->hub_id);
                 })
                 ->exists() ||
                 $customer->hub_id === $user->hub_id; // Created by user's branch
@@ -105,7 +105,7 @@ class CustomerPolicy
     // Helper methods
     private function isBranchUser(User $user): bool
     {
-        return !is_null($user->hub_id) && (
+        return ! is_null($user->hub_id) && (
             $user->hasRole('branch_ops_manager') ||
             $user->hasRole('branch_attendant') ||
             $user->hasRole('driver') ||
@@ -116,7 +116,7 @@ class CustomerPolicy
 
     private function isBranchOps(User $user): bool
     {
-        return !is_null($user->hub_id) && (
+        return ! is_null($user->hub_id) && (
             $user->hasRole('branch_ops_manager') ||
             $user->hasRole('branch_attendant')
         );

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('symbol')->nullable();
             $table->string('code')->nullable();
-            $table->decimal('exchange_rate',16,2)->nullable();
+            $table->decimal('exchange_rate', 16, 2)->nullable();
             $table->string('position')->nullable();
             $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'= Active, '.Status::INACTIVE.'= Inactive');
             $table->timestamps();

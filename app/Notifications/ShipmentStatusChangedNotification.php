@@ -12,9 +12,7 @@ class ShipmentStatusChangedNotification extends Notification implements ShouldQu
 {
     use Queueable;
 
-    public function __construct(public Shipment $shipment)
-    {
-    }
+    public function __construct(public Shipment $shipment) {}
 
     public function via($notifiable): array
     {
@@ -22,16 +20,18 @@ class ShipmentStatusChangedNotification extends Notification implements ShouldQu
         // Optional: extend with SMS/push based on user preferences
         if (is_array($notifiable->notification_prefs ?? null)) {
             $prefs = $notifiable->notification_prefs;
-            if (!empty($prefs['sms'])) {
+            if (! empty($prefs['sms'])) {
                 // e.g., add a custom SMS channel here
             }
         }
+
         return $channels;
     }
 
     public function toMail($notifiable): MailMessage
     {
         $s = $this->shipment;
+
         return (new MailMessage)
             ->subject('Shipment #'.$s->id.' status updated to '.$s->current_status->value)
             ->greeting('Hello '.$notifiable->name.',')
@@ -41,4 +41,3 @@ class ShipmentStatusChangedNotification extends Notification implements ShouldQu
             ->line('Thank you for choosing us.');
     }
 }
-

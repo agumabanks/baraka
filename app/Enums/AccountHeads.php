@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Enums;
-Interface AccountHeads
+
+interface AccountHeads
 {
+    const INCOME = 1;
 
-        const INCOME    = 1;
-        const EXPENSE   = 2;
-
+    const EXPENSE = 2;
 }

@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -19,8 +18,11 @@ class InvoicePDFSend extends Mailable
      *
      * @return void
      */
-    protected $invoice,$pdf;
-    public function __construct($invoice = null,$pdf = null)
+    protected $invoice;
+
+    protected $pdf;
+
+    public function __construct($invoice = null, $pdf = null)
     {
         $this->invoice = $invoice;
         $this->pdf = $pdf;
@@ -46,12 +48,12 @@ class InvoicePDFSend extends Mailable
      */
     public function content()
     {
-        
+
         return new Content(
             view: 'backend.merchant.invoice.invoice_mail_pdf',
-            with:[
-                'title'=>'invoice generated',
-                'body'  => $this->attachments()
+            with: [
+                'title' => 'invoice generated',
+                'body' => $this->attachments(),
             ]
         );
     }
@@ -64,7 +66,7 @@ class InvoicePDFSend extends Mailable
     public function attachments()
     {
         return [
-            Attachment::fromData(fn()=>$this->pdf,'invoice.pdf')
+            Attachment::fromData(fn () => $this->pdf, 'invoice.pdf')
                 ->withMime('application/pdf'),
         ];
     }

@@ -24,10 +24,10 @@ class StorePushNotificationRequest extends FormRequest
     public function rules()
     {
         return [
-            'title'        => ['required','string','max:191'],
-            'description'  => ['required','string','max:1000'],
-            'role_id'      => ['required','string'],
-            'image'        => 'nullable|image|mimes:png|max:5098',
+            'title' => ['required', 'string', 'max:191'],
+            'description' => ['required', 'string', 'max:1000'],
+            'role_id' => ['required', 'string'],
+            'image' => 'nullable|image|mimes:png|max:5098',
         ];
     }
 }

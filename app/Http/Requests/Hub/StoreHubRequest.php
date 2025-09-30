@@ -24,9 +24,9 @@ class StoreHubRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'    => ['required','string','unique:hubs','max:191'],
-            'phone'   => ['required','numeric','digits_between:11,14'],
-            'address' => ['required','string','max:191'],
+            'name' => ['required', 'string', 'unique:hubs', 'max:191'],
+            'phone' => ['required', 'numeric', 'digits_between:11,14'],
+            'address' => ['required', 'string', 'max:191'],
         ];
     }
 }

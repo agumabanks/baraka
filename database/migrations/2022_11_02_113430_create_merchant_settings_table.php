@@ -22,7 +22,6 @@ return new class extends Migration
 
             $table->index('merchant_id');
 
-
         });
     }
 

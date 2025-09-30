@@ -13,7 +13,7 @@ class CustomerAuthController extends Controller
 {
     public function register(Request $request)
     {
-        if (!config('otp.self_registration')) {
+        if (! config('otp.self_registration')) {
             return response()->json(['success' => false, 'message' => 'Self registration disabled'], 403);
         }
 
@@ -26,7 +26,9 @@ class CustomerAuthController extends Controller
             'consent_version' => 'required|string',
         ];
         $v = Validator::make($request->all(), $rules);
-        if ($v->fails()) return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        if ($v->fails()) {
+            return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        }
 
         $otp = app(OtpService::class);
         try {
@@ -72,21 +74,27 @@ class CustomerAuthController extends Controller
             'address' => 'required|string', // email or phone E.164
             'channel' => 'nullable|in:sms,whatsapp,email',
         ]);
-        if ($v->fails()) return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        if ($v->fails()) {
+            return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        }
 
         $channel = $request->channel ?: 'sms';
-        if (!in_array($channel, config('otp.channels'))) {
+        if (! in_array($channel, config('otp.channels'))) {
             return response()->json(['success' => false, 'message' => 'Channel not enabled'], 422);
         }
 
         $addr = $request->address;
         // Normalize if phone-like
         if ($channel !== 'email' && preg_match('/\d{6,}/', $addr)) {
-            try { $addr = app(OtpService::class)->normalizePhoneE164($addr); } catch (\Throwable $e) {}
+            try {
+                $addr = app(OtpService::class)->normalizePhoneE164($addr);
+            } catch (\Throwable $e) {
+            }
         }
 
         try {
             app(OtpService::class)->issue($addr, $channel);
+
             return response()->json(['success' => true, 'message' => 'OTP sent']);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 429);
@@ -99,15 +107,22 @@ class CustomerAuthController extends Controller
             'address' => 'required|string',
             'code' => 'required|string|min:4|max:8',
         ]);
-        if ($v->fails()) return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        if ($v->fails()) {
+            return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        }
 
         $addr = $request->address;
         if (preg_match('/\d{6,}/', $addr)) {
-            try { $addr = app(OtpService::class)->normalizePhoneE164($addr); } catch (\Throwable $e) {}
+            try {
+                $addr = app(OtpService::class)->normalizePhoneE164($addr);
+            } catch (\Throwable $e) {
+            }
         }
 
         $ok = app(OtpService::class)->verify($addr, $request->code);
-        if (!$ok) return response()->json(['success' => false, 'message' => 'Invalid or expired code'], 401);
+        if (! $ok) {
+            return response()->json(['success' => false, 'message' => 'Invalid or expired code'], 401);
+        }
 
         // Mark user verified where applicable
         $user = User::where('phone_e164', $addr)->orWhere('mobile', $addr)
@@ -118,6 +133,7 @@ class CustomerAuthController extends Controller
             } else {
                 $user->forceFill(['verification_status' => 1, 'mobile' => $addr, 'phone_e164' => $addr])->save();
             }
+
             // Return API token for immediate use
             return response()->json(['success' => true, 'token' => $user->createToken('otp')->plainTextToken]);
         }
@@ -133,19 +149,31 @@ class CustomerAuthController extends Controller
             'password' => 'nullable|string|min:8',
             'code' => 'nullable|string|min:4|max:8',
         ]);
-        if ($v->fails()) return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        if ($v->fails()) {
+            return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        }
 
         // OTP login (preferred for self-service)
         if ($request->filled('code')) {
             $addr = $request->phone ?: $request->email;
-            if (!$addr) return response()->json(['success' => false, 'message' => 'Address required'], 422);
+            if (! $addr) {
+                return response()->json(['success' => false, 'message' => 'Address required'], 422);
+            }
             if ($request->phone) {
-                try { $addr = app(OtpService::class)->normalizePhoneE164($addr); } catch (\Throwable $e) {}
+                try {
+                    $addr = app(OtpService::class)->normalizePhoneE164($addr);
+                } catch (\Throwable $e) {
+                }
             }
             $ok = app(OtpService::class)->verify($addr, $request->code);
-            if (!$ok) return response()->json(['success' => false, 'message' => 'Invalid or expired code'], 401);
+            if (! $ok) {
+                return response()->json(['success' => false, 'message' => 'Invalid or expired code'], 401);
+            }
             $user = User::where('phone_e164', $addr)->orWhere('mobile', $addr)->orWhere('email', $addr)->first();
-            if (!$user) return response()->json(['success' => false, 'message' => 'User not found'], 404);
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'User not found'], 404);
+            }
+
             return response()->json(['success' => true, 'token' => $user->createToken('otp')->plainTextToken]);
         }
 
@@ -159,7 +187,7 @@ class CustomerAuthController extends Controller
             return response()->json(['success' => false, 'message' => 'Credentials required'], 422);
         }
 
-        if (!$user || !$user->password || !\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+        if (! $user || ! $user->password || ! \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
             return response()->json(['success' => false, 'message' => 'Invalid credentials'], 401);
         }
 
@@ -169,6 +197,7 @@ class CustomerAuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
+
         return response()->json(['success' => true]);
     }
 }

@@ -69,14 +69,17 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        //custom
-        'hasPermission'     => \App\Http\Middleware\PermissionCheckMiddleware::class,
-        'XSS'               => \App\Http\Middleware\XSS::class,
-        'CheckApiKey'       => CheckApiKeyMiddleware::class,
-        'headersCheck'      =>\App\Http\Middleware\ModifyHeaderMiddleware::class,
-        'IsInstalled'       =>\App\Http\Middleware\IsInstalledMiddleware::class,
-        'IsNotInstalled'    =>\App\Http\Middleware\IsNotInstalledMiddleware::class,
+        // custom
+        'hasPermission' => \App\Http\Middleware\PermissionCheckMiddleware::class,
+        'XSS' => \App\Http\Middleware\XSS::class,
+        'CheckApiKey' => CheckApiKeyMiddleware::class,
+        'headersCheck' => \App\Http\Middleware\ModifyHeaderMiddleware::class,
+        'IsInstalled' => \App\Http\Middleware\IsInstalledMiddleware::class,
+        'IsNotInstalled' => \App\Http\Middleware\IsNotInstalledMiddleware::class,
         'impersonationBanner' => \App\Http\Middleware\ImpersonationBanner::class,
+        'idempotency' => \App\Http\Middleware\IdempotencyMiddleware::class,
+        'bind_device' => \App\Http\Middleware\BindDeviceMiddleware::class,
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
 
     ];
 }

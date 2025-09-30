@@ -33,37 +33,37 @@ return new class extends Migration
             $table->string('invoice_no')->nullable();
             $table->unsignedTinyInteger('category_id')->nullable();
             $table->bigInteger('weight')->default(0)->nullable();
-            $table->unsignedTinyInteger('delivery_type_id')->nullable(); 
+            $table->unsignedTinyInteger('delivery_type_id')->nullable();
             $table->bigInteger('packaging_id')->nullable();
-            $table->unsignedBigInteger('first_hub_id')->nullable();//first hub id from hub
-            $table->foreignId('hub_id')->nullable()->constrained('hubs')->onUpdate('cascade')->onDelete('cascade');//hub id from hub
-            $table->foreignId('transfer_hub_id')->nullable();//hub id from hub
-            $table->decimal('cash_collection',13,2)->nullable();
-            $table->decimal('old_cash_collection',13,2)->nullable();
-            $table->decimal('selling_price',13,2)->nullable();
-            $table->decimal('liquid_fragile_amount',13,2)->nullable();
-            $table->decimal('packaging_amount',13,2)->nullable();
-            $table->decimal('delivery_charge',13,2)->nullable();
+            $table->unsignedBigInteger('first_hub_id')->nullable(); // first hub id from hub
+            $table->foreignId('hub_id')->nullable()->constrained('hubs')->onUpdate('cascade')->onDelete('cascade'); // hub id from hub
+            $table->foreignId('transfer_hub_id')->nullable(); // hub id from hub
+            $table->decimal('cash_collection', 13, 2)->nullable();
+            $table->decimal('old_cash_collection', 13, 2)->nullable();
+            $table->decimal('selling_price', 13, 2)->nullable();
+            $table->decimal('liquid_fragile_amount', 13, 2)->nullable();
+            $table->decimal('packaging_amount', 13, 2)->nullable();
+            $table->decimal('delivery_charge', 13, 2)->nullable();
             $table->bigInteger('cod_charge')->nullable();
-            $table->decimal('cod_amount',13,2)->nullable();
+            $table->decimal('cod_amount', 13, 2)->nullable();
             $table->bigInteger('vat')->nullable();
-            $table->decimal('vat_amount',13,2)->nullable();
-            $table->decimal('total_delivery_amount',13,2)->nullable();
-            $table->decimal('current_payable',13,2)->nullable();
+            $table->decimal('vat_amount', 13, 2)->nullable();
+            $table->decimal('total_delivery_amount', 13, 2)->nullable();
+            $table->decimal('current_payable', 13, 2)->nullable();
             $table->string('tracking_id')->nullable();
             $table->longtext('note')->nullable();
             $table->unsignedTinyInteger('partial_delivered')->default(BooleanStatus::NO)->comment('no=0,yes=1');
-            $table->unsignedTinyInteger('status')->default(ParcelStatus::PENDING);//check parcel status enums file
+            $table->unsignedTinyInteger('status')->default(ParcelStatus::PENDING); // check parcel status enums file
             $table->string('parcel_bank')->nullable();
             $table->date('pickup_date')->nullable();
             $table->date('delivery_date')->nullable();
             $table->timestamp('deliverd_date')->nullable();
-            $table->decimal('return_charges',16,2)->default(0)->comment('received by merchant return charges');
+            $table->decimal('return_charges', 16, 2)->default(0)->comment('received by merchant return charges');
             $table->unsignedTinyInteger('return_to_courier')->default(BooleanStatus::NO)->comment('no=0,yes=1');
             $table->bigInteger('invoice_id')->nullable();
             $table->unsignedTinyInteger('parcel_payment_method')->default(ParcelPaymentMethod::COD)->comment(ParcelPaymentMethod::COD.'= COD, '.ParcelPaymentMethod::PREPAID.' = Prepaid');
             $table->timestamps();
- 
+
             $table->index('merchant_id');
             $table->index('merchant_shop_id');
             $table->index('hub_id');

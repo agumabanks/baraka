@@ -15,12 +15,11 @@ class FraudResource extends JsonResource
     public function toArray($request)
     {
         return [
-            "id"                => $this->id,
-            "name"              => $this->name,
-            "phone"             => (string) $this->phone,
-            "description"       => $this->details,
-            'date'              => dateFormat($this->created_at),
+            'id' => $this->id,
+            'name' => $this->name,
+            'phone' => (string) $this->phone,
+            'description' => $this->details,
+            'date' => dateFormat($this->created_at),
         ];
     }
-
 }

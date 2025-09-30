@@ -1,6 +1,6 @@
 <?php
 
-return[
-    'title'=>'عنوان',
-    'charge'=>'تكلفة'
+return [
+    'title' => 'عنوان',
+    'charge' => 'تكلفة',
 ];

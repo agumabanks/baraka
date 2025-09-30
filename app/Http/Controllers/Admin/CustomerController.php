@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Status as UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\SearchService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Enums\Status as UserStatus;
+use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
@@ -30,11 +30,11 @@ class CustomerController extends Controller
         $query = User::with(['hub', 'shipments']);
 
         // Apply ABAC filtering
-        if (!auth()->user()->hasRole(['hq_admin','admin','super-admin'])) {
+        if (! auth()->user()->hasRole(['hq_admin', 'admin', 'super-admin'])) {
             $query->where(function ($q) {
                 $q->whereHas('shipments', function ($shipmentQuery) {
                     $shipmentQuery->where('origin_branch_id', auth()->user()->hub_id)
-                                  ->orWhere('dest_branch_id', auth()->user()->hub_id);
+                        ->orWhere('dest_branch_id', auth()->user()->hub_id);
                 })->orWhere('hub_id', auth()->user()->hub_id);
             });
         }
@@ -43,7 +43,7 @@ class CustomerController extends Controller
         if ($request->filled('search')) {
             $searchResults = $this->searchService->search($request->search, [
                 'type' => 'customer',
-                'per_page' => 1000
+                'per_page' => 1000,
             ], auth()->user());
 
             $customerIds = collect($searchResults->items())
@@ -106,13 +106,17 @@ class CustomerController extends Controller
             ], 422);
         }
 
-        $customer = new User();
+        $customer = new User;
         $customer->name = $request->name;
         $customer->email = $request->email;
         $customer->password = Hash::make($request->password ?: 'temp123');
         $customer->hub_id = $request->hub_id;
-        if ($mobile) { $customer->mobile = $mobile; }
-        if ($request->filled('address')) { $customer->address = $request->address; }
+        if ($mobile) {
+            $customer->mobile = $mobile;
+        }
+        if ($request->filled('address')) {
+            $customer->address = $request->address;
+        }
         $customer->status = UserStatus::ACTIVE;
         $customer->save();
 
@@ -120,7 +124,7 @@ class CustomerController extends Controller
             'success' => true,
             'message' => 'Customer created successfully',
             'customer' => $customer,
-            'redirect' => route('admin.customers.show', $customer)
+            'redirect' => route('admin.customers.show', $customer),
         ]);
     }
 
@@ -137,7 +141,7 @@ class CustomerController extends Controller
                 $query->latest()->take(10);
             },
             'shipments.originBranch',
-            'shipments.destBranch'
+            'shipments.destBranch',
         ]);
 
         return view('admin.customers.show', compact('customer'));
@@ -164,8 +168,8 @@ class CustomerController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $customer->id,
-            'mobile' => 'nullable|string|max:20|unique:users,mobile,' . $customer->id,
+            'email' => 'required|email|unique:users,email,'.$customer->id,
+            'mobile' => 'nullable|string|max:20|unique:users,mobile,'.$customer->id,
             'phone' => 'nullable|string|max:20',
             'hub_id' => 'nullable|exists:hubs,id',
             'address' => 'nullable|string',
@@ -179,14 +183,18 @@ class CustomerController extends Controller
             'status' => (int) $request->status,
         ];
         $mobile = $request->mobile ?? $request->phone;
-        if ($mobile) { $payload['mobile'] = $mobile; }
-        if ($request->filled('address')) { $payload['address'] = $request->address; }
+        if ($mobile) {
+            $payload['mobile'] = $mobile;
+        }
+        if ($request->filled('address')) {
+            $payload['address'] = $request->address;
+        }
         $customer->update($payload);
 
         return response()->json([
             'success' => true,
             'message' => 'Customer updated successfully',
-            'customer' => $customer
+            'customer' => $customer,
         ]);
     }
 
@@ -201,7 +209,7 @@ class CustomerController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Customer deleted successfully'
+            'message' => 'Customer deleted successfully',
         ]);
     }
 
@@ -222,9 +230,10 @@ class CustomerController extends Controller
 
         $customers = collect($results->items())->map(function ($item) {
             $customer = $item['model'];
+
             return [
                 'id' => $customer->id,
-                'text' => $customer->name . ' (' . $customer->email . ')',
+                'text' => $customer->name.' ('.$customer->email.')',
                 'name' => $customer->name,
                 'email' => $customer->email,
                 'phone' => $customer->mobile,

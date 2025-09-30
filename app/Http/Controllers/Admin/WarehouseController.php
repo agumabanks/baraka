@@ -12,8 +12,11 @@ class WarehouseController extends Controller
     {
         $this->authorize('viewAny', WhLocation::class);
         $query = WhLocation::query();
-        if ($request->user()->hub_id) { $query->where('branch_id', $request->user()->hub_id); }
+        if ($request->user()->hub_id) {
+            $query->where('branch_id', $request->user()->hub_id);
+        }
         $items = $query->orderBy('code')->paginate(30);
+
         return view('backend.admin.warehouse.index', compact('items'));
     }
 }

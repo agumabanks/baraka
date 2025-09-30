@@ -2,7 +2,6 @@
 
 namespace App\Models\Backend;
 
-use App\Enums\Status;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,17 +12,19 @@ class PushNotification extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $table       = 'push_notifications';
+    protected $table = 'push_notifications';
+
     protected $fillable = ['title', 'description'];
 
     public function getActivitylogOptions(): LogOptions
     {
 
         $logAttributes = ['title', 'description'];
+
         return LogOptions::defaults()
             ->useLogName('Push Notification')
             ->logOnly($logAttributes)
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     // Get single row in Upload table.
@@ -34,9 +35,10 @@ class PushNotification extends Model
 
     public function getImageAttribute()
     {
-        if (!empty($this->upload->original['original']) && file_exists(public_path($this->upload->original['original']))) {
+        if (! empty($this->upload->original['original']) && file_exists(public_path($this->upload->original['original']))) {
             return static_asset($this->upload->original['original']);
         }
+
         return static_asset('images/default/logo1.png');
     }
 
@@ -44,5 +46,4 @@ class PushNotification extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-
 }

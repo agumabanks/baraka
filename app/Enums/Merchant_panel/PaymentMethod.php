@@ -1,8 +1,12 @@
 <?php
+
 namespace App\Enums\Merchant_panel;
 
-interface PaymentMethod{
-    const bank   = 'bank';
+interface PaymentMethod
+{
+    const bank = 'bank';
+
     const mobile = 'mobile';
-    const cash   = 'cash';
+
+    const cash = 'cash';
 }

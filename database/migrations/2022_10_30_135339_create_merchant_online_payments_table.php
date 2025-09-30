@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('account_id')->nullable()->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('merchant_id')->nullable()->constrained('merchants')->onUpdate('cascade')->onDelete('cascade');
             $table->string('transaction_id')->nullable();
-            $table->decimal('amount',16,2)->nullable();
+            $table->decimal('amount', 16, 2)->nullable();
             $table->string('note')->nullable();
             $table->string('status')->nullable();
             $table->timestamps();

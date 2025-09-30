@@ -26,40 +26,38 @@ class StoreRequest extends FormRequest
     {
         if (Request::input('gateway') == 1) {
             return [
-                'type'                => ['required'],
-                'user'                => ['required'],
-                'gateway'             => ['required'],
-                'balance'             => ['required','numeric'],
+                'type' => ['required'],
+                'user' => ['required'],
+                'gateway' => ['required'],
+                'balance' => ['required', 'numeric'],
             ];
-        }
-        else if (Request::input('gateway') == 2) {
+        } elseif (Request::input('gateway') == 2) {
             return [
-                'type'                => ['required'],
-                'user'                => ['required'],
-                'gateway'             => ['required'],
+                'type' => ['required'],
+                'user' => ['required'],
+                'gateway' => ['required'],
                 'account_holder_name' => ['required'],
-                'account_no'          => ['required','numeric'],
-                'bank'                => ['required'],
-                'branch_name'         => ['required'],
-                'opening_balance'     => ['required','numeric'],
+                'account_no' => ['required', 'numeric'],
+                'bank' => ['required'],
+                'branch_name' => ['required'],
+                'opening_balance' => ['required', 'numeric'],
             ];
-        }
-        else if (Request::input('gateway') == 3 || Request::input('gateway') == 4 || Request::input('gateway') == 5) {
+        } elseif (Request::input('gateway') == 3 || Request::input('gateway') == 4 || Request::input('gateway') == 5) {
             return [
-                'type'                => ['required'],
-                'user'                => ['required'],
-                'gateway'             => ['required'],
+                'type' => ['required'],
+                'user' => ['required'],
+                'gateway' => ['required'],
                 'account_holder_name' => ['required'],
-                'mobile'              => ['required','numeric','digits_between:11,14'],
-                'account_type'        => ['required'],
-                'opening_balance'     => ['required','numeric'],
-                'status'              => ['required'],
+                'mobile' => ['required', 'numeric', 'digits_between:11,14'],
+                'account_type' => ['required'],
+                'opening_balance' => ['required', 'numeric'],
+                'status' => ['required'],
             ];
-        }else{
+        } else {
             return [
-                'type'                => ['required'],
-                'user'                => ['required'],
-                'gateway'             => ['required'],
+                'type' => ['required'],
+                'user' => ['required'],
+                'gateway' => ['required'],
             ];
         }
     }

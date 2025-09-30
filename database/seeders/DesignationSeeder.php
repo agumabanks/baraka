@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Backend\Designation;
+use Illuminate\Database\Seeder;
 
 class DesignationSeeder extends Seeder
 {
@@ -23,9 +22,8 @@ class DesignationSeeder extends Seeder
             'Chief Legal Officer (CLO)',
             'Chief Marketing Officer (CMO)'];
 
-        for($n = 0; $n < sizeof($designations); $n++)
-        {
-            $desig        = new Designation;
+        for ($n = 0; $n < count($designations); $n++) {
+            $desig = new Designation;
             $desig->title = $designations[$n];
             $desig->save();
         }

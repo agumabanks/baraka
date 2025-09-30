@@ -24,12 +24,12 @@ class UpdatePushNotificationRequest extends FormRequest
     public function rules()
     {
         return [
-            'title'        => ['required','string','max:191'],
-            'description'  => ['required','string','max:1000'],
-            'user_id'      => ['nullable'],
-            'merchant_id'  => ['nullable'],
-            'type'         => ['required','numeric'],
-            'image'        => 'nullable|image|mimes:png|max:5098',
+            'title' => ['required', 'string', 'max:191'],
+            'description' => ['required', 'string', 'max:1000'],
+            'user_id' => ['nullable'],
+            'merchant_id' => ['nullable'],
+            'type' => ['required', 'numeric'],
+            'image' => 'nullable|image|mimes:png|max:5098',
         ];
     }
 }

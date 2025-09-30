@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::create('social_links', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
-            $table->string('icon')->nullable();//from font awesome
+            $table->string('icon')->nullable(); // from font awesome
             $table->string('link')->nullable();
             $table->string('position')->nullable();
             $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'= Active, '.Status::INACTIVE.'= Inactive');

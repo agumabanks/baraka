@@ -29,7 +29,6 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
 
-
             $table->index('hub_id');
             $table->index('delivery_man_id');
             $table->index('pickup_man_id');

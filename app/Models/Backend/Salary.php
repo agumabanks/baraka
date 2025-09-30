@@ -2,8 +2,8 @@
 
 namespace App\Models\Backend;
 
-use App\Models\User;
 use App\Models\Backend\Payroll\SalaryGenerate;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
@@ -13,7 +13,7 @@ class Salary extends Model
 {
     use HasFactory,LogsActivity;
 
-    protected  $fillable = [
+    protected $fillable = [
         'user_id',
         'month',
         'account',
@@ -33,24 +33,25 @@ class Salary extends Model
             'date',
             'note',
         ];
+
         return LogOptions::defaults()
-        ->useLogName('Salary')
-        ->logOnly($logAttributes)
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Salary')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
-
-    public function user(){
-        return $this->belongsTo(User::class,'user_id','id');
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function account(){
-        return $this->belongsTo(Account::class,'account_id','id');
+    public function account()
+    {
+        return $this->belongsTo(Account::class, 'account_id', 'id');
     }
 
-    public function getSalary(){
-        return $this->hasMany(SalaryGenerate::class,'user_id','user_id');
+    public function getSalary()
+    {
+        return $this->hasMany(SalaryGenerate::class, 'user_id', 'user_id');
     }
-
-
 }

@@ -11,18 +11,21 @@ class ManifestController extends Controller
     {
         $this->authorize('viewAny', Manifest::class);
         $items = Manifest::query()->latest('id')->paginate(15);
+
         return view('backend.admin.manifests.index', compact('items'));
     }
 
     public function show(Manifest $manifest)
     {
         $this->authorize('view', $manifest);
+
         return view('backend.admin.manifests.show', compact('manifest'));
     }
 
     public function create()
     {
         $this->authorize('create', Manifest::class);
+
         return view('backend.admin.manifests.create');
     }
 
@@ -39,12 +42,14 @@ class ManifestController extends Controller
             'status' => 'required|in:open,closed,departed,arrived',
         ]);
         $m = Manifest::create($data);
-        return redirect()->route('admin.manifests.show', $m)->with('status','Manifest created');
+
+        return redirect()->route('admin.manifests.show', $m)->with('status', 'Manifest created');
     }
 
     public function edit(Manifest $manifest)
     {
         $this->authorize('update', $manifest);
+
         return view('backend.admin.manifests.edit', compact('manifest'));
     }
 
@@ -56,13 +61,15 @@ class ManifestController extends Controller
             'arrival_at' => 'nullable|date',
         ]);
         $manifest->update($data);
-        return redirect()->route('admin.manifests.show', $manifest)->with('status','Manifest updated');
+
+        return redirect()->route('admin.manifests.show', $manifest)->with('status', 'Manifest updated');
     }
 
     public function destroy(Manifest $manifest)
     {
         $this->authorize('delete', $manifest);
         $manifest->delete();
-        return redirect()->route('admin.manifests.index')->with('status','Manifest deleted');
+
+        return redirect()->route('admin.manifests.index')->with('status', 'Manifest deleted');
     }
 }

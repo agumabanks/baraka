@@ -1,26 +1,31 @@
 <?php
-namespace App\Repositories\AssetCategory;
-use App\Models\Backend\Assetcategory;
-use App\Repositories\AssetCategory\AssetCategoryInterface;
 
-class AssetCategoryRepository implements AssetCategoryInterface{
-    public function all(){
-        return Assetcategory::orderBy('position','asc')->paginate(10);
+namespace App\Repositories\AssetCategory;
+
+use App\Models\Backend\Assetcategory;
+
+class AssetCategoryRepository implements AssetCategoryInterface
+{
+    public function all()
+    {
+        return Assetcategory::orderBy('position', 'asc')->paginate(10);
     }
 
-    public function get($id){
+    public function get($id)
+    {
         return Assetcategory::find($id);
     }
 
-    public function store($request){
+    public function store($request)
+    {
         try {
-            $assetcategory               = new Assetcategory();
-            $assetcategory->title        = $request->title;
-            $assetcategory->position     = $request->position;
+            $assetcategory = new Assetcategory;
+            $assetcategory->title = $request->title;
+            $assetcategory->position = $request->position;
             $assetcategory->save();
+
             return true;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
     }
@@ -29,18 +34,19 @@ class AssetCategoryRepository implements AssetCategoryInterface{
     {
 
         try {
-            $assetcategory               =  Assetcategory::find($request->id);
-            $assetcategory->title        = $request->title;
-            $assetcategory->position     = $request->position;
+            $assetcategory = Assetcategory::find($request->id);
+            $assetcategory->title = $request->title;
+            $assetcategory->position = $request->position;
             $assetcategory->save();
+
             return true;
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return false;
         }
     }
 
-    public function delete($id){
+    public function delete($id)
+    {
         return Assetcategory::destroy($id);
     }
 }

@@ -12,7 +12,7 @@ class CashOffice extends Model
     protected $table = 'cash_office_days';
 
     protected $fillable = [
-        'branch_id','business_date','cod_collected','cash_on_hand','banked_amount','variance','submitted_by_id','submitted_at'
+        'branch_id', 'business_date', 'cod_collected', 'cash_on_hand', 'banked_amount', 'variance', 'submitted_by_id', 'submitted_at',
     ];
 
     protected $casts = [
@@ -20,4 +20,3 @@ class CashOffice extends Model
         'submitted_at' => 'datetime',
     ];
 }
-

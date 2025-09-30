@@ -21,7 +21,7 @@ class PrivacyController extends Controller
                 'address' => $user->address,
                 'created_at' => $user->created_at,
             ],
-            'shipments' => $user->shipments()->with(['originBranch:id,name','destBranch:id,name','parcels:id,shipment_id,weight_kg'])->latest()->limit(1000)->get(),
+            'shipments' => $user->shipments()->with(['originBranch:id,name', 'destBranch:id,name', 'parcels:id,shipment_id,weight_kg'])->latest()->limit(1000)->get(),
         ];
 
         $filename = 'privacy-export-user-'.$user->id.'-'.now()->format('Ymd_His').'.json';
@@ -33,4 +33,3 @@ class PrivacyController extends Controller
         ]);
     }
 }
-

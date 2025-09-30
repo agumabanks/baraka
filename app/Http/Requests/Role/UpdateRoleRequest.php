@@ -25,10 +25,9 @@ class UpdateRoleRequest extends FormRequest
     public function rules()
     {
 
-
         return [
-            'name'   => 'required|string|max:60|unique:roles,name,'.Request::input('id'),
-            'status' => ['required','numeric'],
+            'name' => 'required|string|max:60|unique:roles,name,'.Request::input('id'),
+            'status' => ['required', 'numeric'],
         ];
     }
 }

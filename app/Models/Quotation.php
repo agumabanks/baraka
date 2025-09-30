@@ -9,12 +9,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Quotation extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'customer_id','origin_branch_id','destination_country','service_type','pieces','weight_kg',
-        'volume_cm3','dim_factor','base_charge','surcharges_json','total_amount','currency','status',
-        'valid_until','pdf_path','created_by_id'
+        'customer_id', 'origin_branch_id', 'destination_country', 'service_type', 'pieces', 'weight_kg',
+        'volume_cm3', 'dim_factor', 'base_charge', 'surcharges_json', 'total_amount', 'currency', 'status',
+        'valid_until', 'pdf_path', 'created_by_id',
     ];
 
     protected $casts = [
@@ -22,6 +22,8 @@ class Quotation extends Model
         'valid_until' => 'date',
     ];
 
-    public function customer() { return $this->belongsTo(Customer::class); }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }
-

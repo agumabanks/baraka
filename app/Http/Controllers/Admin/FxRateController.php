@@ -11,12 +11,14 @@ class FxRateController extends Controller
     {
         $this->authorize('viewAny', FxRate::class);
         $items = FxRate::query()->orderByDesc('effective_at')->paginate(20);
+
         return view('backend.admin.fx_rates.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', FxRate::class);
+
         return view('backend.admin.fx_rates.create');
     }
 
@@ -31,12 +33,14 @@ class FxRateController extends Controller
             'effective_at' => 'required|date',
         ]);
         FxRate::create($data);
-        return redirect()->route('admin.fx.index')->with('status','FX rate added');
+
+        return redirect()->route('admin.fx.index')->with('status', 'FX rate added');
     }
 
     public function edit(FxRate $fx)
     {
         $this->authorize('update', $fx);
+
         return view('backend.admin.fx_rates.edit', ['fx' => $fx]);
     }
 
@@ -48,13 +52,15 @@ class FxRateController extends Controller
             'effective_at' => 'required|date',
         ]);
         $fx->update($data);
-        return redirect()->route('admin.fx.index')->with('status','FX rate updated');
+
+        return redirect()->route('admin.fx.index')->with('status', 'FX rate updated');
     }
 
     public function destroy(FxRate $fx)
     {
         $this->authorize('delete', $fx);
         $fx->delete();
-        return back()->with('status','FX rate deleted');
+
+        return back()->with('status', 'FX rate deleted');
     }
 }

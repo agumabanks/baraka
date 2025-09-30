@@ -14,7 +14,7 @@ class PaymentAccount extends Model
     /**
      * Activity Log
      */
- protected $fillable = [
+    protected $fillable = [
         'merchant_id',
         'payment_method',
         'bank_name',
@@ -41,17 +41,17 @@ class PaymentAccount extends Model
             'routing_no',
             'mobile_company',
             'mobile_no',
-            'account_type'
+            'account_type',
         ];
+
         return LogOptions::defaults()
-        ->useLogName('Payment Account')
-        ->logOnly($LogAttributes)
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Payment Account')
+            ->logOnly($LogAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
-    public function merchant(){
-        return $this->belongsTo(Merchant::class,'merchant_id','id');
+    public function merchant()
+    {
+        return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
-
-
 }

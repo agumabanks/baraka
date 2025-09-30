@@ -12,18 +12,21 @@ class ScanEventController extends Controller
     {
         $this->authorize('viewAny', ScanEvent::class);
         $events = ScanEvent::latest()->paginate(15);
+
         return view('backend.admin.scans.index', compact('events'));
     }
 
     public function show(ScanEvent $scan)
     {
         $this->authorize('view', $scan);
+
         return view('backend.admin.scans.show', ['scan' => $scan]);
     }
 
     public function create()
     {
         $this->authorize('create', ScanEvent::class);
+
         return view('backend.admin.scans.create');
     }
 
@@ -41,6 +44,7 @@ class ScanEventController extends Controller
         $payload['user_id'] = $request->user()->id;
         $payload['occurred_at'] = $payload['occurred_at'] ?? now();
         ScanEvent::create($payload);
-        return redirect()->route('admin.scans.index')->with('status','Scan created');
+
+        return redirect()->route('admin.scans.index')->with('status', 'Scan created');
     }
 }

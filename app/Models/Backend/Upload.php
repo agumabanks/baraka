@@ -2,26 +2,27 @@
 
 namespace App\Models\Backend;
 
+use App\Support\UploadOriginal;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use App\Support\UploadOriginal;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Upload extends Model
 {
     use HasFactory, LogsActivity;
-    protected $fillable = ['original','one','two','three'];
+
+    protected $fillable = ['original', 'one', 'two', 'three'];
 
     /**
-    * Activity Log
-    */
+     * Activity Log
+     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->useLogName('Upload')
-        ->logOnly(['original'])
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Upload')
+            ->logOnly(['original'])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     /**
@@ -32,9 +33,9 @@ class Upload extends Model
     {
         return new UploadOriginal([
             'original' => $value,
-            'one'      => $this->attributes['one'] ?? null,
-            'two'      => $this->attributes['two'] ?? null,
-            'three'    => $this->attributes['three'] ?? null,
+            'one' => $this->attributes['one'] ?? null,
+            'two' => $this->attributes['two'] ?? null,
+            'three' => $this->attributes['three'] ?? null,
         ]);
     }
 }

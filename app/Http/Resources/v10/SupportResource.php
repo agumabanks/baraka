@@ -15,17 +15,16 @@ class SupportResource extends JsonResource
     public function toArray($request)
     {
         return [
-            "id"                => $this->id,
-            "subject"           => $this->subject,
-            "userName"          => $this->user->name,
-            "userEmail"         => $this->user->email,
-            "userMobile"        => $this->user->mobile,
-            "department"        => $this->department->title,
-            "service"           => $this->service,
-            "priority"          => $this->priority,
-            "description"       => $this->description,
-            'date'              => (string) dateFormat($this->date),
+            'id' => $this->id,
+            'subject' => $this->subject,
+            'userName' => $this->user->name,
+            'userEmail' => $this->user->email,
+            'userMobile' => $this->user->mobile,
+            'department' => $this->department->title,
+            'service' => $this->service,
+            'priority' => $this->priority,
+            'description' => $this->description,
+            'date' => (string) dateFormat($this->date),
         ];
     }
-
 }

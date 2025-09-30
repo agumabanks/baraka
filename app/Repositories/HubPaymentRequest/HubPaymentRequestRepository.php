@@ -1,49 +1,30 @@
 <?php
+
 namespace App\Repositories\HubPaymentRequest;
 
 use App\Enums\UserType;
 use App\Models\Backend\HubPayment;
-use App\Models\Backend\Hub;
-use App\Repositories\HubPaymentRequest\HubPaymentRequestInterface;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
-class HubPaymentRequestRepository implements HubPaymentRequestInterface {
-
-    public function all(){
+class HubPaymentRequestRepository implements HubPaymentRequestInterface
+{
+    public function all()
+    {
         //
     }
 
-    public function get($id){
-        return HubPayment::where('id',$id)->first();
+    public function get($id)
+    {
+        return HubPayment::where('id', $id)->first();
     }
 
-    public function store($request){
+    public function store($request)
+    {
         try {
-            $payment                    = new HubPayment();
-            $payment->hub_id            = auth()->user()->hub_id;
-            $payment->amount            = $request->amount;
-            $payment->description       = $request->description;
-            $payment->created_by        = UserType::INCHARGE;
-            $payment->save();
-            return true;
-
-        } catch (\Throwable $th) {
-            return false;
-        }
-    }
-    public function edit($id){
-        //
-    }
-
-    public function update($id,$request){
-        try {
-
-            $payment                   = HubPayment::find($id);
-            $payment->hub_id           = auth()->user()->hub_id;
-            $payment->amount           = $request->amount;
-            $payment->description      = $request->description;
-            $payment->created_by       = UserType::INCHARGE;
+            $payment = new HubPayment;
+            $payment->hub_id = auth()->user()->hub_id;
+            $payment->amount = $request->amount;
+            $payment->description = $request->description;
+            $payment->created_by = UserType::INCHARGE;
             $payment->save();
 
             return true;
@@ -53,8 +34,31 @@ class HubPaymentRequestRepository implements HubPaymentRequestInterface {
         }
     }
 
-    public function delete($id){
-         return HubPayment::destroy($id);
+    public function edit($id)
+    {
+        //
     }
 
+    public function update($id, $request)
+    {
+        try {
+
+            $payment = HubPayment::find($id);
+            $payment->hub_id = auth()->user()->hub_id;
+            $payment->amount = $request->amount;
+            $payment->description = $request->description;
+            $payment->created_by = UserType::INCHARGE;
+            $payment->save();
+
+            return true;
+
+        } catch (\Throwable $th) {
+            return false;
+        }
+    }
+
+    public function delete($id)
+    {
+        return HubPayment::destroy($id);
+    }
 }

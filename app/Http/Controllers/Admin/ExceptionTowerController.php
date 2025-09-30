@@ -15,6 +15,7 @@ class ExceptionTowerController extends Controller
         $staleCount = ScanEvent::query()
             ->where('occurred_at', '<', $staleThreshold)
             ->count();
+
         return view('backend.admin.exception_tower.index', compact('staleCount', 'staleThreshold'));
     }
 }

@@ -1,8 +1,7 @@
 <?php
 
-
 return [
-    'success'    => 'सफलता',
-    'error'      => 'गलती',
-    'warning'    => 'चेतावनी',
+    'success' => 'सफलता',
+    'error' => 'गलती',
+    'warning' => 'चेतावनी',
 ];

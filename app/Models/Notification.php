@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Notification extends Model
 {
@@ -31,7 +31,7 @@ class Notification extends Model
         return LogOptions::defaults()
             ->useLogName('notification')
             ->logOnly(['channel', 'template', 'to_address', 'status'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} notification");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} notification");
     }
 
     // Scopes
@@ -61,7 +61,7 @@ class Notification extends Model
     }
 
     // Business Logic
-    public function markAsSent(string $providerMessageId = null): void
+    public function markAsSent(?string $providerMessageId = null): void
     {
         $this->update([
             'status' => 'SENT',

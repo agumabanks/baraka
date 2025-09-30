@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ApiKey extends Model
 {
-    protected $fillable = ['name','token','scopes'];
+    protected $fillable = ['name', 'token', 'scopes'];
+
     protected $casts = ['scopes' => 'array'];
 }
-

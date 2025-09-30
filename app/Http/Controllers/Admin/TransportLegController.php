@@ -12,6 +12,7 @@ class TransportLegController extends Controller
     {
         $this->authorize('viewAny', TransportLeg::class);
         $legs = TransportLeg::latest()->paginate(15);
+
         return view('backend.admin.linehaul_legs.index', compact('legs'));
     }
 
@@ -19,12 +20,14 @@ class TransportLegController extends Controller
     {
         // Route model binding will name parameter by resource 'linehaul-legs' => variable $linehaul_leg
         $this->authorize('view', $linehaul_leg);
+
         return view('backend.admin.linehaul_legs.show', ['leg' => $linehaul_leg]);
     }
 
     public function create()
     {
         $this->authorize('create', TransportLeg::class);
+
         return view('backend.admin.linehaul_legs.create');
     }
 
@@ -44,7 +47,8 @@ class TransportLegController extends Controller
             'status' => 'required|string',
         ]);
         $leg = TransportLeg::create($data);
-        return redirect()->route('admin.linehaul-legs.index')->with('status','Leg #'.$leg->id.' created');
+
+        return redirect()->route('admin.linehaul-legs.index')->with('status', 'Leg #'.$leg->id.' created');
     }
 
     public function update(Request $request, TransportLeg $linehaul_leg)
@@ -61,6 +65,7 @@ class TransportLegController extends Controller
             'status' => 'required|string',
         ]);
         $linehaul_leg->update($data);
-        return redirect()->route('admin.linehaul-legs.index')->with('status','Leg updated');
+
+        return redirect()->route('admin.linehaul-legs.index')->with('status', 'Leg updated');
     }
 }

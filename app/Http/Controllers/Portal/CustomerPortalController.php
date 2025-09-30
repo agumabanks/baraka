@@ -50,7 +50,7 @@ class CustomerPortalController extends Controller
         ]);
 
         try {
-            $parcel = new Parcel();
+            $parcel = new Parcel;
             $parcel->merchant_id = auth()->id();
             $parcel->pickup_phone = $request->pickup_phone;
             $parcel->pickup_address = $request->pickup_address;
@@ -116,6 +116,7 @@ class CustomerPortalController extends Controller
     public function deliveryServices()
     {
         $services = Service::where('status', 1)->get();
+
         return view('frontend.portal.delivery_services', compact('services'));
     }
 
@@ -174,7 +175,7 @@ class CustomerPortalController extends Controller
                 return new Fluent([
                     'id' => $id,
                     'key' => $configKey,
-                    'name' => trans('deliveryType.' . $configKey),
+                    'name' => trans('deliveryType.'.$configKey),
                 ]);
             })
             ->filter()

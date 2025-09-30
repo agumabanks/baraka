@@ -32,20 +32,20 @@ return [
     ],
 
     'google' => [
-        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect'      => env('GOOGLE_REDIRECT_URL')
+        'redirect' => env('GOOGLE_REDIRECT_URL'),
     ],
     'facebook' => [
-        'client_id'     => env('FACEBOOK_CLIENT_ID'),
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-        'redirect'      => env('FACEBOOK_REDIRECT_URL')
+        'redirect' => env('FACEBOOK_REDIRECT_URL'),
     ],
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
     ],
     'paytm-wallet' => [
-        'env' => env('PAYTM_ENVIRONMENT','local'), // values : (local | production)
+        'env' => env('PAYTM_ENVIRONMENT', 'local'), // values : (local | production)
         'merchant_id' => env('PAYTM_MERCHANT_ID'),
         'merchant_key' => env('PAYTM_MERCHANT_KEY'),
         'merchant_website' => env('PAYTM_MERCHANT_WEBSITE'),

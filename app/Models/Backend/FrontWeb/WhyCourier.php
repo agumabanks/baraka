@@ -16,24 +16,27 @@ class WhyCourier extends Model
     {
         return $this->belongsTo(Upload::class, 'image_id', 'id');
     }
-    public function scopeActive($query){
-        return $query->where('status',Status::ACTIVE);
-    } 
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', Status::ACTIVE);
+    }
+
     public function getImageAttribute()
     {
-        if (!empty($this->upload->original['original']) && File::exists(public_path($this->upload->original['original']))) {
+        if (! empty($this->upload->original['original']) && File::exists(public_path($this->upload->original['original']))) {
             return static_asset($this->upload->original['original']);
         }
+
         return static_asset('images/default/blank-image.jpg');
     }
 
-
-    public function getMyStatusAttribute(){
-        if($this->status == Status::ACTIVE):
+    public function getMyStatusAttribute()
+    {
+        if ($this->status == Status::ACTIVE) {
             return '<span class="badge badge-success">'.__('status.'.$this->status).'</span>';
-        else:
+        } else {
             return '<span class="badge badge-danger">'.__('status.'.$this->status).'</span>';
-        endif;
+        }
     }
-
 }

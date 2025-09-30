@@ -3,16 +3,17 @@
 namespace App\Models\Backend;
 
 use App\Enums\Status;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use App\Models\User;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Account extends Model
 {
     use HasFactory, LogsActivity;
-    protected $fillable = ['account_holder_name','account_no','gateway'];
+
+    protected $fillable = ['account_holder_name', 'account_no', 'gateway'];
 
     // Get all row. Descending order using scope.
     public function scopeOrderByDesc($query, $data)
@@ -21,14 +22,14 @@ class Account extends Model
     }
 
     /**
-    * Activity Log
-    */
+     * Activity Log
+     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->useLogName('Account')
-        ->logOnly(['account_holder_name','account_no', 'gateway'])
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Account')
+            ->logOnly(['account_holder_name', 'account_no', 'gateway'])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     // Get single row in User table.
@@ -36,29 +37,36 @@ class Account extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-    public function getMyStatusAttribute(){
-        if($this->status == Status::ACTIVE):
-            $status = '<span class="badge badge-pill badge-success">'.trans('status.' . $this->status).'</span>';
-        else:
-            $status = '<span class="badge badge-pill badge-danger">'.trans('status.' . $this->status).'</span>';
-        endif;
+
+    public function getMyStatusAttribute()
+    {
+        if ($this->status == Status::ACTIVE) {
+            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
+        } else {
+            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
+        }
+
         return $status;
     }
-    public function getAccountTypesAttribute(){
+
+    public function getAccountTypesAttribute()
+    {
         $type = '';
-        if($this->account_type == '1'):
-            $type   =  'Merchant';
-        elseif($this->account_type == '2'):
-            $type   =  'Personal';
-        elseif($this->gateway == '2'):
-            $type   =  'Bank';
-        elseif($this->gateway == '1'):
-                $type   =  'Cash';
-        endif;
+        if ($this->account_type == '1') {
+            $type = 'Merchant';
+        } elseif ($this->account_type == '2') {
+            $type = 'Personal';
+        } elseif ($this->gateway == '2') {
+            $type = 'Bank';
+        } elseif ($this->gateway == '1') {
+            $type = 'Cash';
+        }
+
         return $type;
     }
 
-    public function merchantOnlinePaymentReceiveds(){
-        return $this->hasMany(MerchantOnlinePaymentReceived::class,'merchant_id','id');
+    public function merchantOnlinePaymentReceiveds()
+    {
+        return $this->hasMany(MerchantOnlinePaymentReceived::class, 'merchant_id', 'id');
     }
 }

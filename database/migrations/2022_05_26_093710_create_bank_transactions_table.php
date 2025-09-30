@@ -17,13 +17,13 @@ return new class extends Migration
     {
         Schema::create('bank_transactions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedTinyInteger('user_type')->default(UserType::ADMIN)->comment(UserType::ADMIN.'='.trans('userType.'.UserType::ADMIN).',' .UserType::HUB.'='.trans('userType.'.UserType::HUB))->nullable();
+            $table->unsignedTinyInteger('user_type')->default(UserType::ADMIN)->comment(UserType::ADMIN.'='.trans('userType.'.UserType::ADMIN).','.UserType::HUB.'='.trans('userType.'.UserType::HUB))->nullable();
             $table->foreignId('hub_id')->nullable()->constrained('hubs')->onUpdate('cascade')->onDelete('cascade');
             $table->bigInteger('expense_id')->nullable();
             $table->foreignId('fund_transfer_id')->nullable()->constrained('fund_transfers')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('account_id')->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
             $table->unsignedTinyInteger('type')->comment('income='.AccountHeads::INCOME.', expense='.AccountHeads::EXPENSE)->nullable();
-            $table->decimal('amount',16,2)->nullable();
+            $table->decimal('amount', 16, 2)->nullable();
             $table->date('date')->nullable();
             $table->longText('note')->nullable();
             $table->string('cash_received_dvry')->nullable();

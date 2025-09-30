@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'notification_prefs')) {
+            if (! Schema::hasColumn('users', 'notification_prefs')) {
                 $table->json('notification_prefs')->nullable()->after('permissions');
             }
         });
@@ -24,4 +24,3 @@ return new class extends Migration
         });
     }
 };
-

@@ -9,12 +9,25 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class AddressBook extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'customer_id','type','name','phone_e164','email','country','city','address_line','tax_id'
+        'customer_id', 'type', 'name', 'phone_e164', 'email', 'country', 'city', 'address_line', 'tax_id',
     ];
 
-    public function customer() { return $this->belongsTo(Customer::class); }
-}
+    /**
+     * Activity Log
+     */
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->useLogName('AddressBook')
+            ->logOnly(['name', 'email'])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
+    }
 
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+}

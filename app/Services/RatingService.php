@@ -28,7 +28,7 @@ class RatingService
         foreach ($rules as $rule) {
             $amount = $rule->rate_type === 'percent'
                 ? round($base * ($rule->amount / 100), 2)
-                : (float)$rule->amount;
+                : (float) $rule->amount;
             $total += $amount;
             $applied[] = [
                 'code' => $rule->code,
@@ -45,4 +45,3 @@ class RatingService
         ];
     }
 }
-

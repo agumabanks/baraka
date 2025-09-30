@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Stop extends Model
 {
@@ -36,7 +36,7 @@ class Stop extends Model
         return LogOptions::defaults()
             ->useLogName('stop')
             ->logOnly(['route_id', 'sscc', 'status', 'sequence'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} stop");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} stop");
     }
 
     public function route(): BelongsTo
@@ -52,6 +52,7 @@ class Stop extends Model
     public function shipment()
     {
         $parcel = $this->parcel();
+
         return $parcel ? $parcel->shipment : null;
     }
 

@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\AccountHeads;
 use App\Enums\SmsSendStatus;
 use App\Enums\Status;
 use Illuminate\Database\Migrations\Migration;
@@ -18,8 +17,8 @@ return new class extends Migration
     {
         Schema::create('sms_send_settings', function (Blueprint $table) {
             $table->id();
-            $table->unsignedTinyInteger('sms_send_status')->comment(SmsSendStatus::PARCEL_CREATE.'='.trans('SmsSendStatus.'.SmsSendStatus::PARCEL_CREATE).', '.SmsSendStatus::DELIVERED_CANCEL_CUSTOMER.'='.trans('SmsSendStatus.'.SmsSendStatus::DELIVERED_CANCEL_CUSTOMER).', ' .SmsSendStatus::DELIVERED_CANCEL_MERCHANT.'='.trans('SmsSendStatus.'.SmsSendStatus::DELIVERED_CANCEL_MERCHANT));
-            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', ' .Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
+            $table->unsignedTinyInteger('sms_send_status')->comment(SmsSendStatus::PARCEL_CREATE.'='.trans('SmsSendStatus.'.SmsSendStatus::PARCEL_CREATE).', '.SmsSendStatus::DELIVERED_CANCEL_CUSTOMER.'='.trans('SmsSendStatus.'.SmsSendStatus::DELIVERED_CANCEL_CUSTOMER).', '.SmsSendStatus::DELIVERED_CANCEL_MERCHANT.'='.trans('SmsSendStatus.'.SmsSendStatus::DELIVERED_CANCEL_MERCHANT));
+            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', '.Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
             $table->timestamps();
         });
     }

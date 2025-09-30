@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Repositories\SmsSendSetting;
 
-interface SmsSendSettingInterface {
+interface SmsSendSettingInterface
+{
     public function all();
 }

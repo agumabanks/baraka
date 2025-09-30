@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Epod extends Model
 {
@@ -32,7 +32,7 @@ class Epod extends Model
         return LogOptions::defaults()
             ->useLogName('epod')
             ->logOnly(['stop_id', 'signer_name', 'completed_at'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} ePOD");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} ePOD");
     }
 
     public function stop(): BelongsTo

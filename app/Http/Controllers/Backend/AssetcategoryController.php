@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Http\Controllers\Backend;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssetCategory\StoreRequest;
 use App\Repositories\AssetCategory\AssetCategoryInterface;
-use Illuminate\Http\Request;
 use Brian2694\Toastr\Facades\Toastr;
 
 class AssetcategoryController extends Controller
@@ -24,7 +24,8 @@ class AssetcategoryController extends Controller
     public function index()
     {
         $assetcategorys = $this->repo->all();
-        return view('backend.assetcategory.index',compact('assetcategorys'));
+
+        return view('backend.assetcategory.index', compact('assetcategorys'));
     }
 
     /**
@@ -45,11 +46,13 @@ class AssetcategoryController extends Controller
      */
     public function store(StoreRequest $request)
     {
-        if($this->repo->store($request)){
-            Toastr::success('Assetcategory successfully added.',__('message.success'));
+        if ($this->repo->store($request)) {
+            Toastr::success('Assetcategory successfully added.', __('message.success'));
+
             return redirect()->route('asset-category.index');
-        }else{
-            Toastr::error('Something went wrong.',__('message.error'));
+        } else {
+            Toastr::error('Something went wrong.', __('message.error'));
+
             return redirect()->back();
         }
     }
@@ -74,7 +77,8 @@ class AssetcategoryController extends Controller
     public function edit($id)
     {
         $assetcategory = $this->repo->get($id);
-        return view('backend.assetcategory.edit',compact('assetcategory'));
+
+        return view('backend.assetcategory.edit', compact('assetcategory'));
     }
 
     /**
@@ -86,11 +90,13 @@ class AssetcategoryController extends Controller
      */
     public function update(StoreRequest $request)
     {
-        if($this->repo->update($request)){
-            Toastr::success('Assetcategory successfully updated.',__('message.success'));
+        if ($this->repo->update($request)) {
+            Toastr::success('Assetcategory successfully updated.', __('message.success'));
+
             return redirect()->route('asset-category.index');
-        }else{
-            Toastr::error('Something went wrong.',__('message.error'));
+        } else {
+            Toastr::error('Something went wrong.', __('message.error'));
+
             return redirect()->back();
         }
     }
@@ -104,7 +110,8 @@ class AssetcategoryController extends Controller
     public function destroy($id)
     {
         $this->repo->delete($id);
-        Toastr::success('Assetcategory successfully deleted.',__('message.success'));
+        Toastr::success('Assetcategory successfully deleted.', __('message.success'));
+
         return back();
     }
 }

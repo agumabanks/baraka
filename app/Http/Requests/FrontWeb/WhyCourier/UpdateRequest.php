@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Requests\FrontWeb\WhyCourier;
+
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRequest extends FormRequest
@@ -24,10 +25,10 @@ class UpdateRequest extends FormRequest
     {
 
         return [
-            'title'       => ['required'], 
-            'image'       => ['mimes:png,jpg'],
-            'position'    => ['numeric'], 
-            'status'      => ['required','numeric']
+            'title' => ['required'],
+            'image' => ['mimes:png,jpg'],
+            'position' => ['numeric'],
+            'status' => ['required', 'numeric'],
         ];
     }
 }

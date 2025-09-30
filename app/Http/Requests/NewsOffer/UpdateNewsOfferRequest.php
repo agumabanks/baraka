@@ -24,10 +24,10 @@ class UpdateNewsOfferRequest extends FormRequest
     public function rules()
     {
         return [
-            'title'      => ['required'],
-            'status'     => ['required'],
-            'date'       => ['required'],
-            'image'      => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
+            'title' => ['required'],
+            'status' => ['required'],
+            'date' => ['required'],
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
         ];
     }
 }

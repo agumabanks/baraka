@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class TransportLeg extends Model
 {
@@ -40,7 +40,7 @@ class TransportLeg extends Model
         return LogOptions::defaults()
             ->useLogName('transport_leg')
             ->logOnly(['shipment_id', 'mode', 'carrier', 'status', 'depart_at', 'arrive_at'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} transport leg");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} transport leg");
     }
 
     // Relationships
@@ -65,6 +65,7 @@ class TransportLeg extends Model
         if ($this->depart_at && $this->arrive_at) {
             return $this->depart_at->diffInMinutes($this->arrive_at);
         }
+
         return null;
     }
 
@@ -87,7 +88,7 @@ class TransportLeg extends Model
     public function scopeDelayed($query)
     {
         return $query->where('arrive_at', '<', now())
-                    ->where('status', '!=', 'ARRIVED');
+            ->where('status', '!=', 'ARRIVED');
     }
 
     // Business Logic

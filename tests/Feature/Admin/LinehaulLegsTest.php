@@ -3,7 +3,6 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\User;
-use App\Models\TransportLeg;
 use Database\Factories\Backend\HubFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,9 +13,10 @@ class LinehaulLegsTest extends TestCase
 
     protected function makeAdminUser(): User
     {
-        $roleId = \DB::table('roles')->insertGetId(['name' => 'Admin','slug' => 'admin','created_at'=>now(),'updated_at'=>now()]);
+        $roleId = \DB::table('roles')->insertGetId(['name' => 'Admin', 'slug' => 'admin', 'created_at' => now(), 'updated_at' => now()]);
         $user = User::factory()->create();
-        \DB::table('users')->where('id',$user->id)->update(['role_id'=>$roleId]);
+        \DB::table('users')->where('id', $user->id)->update(['role_id' => $roleId]);
+
         return $user->fresh();
     }
 
@@ -43,7 +43,7 @@ class LinehaulLegsTest extends TestCase
             'currency' => 'USD',
             'current_status' => 'CREATED',
             'created_by' => $user->id,
-            'created_at'=>now(), 'updated_at'=>now(),
+            'created_at' => now(), 'updated_at' => now(),
         ]);
 
         $payload = [
@@ -55,7 +55,7 @@ class LinehaulLegsTest extends TestCase
         ];
         $res = $this->actingAs($user)->post(route('admin.linehaul-legs.store'), $payload);
         $res->assertRedirect(route('admin.linehaul-legs.index'));
-        $this->assertDatabaseHas('transport_legs', ['shipment_id'=>$shipmentId,'carrier'=>'KQ']);
+        $this->assertDatabaseHas('transport_legs', ['shipment_id' => $shipmentId, 'carrier' => 'KQ']);
     }
 
     public function test_policy_blocks_unauthorized(): void
@@ -64,4 +64,3 @@ class LinehaulLegsTest extends TestCase
         $this->actingAs($unauth)->get(route('admin.linehaul-legs.index'))->assertForbidden();
     }
 }
-

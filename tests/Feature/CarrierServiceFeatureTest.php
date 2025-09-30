@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\User;
 
 class CarrierServiceFeatureTest extends TestCase
 {
@@ -18,7 +18,7 @@ class CarrierServiceFeatureTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('admin.carriers.store'), [
-                'name' => 'DHL', 'code' => 'DHL', 'mode' => 'air'
+                'name' => 'DHL', 'code' => 'DHL', 'mode' => 'air',
             ])->assertStatus(302);
 
         $carrierId = \DB::table('carriers')->value('id');
@@ -34,4 +34,3 @@ class CarrierServiceFeatureTest extends TestCase
         $this->assertDatabaseHas('carrier_services', ['code' => 'EXP']);
     }
 }
-

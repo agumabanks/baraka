@@ -26,18 +26,18 @@ return new class extends Migration
             $table->foreignId('designation_id')->nullable()->constrained('designations')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('department_id')->nullable()->constrained('departments')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('hub_id')->nullable()->constrained('hubs')->onUpdate('cascade')->onDelete('cascade');
-            $table->unsignedTinyInteger('user_type')->default(UserType::ADMIN)->comment(UserType::ADMIN.'='.trans('userType.'.UserType::ADMIN).', ' .UserType::MERCHANT.'='.trans('userType.'.UserType::MERCHANT).', ' .UserType::DELIVERYMAN.'='.trans('userType.'.UserType::DELIVERYMAN).', ' .UserType::INCHARGE.'='.trans('userType.'.UserType::INCHARGE))->nullable();
+            $table->unsignedTinyInteger('user_type')->default(UserType::ADMIN)->comment(UserType::ADMIN.'='.trans('userType.'.UserType::ADMIN).', '.UserType::MERCHANT.'='.trans('userType.'.UserType::MERCHANT).', '.UserType::DELIVERYMAN.'='.trans('userType.'.UserType::DELIVERYMAN).', '.UserType::INCHARGE.'='.trans('userType.'.UserType::INCHARGE))->nullable();
             $table->foreignId('image_id')->nullable()->constrained('uploads')->onUpdate('cascade')->onDelete('cascade');
             $table->string('joining_date')->nullable();
             $table->string('address')->nullable();
             $table->foreignId('role_id')->nullable()->constrained('roles')->onUpdate('cascade')->onDelete('cascade');
             $table->text('permissions')->nullable();
             $table->integer('otp')->nullable();
-            $table->decimal('salary',16,2)->default(0);
+            $table->decimal('salary', 16, 2)->default(0);
             $table->string('device_token')->nullable();
             $table->string('web_token')->nullable();
-            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', ' .Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
-            $table->unsignedTinyInteger('verification_status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', ' .Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
+            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', '.Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
+            $table->unsignedTinyInteger('verification_status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', '.Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
             $table->string('google_id')->unique()->nullable();
             $table->string('facebook_id')->unique()->nullable();
             $table->rememberToken();
@@ -47,7 +47,7 @@ return new class extends Migration
             $table->index('department_id');
             $table->index('hub_id');
             $table->index('role_id');
-            $table->index('user_type'); 
+            $table->index('user_type');
 
         });
     }

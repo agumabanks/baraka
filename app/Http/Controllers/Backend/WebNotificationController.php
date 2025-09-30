@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
 use App\Http\Services\PushNotificationService;
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class WebNotificationController extends Controller
 {
@@ -15,13 +15,12 @@ class WebNotificationController extends Controller
         $user->web_token = $request->token;
         $user->save();
         try {
-            $request->request->add(['device_token'  => $request->token, 'topic' => $user->email]);
+            $request->request->add(['device_token' => $request->token, 'topic' => $user->email]);
             app(PushNotificationService::class)->fcmSubscribe($request);
         } catch (\Exception $exception) {
             return response()->json(['Something went wrong.']);
         }
+
         return response()->json(['Token successfully stored.']);
     }
-
-
 }

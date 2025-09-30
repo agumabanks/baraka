@@ -24,8 +24,8 @@ class ProcessRequest extends FormRequest
     public function rules()
     {
         return [
-            'transaction_id'  => ['required'],
-            'from_account'    => ['required']
+            'transaction_id' => ['required'],
+            'from_account' => ['required'],
         ];
     }
 }

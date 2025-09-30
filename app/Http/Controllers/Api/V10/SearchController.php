@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\V10;
 
 use App\Http\Controllers\Controller;
 use App\Services\SearchService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
@@ -54,7 +54,7 @@ class SearchController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Search failed: ' . $e->getMessage(),
+                'message' => 'Search failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -92,7 +92,7 @@ class SearchController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Autocomplete failed: ' . $e->getMessage(),
+                'message' => 'Autocomplete failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -147,7 +147,7 @@ class SearchController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Advanced search failed: ' . $e->getMessage(),
+                'message' => 'Advanced search failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -175,7 +175,7 @@ class SearchController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to get search stats: ' . $e->getMessage(),
+                'message' => 'Failed to get search stats: '.$e->getMessage(),
             ], 500);
         }
     }

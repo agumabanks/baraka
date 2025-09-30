@@ -24,10 +24,10 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-                'delivery_man_id' => ['required'],
-                'account_id'      => ['required'],
-                'amount'          => ['required'],
-                'date'            => ['required'], 
+            'delivery_man_id' => ['required'],
+            'account_id' => ['required'],
+            'amount' => ['required'],
+            'date' => ['required'],
         ];
     }
 }

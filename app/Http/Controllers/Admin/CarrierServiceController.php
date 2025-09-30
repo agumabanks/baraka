@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\CarrierService;
 use App\Models\Carrier;
+use App\Models\CarrierService;
 use Illuminate\Http\Request;
 
 class CarrierServiceController extends Controller
@@ -12,12 +12,14 @@ class CarrierServiceController extends Controller
     public function index()
     {
         $services = CarrierService::with('carrier')->paginate(20);
+
         return view('backend.admin.carrier_services.index', compact('services'));
     }
 
     public function create()
     {
         $carriers = Carrier::orderBy('name')->get();
+
         return view('backend.admin.carrier_services.create', compact('carriers'));
     }
 
@@ -29,14 +31,16 @@ class CarrierServiceController extends Controller
             'name' => 'required|string|max:100',
             'requires_eawb' => 'nullable|boolean',
         ]);
-        $data['requires_eawb'] = (bool)($data['requires_eawb'] ?? false);
+        $data['requires_eawb'] = (bool) ($data['requires_eawb'] ?? false);
         CarrierService::create($data);
+
         return redirect()->route('admin.carrier-services.index')->with('status', 'Service created');
     }
 
     public function edit(CarrierService $carrier_service)
     {
         $carriers = Carrier::orderBy('name')->get();
+
         return view('backend.admin.carrier_services.edit', ['service' => $carrier_service, 'carriers' => $carriers]);
     }
 
@@ -46,9 +50,9 @@ class CarrierServiceController extends Controller
             'name' => 'required|string|max:100',
             'requires_eawb' => 'nullable|boolean',
         ]);
-        $data['requires_eawb'] = (bool)($data['requires_eawb'] ?? false);
+        $data['requires_eawb'] = (bool) ($data['requires_eawb'] ?? false);
         $carrier_service->update($data);
+
         return redirect()->route('admin.carrier-services.index')->with('status', 'Service updated');
     }
 }
-

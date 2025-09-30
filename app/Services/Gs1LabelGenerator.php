@@ -40,8 +40,8 @@ class Gs1LabelGenerator
         foreach ($parcels as $parcel) {
             $data = self::prepareLabelData($parcel);
             $barcode = self::generateGs1Barcode($parcel->sscc);
-            $html .= '<div style="page-break-after: always;">' .
-                     self::getLabelTemplate($data, $barcode) .
+            $html .= '<div style="page-break-after: always;">'.
+                     self::getLabelTemplate($data, $barcode).
                      '</div>';
         }
 
@@ -69,7 +69,7 @@ class Gs1LabelGenerator
             'tracking_id' => $parcel->tracking_id,
             'customer_name' => $parcel->customer_name,
             'customer_address' => $parcel->customer_address,
-            'weight' => $parcel->weight . ' kg',
+            'weight' => $parcel->weight.' kg',
             'dimensions' => sprintf('%dx%dx%d cm',
                 $parcel->length ?? 0,
                 $parcel->width ?? 0,
@@ -79,7 +79,7 @@ class Gs1LabelGenerator
             'origin_branch' => $parcel->shipment->originBranch->name ?? 'N/A',
             'dest_branch' => $parcel->shipment->destBranch->name ?? 'N/A',
             'service_level' => $parcel->shipment->service_level ?? 'STANDARD',
-            'declared_value' => $parcel->declared_value ? '€' . number_format($parcel->declared_value, 2) : 'N/A',
+            'declared_value' => $parcel->declared_value ? '€'.number_format($parcel->declared_value, 2) : 'N/A',
             'created_date' => $parcel->created_at->format('d/m/Y'),
         ];
     }
@@ -90,7 +90,7 @@ class Gs1LabelGenerator
     private static function generateGs1Barcode(string $sscc): string
     {
         // GS1-128 barcode with SSCC (Application Identifier 00)
-        $barcodeData = '(00)' . SsccGenerator::clean($sscc);
+        $barcodeData = '(00)'.SsccGenerator::clean($sscc);
 
         return DNS1D::getBarcodeHTML($barcodeData, 'C128', 2, 60, 'black', true);
     }
@@ -162,9 +162,9 @@ class Gs1LabelGenerator
             </div>
 
             <div class="barcode-section">
-                ' . $barcode . '
+                '.$barcode.'
                 <div style="font-size: 10px; margin-top: 5px;">
-                    (00) ' . $data['sscc'] . '
+                    (00) '.$data['sscc'].'
                 </div>
             </div>
 
@@ -172,53 +172,53 @@ class Gs1LabelGenerator
                 <div class="info-left">
                     <div class="field">
                         <span class="field-label">Track:</span>
-                        <span class="field-value large-text">' . $data['tracking_id'] . '</span>
+                        <span class="field-value large-text">'.$data['tracking_id'].'</span>
                     </div>
                     <div class="field">
                         <span class="field-label">To:</span>
-                        <span class="field-value">' . $data['customer_name'] . '</span>
+                        <span class="field-value">'.$data['customer_name'].'</span>
                     </div>
                     <div class="field">
                         <span class="field-label">Addr:</span>
-                        <span class="field-value">' . substr($data['customer_address'], 0, 30) . '</span>
+                        <span class="field-value">'.substr($data['customer_address'], 0, 30).'</span>
                     </div>
                     <div class="field">
                         <span class="field-label">Weight:</span>
-                        <span class="field-value">' . $data['weight'] . '</span>
+                        <span class="field-value">'.$data['weight'].'</span>
                     </div>
                     <div class="field">
                         <span class="field-label">Dims:</span>
-                        <span class="field-value">' . $data['dimensions'] . '</span>
+                        <span class="field-value">'.$data['dimensions'].'</span>
                     </div>
                 </div>
 
                 <div class="info-right">
                     <div class="field">
                         <span class="field-label">From:</span>
-                        <span class="field-value">' . $data['origin_branch'] . '</span>
+                        <span class="field-value">'.$data['origin_branch'].'</span>
                     </div>
                     <div class="field">
                         <span class="field-label">To:</span>
-                        <span class="field-value">' . $data['dest_branch'] . '</span>
+                        <span class="field-value">'.$data['dest_branch'].'</span>
                     </div>
                     <div class="field">
                         <span class="field-label">Service:</span>
-                        <span class="field-value">' . $data['service_level'] . '</span>
+                        <span class="field-value">'.$data['service_level'].'</span>
                     </div>
                     <div class="field">
                         <span class="field-label">Value:</span>
-                        <span class="field-value">' . $data['declared_value'] . '</span>
+                        <span class="field-value">'.$data['declared_value'].'</span>
                     </div>
                     <div class="field">
                         <span class="field-label">Date:</span>
-                        <span class="field-value">' . $data['created_date'] . '</span>
+                        <span class="field-value">'.$data['created_date'].'</span>
                     </div>
                 </div>
             </div>
 
             <div class="field" style="margin-top: 10px;">
                 <span class="field-label">Contents:</span>
-                <span class="field-value">' . $data['contents'] . '</span>
+                <span class="field-value">'.$data['contents'].'</span>
             </div>
 
             <div class="footer">
@@ -244,6 +244,7 @@ class Gs1LabelGenerator
     public static function getLabelAsBase64(Parcel $parcel): string
     {
         $pdfContent = self::generateLabel($parcel);
+
         return base64_encode($pdfContent);
     }
 }

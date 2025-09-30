@@ -26,7 +26,7 @@ return new class extends Migration
             $table->unsignedBigInteger('attached_file')->nullable();
             $table->unsignedTinyInteger('status')->default(SupportStatus::PENDING)->comment(SupportStatus::PENDING.'= Pending,'.SupportStatus::PROCESSING.'= Processing,'.SupportStatus::RESOLVED.'= Resolved,'.SupportStatus::CLOSED.'= Closed');
             $table->timestamps();
- 
+
             $table->index('user_id');
             $table->index('department_id');
 

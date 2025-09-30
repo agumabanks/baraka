@@ -14,4 +14,3 @@ class PortalAccessTest extends TestCase
         $this->get(route('portal.index'))->assertStatus(200);
     }
 }
-

@@ -15,6 +15,7 @@
         "brian2694/laravel-toastr": "^5.57",
         "cartalyst/stripe-laravel": "^17.0",
         "components/flag-icon-css": "^3.5",
+        "darkaonline/l5-swagger": "^9.0",
         "geo-sot/laravel-env-editor": "^3.2.0",
         "giggsey/libphonenumber-for-php": "^9.0",
         "google/apiclient": "^2.18",

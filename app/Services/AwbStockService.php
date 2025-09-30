@@ -13,8 +13,9 @@ class AwbStockService
             if ($stock->used_count + $stock->voided_count >= (($stock->range_end - $stock->range_start) + 1)) {
                 return null;
             }
-            $next = (int)$stock->range_start + (int)$stock->used_count + (int)$stock->voided_count;
+            $next = (int) $stock->range_start + (int) $stock->used_count + (int) $stock->voided_count;
             $stock->increment('used_count');
+
             return $next;
         });
     }
@@ -24,4 +25,3 @@ class AwbStockService
         $stock->increment('voided_count', $count);
     }
 }
-

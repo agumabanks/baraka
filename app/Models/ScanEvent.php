@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
 use App\Enums\ScanType;
 use App\Models\Backend\Hub;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ScanEvent extends Model
 {
@@ -38,7 +38,7 @@ class ScanEvent extends Model
         return LogOptions::defaults()
             ->useLogName('scan_event')
             ->logOnly(['sscc', 'type', 'branch_id', 'occurred_at'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} scan event");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} scan event");
     }
 
     // Relationships
@@ -61,6 +61,7 @@ class ScanEvent extends Model
     {
         // Find shipment through parcel SSCC
         $parcel = \App\Models\Backend\Parcel::where('sscc', $this->sscc)->first();
+
         return $parcel ? $parcel->shipment : null;
     }
 

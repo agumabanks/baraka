@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
@@ -17,6 +16,7 @@ class ContactMail extends Mailable
      * @return void
      */
     protected $data;
+
     public function __construct($data = null)
     {
         $this->data = $data;
@@ -31,6 +31,7 @@ class ContactMail extends Mailable
     {
         $data = $this->data;
         $logoImage = settings()->LogoImage;
-        return $this->view('backend.contact.contact_mail',compact('data','logoImage'))->to(settings()->email)->subject($data['subject']);
+
+        return $this->view('backend.contact.contact_mail', compact('data', 'logoImage'))->to(settings()->email)->subject($data['subject']);
     }
 }

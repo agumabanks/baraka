@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('parcel_id')->nullable()->constrained('parcels')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('account_id')->nullable()->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
-            $table->decimal('amount',16,2)->nullable();
+            $table->decimal('amount', 16, 2)->nullable();
             $table->date('date')->nullable();
             $table->foreignId('receipt')->nullable()->constrained('uploads')->onUpdate('cascade')->onDelete('cascade');
             $table->text('note')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('account_head_id');
-            $table->index('merchant_id'); 
+            $table->index('merchant_id');
             $table->index('delivery_man_id');
             $table->index('user_id');
             $table->index('parcel_id');
