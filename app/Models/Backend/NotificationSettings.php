@@ -10,14 +10,17 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class NotificationSettings extends Model
 {
     use HasFactory,LogsActivity;
+
     protected $fillable = ['fcm_secret_key', 'fcm_topic'];
+
     public function getActivitylogOptions(): LogOptions
     {
 
         $logAttributes = ['fcm_secret_key', 'fcm_topic'];
+
         return LogOptions::defaults()
-        ->useLogName('Notification Settings')
-        ->logOnly($logAttributes)
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Notification Settings')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 }

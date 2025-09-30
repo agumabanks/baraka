@@ -15,20 +15,20 @@ class DeliverymanUserResource extends JsonResource
     public function toArray($request)
     {
         return [
-            "id"                => $this->id,
-            "name"              => $this->name,
-            "email"             => $this->email,
-            "phone"             => (string) $this->mobile,
-            "user_type"         => (string) $this->user_type,
-            "deliveryman"       => $this->deliveryman,
-            "hub"               => $this->hub,
-            "address"           => $this->address,
-            "salary"            => (string) $this->salary,
-            "status"            => (string) $this->status,
-            "statusName"        => trans("status." . $this->status),
-            "image"             => (string) $this->image,
-            'created_at'        => $this->created_at->format('d M Y, h:i A'),
-            'updated_at'        => $this->updated_at->format('d M Y, h:i A'),
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'phone' => (string) $this->mobile,
+            'user_type' => (string) $this->user_type,
+            'deliveryman' => $this->deliveryman,
+            'hub' => $this->hub,
+            'address' => $this->address,
+            'salary' => (string) $this->salary,
+            'status' => (string) $this->status,
+            'statusName' => trans('status.'.$this->status),
+            'image' => (string) $this->image,
+            'created_at' => $this->created_at->format('d M Y, h:i A'),
+            'updated_at' => $this->updated_at->format('d M Y, h:i A'),
         ];
     }
 }

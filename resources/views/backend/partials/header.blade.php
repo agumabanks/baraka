@@ -21,8 +21,10 @@
     <link rel="stylesheet" href="{{static_asset('backend')}}/libs/css/datepicker.min.css">
     <link rel="stylesheet" href="{{static_asset('backend')}}/libs/css/custom.css">
     <link rel="stylesheet" href="{{static_asset('backend')}}/css/custom.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/6.5.1/css/flag-icons.min.css" /> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/6.5.1/css/flag-icons.min.css" />
     <link rel="stylesheet" href="{{ static_asset('backend/vendor') }}/toastr/toastr.min.css">
+    <!-- Monochrome Theme - Steve Jobs Aesthetic -->
+    <link rel="stylesheet" href="{{static_asset('backend')}}/css/monochrome-theme.css">
     <!-- push target to head -->
     @stack('styles')
     <title>@yield('title')</title>

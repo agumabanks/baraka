@@ -25,9 +25,9 @@ class UpdateRequest extends FormRequest
     {
         return [
             'delivery_man_id' => ['required'],
-            'account_id'      => ['required'],
-            'amount'          => ['required'],
-            'date'            => ['required']
+            'account_id' => ['required'],
+            'amount' => ['required'],
+            'date' => ['required'],
         ];
     }
 }

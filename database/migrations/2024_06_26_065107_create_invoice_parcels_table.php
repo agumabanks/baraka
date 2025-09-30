@@ -16,15 +16,15 @@ return new class extends Migration
             $table->foreignId('invoice_id')->constrained('invoices')->onUpdate('cascade')->onDelete('cascade');
             $table->bigInteger('parcel_id')->nullable();
             $table->unsignedTinyInteger('parcel_status')->nullable();
-            $table->decimal('total_delivery_amount',16,2)->default(0);
-            $table->decimal('collected_amount',16,2)->nullable();
-            $table->decimal('return_charge',16,2)->nullable();
-            $table->decimal('vat_amount',16,2)->nullable();
-            $table->decimal('cod_amount',16,2)->nullable();
-            $table->decimal('total_charge_amount',16,2)->nullable();
-            $table->decimal('current_payable',16,2)->nullable();
+            $table->decimal('total_delivery_amount', 16, 2)->default(0);
+            $table->decimal('collected_amount', 16, 2)->nullable();
+            $table->decimal('return_charge', 16, 2)->nullable();
+            $table->decimal('vat_amount', 16, 2)->nullable();
+            $table->decimal('cod_amount', 16, 2)->nullable();
+            $table->decimal('total_charge_amount', 16, 2)->nullable();
+            $table->decimal('current_payable', 16, 2)->nullable();
             $table->timestamps();
- 
+
             $table->index('invoice_id');
             $table->index('parcel_id');
             $table->index('parcel_status');

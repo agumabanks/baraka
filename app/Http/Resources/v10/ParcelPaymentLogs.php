@@ -15,14 +15,14 @@ class ParcelPaymentLogs extends JsonResource
     public function toArray($request)
     {
         return [
-                    'id'             => $this->id,
-                    'name'           => $this->deliveryman->user->name,
-                    'type'           => $this->type,
-                    'cash_collection'=>$this->cash_collection,
-                    'date'           => $this->date,
-                    'note'           => $this->note,
-                    'created_at'     => $this->created_at,
-                    'updated_at'     => $this->updated_at
+            'id' => $this->id,
+            'name' => $this->deliveryman->user->name,
+            'type' => $this->type,
+            'cash_collection' => $this->cash_collection,
+            'date' => $this->date,
+            'note' => $this->note,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
 
         ];
     }

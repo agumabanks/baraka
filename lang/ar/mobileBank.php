@@ -1,7 +1,8 @@
 <?php
-return array(
-    'name'=> 'الاسم',
-    'title'=> 'البنك',
+
+return [
+    'name' => 'الاسم',
+    'title' => 'البنك',
     'bank' => 'بنك',
     'mobile_bank' => 'بنك الجوال',
     'bank_name' => 'اسم البنك',
@@ -14,4 +15,4 @@ return array(
     'edit_mobile_bank' => 'تعديل بنك جوال',
     'delete_bank' => 'حذف بنك',
     'delete_mobile_bank' => 'حذف بنك جوال',
-);
+];

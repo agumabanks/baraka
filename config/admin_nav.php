@@ -109,7 +109,7 @@ return [
                     'key' => 'zones_lanes',
                     'label_trans_key' => 'menus.zones_lanes',
                     'icon' => 'fa fa-project-diagram',
-                    'active_patterns' => ['admin.zones.*','admin.lanes.*'],
+                    'active_patterns' => ['admin.zones.*', 'admin.lanes.*'],
                     'children' => [
                         [
                             'key' => 'zones',
@@ -133,7 +133,7 @@ return [
                     'key' => 'carriers_services',
                     'label_trans_key' => 'menus.carriers_services',
                     'icon' => 'fa fa-plane',
-                    'active_patterns' => ['admin.carriers.*','admin.carrier-services.*'],
+                    'active_patterns' => ['admin.carriers.*', 'admin.carrier-services.*'],
                     'children' => [
                         [
                             'key' => 'carriers',
@@ -190,7 +190,7 @@ return [
                     'key' => 'asset_management',
                     'label_trans_key' => 'menus.asset_management',
                     'icon' => 'fa fa-sitemap',
-                    'active_patterns' => ['asset-category.*','asset.*','fuels.*','maintenance.*','accident.*'],
+                    'active_patterns' => ['asset-category.*', 'asset.*', 'fuels.*', 'maintenance.*', 'accident.*'],
                     'children' => [
                         [
                             'key' => 'asset_categories',
@@ -332,7 +332,7 @@ return [
                     'label_trans_key' => 'menus.commodities_hs_codes',
                     'icon' => 'fa fa-list',
                     'route' => 'admin.commodities.index',
-                    'active_patterns' => ['admin.commodities.*','admin.hs-codes.*'],
+                    'active_patterns' => ['admin.commodities.*', 'admin.hs-codes.*'],
                     'permission_check' => 'hasPermission:commodities_read|hasPermission:hscodes_read',
                 ],
                 [
@@ -426,7 +426,7 @@ return [
                     'key' => 'payroll',
                     'label_trans_key' => 'salary.payroll',
                     'icon' => 'fas fa-hand-holding-usd',
-                    'active_patterns' => ['salary.generate.*','salary.*'],
+                    'active_patterns' => ['salary.generate.*', 'salary.*'],
                     'children' => [
                         [
                             'key' => 'salary_generate',
@@ -452,7 +452,7 @@ return [
                     'key' => 'accounts',
                     'label_trans_key' => 'menus.accounts',
                     'icon' => 'fas fa-user',
-                    'active_patterns' => ['accounts.*','fund-transfer.*','account.heads.*','bank-transaction.*','cash.received.deliveryman.*','hub-panel.payment-request.*','paid.invoice.*'],
+                    'active_patterns' => ['accounts.*', 'fund-transfer.*', 'account.heads.*', 'bank-transaction.*', 'cash.received.deliveryman.*', 'hub-panel.payment-request.*', 'paid.invoice.*'],
                     'children' => [
                         [
                             'key' => 'account_heads',
@@ -572,7 +572,7 @@ return [
                     'label_trans_key' => 'menus.api_keys_webhooks',
                     'icon' => 'fa fa-key',
                     'route' => 'admin.api-keys.index',
-                    'active_patterns' => ['admin.api-keys.*','admin.webhooks.*'],
+                    'active_patterns' => ['admin.api-keys.*', 'admin.webhooks.*'],
                     'permission_check' => 'hasPermission:api_keys_read|hasPermission:webhooks_read',
                 ],
                 [
@@ -613,7 +613,7 @@ return [
                     'label_trans_key' => 'menus.push_notification',
                     'icon' => 'fa fa-bell',
                     'route' => 'push-notification.index',
-                    'active_patterns' => ['admin.push-notification.*','push-notification.*'],
+                    'active_patterns' => ['admin.push-notification.*', 'push-notification.*'],
                     'permission_check' => 'hasPermission:push_notification_read',
                 ],
                 [
@@ -621,7 +621,7 @@ return [
                     'label_trans_key' => 'menus.addons',
                     'icon' => 'fa fa-upload',
                     'route' => 'addons.index',
-                    'active_patterns' => ['admin.addons.*','addons.*'],
+                    'active_patterns' => ['admin.addons.*', 'addons.*'],
                     'permission_check' => 'env:DEMO,false',
                 ],
                 [
@@ -629,7 +629,7 @@ return [
                     'label_trans_key' => 'menus.news_offer',
                     'icon' => 'fa fa-newspaper',
                     'route' => 'news-offer.index',
-                    'active_patterns' => ['admin.news-offer.*','news-offer.*'],
+                    'active_patterns' => ['admin.news-offer.*', 'news-offer.*'],
                     'permission_check' => 'hasPermission:news_offer_read',
                 ],
                 [
@@ -637,7 +637,7 @@ return [
                     'label_trans_key' => 'menus.active_logs',
                     'icon' => 'fa fa-history',
                     'route' => 'logs.index',
-                    'active_patterns' => ['admin.logs.*','logs.*'],
+                    'active_patterns' => ['admin.logs.*', 'logs.*'],
                     'permission_check' => 'hasPermission:log_read',
                 ],
                 [
@@ -645,7 +645,7 @@ return [
                     'label_trans_key' => 'menus.fraud_check',
                     'icon' => 'fa fa-user-times',
                     'route' => 'fraud.index',
-                    'active_patterns' => ['admin.fraud.*','fraud.*'],
+                    'active_patterns' => ['admin.fraud.*', 'fraud.*'],
                     'permission_check' => 'hasPermission:fraud_read',
                 ],
                 [
@@ -653,14 +653,14 @@ return [
                     'label_trans_key' => 'account.subscribe',
                     'icon' => 'fas fa-users',
                     'route' => 'subscribe.index',
-                    'active_patterns' => ['admin.subscribe.*','subscribe.*'],
+                    'active_patterns' => ['admin.subscribe.*', 'subscribe.*'],
                     'permission_check' => 'hasPermission:subscribe_read',
                 ],
                 [
                     'key' => 'reports',
                     'label_trans_key' => 'reports.title',
                     'icon' => 'fas fa-print',
-                    'active_patterns' => ['parcel.reports','parcel.wise.*','salary.reports','merchant.hub.deliveryman.*','parcel.total.summery.*','reports.*'],
+                    'active_patterns' => ['parcel.reports', 'parcel.wise.*', 'salary.reports', 'merchant.hub.deliveryman.*', 'parcel.total.summery.*', 'reports.*'],
                     'children' => [
                         [
                             'key' => 'parcel_reports',
@@ -708,7 +708,7 @@ return [
                     'key' => 'front_web',
                     'label_trans_key' => 'levels.front_web',
                     'icon' => 'fas fa-globe',
-                    'active_patterns' => ['social.link.*','service.*','why.courier.*','faq.*','partner.*','blogs.*','pages.*','section.*'],
+                    'active_patterns' => ['social.link.*', 'service.*', 'why.courier.*', 'faq.*', 'partner.*', 'blogs.*', 'pages.*', 'section.*'],
                     'children' => [
                         [
                             'key' => 'social_link',
@@ -786,7 +786,7 @@ return [
                     'key' => 'user_role',
                     'label_trans_key' => 'menus.user_role',
                     'icon' => 'fas fa-th',
-                    'active_patterns' => ['roles.*','users.*','designations.*','departments.*'],
+                    'active_patterns' => ['roles.*', 'users.*', 'designations.*', 'departments.*'],
                     'children' => [
                         [
                             'key' => 'roles',
@@ -915,7 +915,7 @@ return [
                     'label_trans_key' => 'menus.social_login_settings',
                     'icon' => 'fa fa-sign-in-alt',
                     'route' => 'social.login.settings.index',
-                    'active_patterns' => ['social.login.settings.*','social-login-setting*'],
+                    'active_patterns' => ['social.login.settings.*', 'social-login-setting*'],
                     'permission_check' => 'hasPermission:social_login_settings_update',
                 ],
                 [
@@ -923,7 +923,7 @@ return [
                     'label_trans_key' => 'menus.payout_setup',
                     'icon' => 'fa fa-money-bill',
                     'route' => 'payout.setup.settings.index',
-                    'active_patterns' => ['payout.setup.settings.*','settings/pay-out/setup*'],
+                    'active_patterns' => ['payout.setup.settings.*', 'settings/pay-out/setup*'],
                     'permission_check' => 'hasPermission:payout_setup_settings_read',
                 ],
                 [
@@ -954,7 +954,7 @@ return [
                     'key' => 'payment_methods',
                     'label_trans_key' => 'menus.payment_method',
                     'icon' => 'fa fa-money-check',
-                    'active_patterns' => ['bank.*','mobile-bank.*'],
+                    'active_patterns' => ['bank.*', 'mobile-bank.*'],
                     'children' => [
                         [
                             'key' => 'banks',

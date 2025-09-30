@@ -17,10 +17,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onUpdate('cascade')->onDelete('cascade');
             $table->string('month')->nullable();
-            $table->decimal('amount',16,2)->default(0);
+            $table->decimal('amount', 16, 2)->default(0);
             $table->unsignedBigInteger('status')->default(0)->comment('Unpaid=0,Paid=1,Partial Paid=2');
-            $table->decimal('due',16,2)->default(0);
-            $table->decimal('advance',16,2)->default(0); 
+            $table->decimal('due', 16, 2)->default(0);
+            $table->decimal('advance', 16, 2)->default(0);
             $table->text('note')->nullable();
             $table->timestamps();
 

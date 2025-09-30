@@ -17,8 +17,8 @@ return new class extends Migration
         Schema::create('packagings', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
-            $table->decimal('price',16,2)->nullable();
-            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', ' .Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
+            $table->decimal('price', 16, 2)->nullable();
+            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', '.Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
             $table->string('position')->nullable();
             $table->string('photo')->nullable();
             $table->timestamps();

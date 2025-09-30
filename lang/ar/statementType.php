@@ -6,5 +6,4 @@ return [
     StatementType::INCOME => 'دخل',
     StatementType::EXPENSE => 'مصروف',
 
-
 ];

@@ -11,6 +11,7 @@ class ZoneController extends Controller
     public function index()
     {
         $zones = Zone::query()->paginate(20);
+
         return view('backend.admin.zones.index', compact('zones'));
     }
 
@@ -27,6 +28,7 @@ class ZoneController extends Controller
             'countries' => 'nullable|array',
         ]);
         Zone::create($data);
+
         return redirect()->route('admin.zones.index')->with('status', 'Zone created');
     }
 
@@ -42,7 +44,7 @@ class ZoneController extends Controller
             'countries' => 'nullable|array',
         ]);
         $zone->update($data);
+
         return redirect()->route('admin.zones.index')->with('status', 'Zone updated');
     }
 }
-

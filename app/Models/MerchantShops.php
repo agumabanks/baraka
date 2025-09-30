@@ -10,7 +10,6 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class MerchantShops extends Model
 {
-
     use HasFactory,LogsActivity;
 
     protected $fillable = [
@@ -31,10 +30,11 @@ class MerchantShops extends Model
             'contact_no',
             'address',
         ];
+
         return LogOptions::defaults()
-        ->useLogName('MerchantShops')
-        ->logOnly($logAttributes)
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('MerchantShops')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     // Merchant details
@@ -42,6 +42,4 @@ class MerchantShops extends Model
     {
         return $this->belongsTo(Merchant::class);
     }
-
-
 }

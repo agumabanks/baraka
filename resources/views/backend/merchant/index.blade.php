@@ -94,7 +94,7 @@
                                         )
                                         <td>
                                             <div class="row">
-                                                <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
+                                                <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
                                                 <div class="dropdown-menu">
                                                     <a href="{{route('merchant.invoice.generate',$merchant->id)}}" class="dropdown-item"><i class="fa fa-file" aria-hidden="true"></i> Invoice Generate</a>
                                                     @if( hasPermission('merchant_view') == true  )

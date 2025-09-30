@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class CustomsDoc extends Model
 {
     protected $table = 'customs_docs';
-    protected $fillable = ['shipment_id','type','path'];
-}
 
+    protected $fillable = ['shipment_id', 'type', 'path'];
+}

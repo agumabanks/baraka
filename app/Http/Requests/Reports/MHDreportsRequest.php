@@ -24,10 +24,10 @@ class MHDreportsRequest extends FormRequest
      */
     public function rules()
     {
-       
-            return [
-                'user_type'=>['required']
-            ];
+
+        return [
+            'user_type' => ['required'],
+        ];
 
     }
 }

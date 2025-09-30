@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Repositories\GoogleMapSettings;
 
-interface GoogleMapSettingsInterface {
-
+interface GoogleMapSettingsInterface
+{
     public function all();
-    public function update($request);
 
+    public function update($request);
 }

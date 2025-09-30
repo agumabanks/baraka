@@ -21,21 +21,21 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        $invoice ='';
-        if(!request()->id):
+        $invoice = '';
+        if (! request()->id) {
             $invoice = ['required'];
-        endif;
+        }
+
         return [
-            'asset_id'                       => ['required'],
-            'start_date'                     => ['required'],
-            'end_date'                       => ['required'],
-            'asset_id'                       => ['required'],
-            'repair_details'                 => ['required'],
-            'spare_parts_purchased_details'  => ['required'],
-            'invoice_of_the_purchases'       => $invoice,
+            'asset_id' => ['required'],
+            'start_date' => ['required'],
+            'end_date' => ['required'],
+            'asset_id' => ['required'],
+            'repair_details' => ['required'],
+            'spare_parts_purchased_details' => ['required'],
+            'invoice_of_the_purchases' => $invoice,
         ];
     }
-
 
     public function attributes()
     {

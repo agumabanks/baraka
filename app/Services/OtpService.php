@@ -6,9 +6,8 @@ use App\Models\OtpCode;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
-use libphonenumber\PhoneNumberUtil;
 use libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumberUtil;
 
 class OtpService
 {
@@ -16,9 +15,10 @@ class OtpService
     {
         $util = PhoneNumberUtil::getInstance();
         $num = $util->parse($phone, $region ?: 'KE');
-        if (!$util->isValidNumber($num)) {
+        if (! $util->isValidNumber($num)) {
             throw new \InvalidArgumentException('Invalid phone number');
         }
+
         return $util->format($num, PhoneNumberFormat::E164);
     }
 
@@ -29,13 +29,14 @@ class OtpService
         if ($last && $last->last_sent_at && now()->diffInSeconds($last->last_sent_at) < $minInterval) {
             return [false, 'Please wait before requesting another OTP'];
         }
+
         return [true, null];
     }
 
     public function issue(string $address, string $channel, ?User $user = null): OtpCode
     {
         [$ok, $reason] = $this->canSend($address, $channel);
-        if (!$ok) {
+        if (! $ok) {
             throw new \RuntimeException($reason);
         }
         $code = (string) random_int(100000, 999999);
@@ -51,6 +52,7 @@ class OtpService
         ]);
 
         $this->deliver($otp, $user);
+
         return $otp;
     }
 
@@ -61,12 +63,12 @@ class OtpService
                 // Reuse existing SMS service. WhatsApp via Twilio if configured.
                 app(\App\Http\Services\SmsService::class)->sendOtp($otp->address, $otp->code);
             } elseif ($otp->channel === 'email') {
-                Mail::raw('Your verification code is: ' . $otp->code, function ($m) use ($otp, $user) {
+                Mail::raw('Your verification code is: '.$otp->code, function ($m) use ($otp) {
                     $m->to($otp->address)->subject('Your verification code');
                 });
             }
         } catch (\Throwable $e) {
-            Log::error('OTP delivery failed: ' . $e->getMessage());
+            Log::error('OTP delivery failed: '.$e->getMessage());
         }
     }
 
@@ -75,7 +77,9 @@ class OtpService
         $otp = OtpCode::where('address', $address)
             ->whereNull('consumed_at')
             ->latest()->first();
-        if (!$otp) return false;
+        if (! $otp) {
+            return false;
+        }
 
         // Lockout check
         if ($otp->locked_until && now()->lessThan($otp->locked_until)) {
@@ -89,6 +93,7 @@ class OtpService
 
         if (hash_equals($otp->code, trim($code))) {
             $otp->update(['consumed_at' => now()]);
+
             return true;
         }
 
@@ -105,4 +110,3 @@ class OtpService
         return false;
     }
 }
-

@@ -26,11 +26,11 @@ class StoreRequest extends FormRequest
     {
 
         return [
-            'user_id'   => ['required'],
-            'account_id'=> ['required'],
-            'month'     => ['required'],
-            'date'      => ['required'],
-            'amount'    => ['required','numeric'],
+            'user_id' => ['required'],
+            'account_id' => ['required'],
+            'month' => ['required'],
+            'date' => ['required'],
+            'amount' => ['required', 'numeric'],
 
         ];
     }

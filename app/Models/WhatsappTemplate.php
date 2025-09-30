@@ -9,6 +9,5 @@ class WhatsappTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','language','body','approved'];
+    protected $fillable = ['name', 'language', 'body', 'approved'];
 }
-

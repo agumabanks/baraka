@@ -23,16 +23,16 @@ class StoreBankRequest extends FormRequest
      */
     public function rules()
     {
-        if(\Request::input('payment_method_name')):
+        if (\Request::input('payment_method_name')) {
             return [];
-        else:
+        } else {
             return [
-                'bank_name'   => ['required'],
+                'bank_name' => ['required'],
                 'holder_name' => ['required'],
-                'account_no'  => ['required','numeric'],
+                'account_no' => ['required', 'numeric'],
                 'branch_name' => ['required'],
-                'routing_no'  => ['required','numeric'],
+                'routing_no' => ['required', 'numeric'],
             ];
-        endif;
+        }
     }
 }

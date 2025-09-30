@@ -24,11 +24,11 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'           => ['required'],
-            'symbol'         => ['required'],
-            'exchange_rate'  => ['required','numeric'],
-            'position'       => ['numeric'],
-            'status'         => ['required','numeric']
+            'name' => ['required'],
+            'symbol' => ['required'],
+            'exchange_rate' => ['required', 'numeric'],
+            'position' => ['numeric'],
+            'status' => ['required', 'numeric'],
         ];
     }
 }

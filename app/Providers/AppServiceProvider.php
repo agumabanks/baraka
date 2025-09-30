@@ -10,10 +10,10 @@ use App\Repositories\Currency\CurrencyInterface;
 use App\Repositories\Currency\CurrencyRepository;
 use App\Repositories\FrontWeb\Blogs\BlogsInterface;
 use App\Repositories\FrontWeb\Blogs\BlogsRepository;
-use App\Repositories\FrontWeb\Pages\PagesInterface;
-use App\Repositories\FrontWeb\Pages\PagesRepository;
 use App\Repositories\FrontWeb\Faq\FaqInterface;
 use App\Repositories\FrontWeb\Faq\FaqRepository;
+use App\Repositories\FrontWeb\Pages\PagesInterface;
+use App\Repositories\FrontWeb\Pages\PagesRepository;
 use App\Repositories\FrontWeb\Partner\PartnerInterface;
 use App\Repositories\FrontWeb\Partner\PartnerRepository;
 use App\Repositories\FrontWeb\Section\SectionInterface;
@@ -28,17 +28,17 @@ use App\Repositories\Fuels\FuelsInterface;
 use App\Repositories\Fuels\FuelsRepository;
 use App\Repositories\Maintenance\MaintenanceInterface;
 use App\Repositories\Maintenance\MaintenanceRepository;
-use App\Repositories\MerchantDeliveryCharge\MerchantDeliveryChargeInterface;
 use App\Repositories\MobileBank\MobileBankInterface;
 use App\Repositories\MobileBank\MobileBankRepository;
 use App\Repositories\Vehicles\VehiclesInterface;
 use App\Repositories\Vehicles\VehiclesRepository;
 use App\Repositories\Wallet\WalletInterface;
 use App\Repositories\Wallet\WalletRepository;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -75,7 +75,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind('App\Repositories\BankTransaction\BankTransactionInterface', 'App\Repositories\BankTransaction\BankTransactionRepository');
         $this->app->bind('App\Repositories\NewsOffer\NewsOfferInterface', 'App\Repositories\NewsOffer\NewsOfferRepository');
         $this->app->bind('App\Repositories\Fraud\FraudInterface', 'App\Repositories\Fraud\FraudRepository');
-        //merchant panel
+        // merchant panel
         $this->app->bind('App\Repositories\MerchantPanel\PaymentAccount\PaymentAccountInterface', 'App\Repositories\MerchantPanel\PaymentAccount\PaymentAccountRepository');
         $this->app->bind('App\Repositories\MerchantPanel\Shops\ShopsInterface', 'App\Repositories\MerchantPanel\Shops\ShopsRepository');
         $this->app->bind('App\Repositories\MerchantPanel\PaymentRequest\PaymentRequestInterface', 'App\Repositories\MerchantPanel\PaymentRequest\PaymentRequestRepository');
@@ -86,7 +86,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind('App\Repositories\Income\IncomeInterface', 'App\Repositories\Income\IncomeRepository');
         $this->app->bind('App\Repositories\Todo\TodoInterface', 'App\Repositories\Todo\TodoRepository');
         $this->app->bind('App\Repositories\Support\SupportInterface', 'App\Repositories\Support\SupportRepository');
-        //account heads
+        // account heads
         $this->app->bind('App\Repositories\AccountHeads\AccountHeadsInterface', 'App\Repositories\AccountHeads\AccountHeadsRepository');
         $this->app->bind('App\Repositories\SmsSetting\SmsSettingInterface', 'App\Repositories\SmsSetting\SmsSettingRepository');
         $this->app->bind('App\Repositories\SmsSendSetting\SmsSendSettingInterface', 'App\Repositories\SmsSendSetting\SmsSendSettingRepository');
@@ -106,23 +106,23 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind('App\Repositories\SocialLoginSettings\SocialLoginSettingsInterface', 'App\Repositories\SocialLoginSettings\SocialLoginSettingsRepository');
         $this->app->bind('App\Repositories\PayoutSetup\PayoutSetupInterface', 'App\Repositories\PayoutSetup\PayoutSetupRepository');
         $this->app->bind('App\Repositories\MerchantOnlinePaymentSetup\PaymentSetupInterface', 'App\Repositories\MerchantOnlinePaymentSetup\PaymentSetupRepository');
-        $this->app->bind(CurrencyInterface::class,   CurrencyRepository::class);
-        $this->app->bind(BankInterface::class,      BankRepository::class);
+        $this->app->bind(CurrencyInterface::class, CurrencyRepository::class);
+        $this->app->bind(BankInterface::class, BankRepository::class);
         $this->app->bind(MobileBankInterface::class, MobileBankRepository::class);
-        //front web
+        // front web
         $this->app->bind(SocialLinkInterface::class, SocialLinkRepository::class);
-        $this->app->bind(ServiceInterface::class,    ServiceRepository::class);
+        $this->app->bind(ServiceInterface::class, ServiceRepository::class);
         $this->app->bind(WhyCourierInterface::class, WhyCourierRepository::class);
-        $this->app->bind(FaqInterface::class,        FaqRepository::class);
-        $this->app->bind(PartnerInterface::class,    PartnerRepository::class);
-        $this->app->bind(BlogsInterface::class,      BlogsRepository::class);
-        $this->app->bind(PagesInterface::class,      PagesRepository::class);
-        $this->app->bind(SectionInterface::class,    SectionRepository::class);
-        $this->app->bind(WalletInterface::class,     WalletRepository::class);
-        $this->app->bind(VehiclesInterface::class,   VehiclesRepository::class);
-        $this->app->bind(FuelsInterface::class,         FuelsRepository::class);
-        $this->app->bind(MaintenanceInterface::class,   MaintenanceRepository::class);
-        $this->app->bind(AccidentInterface::class,      AccidentRepository::class);
+        $this->app->bind(FaqInterface::class, FaqRepository::class);
+        $this->app->bind(PartnerInterface::class, PartnerRepository::class);
+        $this->app->bind(BlogsInterface::class, BlogsRepository::class);
+        $this->app->bind(PagesInterface::class, PagesRepository::class);
+        $this->app->bind(SectionInterface::class, SectionRepository::class);
+        $this->app->bind(WalletInterface::class, WalletRepository::class);
+        $this->app->bind(VehiclesInterface::class, VehiclesRepository::class);
+        $this->app->bind(FuelsInterface::class, FuelsRepository::class);
+        $this->app->bind(MaintenanceInterface::class, MaintenanceRepository::class);
+        $this->app->bind(AccidentInterface::class, AccidentRepository::class);
     }
 
     /**

@@ -30,15 +30,15 @@ class Fraud extends Model
             'tracking_id',
             'details',
         ];
+
         return LogOptions::defaults()
-        ->useLogName('Fraud')
-        ->logOnly($logAttributes)
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('Fraud')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
-    public function createdby(){
-        return $this->belongsTo(User::class,'created_by','id');
+    public function createdby()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id');
     }
-
-
 }

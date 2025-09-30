@@ -31,6 +31,7 @@ class SearchController extends Controller
                 $r->url = route('admin.shipments.show', $r->id);
                 $r->title = $r->tracking ?: ('Shipment #'.$r->id);
                 $r->subtitle = trim(($r->customer ?? '').' · '.($r->current_status ?? ''));
+
                 return $r;
             });
         } else {
@@ -40,8 +41,8 @@ class SearchController extends Controller
                 ->select(DB::raw("'shipment' as type"), 's.id', 's.tracking', 's.current_status', DB::raw('c.name as customer'))
                 ->where(function ($query) use ($q) {
                     $query->where('s.tracking', 'like', "%$q%")
-                          ->orWhere('c.name', 'like', "%$q%")
-                          ->orWhere('c.phone_e164', 'like', "%$q%");
+                        ->orWhere('c.name', 'like', "%$q%")
+                        ->orWhere('c.phone_e164', 'like', "%$q%");
                 })
                 ->orderByDesc('s.id')
                 ->limit(50)
@@ -50,6 +51,7 @@ class SearchController extends Controller
                 $r->url = route('admin.shipments.show', $r->id);
                 $r->title = $r->tracking ?: ('Shipment #'.$r->id);
                 $r->subtitle = trim(($r->customer ?? '').' · '.($r->current_status ?? ''));
+
                 return $r;
             });
         }

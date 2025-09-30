@@ -9,10 +9,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Ics2Filing extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'shipment_id','transport_leg_id','mode','ens_ref','status','lodged_at','response_json'
+        'shipment_id', 'transport_leg_id', 'mode', 'ens_ref', 'status', 'lodged_at', 'response_json',
     ];
 
     protected $casts = [
@@ -20,4 +20,3 @@ class Ics2Filing extends Model
         'lodged_at' => 'datetime',
     ];
 }
-

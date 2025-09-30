@@ -34,7 +34,7 @@
                     @if (hasPermission('salary_generate_create') == true)
                     <div class="col-12 col-md-6">
                         <a href="{{ route('salary.generate.create') }}" class="btn btn-primary btn-sm float-right m-2 " data-toggle="tooltip" data-placement="top"  ><i class="fa fa-plus"></i> {{ __('levels.add') }}</a>
-                        <a href="#" class="btn btn-primary btn-sm float-right m-2" data-toggle="modal"  data-target="#autogenerate"  > {{ __('salary.auto_generate') }} </a>
+                        <a href="#" class="btn btn-primary btn-sm float-right m-2" data-bs-toggle="modal"  data-bs-target="#autogenerate"  > {{ __('salary.auto_generate') }} </a>
                     </div>
                     @endif
                 </div>
@@ -74,7 +74,7 @@
                                     @if (hasPermission('salary_generate_update') == true || hasPermission('salary_generate_delete') == true )
                                     <td>
                                         <div class="row">
-                                            <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
+                                            <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
                                             <div class="dropdown-menu">
 
                                                 @if (hasPermission('salary_generate_update') == true )

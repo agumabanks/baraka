@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\DeliveryMan\DeliveryManInterface;
-use Illuminate\Http\Request;
 use App\Http\Requests\DeliveryMan\DeliveryManRequest;
-
+use App\Repositories\DeliveryMan\DeliveryManInterface;
 use Brian2694\Toastr\Facades\Toastr;
+use Illuminate\Http\Request;
+
 class DeliveryManController extends Controller
 {
     protected $repo;
+
     public function __construct(DeliveryManInterface $repo)
     {
         $this->repo = $repo;
@@ -19,29 +20,34 @@ class DeliveryManController extends Controller
     public function index(Request $request)
     {
         $deliveryMans = $this->repo->all();
-        return view('backend.deliveryman.index',compact('deliveryMans','request'));
+
+        return view('backend.deliveryman.index', compact('deliveryMans', 'request'));
     }
+
     public function filter(Request $request)
     {
         $deliveryMans = $this->repo->filter($request);
-        return view('backend.deliveryman.index',compact('deliveryMans','request'));
+
+        return view('backend.deliveryman.index', compact('deliveryMans', 'request'));
     }
 
     public function create()
     {
-        $hubs         = $this->repo->hubs();
-      return view('backend.deliveryman.create',compact('hubs'));
-    }
+        $hubs = $this->repo->hubs();
 
+        return view('backend.deliveryman.create', compact('hubs'));
+    }
 
     public function store(DeliveryManRequest $request)
     {
 
-        if($this->repo->store($request)){
-            Toastr::success(__('deliveryman.added_msg'),__('message.success'));
+        if ($this->repo->store($request)) {
+            Toastr::success(__('deliveryman.added_msg'), __('message.success'));
+
             return redirect()->route('deliveryman.index');
-        }else{
-            Toastr::error(__('deliveryman.error_msg'),__('message.error'));
+        } else {
+            Toastr::error(__('deliveryman.error_msg'), __('message.error'));
+
             return redirect()->back();
         }
     }
@@ -53,18 +59,21 @@ class DeliveryManController extends Controller
 
     public function edit($id)
     {
-        $hubs         = $this->repo->hubs();
+        $hubs = $this->repo->hubs();
         $deliveryman = $this->repo->get($id);
-        return view('backend.deliveryman.edit',compact('deliveryman','hubs'));
+
+        return view('backend.deliveryman.edit', compact('deliveryman', 'hubs'));
     }
 
     public function update(DeliveryManRequest $request)
     {
-        if($this->repo->update($request->id, $request)){
-            Toastr::success(__('deliveryman.update_msg'),__('message.success'));
+        if ($this->repo->update($request->id, $request)) {
+            Toastr::success(__('deliveryman.update_msg'), __('message.success'));
+
             return redirect()->route('deliveryman.index');
-        }else{
-            Toastr::error(__('deliveryman.error_msg'),__('message.error'));
+        } else {
+            Toastr::error(__('deliveryman.error_msg'), __('message.error'));
+
             return redirect()->back();
         }
     }
@@ -72,7 +81,8 @@ class DeliveryManController extends Controller
     public function destroy($id)
     {
         $this->repo->delete($id);
-        Toastr::success(__('deliveryman.delete_msg'),__('message.success'));
+        Toastr::success(__('deliveryman.delete_msg'), __('message.success'));
+
         return back();
     }
 }

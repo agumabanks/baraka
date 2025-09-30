@@ -11,5 +11,4 @@ return [
     ParcelType::SWEET => '甜的',
     ParcelType::COSMETICS => '化妆品',
 
-
 ];

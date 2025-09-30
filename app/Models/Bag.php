@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Backend\Hub;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use App\Models\Backend\Hub;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Bag extends Model
 {
@@ -35,7 +35,7 @@ class Bag extends Model
         return LogOptions::defaults()
             ->useLogName('bag')
             ->logOnly(['code', 'origin_branch_id', 'dest_branch_id', 'status'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} bag");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} bag");
     }
 
     // Relationships
@@ -63,6 +63,7 @@ class Bag extends Model
     {
         // Get shipment through parcels
         $parcel = $this->parcels()->first();
+
         return $parcel ? $parcel->shipment : null;
     }
 
@@ -91,7 +92,7 @@ class Bag extends Model
     public function scopeByBranch($query, int $branchId)
     {
         return $query->where('origin_branch_id', $branchId)
-                    ->orWhere('dest_branch_id', $branchId);
+            ->orWhere('dest_branch_id', $branchId);
     }
 
     public function scopeActive($query)
@@ -107,11 +108,12 @@ class Bag extends Model
         }
 
         $parcel = \App\Models\Backend\Parcel::where('sscc', $sscc)->first();
-        if (!$parcel) {
+        if (! $parcel) {
             return false;
         }
 
         $this->parcels()->attach($sscc);
+
         return true;
     }
 
@@ -122,6 +124,7 @@ class Bag extends Model
         }
 
         $this->parcels()->detach($sscc);
+
         return true;
     }
 

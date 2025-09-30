@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
     /*
     |--------------------------------------------------------------------------
     | Password Reset Language Lines
@@ -15,5 +15,5 @@ return array(
     'sent' => 'Nous avons envoyé un lien de réinitialisation de votre mot de passe par e-mail !',
     'throttled' => 'Veuillez patienter avant de réessayer.',
     'token' => 'Ce jeton de réinitialisation de mot de passe est invalide.',
-    'user' => "Nous ne pouvons pas trouver un utilisateur avec cette adresse e-mail.",
-);
+    'user' => 'Nous ne pouvons pas trouver un utilisateur avec cette adresse e-mail.',
+];

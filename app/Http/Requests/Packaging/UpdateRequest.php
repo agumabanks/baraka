@@ -25,10 +25,10 @@ class UpdateRequest extends FormRequest
     {
         return [
             // 'name'  => 'required|string|max:191|unique:packagings,name,'.$this->packaging,
-            'price'    => ['required','numeric'],
-            'status'   => ['required','numeric'],
+            'price' => ['required', 'numeric'],
+            'status' => ['required', 'numeric'],
             'position' => ['required'],
-            'image'    => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
         ];
     }
 }

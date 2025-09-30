@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Backend\Department;
+use Illuminate\Database\Seeder;
 
 class DepartmentSeeder extends Seeder
 {
@@ -24,9 +23,8 @@ class DepartmentSeeder extends Seeder
             'Human Resource',
             'Purchase'];
 
-        for($n = 0; $n < sizeof($departments); $n++)
-        {
-            $dep        = new Department;
+        for ($n = 0; $n < count($departments); $n++) {
+            $dep = new Department;
             $dep->title = $departments[$n];
             $dep->save();
         }

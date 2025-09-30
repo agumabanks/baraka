@@ -5,7 +5,6 @@ namespace App\Services;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Collection;
 
 class PerformanceOptimizationService
 {
@@ -20,7 +19,7 @@ class PerformanceOptimizationService
     /**
      * Get cached data with fallback
      */
-    public function getCachedData(string $key, callable $fallback = null, int $ttl = 3600)
+    public function getCachedData(string $key, ?callable $fallback = null, int $ttl = 3600)
     {
         return Cache::tags(['frequent_data'])->remember($key, $ttl, $fallback);
     }
@@ -37,14 +36,14 @@ class PerformanceOptimizationService
             'hub',
             'logs' => function ($query) {
                 $query->latest()->limit(10);
-            }
+            },
         ];
 
         $relations = array_merge($defaultRelations, $relations);
 
         return $query->with($relations)
-                    ->select(['id', 'tracking_id', 'status', 'merchant_id', 'pickupman_id', 'deliveryman_id', 'hub_id', 'created_at'])
-                    ->orderBy('created_at', 'desc');
+            ->select(['id', 'tracking_id', 'status', 'merchant_id', 'pickupman_id', 'deliveryman_id', 'hub_id', 'created_at'])
+            ->orderBy('created_at', 'desc');
     }
 
     /**
@@ -52,12 +51,13 @@ class PerformanceOptimizationService
      */
     public function cacheQueryResult(string $queryKey, $query, int $ttl = 1800)
     {
-        $cacheKey = 'query_' . md5($queryKey);
+        $cacheKey = 'query_'.md5($queryKey);
 
         return Cache::tags(['database_queries'])->remember($cacheKey, $ttl, function () use ($query) {
             if (is_callable($query)) {
                 return $query();
             }
+
             return $query;
         });
     }
@@ -72,7 +72,7 @@ class PerformanceOptimizationService
             'thumbnail' => $this->generateThumbnail($imagePath),
             'webp' => $this->convertToWebP($imagePath),
             'lazy_load' => true,
-            'compressed' => $compress
+            'compressed' => $compress,
         ];
 
         return $optimized;
@@ -109,7 +109,7 @@ class PerformanceOptimizationService
             $data['_mobile'] = [
                 'optimized' => true,
                 'compressed' => true,
-                'cacheable' => true
+                'cacheable' => true,
             ];
         }
 
@@ -160,7 +160,7 @@ class PerformanceOptimizationService
             return [
                 'permissions' => $user->permissions ?? [],
                 'role' => $user->role->name ?? null,
-                'role_permissions' => $user->role->permissions ?? []
+                'role_permissions' => $user->role->permissions ?? [],
             ];
         });
     }
@@ -174,7 +174,7 @@ class PerformanceOptimizationService
             'chunk_size' => $options['chunk_size'] ?? 1024 * 1024, // 1MB chunks
             'total_chunks' => ceil($file->getSize() / ($options['chunk_size'] ?? 1024 * 1024)),
             'compression' => $options['compression'] ?? 'gzip',
-            'cdn_upload' => $options['cdn_upload'] ?? true
+            'cdn_upload' => $options['cdn_upload'] ?? true,
         ];
 
         return $optimized;
@@ -197,7 +197,7 @@ class PerformanceOptimizationService
         Log::info("Performance metric: {$metric}", [
             'value' => $value,
             'tags' => $tags,
-            'timestamp' => now()
+            'timestamp' => now(),
         ]);
     }
 
@@ -211,7 +211,7 @@ class PerformanceOptimizationService
             'use_fulltext' => strlen($searchTerm) > 3,
             'filters' => $this->optimizeFilters($filters),
             'limit' => 50, // Reasonable limit for performance
-            'cache_results' => true
+            'cache_results' => true,
         ];
 
         return $optimized;
@@ -238,8 +238,13 @@ class PerformanceOptimizationService
             $aIndexed = in_array($a, $indexedFields);
             $bIndexed = in_array($b, $indexedFields);
 
-            if ($aIndexed && !$bIndexed) return -1;
-            if (!$aIndexed && $bIndexed) return 1;
+            if ($aIndexed && ! $bIndexed) {
+                return -1;
+            }
+            if (! $aIndexed && $bIndexed) {
+                return 1;
+            }
+
             return 0;
         });
 
@@ -256,7 +261,7 @@ class PerformanceOptimizationService
             'average_query_time' => $this->getAverageQueryTime(),
             'memory_usage' => memory_get_peak_usage(true),
             'database_connections' => DB::getConnections(),
-            'slow_queries' => $this->getSlowQueries()
+            'slow_queries' => $this->getSlowQueries(),
         ];
     }
 

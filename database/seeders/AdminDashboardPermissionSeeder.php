@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Backend\Role;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class AdminDashboardPermissionSeeder extends Seeder
 {
@@ -13,7 +13,7 @@ class AdminDashboardPermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $needed = ['total_customers','booking_create'];
+        $needed = ['total_customers', 'booking_create'];
 
         // Ensure roles exist: hq_admin and branch_ops_manager
         $roles = [
@@ -45,4 +45,3 @@ class AdminDashboardPermissionSeeder extends Seeder
         }
     }
 }
-

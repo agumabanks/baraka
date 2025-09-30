@@ -7,8 +7,8 @@ return [
     ParcelStatus::PICKUP_RE_SCHEDULE => 'Parcel pickup Re-Scheduled',
     ParcelStatus::RECEIVED_BY_PICKUP_MAN => 'Parcel received  Pickup Man',
     ParcelStatus::RECEIVED_WAREHOUSE => 'Parcel received to Warehouse',
-    ParcelStatus::TRANSFER_TO_HUB        => 'Parcel transfer to hub',
-    ParcelStatus::RECEIVED_BY_HUB        => 'Received By Hub',
+    ParcelStatus::TRANSFER_TO_HUB => 'Parcel transfer to hub',
+    ParcelStatus::RECEIVED_BY_HUB => 'Received By Hub',
     ParcelStatus::DELIVERY_MAN_ASSIGN => 'Delivery Man Assigned',
     ParcelStatus::DELIVERY_RE_SCHEDULE => 'Delivery Re-Scheduled',
 
@@ -24,10 +24,9 @@ return [
     ParcelStatus::RETURNED_MERCHANT => 'Returned Merchant',
     ParcelStatus::RETURN_RECEIVED_BY_MERCHANT => 'Return received by merchant',
 
-    'hub_name'                      => 'Hub Name',
-    'hub_phone'                      => 'Hub Phone',
-    'delivery_man'                  => 'Delivery Man',
-    'delivery_man_phone'            => 'Delivery man phone'
-
+    'hub_name' => 'Hub Name',
+    'hub_phone' => 'Hub Phone',
+    'delivery_man' => 'Delivery Man',
+    'delivery_man_phone' => 'Delivery man phone',
 
 ];

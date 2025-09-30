@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\InvoiceStatus;
-use App\Models\Backend\Merchantpanel\Invoice;
 
 return [
     'id' => 'ID',

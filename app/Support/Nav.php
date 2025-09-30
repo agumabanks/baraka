@@ -15,6 +15,7 @@ class Nav
                 return 'active';
             }
         }
+
         return '';
     }
 
@@ -26,6 +27,7 @@ class Nav
                 return 'show';
             }
         }
+
         return '';
     }
 
@@ -53,7 +55,9 @@ class Nav
         $parts = explode('|', $signature);
         foreach ($parts as $expr) {
             $expr = trim($expr);
-            if ($expr === '') continue;
+            if ($expr === '') {
+                continue;
+            }
 
             if (str_starts_with($expr, 'hasPermission:')) {
                 $key = substr($expr, strlen('hasPermission:'));
@@ -71,12 +75,13 @@ class Nav
                 [$envKey, $expected] = array_pad(array_map('trim', explode(',', $payload, 2)), 2, null);
                 if ($envKey !== null) {
                     $val = env($envKey);
-                    if ((string)$val === (string)$expected) {
+                    if ((string) $val === (string) $expected) {
                         return true;
                     }
                 }
             }
         }
+
         return false;
     }
 
@@ -93,9 +98,12 @@ class Nav
                     return true;
                 }
             } else {
-                if ($ok) return true;
+                if ($ok) {
+                    return true;
+                }
             }
         }
+
         return false;
     }
 }

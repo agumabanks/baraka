@@ -12,9 +12,10 @@ class SurchargeRulesTest extends TestCase
 
     protected function makeAdminUser(): User
     {
-        $roleId = \DB::table('roles')->insertGetId(['name' => 'Admin','slug' => 'admin','created_at'=>now(),'updated_at'=>now()]);
+        $roleId = \DB::table('roles')->insertGetId(['name' => 'Admin', 'slug' => 'admin', 'created_at' => now(), 'updated_at' => now()]);
         $user = User::factory()->create();
-        \DB::table('users')->where('id',$user->id)->update(['role_id'=>$roleId]);
+        \DB::table('users')->where('id', $user->id)->update(['role_id' => $roleId]);
+
         return $user->fresh();
     }
 
@@ -39,7 +40,7 @@ class SurchargeRulesTest extends TestCase
         ];
         $res = $this->actingAs($user)->post(route('admin.surcharges.store'), $payload);
         $res->assertRedirect(route('admin.surcharges.index'));
-        $this->assertDatabaseHas('surcharge_rules', ['code'=>'FUEL10']);
+        $this->assertDatabaseHas('surcharge_rules', ['code' => 'FUEL10']);
     }
 
     public function test_policy_blocks_unauthorized(): void
@@ -48,4 +49,3 @@ class SurchargeRulesTest extends TestCase
         $this->actingAs($unauth)->get(route('admin.surcharges.index'))->assertForbidden();
     }
 }
-

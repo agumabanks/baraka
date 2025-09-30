@@ -6,4 +6,3 @@ class Customer extends User
 {
     protected $table = 'users';
 }
-

@@ -2,29 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-use App\Models\Backend\Upload;
-use App\Models\Backend\Hub;
-use App\Models\Backend\Department;
-use App\Models\Backend\Designation;
 use App\Enums\Status;
 use App\Models\Backend\Account;
 use App\Models\Backend\DeliveryMan;
+use App\Models\Backend\Department;
+use App\Models\Backend\Designation;
+use App\Models\Backend\Hub;
 use App\Models\Backend\Merchant;
 use App\Models\Backend\Role;
 use App\Models\Backend\Salary;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Backend\Upload;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, LogsActivity;
+    use HasApiTokens, HasFactory, LogsActivity, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -42,10 +40,9 @@ class User extends Authenticatable
         'user_type',
         'phone_e164',
         'mobile',
-        'address'
+        'address',
 
     ];
-
 
     /**
      * Activity Log
@@ -53,9 +50,9 @@ class User extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->useLogName('User')
-        ->logOnly(['name', 'email'])
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
+            ->useLogName('User')
+            ->logOnly(['name', 'email'])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
 
     /**
@@ -111,30 +108,35 @@ class User extends Authenticatable
 
     public function getImageAttribute()
     {
-        if (!empty($this->upload->original['original']) && file_exists(public_path($this->upload->original['original']))) {
+        if (! empty($this->upload->original['original']) && file_exists(public_path($this->upload->original['original']))) {
             return static_asset($this->upload->original['original']);
         }
+
         return static_asset('images/default/user.png');
     }
 
     public function getMyStatusAttribute()
     {
-        if($this->status == Status::ACTIVE){
-            $status = '<span class="badge badge-pill badge-success">'.trans("status." . $this->status).'</span>';
-        }else {
-            $status = '<span class="badge badge-pill badge-danger">'.trans("status." . $this->status).'</span>';
+        if ($this->status == Status::ACTIVE) {
+            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
+        } else {
+            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
         }
+
         return $status;
     }
 
-    public function merchant(){
-        return $this->belongsTo(Merchant::class,'id','user_id');
+    public function merchant()
+    {
+        return $this->belongsTo(Merchant::class, 'id', 'user_id');
     }
 
     // Encrypt phone at rest without breaking existing plain values
     public function getPhoneE164Attribute($value)
     {
-        if (is_null($value)) return null;
+        if (is_null($value)) {
+            return null;
+        }
         try {
             return decrypt($value);
         } catch (\Throwable $e) {
@@ -147,21 +149,24 @@ class User extends Authenticatable
         $this->attributes['phone_e164'] = is_null($value) ? null : encrypt($value);
     }
 
-    public function role(){
-        return $this->belongsTo(Role::class,'role_id','id');
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'id');
     }
 
-    public function deliveryman(){
-        return $this->belongsTo(DeliveryMan::class,'id','user_id');
+    public function deliveryman()
+    {
+        return $this->belongsTo(DeliveryMan::class, 'id', 'user_id');
     }
 
     public function salary()
     {
-        return $this->hasMany(Salary::class,'user_id','id');
+        return $this->hasMany(Salary::class, 'user_id', 'id');
     }
 
-    public function accounts(){
-        return $this->hasMany(Account::class,'user_id','id');
+    public function accounts()
+    {
+        return $this->hasMany(Account::class, 'user_id', 'id');
     }
 
     /**
@@ -181,7 +186,8 @@ class User extends Authenticatable
         $current = strtolower($this->role->slug ?? $this->role->name ?? '');
 
         if (is_array($roles)) {
-            $needle = array_map(fn($r) => strtolower($r), $roles);
+            $needle = array_map(fn ($r) => strtolower($r), $roles);
+
             return in_array($current, $needle, true);
         }
 

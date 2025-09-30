@@ -5,8 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Invoice extends Model
 {
@@ -39,7 +39,7 @@ class Invoice extends Model
         return LogOptions::defaults()
             ->useLogName('invoice')
             ->logOnly(['invoice_number', 'shipment_id', 'total_amount', 'status'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} invoice");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} invoice");
     }
 
     public function shipment(): BelongsTo
@@ -66,7 +66,7 @@ class Invoice extends Model
     public function scopeOverdue($query)
     {
         return $query->where('due_date', '<', now())
-                    ->where('status', '!=', 'PAID');
+            ->where('status', '!=', 'PAID');
     }
 
     public function scopeByCustomer($query, int $customerId)

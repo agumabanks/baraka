@@ -19,9 +19,9 @@ return new class extends Migration
             $table->foreignId('merchant_id')->constrained('merchants')->onUpdate('cascade')->onDelete('cascade');
             $table->string('invoice_id')->unique()->nullable();
             $table->string('invoice_date')->nullable();
-            $table->decimal('total_charge',16,2)->nullable();
-            $table->decimal('cash_collection',16,2)->nullable();
-            $table->decimal('current_payable',16,2)->nullable();
+            $table->decimal('total_charge', 16, 2)->nullable();
+            $table->decimal('cash_collection', 16, 2)->nullable();
+            $table->decimal('current_payable', 16, 2)->nullable();
             $table->longText('parcels_id')->nullable();
             $table->unsignedTinyInteger('status')->default(InvoiceStatus::PROCESSING)->comment(
                 ' Unpaid      = '.InvoiceStatus::UNPAID.
@@ -35,7 +35,6 @@ return new class extends Migration
             $table->index('status');
 
         });
-
 
     }
 

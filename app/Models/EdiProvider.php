@@ -9,10 +9,9 @@ class EdiProvider extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','type','config'];
+    protected $fillable = ['name', 'type', 'config'];
 
     protected $casts = [
         'config' => 'array',
     ];
 }
-

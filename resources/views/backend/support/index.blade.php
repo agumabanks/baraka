@@ -85,7 +85,7 @@
                                                     @else
                                                         <div class="input-group mb-3">
                                                             <div class="input-group-prepend be-addon">
-                                                                <button tabindex="-1" data-toggle="dropdown" type="button"
+                                                                <button tabindex="-1" data-bs-toggle="dropdown" type="button"
                                                                     class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split"><span
                                                                         class="sr-only">Toggle Dropdown</span></button>
                                                                 <div class="dropdown-menu">
@@ -111,7 +111,7 @@
                                             @if (hasPermission('support_read') || hasPermission('support_update') || hasPermission('support_delete'))
                                                 <td>
                                                     <div class="row">
-                                                        <button tabindex="-1" data-toggle="dropdown" type="button"
+                                                        <button tabindex="-1" data-bs-toggle="dropdown" type="button"
                                                             class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span
                                                                 class="sr-only">Toggle Dropdown</span></button>
                                                         <div class="dropdown-menu">

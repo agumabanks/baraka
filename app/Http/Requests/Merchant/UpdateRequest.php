@@ -24,17 +24,18 @@ class UpdateRequest extends FormRequest
      */
     public function rules()
     {
-        $user  = Merchant::findOrFail($this->id);
+        $user = Merchant::findOrFail($this->id);
         $userID = $user->user_id;
+
         return [
-            'name'                  => ['required','string','max:191'],
-            'business_name'         => 'required|string|unique:merchants,business_name,'.$this->id,
-            'mobile'                => 'required|numeric|digits_between:11,14|unique:users,mobile,'.$userID,
-            'hub'                   => ['required','numeric'],
-            'status'                => ['required','numeric'],
-            'password'              => ['nullable','min:6'],
-            'address'               => ['required','string','max:191'],
-            'payment_period'        => ['numeric']
+            'name' => ['required', 'string', 'max:191'],
+            'business_name' => 'required|string|unique:merchants,business_name,'.$this->id,
+            'mobile' => 'required|numeric|digits_between:11,14|unique:users,mobile,'.$userID,
+            'hub' => ['required', 'numeric'],
+            'status' => ['required', 'numeric'],
+            'password' => ['nullable', 'min:6'],
+            'address' => ['required', 'string', 'max:191'],
+            'payment_period' => ['numeric'],
         ];
     }
 }

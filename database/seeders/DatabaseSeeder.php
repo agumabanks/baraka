@@ -10,9 +10,7 @@ use Database\Seeders\Backend\FrontWeb\SectionSeeder;
 use Database\Seeders\Backend\FrontWeb\ServiceSeeder;
 use Database\Seeders\Backend\FrontWeb\SocialLinkSeeder;
 use Database\Seeders\Backend\FrontWeb\WhyCourierSeeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use SebastianBergmann\CodeUnit\CodeUnit;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,18 +21,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-         $this->call(UploadSeeder::class);
-         $this->call(HubSeeder::class);
+        $this->call(UploadSeeder::class);
+        $this->call(HubSeeder::class);
         $this->call(DepartmentSeeder::class);
         $this->call(DesignationSeeder::class);
         $this->call(RoleSeeder::class);
         $this->call(UserSeeder::class);
-         $this->call(DeliveryManSeeder::class);
-         $this->call(HubInChargeSeeder::class);
+        $this->call(DeliveryManSeeder::class);
+        $this->call(HubInChargeSeeder::class);
         $this->call(DeliverycategorySeeder::class);
-         $this->call(DeliveryChargeSeeder::class);
-         $this->call(MerchantSeeder::class);
-         $this->call(MerchantshopsSeeder::class);
+        $this->call(DeliveryChargeSeeder::class);
+        $this->call(MerchantSeeder::class);
+        $this->call(MerchantshopsSeeder::class);
         // $this->call(MerchantPaymentSeeder::class);
         // $this->call(AccountSeeder::class);
         // $this->call(MerchantManagePaymentSeeder::class);
@@ -57,7 +55,7 @@ class DatabaseSeeder extends Seeder
         $this->call(MerchantSettingSeeder::class);
         $this->call(CurrencySeeder::class);
 
-        //front web seeder
+        // front web seeder
         $this->call(SocialLinkSeeder::class);
         $this->call(ServiceSeeder::class);
         $this->call(WhyCourierSeeder::class);

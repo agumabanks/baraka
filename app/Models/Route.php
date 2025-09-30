@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Backend\Hub;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use App\Models\Backend\Hub;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Route extends Model
 {
@@ -35,7 +35,7 @@ class Route extends Model
         return LogOptions::defaults()
             ->useLogName('route')
             ->logOnly(['branch_id', 'driver_id', 'status', 'planned_at'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} route");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} route");
     }
 
     public function branch(): BelongsTo
@@ -56,6 +56,7 @@ class Route extends Model
     public function shipment()
     {
         $stop = $this->stops()->first();
+
         return $stop ? $stop->shipment() : null;
     }
 }

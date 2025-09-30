@@ -9,5 +9,3 @@ return [
     UserType::INCHARGE => 'Responsable',
     UserType::HUB => 'Hub',
 ];
-
-?>

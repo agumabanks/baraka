@@ -10,16 +10,19 @@ class SocialLink extends Model
 {
     use HasFactory;
 
-    public function scopeActive($query){
-        return $query->where('status',Status::ACTIVE);
+    public function scopeActive($query)
+    {
+        return $query->where('status', Status::ACTIVE);
     }
+
     public function getMyStatusAttribute()
     {
-        if($this->status == Status::ACTIVE){
-            $status = '<span class="badge badge-pill badge-success">'.trans("status." . $this->status).'</span>';
-        }else {
-            $status = '<span class="badge badge-pill badge-danger">'.trans("status." . $this->status).'</span>';
+        if ($this->status == Status::ACTIVE) {
+            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
+        } else {
+            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
         }
+
         return $status;
     }
 }

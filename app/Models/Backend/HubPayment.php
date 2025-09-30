@@ -2,7 +2,6 @@
 
 namespace App\Models\Backend;
 
-use App\Enums\Status;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
@@ -31,14 +30,14 @@ class HubPayment extends Model
             'transaction_id',
             'fromPayment.account_no',
             'description',
-           
-        ];
-        return LogOptions::defaults()
-        ->useLogName('HubPayment')
-        ->logOnly($logAttributes)
-        ->setDescriptionForEvent(fn(string $eventName) => "{$eventName}");
-    }
 
+        ];
+
+        return LogOptions::defaults()
+            ->useLogName('HubPayment')
+            ->logOnly($logAttributes)
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
+    }
 
     protected $table = 'hub_payments';
 
@@ -47,18 +46,23 @@ class HubPayment extends Model
         $query->orderBy($data, 'desc');
     }
 
-    public function hub(){
-        return $this->belongsTo(Hub::class,'hub_id','id');
+    public function hub()
+    {
+        return $this->belongsTo(Hub::class, 'hub_id', 'id');
     }
 
-    public function fromPayment(){
-        return $this->belongsTo(Account::class,'from_account','id');
-    }
-    public function referenceFile(){
-        return $this->belongsTo(Upload::class,'reference_file','id');
+    public function fromPayment()
+    {
+        return $this->belongsTo(Account::class, 'from_account', 'id');
     }
 
-    public function createdBy(){
-        return $this->belongsTo(User::class,'created_by','id');
+    public function referenceFile()
+    {
+        return $this->belongsTo(Upload::class, 'reference_file', 'id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id');
     }
 }

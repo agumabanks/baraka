@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\BooleanStatus;
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -21,7 +20,7 @@ return new class extends Migration
             $table->foreignId('merchant_id')->constrained('merchants')->onUpdate('cascade')->onDelete('cascade');
             $table->string('order_id')->nullable();
             $table->string('transaction_id')->nullable();
-            $table->decimal('amount',22,2)->nullable();
+            $table->decimal('amount', 22, 2)->nullable();
             $table->string('payment_method')->nullable();
             $table->unsignedTinyInteger('is_paid')->default(BooleanStatus::NO);
             $table->string('status')->default('pending')->nullable()->comment('pending,processing,success,fail');

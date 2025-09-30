@@ -4,9 +4,9 @@ namespace Database\Seeders\Backend\FrontWeb;
 
 use App\Models\Backend\FrontWeb\Partner;
 use App\Models\Backend\Upload;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
+
 class PartnerSeeder extends Seeder
 {
     /**
@@ -16,7 +16,7 @@ class PartnerSeeder extends Seeder
      */
     public function run()
     {
-        $faker  = Faker::create('en_US');
+        $faker = Faker::create('en_US');
         $data = [
             '1.png',
             'atom.png',
@@ -29,20 +29,20 @@ class PartnerSeeder extends Seeder
             'digg.png',
             '2.png',
             'huawei.png',
-            'ups.png'
-        ]; 
-      foreach ($data as $key => $value) { 
+            'ups.png',
+        ];
+        foreach ($data as $key => $value) {
 
-        $upload           = new Upload();
-        $upload->original = "frontend/images/partner/".$value;
-        $upload->save(); 
-        $partner           = new Partner();
-        $partner->name     = $faker->unique()->company();
-        $partner->image_id = $upload->id;
-        $partner->link     = '#';
-        $partner->position = ($key+1);
-        $partner->save(); 
-      } 
-       
+            $upload = new Upload;
+            $upload->original = 'frontend/images/partner/'.$value;
+            $upload->save();
+            $partner = new Partner;
+            $partner->name = $faker->unique()->company();
+            $partner->image_id = $upload->id;
+            $partner->link = '#';
+            $partner->position = ($key + 1);
+            $partner->save();
+        }
+
     }
 }

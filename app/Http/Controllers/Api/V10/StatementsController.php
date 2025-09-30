@@ -7,25 +7,27 @@ use App\Http\Resources\v10\StatementsResource;
 use App\Models\Backend\MerchantStatement;
 use App\Models\Backend\Parcel;
 use App\Traits\ApiReturnFormatTrait;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class StatementsController extends Controller
 {
     use ApiReturnFormatTrait;
-    public function index(){
-        try {
-            $statements = MerchantStatement::where('merchant_id',auth()->user()->merchant->id)->orderByDesc('id')->get();
 
-            return $this->responseWithSuccess(__('statements.title'), ['statements'=> StatementsResource::collection($statements)], 200);
-        }catch (\Exception $exception){
+    public function index()
+    {
+        try {
+            $statements = MerchantStatement::where('merchant_id', auth()->user()->merchant->id)->orderByDesc('id')->get();
+
+            return $this->responseWithSuccess(__('statements.title'), ['statements' => StatementsResource::collection($statements)], 200);
+        } catch (\Exception $exception) {
             return $this->responseWithError(__('statements.title'), [], 500);
 
         }
     }
 
-    public function filter(Request $request){
+    public function filter(Request $request)
+    {
 
         try {
 
@@ -47,7 +49,7 @@ class StatementsController extends Controller
                     $query->where('type', $request->type);
                 }
 
-                if (!blank($parcelID)) {
+                if (! blank($parcelID)) {
                     $query->where(['parcel_id' => $parcelID->id]);
                 }
                 if ($request->parcel_tracking_id && blank($parcelID)) {
@@ -56,9 +58,9 @@ class StatementsController extends Controller
 
             })->get();
 
-            return $this->responseWithSuccess(__('statements.title'), ['statements'=> StatementsResource::collection($statements)], 200);
+            return $this->responseWithSuccess(__('statements.title'), ['statements' => StatementsResource::collection($statements)], 200);
 
-        }catch (\Exception $exception) {
+        } catch (\Exception $exception) {
 
             return $this->responseWithError(__('statements.title'), [], 500);
 

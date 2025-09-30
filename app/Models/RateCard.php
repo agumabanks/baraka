@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class RateCard extends Model
 {
@@ -36,7 +36,7 @@ class RateCard extends Model
         return LogOptions::defaults()
             ->useLogName('rate_card')
             ->logOnly(['name', 'origin_country', 'dest_country', 'is_active'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} rate card");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} rate card");
     }
 
     // Scopes
@@ -48,8 +48,8 @@ class RateCard extends Model
     public function scopeByRoute($query, string $origin, string $dest)
     {
         return $query->where('origin_country', $origin)
-                    ->where('dest_country', $dest)
-                    ->active();
+            ->where('dest_country', $dest)
+            ->active();
     }
 
     // Business Logic
@@ -85,6 +85,7 @@ class RateCard extends Model
                 $charges[$accessorial['name']] = $accessorial['amount'];
             }
         }
+
         return $charges;
     }
 }

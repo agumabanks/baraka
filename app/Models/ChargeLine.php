@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ChargeLine extends Model
 {
@@ -30,7 +30,7 @@ class ChargeLine extends Model
         return LogOptions::defaults()
             ->useLogName('charge_line')
             ->logOnly(['shipment_id', 'charge_type', 'amount'])
-            ->setDescriptionForEvent(fn(string $eventName) => "{$eventName} charge line");
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} charge line");
     }
 
     public function shipment(): BelongsTo

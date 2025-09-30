@@ -10,7 +10,6 @@ class WhLocation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'branch_id','code','type','capacity','status'
+        'branch_id', 'code', 'type', 'capacity', 'status',
     ];
 }
-

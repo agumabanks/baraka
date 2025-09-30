@@ -19,17 +19,17 @@ return new class extends Migration
 
             $table->foreignId('merchant_id')->nullable()->constrained('merchants')->onUpdate('cascade')->onDelete('cascade');
             $table->string('payment_method')->nullable();
-            //bank info
+            // bank info
             $table->string('bank_name')->nullable();
             $table->string('holder_name')->nullable();
             $table->string('account_no')->nullable();
             $table->string('branch_name')->nullable();
             $table->string('routing_no')->nullable();
-            //mobile info
+            // mobile info
             $table->string('mobile_company')->nullable();
             $table->string('mobile_no')->nullable();
             $table->string('account_type')->nullable();
-            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', ' .Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
+            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', '.Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
             $table->timestamps();
 
             $table->index('merchant_id');

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'success'    => 'Succès',
-    'error'      => 'Erreur',
-    'warning'    => 'Attention',
+    'success' => 'Succès',
+    'error' => 'Erreur',
+    'warning' => 'Attention',
 ];

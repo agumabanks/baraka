@@ -3,6 +3,6 @@
 use App\Enums\AccountType;
 
 return [
-        AccountType::ADMIN   => 'Admin',
-        AccountType::USER    => 'Utilisateur',
+    AccountType::ADMIN => 'Admin',
+    AccountType::USER => 'Utilisateur',
 ];

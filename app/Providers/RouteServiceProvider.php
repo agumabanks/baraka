@@ -34,6 +34,12 @@ class RouteServiceProvider extends ServiceProvider
                 ->middleware('api')
                 ->group(base_path('routes/api.php'));
 
+            if (config('app.feature_mobile_api')) {
+                Route::prefix('api/v1')
+                    ->middleware('api')
+                    ->group(base_path('routes/api_v1.php'));
+            }
+
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });

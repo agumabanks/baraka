@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('from_account')->nullable()->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
             $table->foreignId('to_account')->nullable()->constrained('accounts')->onUpdate('cascade')->onDelete('cascade');
-            $table->decimal('amount',16,2)->nullable();
+            $table->decimal('amount', 16, 2)->nullable();
             $table->date('date')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();

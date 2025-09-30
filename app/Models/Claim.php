@@ -9,14 +9,13 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Claim extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'shipment_id','type','description','amount_claimed','evidence','status','settled_amount'
+        'shipment_id', 'type', 'description', 'amount_claimed', 'evidence', 'status', 'settled_amount',
     ];
 
     protected $casts = [
         'evidence' => 'array',
     ];
 }
-

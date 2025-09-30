@@ -8,8 +8,8 @@ return [
     ',
     ParcelStatus::RECEIVED_BY_PICKUP_MAN => 'تلقى الطرود رجل بيك أب',
     ParcelStatus::RECEIVED_WAREHOUSE => 'تم استلام الطرد إلى المستودع',
-    ParcelStatus::TRANSFER_TO_HUB        => 'نقل الطرود إلى المحور',
-    ParcelStatus::RECEIVED_BY_HUB        => 'تم الاستلام بواسطة Hub',
+    ParcelStatus::TRANSFER_TO_HUB => 'نقل الطرود إلى المحور',
+    ParcelStatus::RECEIVED_BY_HUB => 'تم الاستلام بواسطة Hub',
     ParcelStatus::DELIVERY_MAN_ASSIGN => 'تعيين رجل التسليم',
     ParcelStatus::DELIVERY_RE_SCHEDULE => 'تمت إعادة جدولة التوصيل',
 
@@ -25,10 +25,9 @@ return [
     ParcelStatus::RETURNED_MERCHANT => 'التاجر العائد',
     ParcelStatus::RETURN_RECEIVED_BY_MERCHANT => 'استلم الإرجاع من قبل التاجر',
 
-    'hub_name'                      => 'اسم المركز',
-    'hub_phone'                      => 'هاتف المحور',
-    'delivery_man'                  => 'رجل التوصيل',
-    'delivery_man_phone'            => 'هاتف رجل التوصيل'
-
+    'hub_name' => 'اسم المركز',
+    'hub_phone' => 'هاتف المحور',
+    'delivery_man' => 'رجل التوصيل',
+    'delivery_man_phone' => 'هاتف رجل التوصيل',
 
 ];

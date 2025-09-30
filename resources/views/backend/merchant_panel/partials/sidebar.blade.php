@@ -23,7 +23,7 @@
 
         <li class="nav-item">
             <a class="nav-link {{ request()->is('merchant/payment-request*', 'merchant/invoice*', 'merchant/payment/received*', 'merchant/online-payment*', 'merchant/invoice*') ? 'active' : '' }}"
-                href="#" data-toggle="collapse" aria-expanded="false" data-target="#accounts"
+                href="#" data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#accounts"
                 aria-controls="accounts"><i class="fa fa-users"></i> {{ __('account.title') }}</a>
             <div id="accounts"
                 class="{{ request()->is('merchant/payment-request*', 'merchant/invoice*', 'merchant/payment/received*', 'merchant/online-payment*', 'merchant/invoice*') ? '' : 'collapse' }} submenu">
@@ -60,7 +60,7 @@
 
         <li class="nav-item">
             <a class="nav-link {{ request()->is('merchant/reports/*') ? 'active' : '' }}" href="#"
-                data-toggle="collapse" aria-expanded="false" data-target="#reports" aria-controls="reports"><i
+                data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#reports" aria-controls="reports"><i
                     class="fas fa-print"></i>{{ __('reports.title') }}</a>
             <div id="reports"
                 class="{{ request()->is('merchant/reports*', 'merchant/accounts/statements*', 'merchant/accounts/account-transaction*') ? '' : 'collapse' }} submenu">
@@ -68,7 +68,7 @@
                     <li class="nav-item ">
                         <a class="nav-link {{ request()->is('merchant/reports/parcel-reports*', 'merchant/reports/parcel-filter-reports') ? 'active' : '' }}"
                             href="{{ route('merchant-panel.parcel.reports') }}" aria-expanded="false"
-                            data-target="#submenu-1" aria-controls="submenu-1">{{ __('reports.parcel_reports') }}</a>
+                            data-bs-target="#submenu-1" aria-controls="submenu-1">{{ __('reports.parcel_reports') }}</a>
                     </li>
 
                     <li class="nav-item">
@@ -90,7 +90,7 @@
 
         <li class="nav-item">
             <a class="nav-link {{ request()->is('merchant/settings*', 'merchant/shops*') ? 'active' : '' }}"
-                href="#" data-toggle="collapse" aria-expanded="false" data-target="#settings"
+                href="#" data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#settings"
                 aria-controls="settings"><i class="fa fa-fw fa-cogs"></i> {{ __('menus.settings') }}</a>
             <div id="settings"
                 class="{{ request()->is('merchant/settings*', 'merchant/shops*') ? '' : 'collapse' }} submenu">
@@ -171,7 +171,7 @@
 
                         <li class="nav-item">
                             <a class="nav-link {{ request()->is('merchant/payment-request*', 'merchant/invoice*', 'merchant/payment/received*', 'merchant/online-payment*', 'merchant/invoice*') ? 'active' : '' }}"
-                                href="#" data-toggle="collapse" aria-expanded="false" data-target="#accounts"
+                                href="#" data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#accounts"
                                 aria-controls="accounts"><i class="fa fa-users"></i> {{ __('account.title') }}</a>
                             <div id="accounts"
                                 class="{{ request()->is('merchant/payment-request*', 'merchant/invoice*', 'merchant/payment/received*', 'merchant/online-payment*', 'merchant/invoice*') ? '' : 'collapse' }} submenu">
@@ -209,7 +209,7 @@
 
                         <li class="nav-item">
                             <a class="nav-link {{ request()->is('merchant/reports/*') ? 'active' : '' }}"
-                                href="#" data-toggle="collapse" aria-expanded="false" data-target="#reports"
+                                href="#" data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#reports"
                                 aria-controls="reports"><i class="fas fa-print"></i>{{ __('reports.title') }}</a>
                             <div id="reports"
                                 class="{{ request()->is('merchant/reports*', 'merchant/accounts/statements*', 'merchant/accounts/account-transaction*') ? '' : 'collapse' }} submenu">
@@ -217,7 +217,7 @@
                                     <li class="nav-item ">
                                         <a class="nav-link {{ request()->is('merchant/reports/parcel-reports*', 'merchant/reports/parcel-filter-reports') ? 'active' : '' }}"
                                             href="{{ route('merchant-panel.parcel.reports') }}" aria-expanded="false"
-                                            data-target="#submenu-1"
+                                            data-bs-target="#submenu-1"
                                             aria-controls="submenu-1">{{ __('reports.parcel_reports') }}</a>
                                     </li>
 
@@ -240,7 +240,7 @@
 
                         <li class="nav-item">
                             <a class="nav-link {{ request()->is('merchant/settings*', 'merchant/shops*') ? 'active' : '' }}"
-                                href="#" data-toggle="collapse" aria-expanded="false" data-target="#settings"
+                                href="#" data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#settings"
                                 aria-controls="settings"><i class="fa fa-fw fa-cogs"></i>
                                 {{ __('menus.settings') }}</a>
                             <div id="settings"

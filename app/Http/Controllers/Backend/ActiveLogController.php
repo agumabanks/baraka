@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Spatie\Activitylog\Models\Activity;
 
 class ActiveLogController extends Controller
@@ -15,12 +14,15 @@ class ActiveLogController extends Controller
      */
     public function index()
     {
-        $logs = Activity::orderBy('id','desc')->paginate(10);
-        return view('backend.log.index',compact('logs'));
+        $logs = Activity::orderBy('id', 'desc')->paginate(10);
+
+        return view('backend.log.index', compact('logs'));
     }
 
-    public function view($id){
-        $logDetails  =  Activity::find($id);
-        return view('backend.log.view',compact('logDetails'));
+    public function view($id)
+    {
+        $logDetails = Activity::find($id);
+
+        return view('backend.log.view', compact('logDetails'));
     }
 }

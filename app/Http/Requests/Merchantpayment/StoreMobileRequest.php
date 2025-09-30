@@ -25,10 +25,10 @@ class StoreMobileRequest extends FormRequest
     {
         return [
 
-            'mobile_holder_name'=>['required'],
-            'mobile_company'   => ['required'],
-            'mobile_no'        => ['required','numeric','digits_between:11,14'],
-            'account_type'     => ['required'],
+            'mobile_holder_name' => ['required'],
+            'mobile_company' => ['required'],
+            'mobile_no' => ['required', 'numeric', 'digits_between:11,14'],
+            'account_type' => ['required'],
         ];
     }
 }

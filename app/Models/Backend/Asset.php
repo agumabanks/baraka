@@ -2,14 +2,10 @@
 
 namespace App\Models\Backend;
 
-use App\Models\Backend\Hub;
-use App\Models\Backend\Assetcategory;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -45,12 +41,12 @@ class Asset extends Model
             'amount',
             'description',
         ];
+
         return LogOptions::defaults()
             ->useLogName('Asset')
             ->logOnly($logAttributes)
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}");
     }
-
 
     public function assetcategorys()
     {
@@ -70,9 +66,9 @@ class Asset extends Model
     public function getMyInsuranceStatusAttribute()
     {
         if ($this->insurance_status == 1) {
-            return __("asset.yes");
+            return __('asset.yes');
         } elseif ($this->insurance_status == 2) {
-            return __("asset.no");
+            return __('asset.no');
         }
     }
 
@@ -93,39 +89,44 @@ class Asset extends Model
 
     public function getMyRegistrationDocumentsAttribute()
     {
-        if (!empty($this->upload_registration->original['original']) && file_exists(public_path($this->upload_registration->original['original']))) {
+        if (! empty($this->upload_registration->original['original']) && file_exists(public_path($this->upload_registration->original['original']))) {
             return static_asset($this->upload_registration->original['original']);
         }
+
         return '';
     }
 
     public function getMyInsuranceDocumentsAttribute()
     {
-        if (!empty($this->upload_insurance->original['original']) && file_exists(public_path($this->upload_insurance->original['original']))) {
+        if (! empty($this->upload_insurance->original['original']) && file_exists(public_path($this->upload_insurance->original['original']))) {
             return static_asset($this->upload_insurance->original['original']);
         }
+
         return '';
     }
 
-    public function getRenewInsuranceAttribute(){
+    public function getRenewInsuranceAttribute()
+    {
 
         $start_date = Carbon::parse($this->insurance_registration)->startOfDay()->toDateTimeString();
         $end_date = Carbon::parse($this->insurance_expiry_date)->endOfDay()->toDateTimeString();
-        $total_insurance_days =  Carbon::parse($start_date)->diffInDays($end_date);
-        $remaning_days =  Carbon::now()->diffInDays($end_date);
+        $total_insurance_days = Carbon::parse($start_date)->diffInDays($end_date);
+        $remaning_days = Carbon::now()->diffInDays($end_date);
+
         return '<span class="text-danger">'.$remaning_days.'</span> remaining'.' / '.$total_insurance_days.' ';
 
         return 'N/A';
     }
 
-    public function getRenewRegistrationAttribute(){
-        $start_date           =  Carbon::parse($this->registration_date)->startOfDay()->toDateTimeString();
-        $end_date             =  Carbon::parse($this->registration_expiry_date)->endOfDay()->toDateTimeString();
-        $total_registration_days =  Carbon::parse($start_date)->diffInDays($end_date);
-        $remaning_days =  Carbon::now()->diffInDays($end_date);
+    public function getRenewRegistrationAttribute()
+    {
+        $start_date = Carbon::parse($this->registration_date)->startOfDay()->toDateTimeString();
+        $end_date = Carbon::parse($this->registration_expiry_date)->endOfDay()->toDateTimeString();
+        $total_registration_days = Carbon::parse($start_date)->diffInDays($end_date);
+        $remaning_days = Carbon::now()->diffInDays($end_date);
+
         return '<span class="text-danger">'.$remaning_days.'</span> remaining'.' / '.$total_registration_days.' ';
 
         return 'N/A';
     }
-
 }

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders\Backend\FrontWeb;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -15,7 +14,7 @@ class PageSeeder extends Seeder
      */
     public function run()
     {
-        if (!\Illuminate\Support\Facades\DB::table('pages')->doesntExist()) {
+        if (! \Illuminate\Support\Facades\DB::table('pages')->doesntExist()) {
             // Skip if pages already seeded or present
             return;
         }

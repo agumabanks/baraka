@@ -1,0 +1,415 @@
+/**
+ * CSS-Only Skeleton Loaders for Enterprise Dashboard
+ *
+ * Provides smooth, accessible loading states for KPI cards, tables, and other components.
+ * Uses CSS animations with reduced motion support and proper ARIA attributes.
+ */
+
+/* ============================================
+   BASE SKELETON STYLES
+   ============================================ */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--color-border-primary) 25%,
+        var(--color-bg-tertiary) 50%,
+        var(--color-border-primary) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .skeleton {
+        animation: none;
+        background: var(--color-bg-tertiary);
+    }
+}
+
+/* Skeleton animation keyframes */
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ============================================
+   SKELETON VARIANTS
+   ============================================ */
+
+/* Text skeletons */
+.skeleton-text {
+    height: var(--text-base);
+    margin-bottom: var(--spacing-2);
+}
+
+.skeleton-text--sm {
+    height: var(--text-sm);
+}
+
+.skeleton-text--lg {
+    height: var(--text-lg);
+}
+
+.skeleton-text--xl {
+    height: var(--text-xl);
+}
+
+/* Heading skeletons */
+.skeleton-heading {
+    height: var(--text-2xl);
+    width: 60%;
+    margin-bottom: var(--spacing-3);
+}
+
+.skeleton-heading--sm {
+    height: var(--text-xl);
+    width: 50%;
+}
+
+.skeleton-heading--lg {
+    height: var(--text-3xl);
+    width: 70%;
+}
+
+/* Avatar skeletons */
+.skeleton-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+}
+
+.skeleton-avatar--sm {
+    width: 32px;
+    height: 32px;
+}
+
+.skeleton-avatar--lg {
+    width: 56px;
+    height: 56px;
+}
+
+/* Button skeletons */
+.skeleton-button {
+    height: 40px;
+    width: 120px;
+    border-radius: var(--radius-md);
+}
+
+.skeleton-button--sm {
+    height: 32px;
+    width: 100px;
+}
+
+.skeleton-button--lg {
+    height: 48px;
+    width: 140px;
+}
+
+/* ============================================
+   COMPONENT-SPECIFIC SKELETONS
+   ============================================ */
+
+/* KPI Card Skeleton */
+.kpi-card--skeleton {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-6);
+    box-shadow: var(--color-card-shadow);
+    display: flex;
+    align-items: center;
+}
+
+.kpi-card--skeleton .skeleton-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-lg);
+    margin-right: var(--spacing-4);
+    flex-shrink: 0;
+}
+
+.kpi-card--skeleton .skeleton-content {
+    flex: 1;
+}
+
+.kpi-card--skeleton .skeleton-title {
+    height: var(--text-sm);
+    width: 80px;
+    margin-bottom: var(--spacing-2);
+}
+
+.kpi-card--skeleton .skeleton-value {
+    height: var(--text-2xl);
+    width: 100px;
+    margin-bottom: var(--spacing-1);
+}
+
+.kpi-card--skeleton .skeleton-subtitle {
+    height: var(--text-xs);
+    width: 60px;
+}
+
+/* Mini Table Skeleton */
+.mini-table--skeleton {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-4);
+}
+
+.mini-table--skeleton .skeleton-header {
+    height: var(--text-sm);
+    width: 100px;
+    margin-bottom: var(--spacing-3);
+    font-weight: var(--font-semibold);
+}
+
+.mini-table--skeleton .skeleton-row {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-2) 0;
+    border-bottom: 1px solid var(--color-border-primary);
+}
+
+.mini-table--skeleton .skeleton-row:last-child {
+    border-bottom: none;
+}
+
+.mini-table--skeleton .skeleton-row-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    margin-right: var(--spacing-3);
+    flex-shrink: 0;
+}
+
+.mini-table--skeleton .skeleton-row-content {
+    flex: 1;
+}
+
+.mini-table--skeleton .skeleton-row-title {
+    height: var(--text-sm);
+    width: 120px;
+    margin-bottom: var(--spacing-1);
+}
+
+.mini-table--skeleton .skeleton-row-subtitle {
+    height: var(--text-xs);
+    width: 80px;
+}
+
+/* Chart Skeleton */
+.chart--skeleton {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-6);
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart--skeleton .skeleton-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-4);
+}
+
+.chart--skeleton .skeleton-chart-title {
+    height: var(--text-lg);
+    width: 150px;
+}
+
+.chart--skeleton .skeleton-chart-controls {
+    display: flex;
+    gap: var(--spacing-2);
+}
+
+.chart--skeleton .skeleton-chart-control {
+    height: 32px;
+    width: 60px;
+    border-radius: var(--radius-md);
+}
+
+.chart--skeleton .skeleton-chart-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart--skeleton .skeleton-chart-bars {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    height: 100%;
+    padding: var(--spacing-4) 0;
+}
+
+.chart--skeleton .skeleton-chart-bar {
+    width: 24px;
+    background: var(--color-border-primary);
+    border-radius: var(--radius-sm);
+    animation: skeleton-chart-bar 2s ease-in-out infinite;
+}
+
+.chart--skeleton .skeleton-chart-bar:nth-child(1) { height: 40%; animation-delay: 0s; }
+.chart--skeleton .skeleton-chart-bar:nth-child(2) { height: 70%; animation-delay: 0.1s; }
+.chart--skeleton .skeleton-chart-bar:nth-child(3) { height: 55%; animation-delay: 0.2s; }
+.chart--skeleton .skeleton-chart-bar:nth-child(4) { height: 80%; animation-delay: 0.3s; }
+.chart--skeleton .skeleton-chart-bar:nth-child(5) { height: 45%; animation-delay: 0.4s; }
+.chart--skeleton .skeleton-chart-bar:nth-child(6) { height: 65%; animation-delay: 0.5s; }
+.chart--skeleton .skeleton-chart-bar:nth-child(7) { height: 75%; animation-delay: 0.6s; }
+
+@keyframes skeleton-chart-bar {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Hide content while loading */
+.skeleton-container {
+    position: relative;
+}
+
+.skeleton-container.is-loading .skeleton-content {
+    visibility: hidden;
+}
+
+.skeleton-container.is-loading .skeleton-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-card-bg);
+    border-radius: inherit;
+    z-index: 1;
+}
+
+/* Pulse animation for attention-grabbing skeletons */
+.skeleton--pulse {
+    animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ============================================
+   RESPONSIVE SKELETONS
+   ============================================ */
+
+@media (max-width: 768px) {
+    .kpi-card--skeleton {
+        padding: var(--spacing-4);
+    }
+
+    .kpi-card--skeleton .skeleton-icon {
+        width: 32px;
+        height: 32px;
+        margin-right: var(--spacing-3);
+    }
+
+    .chart--skeleton {
+        height: 250px;
+        padding: var(--spacing-4);
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+/* Screen reader only text for loading states */
+.sr-loading-text {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* ARIA live region for loading announcements */
+.skeleton[aria-live] {
+    position: relative;
+}
+
+.skeleton[aria-live]::after {
+    content: attr(aria-label);
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* ============================================
+   DARK THEME ADJUSTMENTS
+   ============================================ */
+
+[data-theme="dark"] .skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(148, 163, 184, 0.1) 25%,
+        rgba(30, 41, 59, 0.5) 50%,
+        rgba(148, 163, 184, 0.1) 75%
+    );
+}
+
+/* ============================================
+   USAGE EXAMPLES
+   ============================================
+
+   <!-- KPI Card Loading State -->
+   <div class="kpi-card--skeleton" aria-live="polite" aria-label="Loading KPI data">
+     <div class="skeleton skeleton-icon"></div>
+     <div class="skeleton-content">
+       <div class="skeleton skeleton-title"></div>
+       <div class="skeleton skeleton-value"></div>
+       <div class="skeleton skeleton-subtitle"></div>
+     </div>
+   </div>
+
+   <!-- Chart Loading State -->
+   <div class="chart--skeleton">
+     <div class="skeleton-chart-header">
+       <div class="skeleton skeleton-chart-title"></div>
+       <div class="skeleton-chart-controls">
+         <div class="skeleton skeleton-chart-control"></div>
+         <div class="skeleton skeleton-chart-control"></div>
+       </div>
+     </div>
+     <div class="skeleton-chart-area">
+       <div class="skeleton-chart-bars">
+         <div class="skeleton skeleton-chart-bar"></div>
+         <!-- More bars... -->
+       </div>
+     </div>
+   </div>
+
+   ============================================ */

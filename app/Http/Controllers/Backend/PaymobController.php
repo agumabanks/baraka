@@ -5,45 +5,41 @@ namespace App\Http\Controllers\Backend;
 use App\Enums\BooleanStatus;
 use App\Enums\PayoutSetup;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
-
-use App\Enums\Wallet\WalletStatus;
 use App\Models\Backend\OnlinePayment;
-use App\Models\Backend\ParcelOnlinePayment;
 use App\Traits\OnlinePaymentTrait;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 
 class PaymobController extends Controller
 {
     use OnlinePaymentTrait;
-    //default responses
+
+    // default responses
     const GATEWAYS_DEFAULT_200 = [
         'response_code' => 'gateways_default_200',
-        'message' => 'successfully loaded'
+        'message' => 'successfully loaded',
     ];
 
     const GATEWAYS_DEFAULT_204 = [
         'response_code' => 'gateways_default_204',
-        'message' => 'information not found'
+        'message' => 'information not found',
     ];
 
     const GATEWAYS_DEFAULT_400 = [
         'response_code' => 'gateways_default_400',
-        'message' => 'invalid or missing information'
+        'message' => 'invalid or missing information',
     ];
 
     const GATEWAYS_DEFAULT_404 = [
         'response_code' => 'gateways_default_404',
-        'message' => 'resource not found'
+        'message' => 'resource not found',
     ];
 
     const GATEWAYS_DEFAULT_UPDATE_200 = [
         'response_code' => 'gateways_default_update_200',
-        'message' => 'successfully updated'
+        'message' => 'successfully updated',
     ];
-
 
     private OnlinePayment $payment;
 
@@ -54,9 +50,10 @@ class PaymobController extends Controller
 
     public function response_formatter($constant, $content = null, $errors = []): array
     {
-        $constant             = (array)$constant;
-        $constant['content']  = $content;
-        $constant['errors']   = $errors;
+        $constant = (array) $constant;
+        $constant['content'] = $content;
+        $constant['errors'] = $errors;
+
         return $constant;
     }
 
@@ -66,9 +63,9 @@ class PaymobController extends Controller
         foreach ($validator->errors()->getMessages() as $index => $error) {
             $errors[] = ['error_code' => $index, 'message' => $error[0]];
         }
+
         return $errors;
     }
-
 
     protected function cURL($url, $json)
     {
@@ -76,7 +73,7 @@ class PaymobController extends Controller
         $ch = curl_init($url);
 
         // Request headers
-        $headers = array();
+        $headers = [];
         $headers[] = 'Content-Type: application/json';
 
         // Return the transfer as a string
@@ -90,6 +87,7 @@ class PaymobController extends Controller
 
         // Close curl resource to free up system resources
         curl_close($ch);
+
         return json_decode($output);
     }
 
@@ -99,7 +97,7 @@ class PaymobController extends Controller
         $ch = curl_init($url);
 
         // Request headers
-        $headers = array();
+        $headers = [];
         $headers[] = 'Content-Type: application/json';
 
         // Return the transfer as a string
@@ -111,6 +109,7 @@ class PaymobController extends Controller
 
         // Close curl resource to free up system resources
         curl_close($ch);
+
         return json_decode($output);
     }
 
@@ -118,25 +117,25 @@ class PaymobController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'payment_id' => ['required','numeric']
+            'payment_id' => ['required', 'numeric'],
         ]);
 
         if ($validator->fails()) {
             return response()->json($this->response_formatter(self::GATEWAYS_DEFAULT_400, null, $this->error_processor($validator)), 400);
         }
 
-        $data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid'=>BooleanStatus::NO])->first();
+        $data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => BooleanStatus::NO])->first();
 
-        if (!isset($data)) {
+        if (! isset($data)) {
             return response()->json($this->response_formatter(self::GATEWAYS_DEFAULT_204), 200);
         }
 
         $payer = $data->payer_details;
 
         try {
-            $token          = $this->getToken();
-            $order          = $this->createOrder($token, $data, $payer);
-            $paymentToken   = $this->getPaymentToken($order, $token, $data, $payer);
+            $token = $this->getToken();
+            $order = $this->createOrder($token, $data, $payer);
+            $paymentToken = $this->getPaymentToken($order, $token, $data, $payer);
             $data->order_id = $order->id;
             $data->save();
 
@@ -144,7 +143,7 @@ class PaymobController extends Controller
             return response()->json($this->response_formatter(self::GATEWAYS_DEFAULT_404), 200);
         }
 
-        return Redirect::away('https://accept.paymobsolutions.com/api/acceptance/iframes/' . globalSettings('paymob_iframe_id') . '?payment_token=' . $paymentToken);
+        return Redirect::away('https://accept.paymobsolutions.com/api/acceptance/iframes/'.globalSettings('paymob_iframe_id').'?payment_token='.$paymentToken);
     }
 
     public function getToken()
@@ -153,6 +152,7 @@ class PaymobController extends Controller
             'https://accept.paymob.com/api/auth/tokens',
             ['api_key' => globalSettings('paymob_api_key')]
         );
+
         return $response->token;
     }
 
@@ -161,21 +161,22 @@ class PaymobController extends Controller
         $items[] = [
             'name' => $payer['name'],
             'amount_cents' => round($payment_data->amount * 100),
-            'description' => 'payment ID :' . $payment_data->id,
-            'quantity' => 1
+            'description' => 'payment ID :'.$payment_data->id,
+            'quantity' => 1,
         ];
 
         $data = [
-            "auth_token"      => $token,
-            "delivery_needed" => "false",
-            "amount_cents"    => round($payment_data->amount * 100),
-            "currency"        => $payment_data->currency_code?? 'EGP',
-            "items"           => $items,
+            'auth_token' => $token,
+            'delivery_needed' => 'false',
+            'amount_cents' => round($payment_data->amount * 100),
+            'currency' => $payment_data->currency_code ?? 'EGP',
+            'items' => $items,
         ];
         $response = $this->cURL(
             'https://accept.paymob.com/api/ecommerce/orders',
             $data
         );
+
         return $response;
     }
 
@@ -184,30 +185,29 @@ class PaymobController extends Controller
 
         $value = $payment_data->amount;
         $billingData = [
-            "apartment" => "N/A",
-            "email" => $payer['email']?? 'N/A',
-            "floor" => "N/A",
-            "first_name" => $payer['name']?? 'N/A',
-            "street" => "N/A",
-            "building" => "N/A",
-            "phone_number" => $payer['phone'] ?? "N/A",
-            "shipping_method" => "PKG",
-            "postal_code" => "N/A",
-            "city" => "N/A",
-            "country" => "N/A",
-            "last_name" => $payer['name']?? 'N/A',
-            "state" => "N/A",
+            'apartment' => 'N/A',
+            'email' => $payer['email'] ?? 'N/A',
+            'floor' => 'N/A',
+            'first_name' => $payer['name'] ?? 'N/A',
+            'street' => 'N/A',
+            'building' => 'N/A',
+            'phone_number' => $payer['phone'] ?? 'N/A',
+            'shipping_method' => 'PKG',
+            'postal_code' => 'N/A',
+            'city' => 'N/A',
+            'country' => 'N/A',
+            'last_name' => $payer['name'] ?? 'N/A',
+            'state' => 'N/A',
         ];
 
-
         $data = [
-            "auth_token"      => $token ,
-            "amount_cents"    => round($value * 100),
-            "expiration"      => 3600,
-            "order_id"        => @$order->id,
-            "billing_data"    => $billingData,
-            "currency"        => $payment_data->currency_code?? 'EGP',
-            "integration_id"  => globalSettings('paymob_integration_id')
+            'auth_token' => $token,
+            'amount_cents' => round($value * 100),
+            'expiration' => 3600,
+            'order_id' => @$order->id,
+            'billing_data' => $billingData,
+            'currency' => $payment_data->currency_code ?? 'EGP',
+            'integration_id' => globalSettings('paymob_integration_id'),
         ];
 
         $response = $this->cURL(
@@ -217,7 +217,6 @@ class PaymobController extends Controller
 
         return $response->token;
     }
-
 
     public function callback(Request $request)
     {
@@ -255,25 +254,23 @@ class PaymobController extends Controller
         }
         $secret = globalSettings('paymob_hmac');
         $hased = hash_hmac('sha512', $connectedString, $secret);
-        if ($hased == $hmac && $data['success'] === "true") {
+        if ($hased == $hmac && $data['success'] === 'true') {
 
             $this->payment::where(['order_id' => $data['order']])->update([
-                'payment_method' =>  __('PayoutSetup.'.PayoutSetup::PAYMOB),
+                'payment_method' => __('PayoutSetup.'.PayoutSetup::PAYMOB),
                 'is_paid' => BooleanStatus::YES,
-                'transaction_id' => $data['order']
+                'transaction_id' => $data['order'],
             ]);
 
             $payment_data = $this->payment::where(['order_id' => $data['order']])->first();
 
             if (isset($payment_data)) {
-                return $this->payment_response($payment_data,'success',PayoutSetup::PAYMOB);
+                return $this->payment_response($payment_data, 'success', PayoutSetup::PAYMOB);
             }
 
         }
         $payment_data = $this->payment::where(['order_id' => $data['order']])->first();
 
-        return $this->payment_response($payment_data,'fail',PayoutSetup::PAYMOB);
+        return $this->payment_response($payment_data, 'fail', PayoutSetup::PAYMOB);
     }
-
-
 }

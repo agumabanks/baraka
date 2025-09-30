@@ -4,15 +4,14 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class DHLSecurityMiddleware
 {
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
@@ -61,12 +60,12 @@ class DHLSecurityMiddleware
         header('Referrer-Policy: strict-origin-when-cross-origin');
 
         // Content Security Policy
-        $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' https://trusted-cdn.com; " .
-               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " .
-               "img-src 'self' data: https:; " .
-               "font-src 'self' https://fonts.gstatic.com; " .
-               "connect-src 'self' https://api.dhl.com; " .
+        $csp = "default-src 'self'; ".
+               "script-src 'self' 'unsafe-inline' https://trusted-cdn.com; ".
+               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ".
+               "img-src 'self' data: https:; ".
+               "font-src 'self' https://fonts.gstatic.com; ".
+               "connect-src 'self' https://api.dhl.com; ".
                "frame-ancestors 'none';";
 
         header("Content-Security-Policy: $csp");
@@ -111,7 +110,7 @@ class DHLSecurityMiddleware
     private function sanitizeInput(string $input): string
     {
         // Remove null bytes
-        $input = str_replace("\0", "", $input);
+        $input = str_replace("\0", '', $input);
 
         // Remove potentially dangerous characters
         $input = filter_var($input, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
@@ -162,7 +161,7 @@ class DHLSecurityMiddleware
             'admin.users.store',
             'admin.users.update',
             'admin.payment.*',
-            'admin.settings.*'
+            'admin.settings.*',
         ];
 
         $currentRoute = $request->route() ? $request->route()->getName() : '';
@@ -175,7 +174,7 @@ class DHLSecurityMiddleware
                     'ip' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                     'timestamp' => now(),
-                    'request_data' => $this->sanitizeLogData($request->all())
+                    'request_data' => $this->sanitizeLogData($request->all()),
                 ]);
                 break;
             }
@@ -245,7 +244,7 @@ class DHLSecurityMiddleware
             'user_agent' => $request->userAgent(),
             'url' => $request->fullUrl(),
             'headers' => $request->headers->all(),
-            'timestamp' => now()
+            'timestamp' => now(),
         ]);
 
         // Could implement additional measures like IP blocking

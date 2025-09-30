@@ -11,12 +11,14 @@ class InvoiceController extends Controller
     {
         $this->authorize('viewAny', Invoice::class);
         $items = Invoice::latest()->paginate(15);
+
         return view('backend.admin.invoices.index', compact('items'));
     }
 
     public function show(Invoice $invoice)
     {
         $this->authorize('view', $invoice);
+
         return view('backend.admin.invoices.show', ['invoice' => $invoice]);
     }
 }

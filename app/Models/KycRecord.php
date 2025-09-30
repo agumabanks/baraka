@@ -9,10 +9,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class KycRecord extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'customer_id','status','documents','reviewed_by_id','reviewed_at'
+        'customer_id', 'status', 'documents', 'reviewed_by_id', 'reviewed_at',
     ];
 
     protected $casts = [
@@ -20,6 +20,8 @@ class KycRecord extends Model
         'reviewed_at' => 'datetime',
     ];
 
-    public function customer() { return $this->belongsTo(Customer::class); }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }
-

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class SupportChat extends Model
 {
     use HasFactory;
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
@@ -18,13 +19,14 @@ class SupportChat extends Model
     {
         $query->orderBy($data, 'desc');
     }
-    public function file ()
+
+    public function file()
     {
         return $this->belongsTo(Upload::class, 'attached_file', 'id');
     }
 
-    public function support(){
+    public function support()
+    {
         return $this->belongsTo(Support::class, 'support_id', 'id');
     }
-
 }

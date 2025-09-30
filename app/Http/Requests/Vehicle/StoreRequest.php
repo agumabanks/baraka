@@ -22,16 +22,16 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'           => ['required'],
-            'plate_no'       => ['required'],
-            'chasis_number'  => ['required'],
-            'model'          => ['required'],
-            'year'           => ['required'],
-            'brand'          => ['required'],
-            'color'          => ['required'],
-            'driver_id'      => ['required'],
-            'description'    => ['required'],
-            'status'         => ['required'],
+            'name' => ['required'],
+            'plate_no' => ['required'],
+            'chasis_number' => ['required'],
+            'model' => ['required'],
+            'year' => ['required'],
+            'brand' => ['required'],
+            'color' => ['required'],
+            'driver_id' => ['required'],
+            'description' => ['required'],
+            'status' => ['required'],
         ];
     }
 }

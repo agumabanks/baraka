@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Models\Backend\Role;
 use App\Models\Backend\Hub;
+use App\Models\Backend\Role;
 use App\Models\Shipment;
 use App\Models\TransportLeg;
 use App\Models\User;
@@ -28,6 +28,7 @@ class TransportLegControllerTest extends TestCase
     {
         $role = Role::create(['name' => 'Admin', 'slug' => 'admin']);
         $user = User::factory()->create(['role_id' => $role->id]);
+
         return $user;
     }
 
@@ -37,6 +38,7 @@ class TransportLegControllerTest extends TestCase
         $customer = User::factory()->create();
         $origin = Hub::factory()->create();
         $dest = Hub::factory()->create();
+
         return Shipment::create([
             'customer_id' => $customer->id,
             'origin_branch_id' => $origin->id,
@@ -70,7 +72,7 @@ class TransportLegControllerTest extends TestCase
         $this->actingAs($admin);
 
         // Missing required -> validation fails
-        $this->post(route('admin.linehaul-legs.store'), [])->assertSessionHasErrors(['shipment_id','mode','status']);
+        $this->post(route('admin.linehaul-legs.store'), [])->assertSessionHasErrors(['shipment_id', 'mode', 'status']);
 
         $shipment = $this->seedShipment();
 

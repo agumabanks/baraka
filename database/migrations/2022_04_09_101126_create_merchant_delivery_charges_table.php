@@ -20,11 +20,11 @@ return new class extends Migration
             $table->foreignId('delivery_charge_id')->nullable()->constrained('delivery_charges')->onUpdate('cascade')->onDelete('cascade');
             $table->bigInteger('weight')->nullable();
             $table->unsignedTinyInteger('category_id')->nullable();
-            $table->decimal('same_day',16,2)->nullable();
-            $table->decimal('next_day',16,2)->nullable();
-            $table->decimal('sub_city',16,2)->nullable();
-            $table->decimal('outside_city',16,2)->nullable();
-            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', ' .Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
+            $table->decimal('same_day', 16, 2)->nullable();
+            $table->decimal('next_day', 16, 2)->nullable();
+            $table->decimal('sub_city', 16, 2)->nullable();
+            $table->decimal('outside_city', 16, 2)->nullable();
+            $table->unsignedTinyInteger('status')->default(Status::ACTIVE)->comment(Status::ACTIVE.'='.trans('status.'.Status::ACTIVE).', '.Status::INACTIVE.'='.trans('status.'.Status::INACTIVE));
             $table->timestamps();
 
             $table->index('merchant_id');

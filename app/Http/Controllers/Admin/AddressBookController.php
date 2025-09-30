@@ -12,12 +12,14 @@ class AddressBookController extends Controller
     {
         $this->authorize('viewAny', AddressBook::class);
         $items = AddressBook::query()->latest('id')->paginate(15);
+
         return view('backend.admin.address_book.index', compact('items'));
     }
 
     public function create()
     {
         $this->authorize('create', AddressBook::class);
+
         return view('backend.admin.address_book.create');
     }
 
@@ -36,32 +38,37 @@ class AddressBookController extends Controller
             'tax_id' => 'nullable|string',
         ]);
         $ab = AddressBook::create($data);
+
         return redirect()->route('admin.address-book.show', $ab);
     }
 
     public function show(AddressBook $address_book)
     {
         $this->authorize('view', $address_book);
+
         return view('backend.admin.address_book.show', ['address' => $address_book]);
     }
 
     public function edit(AddressBook $address_book)
     {
         $this->authorize('update', $address_book);
+
         return view('backend.admin.address_book.edit', ['address' => $address_book]);
     }
 
     public function update(Request $request, AddressBook $address_book)
     {
         $this->authorize('update', $address_book);
-        $address_book->update($request->only(['name','phone_e164','email','city','address_line']));
-        return back()->with('status','Address updated');
+        $address_book->update($request->only(['name', 'phone_e164', 'email', 'city', 'address_line']));
+
+        return back()->with('status', 'Address updated');
     }
 
     public function destroy(AddressBook $address_book)
     {
         $this->authorize('delete', $address_book);
         $address_book->delete();
+
         return redirect()->route('admin.address-book.index');
     }
 }

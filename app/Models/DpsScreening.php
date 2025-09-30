@@ -10,7 +10,7 @@ class DpsScreening extends Model
     use HasFactory;
 
     protected $fillable = [
-        'screened_type','screened_id','query','response_json','result','list_name','match_score','screened_at'
+        'screened_type', 'screened_id', 'query', 'response_json', 'result', 'list_name', 'match_score', 'screened_at',
     ];
 
     protected $casts = [
@@ -18,4 +18,3 @@ class DpsScreening extends Model
         'screened_at' => 'datetime',
     ];
 }
-

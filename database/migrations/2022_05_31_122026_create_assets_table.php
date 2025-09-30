@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('quantity')->nullable();
             $table->string('warranty')->nullable();
             $table->string('invoice_no')->nullable();
-            $table->decimal('amount',13,2)->nullable();
+            $table->decimal('amount', 13, 2)->nullable();
             $table->longtext('description')->nullable();
             $table->timestamps();
 

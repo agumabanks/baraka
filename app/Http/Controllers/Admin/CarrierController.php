@@ -11,6 +11,7 @@ class CarrierController extends Controller
     public function index()
     {
         $carriers = Carrier::paginate(20);
+
         return view('backend.admin.carriers.index', compact('carriers'));
     }
 
@@ -27,6 +28,7 @@ class CarrierController extends Controller
             'mode' => 'required|in:air,road',
         ]);
         Carrier::create($data);
+
         return redirect()->route('admin.carriers.index')->with('status', 'Carrier created');
     }
 
@@ -42,7 +44,7 @@ class CarrierController extends Controller
             'mode' => 'required|in:air,road',
         ]);
         $carrier->update($data);
+
         return redirect()->route('admin.carriers.index')->with('status', 'Carrier updated');
     }
 }
-

@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class DHLComplianceService
 {
@@ -18,7 +18,7 @@ class DHLComplianceService
         'ISO_27001' => 'Information Security Management',
         'ISO_45001' => 'Occupational Health and Safety',
         'GDPR' => 'General Data Protection Regulation',
-        'SOX' => 'Sarbanes-Oxley Act'
+        'SOX' => 'Sarbanes-Oxley Act',
     ];
 
     /**
@@ -32,20 +32,20 @@ class DHLComplianceService
         if ($validator->fails()) {
             Log::warning("Compliance validation failed for {$standard}", [
                 'errors' => $validator->errors(),
-                'data' => $this->sanitizeForLogging($data)
+                'data' => $this->sanitizeForLogging($data),
             ]);
 
             return [
                 'compliant' => false,
                 'errors' => $validator->errors(),
-                'recommendations' => $this->getComplianceRecommendations($standard)
+                'recommendations' => $this->getComplianceRecommendations($standard),
             ];
         }
 
         return [
             'compliant' => true,
             'standard' => $standard,
-            'validated_at' => now()
+            'validated_at' => now(),
         ];
     }
 
@@ -61,7 +61,7 @@ class DHLComplianceService
                 'consent_obtained' => 'required|boolean',
                 'data_subject_rights' => 'required|array',
                 'privacy_policy_url' => 'required|url',
-                'data_protection_officer' => 'required|string'
+                'data_protection_officer' => 'required|string',
             ],
             'ISO_27001' => [
                 'risk_assessment_completed' => 'required|boolean',
@@ -69,15 +69,15 @@ class DHLComplianceService
                 'incident_response_plan' => 'required|boolean',
                 'access_control_mechanism' => 'required|string',
                 'encryption_standards' => 'required|string',
-                'audit_trail_enabled' => 'required|boolean'
+                'audit_trail_enabled' => 'required|boolean',
             ],
             'SOX' => [
                 'financial_controls' => 'required|array',
                 'internal_audit_completed' => 'required|boolean',
                 'segregation_of_duties' => 'required|boolean',
                 'financial_reporting_accurate' => 'required|boolean',
-                'management_override_prevented' => 'required|boolean'
-            ]
+                'management_override_prevented' => 'required|boolean',
+            ],
         ];
 
         return $rules[$standard] ?? [];
@@ -94,22 +94,22 @@ class DHLComplianceService
                 'Establish data processing agreements with vendors',
                 'Conduct regular privacy impact assessments',
                 'Implement data subject access request procedures',
-                'Establish data breach notification protocols'
+                'Establish data breach notification protocols',
             ],
             'ISO_27001' => [
                 'Conduct comprehensive risk assessment',
                 'Implement access control mechanisms',
                 'Establish incident response procedures',
                 'Regular security awareness training',
-                'Implement continuous monitoring'
+                'Implement continuous monitoring',
             ],
             'SOX' => [
                 'Implement proper segregation of duties',
                 'Establish financial control procedures',
                 'Regular internal and external audits',
                 'Implement fraud detection mechanisms',
-                'Management oversight of financial processes'
-            ]
+                'Management oversight of financial processes',
+            ],
         ];
 
         return $recommendations[$standard] ?? [];
@@ -125,7 +125,7 @@ class DHLComplianceService
             'user_id' => auth()->id(),
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
-            'data' => $this->sanitizeForLogging($data)
+            'data' => $this->sanitizeForLogging($data),
         ]);
     }
 
@@ -139,7 +139,7 @@ class DHLComplianceService
             'financial_records' => 7,
             'audit_logs' => 7,
             'parcel_tracking' => 5,
-            'communication_logs' => 3
+            'communication_logs' => 3,
         ];
 
         $retentionYears = $retentionPeriods[$dataType] ?? 7;
@@ -155,7 +155,7 @@ class DHLComplianceService
     {
         $this->logComplianceEvent('right_to_be_forgotten_initiated', [
             'user_id' => $userId,
-            'initiated_by' => auth()->id()
+            'initiated_by' => auth()->id(),
         ]);
 
         // Implementation would:
@@ -168,7 +168,7 @@ class DHLComplianceService
             'status' => 'initiated',
             'user_id' => $userId,
             'estimated_completion' => now()->addDays(30),
-            'affected_systems' => ['database', 'logs', 'backups']
+            'affected_systems' => ['database', 'logs', 'backups'],
         ];
     }
 
@@ -179,7 +179,7 @@ class DHLComplianceService
     {
         $this->logComplianceEvent('data_export_requested', [
             'user_id' => $userId,
-            'requested_by' => auth()->id()
+            'requested_by' => auth()->id(),
         ]);
 
         // Implementation would gather all user data
@@ -187,7 +187,7 @@ class DHLComplianceService
             'personal_information' => $this->getUserPersonalData($userId),
             'parcel_history' => $this->getUserParcelHistory($userId),
             'payment_history' => $this->getUserPaymentHistory($userId),
-            'communication_logs' => $this->getUserCommunicationLogs($userId)
+            'communication_logs' => $this->getUserCommunicationLogs($userId),
         ];
 
         return [
@@ -195,7 +195,7 @@ class DHLComplianceService
             'export_date' => now(),
             'data' => $userData,
             'format' => 'JSON',
-            'compliance_standard' => 'GDPR_Article_20'
+            'compliance_standard' => 'GDPR_Article_20',
         ];
     }
 
@@ -204,14 +204,14 @@ class DHLComplianceService
      */
     public function reportSecurityIncident(array $incidentDetails): string
     {
-        $incidentId = 'INC-' . now()->format('YmdHis') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
+        $incidentId = 'INC-'.now()->format('YmdHis').'-'.strtoupper(substr(md5(uniqid()), 0, 6));
 
         Log::critical("Security Incident Reported: {$incidentId}", [
             'incident_id' => $incidentId,
             'reported_by' => auth()->id(),
             'reported_at' => now(),
             'severity' => $incidentDetails['severity'] ?? 'medium',
-            'details' => $incidentDetails
+            'details' => $incidentDetails,
         ]);
 
         // Implementation would:
@@ -235,7 +235,7 @@ class DHLComplianceService
                 'recent_audits' => $this->getRecentAudits(),
                 'open_findings' => $this->getOpenFindings(),
                 'upcoming_deadlines' => $this->getUpcomingDeadlines(),
-                'risk_assessment' => $this->getRiskAssessment()
+                'risk_assessment' => $this->getRiskAssessment(),
             ];
         });
     }
@@ -257,7 +257,7 @@ class DHLComplianceService
         return [
             'GDPR' => ['status' => 'compliant', 'last_audit' => now()->subDays(30)],
             'ISO_27001' => ['status' => 'compliant', 'last_audit' => now()->subDays(45)],
-            'SOX' => ['status' => 'compliant', 'last_audit' => now()->subDays(60)]
+            'SOX' => ['status' => 'compliant', 'last_audit' => now()->subDays(60)],
         ];
     }
 
@@ -271,14 +271,14 @@ class DHLComplianceService
                 'audit_type' => 'GDPR',
                 'date' => now()->subDays(30),
                 'result' => 'passed',
-                'findings' => 2
+                'findings' => 2,
             ],
             [
                 'audit_type' => 'Security',
                 'date' => now()->subDays(45),
                 'result' => 'passed',
-                'findings' => 1
-            ]
+                'findings' => 1,
+            ],
         ];
     }
 
@@ -292,14 +292,14 @@ class DHLComplianceService
                 'id' => 'FIND-001',
                 'title' => 'Data encryption enhancement needed',
                 'severity' => 'medium',
-                'due_date' => now()->addDays(30)
+                'due_date' => now()->addDays(30),
             ],
             [
                 'id' => 'FIND-002',
                 'title' => 'Access control review required',
                 'severity' => 'low',
-                'due_date' => now()->addDays(60)
-            ]
+                'due_date' => now()->addDays(60),
+            ],
         ];
     }
 
@@ -312,13 +312,13 @@ class DHLComplianceService
             [
                 'deadline' => now()->addDays(15),
                 'description' => 'GDPR Annual Review',
-                'type' => 'review'
+                'type' => 'review',
             ],
             [
                 'deadline' => now()->addDays(45),
                 'description' => 'ISO 27001 Recertification',
-                'type' => 'certification'
-            ]
+                'type' => 'certification',
+            ],
         ];
     }
 
@@ -332,7 +332,7 @@ class DHLComplianceService
             'high_risk_items' => 1,
             'medium_risk_items' => 3,
             'low_risk_items' => 8,
-            'last_assessment' => now()->subDays(30)
+            'last_assessment' => now()->subDays(30),
         ];
     }
 

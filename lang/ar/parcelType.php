@@ -11,5 +11,4 @@ return [
     ParcelType::SWEET => 'حلو',
     ParcelType::COSMETICS => 'مستحضرات التجميل',
 
-
 ];

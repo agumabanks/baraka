@@ -2,7 +2,7 @@
 
 use App\Enums\ParcelType;
 
-return array(
+return [
     ParcelType::FRAGILE => 'Fragile',
     ParcelType::LIQUID => 'Liquide',
     ParcelType::GROCERY => 'Épicerie',
@@ -10,4 +10,4 @@ return array(
     ParcelType::DRYFOOD => 'Aliments secs',
     ParcelType::SWEET => 'Sucré',
     ParcelType::COSMETICS => 'Cosmétiques',
-);
+];
