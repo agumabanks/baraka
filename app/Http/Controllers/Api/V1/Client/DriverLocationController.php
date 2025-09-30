@@ -6,6 +6,7 @@ use App\Events\DriverLocationUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreDriverLocationRequest;
 use App\Models\DeliveryMan;
+use App\Models\DriverLocation;
 use App\Traits\ApiReturnFormatTrait;
 
 /**
@@ -57,14 +58,30 @@ class DriverLocationController extends Controller
     {
         $driver = DeliveryMan::where('user_id', auth()->id())->firstOrFail();
 
-        // Batch store locations
+        // Performance optimization: Batch insert locations
+        $locationsData = [];
         foreach ($request->locations as $location) {
-            $driver->locations()->create([
+            $locationsData[] = [
+                'driver_id' => $driver->id,
                 'latitude' => $location['latitude'],
                 'longitude' => $location['longitude'],
                 'timestamp' => $location['timestamp'] ?? now(),
-            ]);
+                'accuracy' => $location['accuracy'] ?? null,
+                'speed' => $location['speed'] ?? null,
+                'heading' => $location['heading'] ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
         }
+
+        // Batch insert for better performance
+        DriverLocation::insert($locationsData);
+
+        // Keep only the latest 1000 locations per driver for performance
+        $driver->locations()
+            ->orderBy('timestamp', 'desc')
+            ->skip(1000)
+            ->delete();
 
         // Broadcast location update
         broadcast(new DriverLocationUpdated($driver, $request->locations));

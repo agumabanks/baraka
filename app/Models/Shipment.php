@@ -121,6 +121,11 @@ class Shipment extends Model
         return $this->hasOne(CodReceipt::class);
     }
 
+    public function podProof(): HasOne
+    {
+        return $this->hasOne(PodProof::class);
+    }
+
     public function commodities(): HasMany
     {
         return $this->hasMany(Commodity::class);

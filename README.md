@@ -95,15 +95,41 @@ This project includes a REST API v1 for DHL-style logistics operations, supporti
 - `GET /api/v1/shipments` - List user's shipments
 - `POST /api/v1/shipments` - Create new shipment
 - `GET /api/v1/shipments/{id}` - Get shipment details
+- `GET /api/v1/shipments/{id}/events` - Get shipment events
 - `POST /api/v1/shipments/{id}/cancel` - Cancel shipment
+
+#### Client Quotes
+- `GET /api/v1/quotes` - List user's quotations
+- `POST /api/v1/quotes` - Create new quotation
+- `GET /api/v1/quotes/{id}` - Get quotation details
+
+#### Client Pickup Requests
+- `GET /api/v1/pickups` - List user's pickup requests
+- `POST /api/v1/pickups` - Create new pickup request
+- `GET /api/v1/pickups/{id}` - Get pickup request details
+
+#### Client Tasks (Drivers)
+- `GET /api/v1/tasks` - List driver's tasks
+- `GET /api/v1/tasks/{id}` - Get task details
+- `PATCH /api/v1/tasks/{id}/status` - Update task status
+- `POST /api/v1/tasks/{id}/pod` - Submit proof of delivery
+- `POST /api/v1/pod/{id}/verify` - Verify POD with OTP
+
+#### Driver Location Tracking
+- `POST /api/v1/driver/locations` - Submit GPS location batch
 
 #### Admin Endpoints (Dashboard)
 - `GET /api/v1/admin/customers` - List customers
 - `GET /api/v1/admin/customers/{id}` - Get customer details
 - `PATCH /api/v1/admin/customers/{id}` - Update customer
-- `GET /api/v1/admin/shipments` - List all shipments
+- `GET /api/v1/admin/shipments` - List all shipments (with advanced filters)
 - `GET /api/v1/admin/shipments/{id}` - Get shipment details
 - `PATCH /api/v1/admin/shipments/{id}/status` - Update shipment status
+- `POST /api/v1/admin/shipments/export` - Export shipments
+- `GET /api/v1/admin/dispatch/unassigned` - Get unassigned shipments
+- `GET /api/v1/admin/dispatch/drivers` - Get available drivers
+- `POST /api/v1/admin/dispatch/assign` - Assign driver to shipment
+- `POST /api/v1/admin/dispatch/optimize` - Optimize dispatch routes
 - `GET /api/v1/admin/metrics` - Get dashboard metrics
 
 ### Authentication
@@ -156,6 +182,64 @@ curl -X PATCH http://localhost/api/v1/admin/customers/1 \
   -H "Idempotency-Key: update-customer-123" \
   -H "Content-Type: application/json" \
   -d '{"name":"Updated Name","status":"active"}'
+```
+
+#### Create Quotation
+```bash
+curl -X POST http://localhost/api/v1/quotes \
+  -H "Authorization: Bearer your-token" \
+  -H "Idempotency-Key: quote-key-123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origin_branch_id": 1,
+    "destination_country": "US",
+    "service_type": "standard",
+    "pieces": 2,
+    "weight_kg": 5.5,
+    "currency": "USD"
+  }'
+```
+
+#### Submit Driver Location
+```bash
+curl -X POST http://localhost/api/v1/driver/locations \
+  -H "Authorization: Bearer driver-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "locations": [
+      {
+        "latitude": 40.7128,
+        "longitude": -74.0060,
+        "timestamp": "2025-01-01T10:00:00Z",
+        "accuracy": 10.0,
+        "speed": 15.5
+      }
+    ]
+  }'
+```
+
+#### Submit POD
+```bash
+curl -X POST http://localhost/api/v1/tasks/1/pod \
+  -H "Authorization: Bearer driver-token" \
+  -H "Idempotency-Key: pod-key-123" \
+  -F "signature=@signature.png" \
+  -F "photo=@delivery_photo.jpg" \
+  -F "notes=Delivered successfully"
+```
+
+#### Assign Driver to Shipment
+```bash
+curl -X POST http://localhost/api/v1/dispatch/assign \
+  -H "Cookie: laravel_session=admin-session" \
+  -H "Idempotency-Key: assign-key-123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shipment_id": 1,
+    "driver_id": 2,
+    "priority": "high",
+    "scheduled_at": "2025-01-01T14:00:00Z"
+  }'
 ```
 
 ### API Documentation

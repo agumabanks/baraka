@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'websockets'),
+    'default' => env('BROADCAST_DRIVER', 'pusher'),
 
     /*
     |--------------------------------------------------------------------------
