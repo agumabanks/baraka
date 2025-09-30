@@ -1,11 +1,11 @@
 @push('styles')
 <style>
     .admin-sidebar .offcanvas-nav {
-        background: linear-gradient(165deg, #0f172a 0%, #111827 45%, #0b1220 100%);
-        color: #e2e8f0;
+        background: linear-gradient(170deg, #111111 0%, #0d0d0d 45%, #050505 100%);
+        color: #f5f5f5;
         min-height: 100vh;
-        border-right: 1px solid rgba(148, 163, 184, 0.25);
-        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.45);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     }
 
     .admin-sidebar .offcanvas-header {
@@ -18,7 +18,7 @@
         gap: 0.75rem;
         font-weight: 600;
         letter-spacing: 0.02em;
-        color: #f8fafc;
+        color: #f9fafb;
         text-decoration: none;
     }
 
@@ -26,11 +26,11 @@
         height: 38px;
         width: auto;
         object-fit: contain;
-        filter: drop-shadow(0 4px 12px rgba(15, 23, 42, 0.35));
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
     }
 
     .admin-sidebar .offcanvas-header .btn-close {
-        background-color: rgba(148, 163, 184, 0.15);
+        background-color: rgba(255, 255, 255, 0.12);
         border-radius: 999px;
         padding: 0.75rem;
         opacity: 1;
@@ -39,7 +39,7 @@
 
     .admin-sidebar .offcanvas-header .btn-close:hover,
     .admin-sidebar .offcanvas-header .btn-close:focus {
-        background-color: rgba(148, 163, 184, 0.3);
+        background-color: rgba(255, 255, 255, 0.18);
         transform: translateY(-1px);
     }
 
@@ -49,8 +49,8 @@
     }
 
     .admin-sidebar .sidebar-utilities {
-        background: rgba(15, 23, 42, 0.25);
-        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(26, 26, 26, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 18px;
         padding: 0.75rem 1rem;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -59,7 +59,7 @@
     .admin-sidebar .language-switcher .dropdown-toggle {
         border: 0;
         background: transparent;
-        color: #e2e8f0;
+        color: #f5f5f5;
         font-weight: 500;
     }
 
@@ -78,13 +78,13 @@
     }
 
     .admin-sidebar .sidebar-scroll::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.35);
+        background: rgba(255, 255, 255, 0.25);
         border-radius: 999px;
     }
 
     .admin-sidebar .nav-left-sidebar {
-        background: rgba(15, 23, 42, 0.35);
-        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(26, 26, 26, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 24px;
         padding: 1.5rem;
         backdrop-filter: blur(24px);
@@ -94,7 +94,7 @@
 
     @supports not ((backdrop-filter: blur(10px))) {
         .admin-sidebar .nav-left-sidebar {
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(17, 17, 17, 0.9);
         }
     }
 
@@ -107,7 +107,7 @@
         font-weight: 600;
         letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: rgba(148, 163, 184, 0.8);
+        color: rgba(245, 245, 245, 0.65);
         margin-bottom: 0.85rem;
         padding-left: 0.25rem;
     }
@@ -116,7 +116,7 @@
         display: flex;
         align-items: center;
         gap: 0.9rem;
-        color: rgba(226, 232, 240, 0.92);
+        color: rgba(249, 250, 251, 0.92);
         font-weight: 500;
         padding: 0.65rem 0.9rem;
         border-radius: 16px;
@@ -134,35 +134,35 @@
         align-items: center;
         justify-content: center;
         font-size: 1.05rem;
-        background: rgba(30, 41, 59, 0.8);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-        color: inherit;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        color: #f5f5f5;
         transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
         flex-shrink: 0;
     }
 
     .admin-sidebar .nav-link:hover,
     .admin-sidebar .nav-link:focus {
-        color: #f8fafc;
-        background: rgba(59, 130, 246, 0.14);
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.12);
         transform: translateY(-1px);
     }
 
     .admin-sidebar .nav-link:hover > i,
     .admin-sidebar .nav-link:focus > i {
-        background: rgba(59, 130, 246, 0.22);
-        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.22);
+        color: #111111;
     }
 
     .admin-sidebar .nav-link.active {
-        background: linear-gradient(135deg, #2563eb 0%, #14b8a6 100%);
-        color: #f8fafc;
-        box-shadow: 0 16px 32px rgba(37, 99, 235, 0.35);
+        background: linear-gradient(135deg, #1f1f1f 0%, #0d0d0d 100%);
+        color: #ffffff;
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
     }
 
     .admin-sidebar .nav-link.active > i {
-        background: rgba(15, 23, 42, 0.25);
-        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.25);
+        color: #0d0d0d;
         box-shadow: none;
     }
 
@@ -179,7 +179,7 @@
     }
 
     .admin-sidebar .submenu {
-        border-left: 1px solid rgba(148, 163, 184, 0.2);
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
         margin-left: 2.55rem;
         padding-left: 1rem;
         padding-top: 0.25rem;
@@ -190,7 +190,7 @@
         font-size: 0.95rem;
         font-weight: 500;
         padding: 0.45rem 0.65rem;
-        color: rgba(226, 232, 240, 0.8);
+        color: rgba(249, 250, 251, 0.75);
         gap: 0.65rem;
         border-radius: 14px;
     }
@@ -215,7 +215,7 @@
     }
 
     .admin-sidebar .nav-link:focus-visible {
-        outline: 2px solid rgba(94, 234, 212, 0.65);
+        outline: 2px solid rgba(255, 255, 255, 0.5);
         outline-offset: 2px;
     }
 
@@ -231,30 +231,34 @@
         font-weight: 600;
         line-height: 1;
         border-radius: 10px;
-        background: var(--color-error-500);
-        color: #ffffff;
+        background: rgba(255, 255, 255, 0.18);
+        color: #111111;
         margin-left: auto;
         margin-right: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         transition: background-color 0.25s ease, transform 0.25s ease;
     }
 
     .admin-sidebar .nav-badge--success {
-        background: var(--color-success-500);
+        background: rgba(255, 255, 255, 0.22);
     }
 
     .admin-sidebar .nav-badge--warning {
-        background: var(--color-warning-500);
-        color: #000000;
+        background: rgba(255, 255, 255, 0.35);
+        color: #111111;
     }
 
     .admin-sidebar .nav-badge--info {
-        background: var(--color-info-500);
+        background: rgba(255, 255, 255, 0.28);
     }
 
     .admin-sidebar .nav-badge--attention {
-        background: var(--color-error-500);
+        background: rgba(255, 255, 255, 0.4);
         animation: pulse-attention 2s infinite;
+    }
+
+    .admin-sidebar .nav-badge--error {
+        background: rgba(255, 255, 255, 0.32);
     }
 
     @keyframes pulse-attention {
@@ -312,7 +316,7 @@
         <div class="navbar-collapse offcanvas offcanvas-nav offcanvas-start text-bg-dark" tabindex="-1"
             id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel" role="navigation">
 
-            <div class="offcanvas-header w-90 ">
+            <div class="offcanvas-header w-100">
                 <a class="navbar-brand" href="{{ url('/dashboard') }}">
                     <img src="{{ optional(settings())->logo_image ?? static_asset('images/default/logo1.png') }}" class="logo" alt="{{ config('app.name', 'Baraka') }}" />
                 </a>
@@ -320,7 +324,7 @@
                     aria-label="Close"></button>
             </div>
 
-            <div class="offcanvas-body ms-lg-auto d-flex flex-column h-100 w-90 mt-0 pt-0">
+            <div class="offcanvas-body ms-lg-auto d-flex flex-column h-100 w-100 mt-0 pt-0">
                 <div class="sidebar-utilities d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-3">
                     <div class="language-switcher dropdown lang-dropdown navbar_menus changeLocale mobileLocale m-0">
                         @include('backend.partials.language')
@@ -334,9 +338,9 @@
                         </li>
                         <li class="nav-item ">
                             @if (hasPermission('dashboard_read') == true)
-                                <a class="nav-link {{ request()->is('/dashboard*') ? 'active' : '' }}"
-                                    href="{{ url('/dashboard') }}">
-                                    <i aria-hidden="true" class="fa fa-home"></i>
+                                <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}"
+                                    href="{{ route('dashboard.index') }}">
+                                    <i aria-hidden="true" class="fas fa-home"></i>
                                     <span class="nav-link-text">{{ __('menus.dashboard') }}</span>
                                     @php
                                         // SLA alerts badge - show if any SLA breaches today
@@ -356,7 +360,7 @@
                             <li class="nav-item ">
                                 <a class="nav-link {{ request()->is('admin/deliveryman*') ? 'active' : '' }}"
                                     href="{{ route('deliveryman.index') }}">
-                                    <i aria-hidden="true" class="fa fa-people-carry"></i>
+                                    <i aria-hidden="true" class="fas fa-people-carry"></i>
                                     <span class="nav-link-text">{{ __('menus.deliveryman') }}</span>
                                     @php
                                         // Active drivers badge
@@ -451,7 +455,7 @@
                             <li class="nav-item ">
                                 <a class="nav-link @navActive(['support.*'])"
                                     href="{{ route('support.index') }}">
-                                    <i aria-hidden="true" class="fa fa-comments"></i>
+                                    <i aria-hidden="true" class="fas fa-comments"></i>
                                     <span class="nav-link-text">{{ __('menus.support') }}</span>
                                     @php
                                         // Urgent tickets badge
@@ -472,7 +476,7 @@
                             <li class="nav-item ">
                                 <a class="nav-link @navActive(['parcel.*'])"
                                     href="{{ route('parcel.index') }}">
-                                    <i aria-hidden="true" class="fa fa-dolly"></i>
+                                    <i aria-hidden="true" class="fas fa-dolly"></i>
                                     <span class="nav-link-text">{{ __('menus.parcel') }}</span>
                                     @php
                                         // Exception parcels badge
@@ -499,7 +503,7 @@
                                     <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#bucket-{{ $bucketKey }}"
                                        aria-controls="bucket-{{ $bucketKey }}" aria-expanded="false"
                                        tabindex="0" role="button">
-                                        <i aria-hidden="true" class="fa fa-folder"></i> {{ __($bucket['label_trans_key']) }}
+                                        <i aria-hidden="true" class="fas fa-folder"></i> {{ __($bucket['label_trans_key']) }}
                                     </a>
                                     <div id="bucket-{{ $bucketKey }}" class="collapse submenu">
                                         <ul class="nav flex-column sidebar-submenu">
