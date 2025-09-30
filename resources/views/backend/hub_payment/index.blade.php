@@ -119,7 +119,7 @@
                                         <td>
                                             @if ($payment->status == \App\Enums\ApprovalStatus::PROCESSED || $payment->status == \App\Enums\ApprovalStatus::REJECT )
                                                 <div class="row">
-                                                    <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
+                                                    <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
                                                     <div class="dropdown-menu">
                                                         @if ( $payment->status == \App\Enums\ApprovalStatus::PROCESSED)
                                                             <a href="{{route('hub-payment.cancel-process',$payment->id)}}" class="dropdown-item"><i class="fas fa-check" aria-hidden="true"></i> {{ __('levels.cancel_process') }}</a>
@@ -130,7 +130,7 @@
                                                 </div>
                                             @else
                                                 <div class="row">
-                                                    <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
+                                                    <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
                                                     <div class="dropdown-menu">
                                                         @if ( $payment->status == \App\Enums\ApprovalStatus::PENDING)
                                                             @if(  hasPermission('hub_payment_reject') == true  )

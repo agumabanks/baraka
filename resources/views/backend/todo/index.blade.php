@@ -64,7 +64,7 @@
                                             @else
                                         <div class="input-group mb-3">
                                             <div class="input-group-prepend be-addon">
-                                                <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
+                                                <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
                                                 <div class="dropdown-menu">
                                                     {!! TodoStatus($todo)  !!}
                                                 </div>
@@ -74,10 +74,10 @@
                                     </td>
                                     <td>
                                         <div class="row">
-                                            <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-sm ml-2">...</button>
+                                            <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-sm ml-2">...</button>
                                             <div class="dropdown-menu">
                                                 @if(hasPermission('todo_update')== true)
-                                                <a href="" class="dropdown-item" id="todoeditModal1" data-target="#todoeditModal{{$todo->id}}" data-toggle="modal"><i class="fa fa-edit" aria-hidden="true"></i> {{ __('levels.edit') }}</a>
+                                                <a href="" class="dropdown-item" id="todoeditModal1" data-bs-target="#todoeditModal{{$todo->id}}" data-bs-toggle="modal"><i class="fa fa-edit" aria-hidden="true"></i> {{ __('levels.edit') }}</a>
                                                 @endif
                                                 @if(hasPermission('todo_delete')== true)
                                                 <form id="delete" value="Test" action="{{route('todo.delete',$todo->id)}}" method="POST" data-title="{{ __('delete.to_do') }}">

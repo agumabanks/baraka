@@ -29,7 +29,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-class DashbordController extends Controller
+class DashboardController extends Controller
 {
     /**
      * Display a listing of the resource.

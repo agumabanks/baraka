@@ -177,7 +177,7 @@
                                         </td>
                                         <td>
                                             <div class="row">
-                                                <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-sm ml-2 bnone">...</button>
+                                                <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-sm ml-2 bnone">...</button>
                                                 <div class="dropdown-menu">
                                                     <a href="{{ route('parcel.details',$parcel->id) }}" class="dropdown-item"><i class="fa fa-eye" aria-hidden="true"></i> {{__('levels.view')}}</a>
                                                     <a href="{{ route('parcel.logs',$parcel->id) }}" class="dropdown-item"><i class="fas fa-history" aria-hidden="true"></i> {{__('levels.parcel_logs')}}</a>
@@ -254,7 +254,7 @@
                                                 @if(\App\Enums\ParcelStatus::DELIVERED !== $parcel->status && \App\Enums\ParcelStatus::PARTIAL_DELIVERED !== $parcel->status && \App\Enums\ParcelStatus::RETURN_RECEIVED_BY_MERCHANT !== $parcel->status)
                                                     <div class="input-group mb-3">
                                                         <div class="input-group-prepend be-addon">
-                                                            <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
+                                                            <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
                                                             <div class="dropdown-menu">
                                                                 {!! parcelStatus($parcel)  !!}
                                                             </div>

@@ -1,4 +1,4 @@
-<a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-toggle="dropdown" aria-haspopup="true"
+<a class="nav-link nav-user-img" href="#" id="navbarDropdownMenuLink2" data-bs-toggle="dropdown" aria-haspopup="true"
     aria-expanded="false">
     <img src="{{ Auth::user()->image }}" alt="" class="user-avatar-md rounded-circle">
 </a>

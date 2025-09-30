@@ -110,7 +110,7 @@ use App\Http\Controllers\Backend\UserController;
 use App\Http\Controllers\Backend\VehicleController;
 use App\Http\Controllers\Backend\WebNotificationController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\DashbordController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InstallerController;
@@ -285,9 +285,9 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
         Route::group(['middleware' => 'XSS'], function () {
 
             // Route::get('/home',[HomeController::class, 'index'])->name('home');
-            // Admin Dashbord Controller
-            Route::get('/dashboard', [DashbordController::class, 'index'])->name('dashboard.index');
-            Route::post('search-charts', [DashbordController::class, 'searchCharts'])->name('search-charts');
+            // Admin Dashboard Controller
+            Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+            Route::post('search-charts', [DashboardController::class, 'searchCharts'])->name('search-charts');
             // Admin Category Controller
             Route::get('category/index', [CategoryController::class, 'index'])->name('category.index')->middleware('hasPermission:category_read');
             Route::get('category/create', [CategoryController::class, 'create'])->name('category.create')->middleware('hasPermission:category_create');
@@ -1039,7 +1039,7 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
 
             // Merchant panel Routes
             Route::group(['prefix' => 'merchant'], function () {
-                Route::post('/dashboard/filter', [DashbordController::class, 'merchantDashboardFilter'])->name('merchant-panel.dashboard.filter');
+                Route::post('/dashboard/filter', [DashboardController::class, 'merchantDashboardFilter'])->name('merchant-panel.dashboard.filter');
                 // accounts
                 Route::get('/accounts/payment-accounts', [PaymentAccountController::class, 'index'])->name('merchant.accounts.payment-account.index');
                 Route::get('/accounts/payment-accounts/create', [PaymentAccountController::class, 'create'])->name('payment.account.create');

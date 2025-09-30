@@ -35,9 +35,9 @@
                 <div class="card-body">
                     <nav>
                         <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                          <a href="#" class="nav-link @if($request->paid_invoice_page ) active show @elseif($request->processing_invoice_page || $request->unpaid_invoice_page) @else active @endif" id="paid-invoice-tab" data-toggle="tab" data-target="#paid-invoice" type="button" role="tab" aria-controls="paid-invoice" aria-selected="true">{{ __('invoice.'.\App\Enums\InvoiceStatus::PAID) }}</a>
-                          <a href="#" class="nav-link @if($request->processing_invoice_page) active show  @endif" id="processing-invoice-tab" data-toggle="tab" data-target="#processing-invoice" type="button" role="tab" aria-controls="processing-invoice" aria-selected="false">{{ __('invoice.'.\App\Enums\InvoiceStatus::PROCESSING) }}</a>
-                          <a href="#" class="nav-link  @if($request->unpaid_invoice_page) active show  @endif" id="unpaid-invoice-tab" data-toggle="tab" data-target="#unpaid-invoice" type="button" role="tab" aria-controls="unpaid-invoice" aria-selected="false">{{ __('invoice.'.\App\Enums\InvoiceStatus::UNPAID) }}</a>
+                          <a href="#" class="nav-link @if($request->paid_invoice_page ) active show @elseif($request->processing_invoice_page || $request->unpaid_invoice_page) @else active @endif" id="paid-invoice-tab" data-bs-toggle="tab" data-bs-target="#paid-invoice" type="button" role="tab" aria-controls="paid-invoice" aria-selected="true">{{ __('invoice.'.\App\Enums\InvoiceStatus::PAID) }}</a>
+                          <a href="#" class="nav-link @if($request->processing_invoice_page) active show  @endif" id="processing-invoice-tab" data-bs-toggle="tab" data-bs-target="#processing-invoice" type="button" role="tab" aria-controls="processing-invoice" aria-selected="false">{{ __('invoice.'.\App\Enums\InvoiceStatus::PROCESSING) }}</a>
+                          <a href="#" class="nav-link  @if($request->unpaid_invoice_page) active show  @endif" id="unpaid-invoice-tab" data-bs-toggle="tab" data-bs-target="#unpaid-invoice" type="button" role="tab" aria-controls="unpaid-invoice" aria-selected="false">{{ __('invoice.'.\App\Enums\InvoiceStatus::UNPAID) }}</a>
                         </div>
                       </nav>
                       <div class="tab-content" id="nav-tabContent">

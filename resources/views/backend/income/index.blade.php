@@ -200,7 +200,7 @@
                                         )
                                             <td>
                                                 <div class="row">
-                                                    <button tabindex="-1" data-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
+                                                    <button tabindex="-1" data-bs-toggle="dropdown" type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"><span class="sr-only">Toggle Dropdown</span></button>
                                                     <div class="dropdown-menu">
                                                         @if(  hasPermission('income_update') == true  )
                                                             <a href="{{route('income.edit',$income->id)}}" class="dropdown-item"><i class="fas fa-edit" aria-hidden="true"></i> {{ __('levels.edit') }}</a>

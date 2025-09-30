@@ -16,9 +16,18 @@
         <!-- Desktop Navigation Items -->
         <div class="d-none d-lg-flex ms-auto align-items-center">
             <!-- Language Switcher -->
-            <div class="nav-item dropdown me-3">
+            <div class="dropdown me-3">
                 @include('backend.partials.language')
             </div>
+            
+            <!-- Dark Mode Toggle -->
+            <button id="theme-toggle" class="btn btn-link nav-link me-3 p-0"
+                    aria-label="Toggle dark mode" title="Toggle dark mode">
+                <i class="fas fa-moon" id="theme-icon"></i>
+            </button>
+            
+            <!-- Enhanced Quick Actions Component -->
+            <x-quick-actions class="me-3" />
 
             <!-- Frontend Link -->
             <a href="{{ url('/') }}" class="nav-link me-3" target="_blank">
@@ -26,13 +35,13 @@
             </a>
 
             <!-- Notifications -->
-            <div class="nav-item dropdown me-3">
-                <a class="nav-link position-relative" href="#" id="notificationDropdown" 
-                   data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="dropdown me-3">
+                <a class="nav-link position-relative dropdown-toggle" href="#" id="notificationDropdown"
+                   data-bs-toggle="dropdown" aria-expanded="false" role="button">
                     <i class="fas fa-bell"></i>
                     <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">3</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end notification-dropdown" 
+                <ul class="dropdown-menu dropdown-menu-end notification-dropdown"
                     aria-labelledby="notificationDropdown">
                     <li><div class="notification-title">Notifications</div></li>
                     <li><div class="notification-list">@include('backend.partials.notification')</div></li>
@@ -48,13 +57,16 @@
             @endif
 
             <!-- User Menu -->
-            <div class="nav-item dropdown">
+            <div class="dropdown">
                 @include('backend.partials.profile_menu')
             </div>
         </div>
 
         <!-- Mobile Navigation Items -->
         <div class="d-lg-none d-flex align-items-center">
+            <!-- Mobile Quick Actions -->
+            <x-quick-actions class="me-2" />
+            
             <a href="{{ url('/') }}" class="nav-link me-2" target="_blank">
                 <i class="fas fa-globe"></i>
             </a>
@@ -71,7 +83,7 @@
             </div>
 
             @if (hasPermission('todo_create') == true)
-                <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" 
+                <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal"
                         data-bs-target="#todoModal" data-url="{{ route('todo.modal') }}">
                     <i class="fas fa-edit"></i>
                 </button>
@@ -125,5 +137,11 @@
                 window.addEventListener('load', updateOffsets, { once: true });
             });
         </script>
+        
+        <!-- Theme Switcher Script -->
+        <script src="{{ static_asset('js/theme-switcher.js') }}" defer></script>
+        
+        <!-- Keyboard Shortcuts Script -->
+        <script src="{{ static_asset('js/keyboard-shortcuts.js') }}" defer></script>
     @endonce
 @endpush
