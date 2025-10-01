@@ -7,6 +7,7 @@ import Sidebar from './components/layout/Sidebar'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
 import Dashboard from './pages/Dashboard'
+import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import { navigationConfig } from './config/navigation'
@@ -91,32 +92,11 @@ function AppContent() {
         {/* Page Content */}
         <main className="p-6">
           <Routes>
-            {/* Protected Dashboard Routes */}
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/analytics" element={
-              <ProtectedRoute>
-                <div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/reports" element={
-              <ProtectedRoute>
-                <div className="p-6"><h1 className="text-2xl font-bold">Reports</h1></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <div className="p-6"><h1 className="text-2xl font-bold">Settings</h1></div>
-              </ProtectedRoute>
-            } />
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
+            <Route path="reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1></div>} />
+            <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1></div>} />
           </Routes>
         </main>
       </div>
@@ -133,11 +113,19 @@ function App() {
         <Router>
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Protected Routes */}
-            <Route path="/*" element={<AppContent />} />
+            {/* Protected Dashboard */}
+            <Route
+              path="/dashboard/*"
+              element={(
+                <ProtectedRoute>
+                  <AppContent />
+                </ProtectedRoute>
+              )}
+            />
           </Routes>
         </Router>
       </AuthProvider>
