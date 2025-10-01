@@ -18,12 +18,21 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
         // Build connect-src dynamically based on environment
-        $connectSrc = "'self' https:";
-        
+        $connectSources = ["'self'", 'https:'];
+
         // Allow localhost connections in development
         if (config('app.env') !== 'production') {
-            $connectSrc .= " http://localhost:* http://127.0.0.1:*";
+            $connectSources[] = 'http://localhost:*';
+            $connectSources[] = 'http://127.0.0.1:*';
         }
+
+        // Allow additional hosts configured via environment variable (space separated)
+        $extraConnectSources = array_filter(preg_split('/\s+/', (string) env('CSP_CONNECT_SRC', '')));
+        if (! empty($extraConnectSources)) {
+            $connectSources = array_merge($connectSources, $extraConnectSources);
+        }
+
+        $connectSrc = implode(' ', array_unique($connectSources));
 
         // Conservative CSP that won't break existing inline assets by default
         $csp = "default-src 'self' https: data:; " .
