@@ -44,7 +44,7 @@ export const navigationConfig: NavigationConfig = {
         {
           id: 'hub-manage',
           label: 'Hub Management',
-          icon: 'Warehouse',
+          icon: 'Building2',
           children: [
             {
               id: 'hubs',
@@ -191,7 +191,7 @@ export const navigationConfig: NavigationConfig = {
         {
           id: 'routes',
           label: 'Routes & Stops',
-          icon: 'TruckIcon',
+          icon: 'Truck',
           path: '/routes',
           visible: true
         }
@@ -234,7 +234,7 @@ export const navigationConfig: NavigationConfig = {
         {
           id: 'contracts',
           label: 'Contracts',
-          icon: 'FileContract',
+          icon: 'FileText',
           path: '/contracts',
           visible: true
         },
@@ -262,7 +262,7 @@ export const navigationConfig: NavigationConfig = {
         {
           id: 'invoices',
           label: 'Invoices',
-          icon: 'FileInvoice',
+          icon: 'Receipt',
           path: '/invoices',
           badge: {
             count: 15,

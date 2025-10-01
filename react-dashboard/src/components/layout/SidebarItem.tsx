@@ -1,13 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import * as Icons from 'lucide-react';
-import type { SidebarItemProps, NavBadge } from '../../types/navigation';
-// import Badge from '../ui/Badge';
+import type { SidebarItemProps, NavBadge as NavBadgeType } from '../../types/navigation';
 
 /**
  * Badge component for navigation items
  * Matches monochrome styling from Blade sidebar
  */
-const NavBadge: React.FC<{ badge: NavBadge }> = ({ badge }) => {
+const NavBadgePill: React.FC<{ badge: NavBadgeType }> = ({ badge }) => {
   const variantClasses = {
     default: 'bg-mono-black text-mono-white',
     success: 'bg-mono-gray-700 text-mono-white',
@@ -41,9 +40,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onClick,
   className = ''
 }) => {
-  const [isExpanded, setIsExpanded] = useState(item.expanded || false);
   const hasChildren = item.children && item.children.length > 0;
-  const isActive = item.path === currentPath || item.active;
+  const childActive = hasChildren
+    ? item.children?.some((child) =>
+        child.path ? currentPath?.startsWith(child.path) : false
+      )
+    : false;
+  const [isExpanded, setIsExpanded] = useState(item.expanded || childActive || false);
+  const isActive = item.path === currentPath || item.active || childActive;
   const isSubmenu = level > 0;
 
   // Get icon component from lucide-react
@@ -117,7 +121,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         </span>
 
         {/* Badge */}
-        {item.badge && <NavBadge badge={item.badge} />}
+        {item.badge && <NavBadgePill badge={item.badge} />}
 
         {/* Chevron for items with children */}
         {hasChildren && (

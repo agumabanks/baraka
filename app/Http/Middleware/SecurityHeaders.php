@@ -17,8 +17,23 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
+        // Build connect-src dynamically based on environment
+        $connectSrc = "'self' https:";
+        
+        // Allow localhost connections in development
+        if (config('app.env') !== 'production') {
+            $connectSrc .= " http://localhost:* http://127.0.0.1:*";
+        }
+
         // Conservative CSP that won't break existing inline assets by default
-        $csp = "default-src 'self' https: data:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' https: data:; frame-ancestors 'none'";
+        $csp = "default-src 'self' https: data:; " .
+               "script-src 'self' 'unsafe-inline' https:; " .
+               "style-src 'self' 'unsafe-inline' https:; " .
+               "img-src 'self' data: https:; " .
+               "font-src 'self' https: data:; " .
+               "connect-src {$connectSrc}; " .
+               "frame-ancestors 'none'";
+        
         $response->headers->set('Content-Security-Policy', $csp);
 
         if ($request->secure()) {

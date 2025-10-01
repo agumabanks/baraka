@@ -27,74 +27,131 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              to="/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              create a new account
+    <div className="min-h-screen bg-mono-black text-mono-white">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10 lg:px-12 xl:px-16">
+        <header className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em]">
+          <a
+            href="https://baraka.sanaa.ug"
+            className="text-mono-gray-300 transition-colors hover:text-mono-white"
+          >
+            ← baraka.sanaa.ug
+          </a>
+          <nav className="flex items-center gap-5 text-mono-gray-400">
+            <Link to="/register" className="transition-colors hover:text-mono-white">
+              Request access
             </Link>
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+            <Link to="/login" className="transition-colors hover:text-mono-white">
+              Sign in
+            </Link>
+          </nav>
+        </header>
 
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+        <main className="mt-16 grid flex-1 gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+          <section className="space-y-10">
+            <div className="space-y-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-mono-gray-500">
+                Baraka Control Centre
+              </p>
+              <h1 className="text-4xl font-semibold leading-tight text-mono-white sm:text-5xl">
+                Precision logistics. Monochrome clarity.
+              </h1>
+              <p className="max-w-xl text-sm leading-relaxed text-mono-gray-400">
+                Authenticate to orchestrate deliveries, finance, and support from a single,
+                minimalist cockpit. Every decision here is measured, audit-ready, and intentionally
+                monochrome.
+              </p>
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-        </form>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 text-sm text-mono-gray-300">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-mono-white" aria-hidden="true" />
+                End-to-end visibility across parcels, hubs, and riders.
+              </div>
+              <div className="flex items-start gap-3 text-sm text-mono-gray-300">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-mono-white" aria-hidden="true" />
+                Financial controls with real-time SLA intelligence.
+              </div>
+              <div className="flex items-start gap-3 text-sm text-mono-gray-300">
+                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-mono-white" aria-hidden="true" />
+                Minimalist UI engineered for focused executive decisions.
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-mono-gray-200 bg-mono-white p-10 shadow-2xl">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold text-mono-black">Sign in</h2>
+                <p className="text-sm text-mono-gray-600">
+                  Use your Baraka admin credentials. Multi-factor prompts will follow company policy.
+                </p>
+              </div>
+
+              {error && (
+                <div className="rounded-2xl border border-mono-gray-300 bg-mono-gray-100 px-4 py-3 text-sm text-mono-black">
+                  {error}
+                </div>
+              )}
+
+              <form className="space-y-5" onSubmit={handleSubmit}>
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    className="w-full rounded-2xl border border-mono-gray-300 bg-mono-white px-4 py-3 text-mono-black placeholder-mono-gray-400 focus:outline-none focus:ring-2 focus:ring-mono-black"
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">
+                    <label htmlFor="password">Password</label>
+                    <a
+                      href="/password/reset"
+                      className="text-mono-gray-400 transition-colors hover:text-mono-black"
+                    >
+                      Forgot?
+                    </a>
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    className="w-full rounded-2xl border border-mono-gray-300 bg-mono-white px-4 py-3 text-mono-black placeholder-mono-gray-400 focus:outline-none focus:ring-2 focus:ring-mono-black"
+                    placeholder="Enter password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full rounded-full border border-mono-black bg-mono-black py-3 text-sm font-semibold uppercase tracking-[0.35em] text-mono-white transition-colors hover:bg-mono-gray-900 focus:outline-none focus:ring-2 focus:ring-mono-black focus:ring-offset-2 focus:ring-offset-mono-white disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Signing in...' : 'Sign In'}
+                </button>
+              </form>
+
+              <p className="text-xs text-mono-gray-500 uppercase tracking-[0.25em]">
+                Need to register?{' '}
+                <Link to="/register" className="text-mono-black hover:text-mono-gray-700">
+                  Request an account
+                </Link>
+              </p>
+            </div>
+          </section>
+        </main>
       </div>
     </div>
   );

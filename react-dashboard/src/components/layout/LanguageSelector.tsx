@@ -2,24 +2,19 @@ import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { LanguageSelectorProps } from '../../types/header';
 
-/**
- * Language Selector Component
- * Dropdown for language switching with flag icons
- */
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   currentLanguage,
   languages,
-  onLanguageChange
+  onLanguageChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleLanguageSelect = (language: typeof currentLanguage) => {
-    onLanguageChange(language);
-    setIsOpen(false);
-  };
+  const toggle = () => setIsOpen((prev) => !prev);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+  const handleSelect = (languageCode: string) => {
+    const language = languages.find((item) => item.code === languageCode);
+    if (language) {
+      onLanguageChange(language);
       setIsOpen(false);
     }
   };
@@ -28,58 +23,37 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     <div className="relative">
       <button
         type="button"
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-mono-gray-700 hover:text-mono-black transition-colors rounded-lg hover:bg-mono-gray-50"
-        onClick={() => setIsOpen(!isOpen)}
-        onKeyDown={handleKeyDown}
-        aria-expanded={isOpen}
+        className="flex items-center gap-2 rounded-full border border-mono-gray-300 px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-mono-gray-700 transition-colors hover:border-mono-black hover:text-mono-black"
+        onClick={toggle}
         aria-haspopup="listbox"
-        aria-label="Select language"
+        aria-expanded={isOpen}
+        aria-label="Select interface language"
       >
-        <span className={`flag-icon flag-icon-${currentLanguage.flag}`} />
-        <span className="hidden md:inline">{currentLanguage.name}</span>
-        <ChevronDown
-          size={16}
-          className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-        />
+        {currentLanguage.code.toUpperCase()}
+        <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <>
-          {/* Overlay for mobile */}
-          <div
-            className="fixed inset-0 z-10 lg:hidden"
-            onClick={() => setIsOpen(false)}
-            aria-hidden="true"
-          />
-
-          {/* Dropdown menu */}
-          <div
-            className="absolute right-0 mt-2 w-48 bg-mono-white border border-mono-gray-200 rounded-lg shadow-lg z-20"
-            role="listbox"
-            aria-label="Language options"
-          >
+        <div className="absolute right-0 mt-3 w-40 rounded-2xl border border-mono-gray-200 bg-mono-white shadow-xl">
+          <ul role="listbox" className="py-2">
             {languages.map((language) => (
-              <button
-                key={language.code}
-                type="button"
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-mono-gray-50 transition-colors ${
-                  language.code === currentLanguage.code
-                    ? 'bg-mono-gray-100 text-mono-black'
-                    : 'text-mono-gray-700'
-                }`}
-                onClick={() => handleLanguageSelect(language)}
-                role="option"
-                aria-selected={language.code === currentLanguage.code}
-              >
-                <span className={`flag-icon flag-icon-${language.flag}`} />
-                <span className="text-sm font-medium">{language.name}</span>
-                {language.code === currentLanguage.code && (
-                  <span className="ml-auto text-mono-black">✓</span>
-                )}
-              </button>
+              <li key={language.code} role="option" aria-selected={language.code === currentLanguage.code}>
+                <button
+                  type="button"
+                  className={`flex w-full items-center justify-between px-4 py-2 text-sm transition-colors ${
+                    language.code === currentLanguage.code
+                      ? 'bg-mono-gray-100 text-mono-black'
+                      : 'text-mono-gray-700 hover:bg-mono-gray-50 hover:text-mono-black'
+                  }`}
+                  onClick={() => handleSelect(language.code)}
+                >
+                  <span>{language.name}</span>
+                  {language.code === currentLanguage.code && <span className="text-xs">✓</span>}
+                </button>
+              </li>
             ))}
-          </div>
-        </>
+          </ul>
+        </div>
       )}
     </div>
   );

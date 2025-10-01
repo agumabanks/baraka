@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { X } from 'lucide-react';
 import type { SidebarProps } from '../../types/navigation';
 import SidebarItem from './SidebarItem';
@@ -16,31 +16,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   onNavigate,
   className = ''
 }) => {
-  // const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({});
-
-  // Load bucket expansion state from localStorage on mount
-  useEffect(() => {
-    const savedState: Record<string, boolean> = {};
-    navigation.buckets.forEach(bucket => {
-      const key = `admin.sidebar.bucketState.${bucket.id}`;
-      const saved = localStorage.getItem(key);
-      if (saved === 'open') {
-        savedState[bucket.id] = true;
-      }
-    });
-    // setExpandedBuckets(savedState);
-  }, [navigation.buckets]);
-
-  // Handle bucket toggle with localStorage persistence
-  // const handleBucketToggle = useCallback((bucketId: string) => {
-  //   setExpandedBuckets(prev => {
-  //     const newState = { ...prev, [bucketId]: !prev[bucketId] };
-  //     const key = `admin.sidebar.bucketState.${bucketId}`;
-  //     localStorage.setItem(key, newState[bucketId] ? 'open' : 'closed');
-  //     return newState;
-  //   });
-  // }, []);
-
   // Handle navigation item click
   const handleNavigate = useCallback((path?: string) => {
     if (path && onNavigate) {
@@ -121,12 +96,14 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation content */}
         <div className="flex flex-col h-full">
-          {/* Language switcher placeholder (can be added later) */}
           <div className="px-6 pb-4">
-            <div className="bg-mono-gray-50 border border-mono-gray-200 rounded-xl p-3">
-              <div className="text-sm text-mono-gray-600 font-medium">
-                Language Switcher
-              </div>
+            <div className="rounded-2xl border border-mono-gray-200 bg-mono-gray-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">
+                Control Pulse
+              </p>
+              <p className="mt-1 text-sm text-mono-gray-600">
+                Navigate the operational spine. Every link is monochrome and deliberate.
+              </p>
             </div>
           </div>
 

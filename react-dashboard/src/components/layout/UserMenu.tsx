@@ -21,22 +21,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, onLogout }) => {
       label: 'Profile',
       icon: User,
       href: `/profile/${user.id}`,
-      action: () => {
-        // Navigate to profile
-        console.log('Navigate to profile');
-        setIsOpen(false);
-      }
     },
     {
       label: 'Change Password',
       icon: Key,
       href: `/password/change/${user.id}`,
-      action: () => {
-        // Navigate to change password
-        console.log('Navigate to change password');
-        setIsOpen(false);
-      }
-    }
+    },
   ];
 
   return (
@@ -107,7 +97,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, onLogout }) => {
                     key={index}
                     type="button"
                     className="w-full flex items-center gap-3 px-4 py-2 text-left text-mono-gray-700 hover:bg-mono-gray-50 hover:text-mono-black transition-colors"
-                    onClick={item.action}
+                    onClick={() => {
+                      if (item.href) {
+                        window.location.href = item.href;
+                      }
+                      setIsOpen(false);
+                    }}
                     role="menuitem"
                   >
                     <Icon size={16} />
