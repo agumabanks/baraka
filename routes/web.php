@@ -122,6 +122,21 @@ use App\Http\Middleware\XSS;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+$serveReactDashboard = static function (array $context = []) {
+    $reactIndexPath = public_path('react-dashboard/index.html');
+
+    if (! file_exists($reactIndexPath)) {
+        \Log::error('React dashboard build missing at '.$reactIndexPath);
+
+        return response()->view('react-fallback', array_merge([
+            'title' => 'Dashboard - Fallback Mode',
+            'error' => 'React dashboard bundle is not available.',
+        ], $context), 503);
+    }
+
+    return response()->file($reactIndexPath);
+};
+
 // installer
 Route::middleware(['XSS', 'IsNotInstalled'])->group(function () {
     Route::get('install', [InstallerController::class, 'index']);
@@ -219,7 +234,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 });
 
 // end installer
-Route::middleware(['XSS', 'IsInstalled'])->group(function () {
+Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDashboard) {
     Auth::routes();
 
     // frontend
@@ -280,13 +295,21 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
     Route::get('/facebook/login', [SocialLoginController::class, 'authFacebookLogin']); // facebook login, need url add in your facebook app
     // end social authentication
     Route::get('localization/{language}', [LocalizationController::class, 'setLocalization'])->name('setlocalization');
-    Route::group(['middleware' => 'auth'], function () {
+
+    Route::get('/react-dashboard/{any?}', function () use ($serveReactDashboard) {
+        return $serveReactDashboard();
+    })->where('any', '.*')->name('react.app');
+
+    Route::group(['middleware' => 'auth'], function () use ($serveReactDashboard) {
         // XSS Protection
-        Route::group(['middleware' => 'XSS'], function () {
+        Route::group(['middleware' => 'XSS'], function () use ($serveReactDashboard) {
 
             // Route::get('/home',[HomeController::class, 'index'])->name('home');
             // Admin Dashboard Controller
-            Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+            Route::get('/dashboard', function () use ($serveReactDashboard) {
+                return $serveReactDashboard();
+            })->name('dashboard.index');
+            Route::get('/dashboard-legacy', [DashboardController::class, 'index'])->name('dashboard.legacy');
             Route::post('search-charts', [DashboardController::class, 'searchCharts'])->name('search-charts');
             // Admin Category Controller
             Route::get('category/index', [CategoryController::class, 'index'])->name('category.index')->middleware('hasPermission:category_read');
@@ -1195,32 +1218,13 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
         Route::post('/store-token', [WebNotificationController::class, 'store'])->name('notification-store.token');
     });
 
-          // React SPA Route - Catch all admin/dashboard routes for authenticated users
-     Route::get('/admin/{any?}', function () {
-         // Check if user is authenticated
-         if (!auth()->check()) {
-             return redirect()->route('login');
-         }
+        // React SPA Route - Catch all admin/dashboard routes for authenticated users
+        Route::get('/admin/{any?}', function () use ($serveReactDashboard) {
+            if (! auth()->check()) {
+                return redirect()->route('login');
+            }
 
-         try {
-             // Check if React app files exist
-             $reactIndexPath = public_path('react-dashboard/index.html');
-             if (!file_exists($reactIndexPath)) {
-                 throw new \Exception('React app not found');
-             }
-
-             // Serve React SPA for authenticated admin users
-             return response()->file($reactIndexPath);
-         } catch (\Exception $e) {
-             // Log the error
-             \Log::error('React SPA loading failed: ' . $e->getMessage());
-
-             // Fallback to Blade view if React app fails to load
-             return response()->view('react-fallback', [
-                 'error' => $e->getMessage(),
-                 'title' => 'Dashboard - Fallback Mode'
-             ]);
-         }
-     })->where('any', '.*')->name('react.spa');
+            return $serveReactDashboard();
+        })->where('any', '.*')->name('react.spa');
    Route::get('/deliveryMan/parcel/map/{id}/{lat}/{long}/{status}', [MapParcelController::class, 'parcelMap']);
 });

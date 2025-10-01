@@ -1,11 +1,45 @@
 import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const resolveApiBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_URL as string | undefined;
+
+  if (envUrl && envUrl.trim().length > 0) {
+    return envUrl.replace(/\/$/, '');
+  }
+
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/api`;
+  }
+
+  return '/api';
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
+
+const resolveSanctumUrl = (): string => {
+  const envSanctum = import.meta.env.VITE_SANCTUM_URL as string | undefined;
+
+  if (envSanctum && envSanctum.trim().length > 0) {
+    return envSanctum;
+  }
+
+  try {
+    const resolved = new URL(API_BASE_URL, typeof window !== 'undefined' ? window.location.origin : undefined);
+    return `${resolved.origin}/sanctum/csrf-cookie`;
+  } catch (error) {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/sanctum/csrf-cookie`;
+    }
+    return '/sanctum/csrf-cookie';
+  }
+};
+
+const SANCTUM_URL = resolveSanctumUrl();
 
 // Create axios instance with default config
 const api: AxiosInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -44,7 +78,7 @@ api.interceptors.response.use(
 
 // Get CSRF token from Laravel Sanctum
 export const getCsrfToken = async (): Promise<void> => {
-  await axios.get(`${API_URL.replace('/api', '')}/sanctum/csrf-cookie`, {
+  await axios.get(SANCTUM_URL, {
     withCredentials: true,
   });
 };

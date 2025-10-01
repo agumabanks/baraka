@@ -78,7 +78,7 @@ This project includes a modern React-based admin dashboard integrated with Larav
    The React app uses the following environment variables (configured in Laravel `.env`):
    ```env
    REACT_APP_URL=http://localhost
-   REACT_API_URL=http://localhost/api
+   REACT_API_URL=https://baraka.sanaa.ug/api
    SANCTUM_STATEFUL_DOMAINS=http://localhost
    ```
 
@@ -90,12 +90,12 @@ This project includes a modern React-based admin dashboard integrated with Larav
    ```
 
 5. **Access Dashboard**
-   - Login at: `http://localhost/login`
-   - Dashboard at: `http://localhost/admin`
+   - Login at: `https://baraka.sanaa.ug/login`
+   - Dashboard at: `https://baraka.sanaa.ug/admin`
    - Admin credentials: `info@baraka.co` / `admin`
 
 ### API Endpoints
-
+<!-- https://baraka.sanaa.ug/react-dashboard/login -->
 #### Authentication
 - `POST /api/auth/login` - Login with email/password
 - `POST /api/auth/logout` - Logout current session
@@ -227,13 +227,13 @@ Use Sanctum personal access tokens with device binding:
 
 ```bash
 # Login
-curl -X POST http://localhost/api/v1/login \
+curl -X POST https://baraka.sanaa.ug/api/v1/login \
   -H "Content-Type: application/json" \
   -H "device_uuid: your-device-uuid" \
   -d '{"email":"merchant@demo.com","password":"password"}'
 
 # Use token in subsequent requests
-curl -X GET http://localhost/api/v1/shipments \
+curl -X GET https://baraka.sanaa.ug/api/v1/shipments \
   -H "Authorization: Bearer your-token-here"
 ```
 
@@ -244,7 +244,7 @@ Use session-based authentication (existing web login).
 
 #### Create Shipment
 ```bash
-curl -X POST http://localhost/api/v1/shipments \
+curl -X POST https://baraka.sanaa.ug/api/v1/shipments \
   -H "Authorization: Bearer your-token" \
   -H "Idempotency-Key: unique-key-123" \
   -H "Content-Type: application/json" \
@@ -260,12 +260,12 @@ curl -X POST http://localhost/api/v1/shipments \
 
 #### Track Shipment
 ```bash
-curl -X GET http://localhost/api/v1/tracking/your-public-token
+curl -X GET https://baraka.sanaa.ug/api/v1/tracking/your-public-token
 ```
 
 #### Admin: Update Customer
 ```bash
-curl -X PATCH http://localhost/api/v1/admin/customers/1 \
+curl -X PATCH https://baraka.sanaa.ug/api/v1/admin/customers/1 \
   -H "Cookie: laravel_session=your-session-cookie" \
   -H "Idempotency-Key: update-customer-123" \
   -H "Content-Type: application/json" \
@@ -274,7 +274,7 @@ curl -X PATCH http://localhost/api/v1/admin/customers/1 \
 
 #### Create Quotation
 ```bash
-curl -X POST http://localhost/api/v1/quotes \
+curl -X POST https://baraka.sanaa.ug/api/v1/quotes \
   -H "Authorization: Bearer your-token" \
   -H "Idempotency-Key: quote-key-123" \
   -H "Content-Type: application/json" \
@@ -290,7 +290,7 @@ curl -X POST http://localhost/api/v1/quotes \
 
 #### Submit Driver Location
 ```bash
-curl -X POST http://localhost/api/v1/driver/locations \
+curl -X POST https://baraka.sanaa.ug/api/v1/driver/locations \
   -H "Authorization: Bearer driver-token" \
   -H "Content-Type: application/json" \
   -d '{
@@ -308,7 +308,7 @@ curl -X POST http://localhost/api/v1/driver/locations \
 
 #### Submit POD
 ```bash
-curl -X POST http://localhost/api/v1/tasks/1/pod \
+curl -X POST https://baraka.sanaa.ug/api/v1/tasks/1/pod \
   -H "Authorization: Bearer driver-token" \
   -H "Idempotency-Key: pod-key-123" \
   -F "signature=@signature.png" \
@@ -318,7 +318,7 @@ curl -X POST http://localhost/api/v1/tasks/1/pod \
 
 #### Assign Driver to Shipment
 ```bash
-curl -X POST http://localhost/api/v1/dispatch/assign \
+curl -X POST https://baraka.sanaa.ug/api/v1/dispatch/assign \
   -H "Cookie: laravel_session=admin-session" \
   -H "Idempotency-Key: assign-key-123" \
   -H "Content-Type: application/json" \

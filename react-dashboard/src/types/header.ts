@@ -47,6 +47,7 @@ export interface HeaderProps {
   onLogout: () => void;
   logoUrl?: string;
   appName?: string;
+  isSidebarOpen?: boolean;
 }
 
 export interface UserMenuProps {
