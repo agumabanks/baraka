@@ -1,18 +1,29 @@
 import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
+const DEFAULT_DEV_API_BASE = 'http://localhost:8000/api';
+const DEFAULT_PROD_API_BASE = 'https://baraka.sanaa.ug/api';
+
+const sanitizeBaseUrl = (url: string): string => url.replace(/\/$/, '');
+
 const resolveApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL as string | undefined;
 
   if (envUrl && envUrl.trim().length > 0) {
-    return envUrl.replace(/\/$/, '');
+    return sanitizeBaseUrl(envUrl);
   }
 
   if (typeof window !== 'undefined') {
-    return `${window.location.origin}/api`;
+    const { hostname } = window.location;
+
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+      return DEFAULT_DEV_API_BASE;
+    }
+
+    return DEFAULT_PROD_API_BASE;
   }
 
-  return '/api';
+  return import.meta.env.PROD ? DEFAULT_PROD_API_BASE : DEFAULT_DEV_API_BASE;
 };
 
 const API_BASE_URL = resolveApiBaseUrl();
@@ -25,13 +36,13 @@ const resolveSanctumUrl = (): string => {
   }
 
   try {
-    const resolved = new URL(API_BASE_URL, typeof window !== 'undefined' ? window.location.origin : undefined);
+    const resolved = new URL(API_BASE_URL);
     return `${resolved.origin}/sanctum/csrf-cookie`;
   } catch (error) {
     if (typeof window !== 'undefined') {
-      return `${window.location.origin}/sanctum/csrf-cookie`;
+      return `${window.location.origin.replace(/\/$/, '')}/sanctum/csrf-cookie`;
     }
-    return '/sanctum/csrf-cookie';
+    return `${DEFAULT_PROD_API_BASE.replace(/\/$/, '')}/sanctum/csrf-cookie`;
   }
 };
 
