@@ -10,6 +10,7 @@ const api: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'apiKey': '123456rx-ecourier123456', // Required API key for backend
   },
 });
 

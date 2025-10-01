@@ -90,13 +90,13 @@ const PieChart: React.FC<PieChartProps> = ({
   if (error) {
     return (
       <div
-        className="bg-red-50 border border-red-200 rounded-lg flex items-center justify-center"
+        className="bg-mono-gray-50 border border-mono-gray-300 rounded-lg flex items-center justify-center px-6 text-center"
         style={{ height }}
         role="alert"
         aria-live="assertive"
       >
-        <div className="text-red-600 text-sm">
-          Error loading chart: {error}
+        <div className="text-sm text-mono-gray-600">
+          {error ? `Unable to render chart: ${error}` : 'Unable to render chart'}
         </div>
       </div>
     );

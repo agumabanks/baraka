@@ -16,9 +16,11 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ children, className = '', header, footer }) => {
   return (
-    <div className={`bg-mono-white border border-mono-gray-200 rounded-lg shadow-subtle hover:shadow-normal transition-shadow ${className}`}>
+    <div
+      className={`bg-mono-white border border-mono-gray-200 rounded-2xl shadow-lg transition-shadow hover:shadow-xl ${className}`}
+    >
       {header && (
-        <div className="px-6 py-4 border-b border-mono-gray-200">
+        <div className="px-6 py-4 border-b border-mono-gray-200 bg-mono-gray-25">
           {header}
         </div>
       )}

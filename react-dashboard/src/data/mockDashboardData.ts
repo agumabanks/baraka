@@ -335,12 +335,16 @@ export const mockQuickActions: QuickAction[] = [
     icon: 'fas fa-clipboard-check',
     url: '/booking/step1',
     badge: 3,
+    shortcut: 'Ctrl+B',
+    description: 'Launch the guided booking flow',
   },
   {
     id: 'bulk-upload',
     title: 'Bulk Upload',
     icon: 'fas fa-file-upload',
     url: '/parcels/import',
+    shortcut: 'Ctrl+U',
+    description: 'Upload parcels from a spreadsheet',
   },
   {
     id: 'view-parcels',
@@ -348,6 +352,7 @@ export const mockQuickActions: QuickAction[] = [
     icon: 'fas fa-dolly',
     url: '/parcels',
     badge: 2847,
+    description: 'Inspect the live parcel pipeline',
   },
 ];
 
