@@ -132,7 +132,7 @@ Route::middleware(['XSS'])->group(function () {
 });
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('customers', CustomerController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+    Route::resource('customers', CustomerController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
     Route::get('booking', [BookingWizardController::class, 'step1'])->name('booking.step1');
 
     // Operations
@@ -1195,5 +1195,32 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () {
         Route::post('/store-token', [WebNotificationController::class, 'store'])->name('notification-store.token');
     });
 
-    Route::get('/deliveryMan/parcel/map/{id}/{lat}/{long}/{status}', [MapParcelController::class, 'parcelMap']);
+          // React SPA Route - Catch all admin/dashboard routes for authenticated users
+     Route::get('/admin/{any?}', function () {
+         // Check if user is authenticated
+         if (!auth()->check()) {
+             return redirect()->route('login');
+         }
+
+         try {
+             // Check if React app files exist
+             $reactIndexPath = public_path('react-dashboard/index.html');
+             if (!file_exists($reactIndexPath)) {
+                 throw new \Exception('React app not found');
+             }
+
+             // Serve React SPA for authenticated admin users
+             return response()->file($reactIndexPath);
+         } catch (\Exception $e) {
+             // Log the error
+             \Log::error('React SPA loading failed: ' . $e->getMessage());
+
+             // Fallback to Blade view if React app fails to load
+             return response()->view('react-fallback', [
+                 'error' => $e->getMessage(),
+                 'title' => 'Dashboard - Fallback Mode'
+             ]);
+         }
+     })->where('any', '.*')->name('react.spa');
+   Route::get('/deliveryMan/parcel/map/{id}/{lat}/{long}/{status}', [MapParcelController::class, 'parcelMap']);
 });

@@ -49,6 +49,94 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## React Dashboard
+
+This project includes a modern React-based admin dashboard integrated with Laravel, featuring a monochrome Steve Jobs-inspired design.
+
+### Dashboard Features
+
+- **Authentication**: Laravel Sanctum-based login/logout with protected routes
+- **Dashboard**: KPI cards, charts, workflow queue, and real-time metrics
+- **Responsive Design**: Mobile-first approach with monochrome theme
+- **API Integration**: RESTful API endpoints for dashboard data
+- **Error Handling**: Comprehensive error boundaries and fallback states
+
+### Setup
+
+1. **Install Dependencies**
+   ```bash
+   cd react-dashboard
+   npm install
+   ```
+
+2. **Build for Production**
+   ```bash
+   npm run build
+   ```
+
+3. **Environment Configuration**
+   The React app uses the following environment variables (configured in Laravel `.env`):
+   ```env
+   REACT_APP_URL=http://localhost
+   REACT_API_URL=http://localhost/api
+   SANCTUM_STATEFUL_DOMAINS=http://localhost
+   ```
+
+4. **Laravel Configuration**
+   Add to your `.env` file:
+   ```env
+   SANCTUM_STATEFUL_DOMAINS=localhost,127.0.0.1
+   SANCTUM_GUARD=web
+   ```
+
+5. **Access Dashboard**
+   - Login at: `http://localhost/login`
+   - Dashboard at: `http://localhost/admin`
+   - Admin credentials: `info@baraka.co` / `admin`
+
+### API Endpoints
+
+#### Authentication
+- `POST /api/auth/login` - Login with email/password
+- `POST /api/auth/logout` - Logout current session
+- `GET /api/auth/user` - Get authenticated user info
+
+#### Dashboard Data
+- `GET /api/v10/dashboard/data` - Complete dashboard data
+- `GET /api/v10/dashboard/kpis` - KPI metrics only
+- `GET /api/v10/dashboard/charts` - Chart data only
+- `GET /api/v10/dashboard/workflow-queue` - Workflow items
+
+#### Headers Required
+All dashboard API requests require:
+```
+Authorization: Bearer <token>
+apiKey: 123456rx-ecourier123456
+```
+
+### Deployment
+
+1. **Build React App**
+   ```bash
+   cd react-dashboard
+   npm run build
+   ```
+
+2. **Serve Static Files**
+   The built files are automatically served from `public/react-dashboard/` by Laravel routes.
+
+3. **Production Environment**
+   ```env
+   APP_ENV=production
+   APP_URL=https://yourdomain.com
+   SANCTUM_STATEFUL_DOMAINS=https://yourdomain.com
+   REACT_APP_URL=https://yourdomain.com
+   REACT_API_URL=https://yourdomain.com/api
+   ```
+
+4. **Web Server Configuration**
+   Ensure your web server serves the React app from `/admin/*` routes to `public/react-dashboard/index.html`.
+
 ## API v1 Documentation
 
 This project includes a REST API v1 for DHL-style logistics operations, supporting both mobile clients and admin dashboards.
@@ -262,6 +350,51 @@ Run the API tests:
 
 ```bash
 php artisan test tests/Feature/Api/V1/
+```
+
+### Troubleshooting
+
+#### React Dashboard Issues
+
+**Dashboard not loading after login:**
+- Ensure React app is built: `cd react-dashboard && npm run build`
+- Check Laravel routes: `/admin/*` should serve `public/react-dashboard/index.html`
+- Verify Sanctum configuration in `.env`
+
+**API authentication errors:**
+- Check `apiKey` header: must be `123456rx-ecourier123456`
+- Verify Bearer token is valid and not expired
+- Ensure user has admin role for dashboard access
+
+**CORS issues:**
+- Add your domain to `SANCTUM_STATEFUL_DOMAINS` in `.env`
+- Clear config cache: `php artisan config:clear`
+
+**Build issues:**
+- Clear node_modules: `rm -rf node_modules && npm install`
+- Check Node.js version: requires Node 16+
+- Verify Vite configuration in `react-dashboard/vite.config.ts`
+
+#### Common Laravel Issues
+
+**Database connection:**
+```bash
+php artisan migrate:status
+php artisan config:clear
+```
+
+**Permission issues:**
+```bash
+chmod -R 755 storage/
+chmod -R 755 bootstrap/cache/
+```
+
+**Queue/cache issues:**
+```bash
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 ```
 
 ### Feature Flags
