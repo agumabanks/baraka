@@ -395,7 +395,7 @@
                                         @if (hasPermission('hub_payment_read') == true)
                                             <li class="nav-item">
                                                 <a class="nav-link {{ request()->is('admin/request/hub/payment*') ? 'active' : '' }}"
-                                                    href="{{ route('hub.hub-payment.index') }}">{{ __('menus.payments') }}</a>
+                                                    href="{{ route('hub.hub-payment.index') }}">{{ __('menus.payments') }} </a>
                                             </li>
                                         @endif
                                     </ul>

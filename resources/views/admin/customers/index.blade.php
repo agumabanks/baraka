@@ -66,6 +66,15 @@
                                                 @can('update', $customer)
                                                     <a href="{{ route('admin.customers.edit', $customer) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fa fa-edit"></i></a>
                                                 @endcan
+                                                @can('delete', $customer)
+                                                    <form action="{{ route('admin.customers.destroy', $customer) }}" method="POST" style="display: inline;">
+                                                        @method('DELETE')
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete" data-title="Are you sure you want to delete this customer?">
+                                                            <i class="fa fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             </div>
                                         </td>
                                     </tr>
@@ -94,3 +103,33 @@
 </div>
 @endsection
 
+@push('scripts')
+<script>
+$(document).ready(function(){
+    // Handle delete confirmation with SweetAlert2
+    $('form[action*="customers"][method="POST"]').on('submit', function(e){
+        e.preventDefault();
+        
+        var form = $(this);
+        var title = $(this).find('button[type="submit"]').data('title') || 'Are you sure you want to delete this customer?';
+        
+        Swal.fire({
+            text: title,
+            position: 'top',
+            showConfirmButton: true,
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#dc3741',
+            cancelButtonColor: '#6e7881'
+        }).then((result) => {
+            if (result.isConfirmed){
+                form[0].submit();
+            }
+        });
+        
+        return false;
+    });
+});
+</script>
+@endpush

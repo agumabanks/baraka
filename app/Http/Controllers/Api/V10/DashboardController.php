@@ -272,6 +272,8 @@ class DashboardController extends Controller
         $parcels = ParcelResource::collection($available_parcel);
 
         return $parcels;
+    }
+
     /**
      * Get real-time dashboard updates for WebSocket broadcasting
      */

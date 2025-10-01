@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\BookingWizardController;
+use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Controllers\Api\V10\AccountTransactionController;
 use App\Http\Controllers\Api\V10\AnalyticsController;
 use App\Http\Controllers\Api\V10\AuthController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Api\V10\SearchController;
 use App\Http\Controllers\Api\V10\SettingsController;
 use App\Http\Controllers\Api\V10\ShopsController;
 use App\Http\Controllers\Api\V10\StatementsController;
+use App\Http\Controllers\Api\AuthController as ReactAuthController;
 use App\Http\Controllers\Api\V10\SupportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +39,17 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+// React Dashboard Authentication Routes
+Route::prefix('auth')->group(function () {
+    Route::post('login', [ReactAuthController::class, 'login']);
+    Route::post('register', [ReactAuthController::class, 'register']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [ReactAuthController::class, 'logout']);
+        Route::get('user', [ReactAuthController::class, 'user']);
+    });
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -73,6 +86,12 @@ Route::prefix('v10')->group(function () {
             Route::get('/dashboard/filter', [DashboardController::class, 'filter']);
             Route::get('/dashboard/updates', [DashboardController::class, 'updates']);
             Route::get('/dashboard/realtime-status', [DashboardController::class, 'realtimeStatus']);
+
+            // React Dashboard API endpoints
+            Route::get('/dashboard/data', [DashboardApiController::class, 'index']);
+            Route::get('/dashboard/kpis', [DashboardApiController::class, 'kpis']);
+            Route::get('/dashboard/charts', [DashboardApiController::class, 'charts']);
+            Route::get('/dashboard/workflow-queue', [DashboardApiController::class, 'workflowQueue']);
             Route::get('/profile', [AuthController::class, 'profile']);
             Route::post('/profile/update', [AuthController::class, 'profileUpdate']);
             // push notification
