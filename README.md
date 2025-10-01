@@ -89,7 +89,14 @@ This project includes a modern React-based admin dashboard integrated with Larav
    SANCTUM_GUARD=web
    ```
 
-5. **Access Dashboard**
+5. **Content Security Policy (CSP)**
+   If your frontend needs to call APIs hosted on a different origin (for example `http://localhost:8000` during local development), whitelist them with the `CSP_CONNECT_SRC` variable in `.env`:
+   ```env
+   CSP_CONNECT_SRC="http://localhost:8000"
+   ```
+   Multiple values can be provided by separating them with spaces.
+
+6. **Access Dashboard**
    - Login at: `https://baraka.sanaa.ug/login`
    - Dashboard at: `https://baraka.sanaa.ug/admin`
    - Admin credentials: `info@baraka.co` / `admin`
