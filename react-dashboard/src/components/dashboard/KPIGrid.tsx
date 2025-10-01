@@ -33,14 +33,32 @@ const KPIGrid: React.FC<KPIGridProps> = ({
   },
   onKPIClick,
 }) => {
+  const resolveGridClass = (prefix: string | null, count?: number) => {
+    if (!count) return null;
+    const map: Record<number, string> = {
+      1: 'grid-cols-1',
+      2: 'grid-cols-2',
+      3: 'grid-cols-3',
+      4: 'grid-cols-4',
+      5: 'grid-cols-5',
+      6: 'grid-cols-6',
+    };
+    const utility = map[count];
+    if (!utility) return null;
+    return prefix ? `${prefix}:${utility}` : utility;
+  };
+
   // Build responsive grid classes
   const gridClasses = [
-    'grid gap-4',
-    `grid-cols-${columns.mobile}`,
-    `md:grid-cols-${columns.tablet}`,
-    `lg:grid-cols-${columns.desktop}`,
-    `xl:grid-cols-${columns.wide}`,
-  ].join(' ');
+    'grid',
+    'gap-4',
+    resolveGridClass(null, columns.mobile ?? 1),
+    resolveGridClass('md', columns.tablet ?? 2),
+    resolveGridClass('lg', columns.desktop ?? 3),
+    resolveGridClass('xl', columns.wide ?? 4),
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   // Handle KPI click
   const handleKPIClick = (kpi: KPICardType) => {

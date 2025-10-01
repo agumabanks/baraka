@@ -110,7 +110,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Router>
+        <Router basename="/react-dashboard">
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />

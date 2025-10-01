@@ -8,21 +8,26 @@ export default {
     extend: {
       colors: {
         mono: {
-          black: '#000000',
-          gray: {
-            900: '#1a1a1a',
-            800: '#2d2d2d',
-            700: '#404040',
-            600: '#666666',
-            500: '#808080',
-            400: '#999999',
-            300: '#b3b3b3',
-            200: '#cccccc',
-            100: '#e6e6e6',
-            50: '#f5f5f5',
-          },
+          black: '#111111',
           white: '#ffffff',
+          gray: {
+            25: '#fcfcfc',
+            50: '#fafafa',
+            100: '#f3f4f6',
+            200: '#e5e7eb',
+            300: '#d1d5db',
+            400: '#9ca3af',
+            500: '#6b7280',
+            600: '#4b5563',
+            700: '#404040',
+            800: '#2d2d2d',
+            900: '#1f2937',
+          },
         },
+      },
+      borderRadius: {
+        'xl': '18px',
+        '2xl': '20px',
       },
       fontFamily: {
         primary: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
@@ -31,6 +36,8 @@ export default {
         subtle: '0 1px 3px rgba(0, 0, 0, 0.08)',
         normal: '0 2px 8px rgba(0, 0, 0, 0.12)',
         elevated: '0 4px 16px rgba(0, 0, 0, 0.16)',
+        lg: '0 18px 36px rgba(15, 23, 42, 0.05)',
+        xl: '0 32px 70px rgba(15, 23, 42, 0.08)',
       },
       spacing: {
         '18': '4.5rem',

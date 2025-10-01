@@ -11,7 +11,7 @@ export type TrendDirection = 'up' | 'down' | 'stable';
 /**
  * Visual state for KPI cards
  */
-export type KPIState = 'success' | 'warning' | 'neutral' | 'critical';
+export type KPIState = 'success' | 'warning' | 'neutral' | 'critical' | 'loading' | 'empty';
 
 /**
  * Trend information for metrics
@@ -49,6 +49,8 @@ export interface KPICard {
   tooltip?: string;
   /** Loading state */
   loading?: boolean;
+  /** KPI identifier for data attributes */
+  kpi?: string;
 }
 
 /**
@@ -97,7 +99,7 @@ export interface WorkflowItem {
   /** Current status */
   status: WorkflowStatus;
   /** Priority level (1-5, 5 being highest) */
-  priority?: number;
+  priority?: number | 'low' | 'medium' | 'high';
   /** Assigned user */
   assignedTo?: string;
   /** Due date */
@@ -193,6 +195,10 @@ export interface QuickAction {
   badge?: number;
   /** Permission required */
   permission?: string;
+  /** Short description */
+  description?: string;
+  /** Keyboard shortcut hint */
+  shortcut?: string;
 }
 
 /**
