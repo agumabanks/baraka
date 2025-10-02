@@ -10,6 +10,29 @@ const ALIAS_TO_CANONICAL: Record<string, string> = {
   customers: 'customers',
 };
 
+const stripPrefix = (path: string, prefix: string) => {
+  if (!path) {
+    return '';
+  }
+
+  if (path === prefix) {
+    return '';
+  }
+
+  const prefixWithSlash = `${prefix}/`;
+  if (path.startsWith(prefixWithSlash)) {
+    return path.slice(prefixWithSlash.length);
+  }
+
+  return path;
+};
+
+const stripKnownPrefixes = (path: string) => {
+  const prefixes = ['dashboard', 'admin', 'merchant'];
+
+  return prefixes.reduce((acc, prefix) => stripPrefix(acc, prefix), path);
+};
+
 export const canonicalisePath = (rawPath?: string): string => {
   if (!rawPath) {
     return '';
@@ -31,18 +54,13 @@ export const resolveRoutePath = (rawPath?: string): string => {
     return '';
   }
 
-  const withoutDashboardPrefix =
-    canonical === 'dashboard'
-      ? ''
-      : canonical.startsWith('dashboard/')
-      ? canonical.slice('dashboard/'.length)
-      : canonical;
+  const withoutPrefixes = stripKnownPrefixes(canonical);
 
-  if (!withoutDashboardPrefix) {
+  if (!withoutPrefixes) {
     return '';
   }
 
-  return ROUTE_ALIASES[withoutDashboardPrefix] ?? withoutDashboardPrefix;
+  return ROUTE_ALIASES[withoutPrefixes] ?? withoutPrefixes;
 };
 
 export const resolveDashboardNavigatePath = (rawPath?: string): string => {
@@ -52,12 +70,8 @@ export const resolveDashboardNavigatePath = (rawPath?: string): string => {
     return '/dashboard';
   }
 
-  const withoutDashboardPrefix =
-    canonical.startsWith('dashboard/')
-      ? canonical.slice('dashboard/'.length)
-      : canonical;
-
-  const alias = ROUTE_ALIASES[withoutDashboardPrefix] ?? withoutDashboardPrefix;
+  const withoutPrefixes = stripKnownPrefixes(canonical);
+  const alias = ROUTE_ALIASES[withoutPrefixes] ?? withoutPrefixes;
   return alias ? `/dashboard/${alias}`.replace('//', '/') : '/dashboard';
 };
 

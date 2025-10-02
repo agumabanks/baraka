@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { t } from '../../lib/i18n';
 import { getUserPermissions, hasPermission } from '../../lib/rbac';
+import { canonicalisePath, resolveDashboardNavigatePath } from '../../lib/spaNavigation';
 import type { QuickAction as DashboardQuickAction } from '../../types/dashboard';
 
 interface QuickActionsProps {
@@ -53,15 +54,43 @@ const FALLBACK_ACTIONS: DashboardQuickAction[] = [
 const QuickActions: React.FC<QuickActionsProps> = ({ actions, loading = false }) => {
   const navigate = useNavigate();
 
-  const handleActionClick = (url: string) => {
-    if (!url) return;
-
-    if (/^https?:/i.test(url)) {
-      window.open(url, '_blank', 'noopener,noreferrer');
-      return;
+  const resolveActionTarget = (url: string) => {
+    if (!url) {
+      return { type: 'none' as const };
     }
 
-    navigate(url);
+    if (/^(https?:|mailto:|tel:)/i.test(url)) {
+      return { type: 'external' as const, href: url };
+    }
+
+    const canonical = canonicalisePath(url);
+    if (!canonical) {
+      return { type: 'external' as const, href: url };
+    }
+
+    const spaPath = resolveDashboardNavigatePath(canonical);
+
+    if (!spaPath || (spaPath === '/dashboard' && canonical !== 'dashboard')) {
+      const fallbackHref = url.startsWith('/') ? url : `/${canonical}`;
+      return { type: 'external' as const, href: fallbackHref };
+    }
+
+    return { type: 'internal' as const, path: spaPath };
+  };
+
+  const handleActionClick = (url: string) => {
+    const target = resolveActionTarget(url);
+
+    switch (target.type) {
+      case 'internal':
+        navigate(target.path);
+        break;
+      case 'external':
+        window.open(target.href, '_blank', 'noopener,noreferrer');
+        break;
+      default:
+        break;
+    }
   };
 
   const userPermissions = getUserPermissions();
@@ -126,12 +155,20 @@ const QuickActions: React.FC<QuickActionsProps> = ({ actions, loading = false })
           ? badgeVariantClasses[badgeObject.variant || 'default']
           : '';
 
+        const target = resolveActionTarget(action.url);
+        const resolvedHref = target.type === 'internal'
+          ? target.path
+          : target.type === 'external'
+            ? target.href
+            : undefined;
+
         return (
-        <button
-          key={action.id}
-          onClick={() => handleActionClick(action.url)}
-          className="relative bg-mono-white border border-mono-gray-200 rounded-2xl p-6 shadow-lg transition-all duration-200 transform hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-mono-black focus:ring-offset-2 text-left group"
+          <button
+            key={action.id}
+            onClick={() => handleActionClick(action.url)}
+            className="relative bg-mono-white border border-mono-gray-200 rounded-2xl p-6 shadow-lg transition-all duration-200 transform hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-mono-black focus:ring-offset-2 text-left group"
           aria-label={`${action.title}${action.shortcut ? ` (${action.shortcut})` : ''}`}
+          data-action-target={resolvedHref}
         >
           {badgeObject && (typeof badgeObject.count === 'number' ? badgeObject.count > 0 : !!badgeObject.count) && (
             <span className={`absolute top-4 right-4 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold ${badgeClasses}`}>
