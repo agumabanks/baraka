@@ -1,4 +1,4 @@
-import type { User, Language, Notification, BreadcrumbItem } from '../types/header';
+import type { User, Language, Notification, BreadcrumbItem, HeaderQuickAction } from '../types/header';
 
 /**
  * Mock data for Header component demonstration
@@ -15,12 +15,8 @@ export const mockUser: User = {
 
 export const mockLanguages: Language[] = [
   { code: 'en', name: 'English', flag: 'us' },
-  { code: 'bn', name: 'Bangla', flag: 'bd' },
-  { code: 'in', name: 'Hindi', flag: 'in' },
-  { code: 'ar', name: 'Arabic', flag: 'sa' },
-  { code: 'fr', name: 'French', flag: 'fr' },
-  { code: 'es', name: 'Spanish', flag: 'es' },
-  { code: 'zh', name: 'Chinese', flag: 'cn' }
+  { code: 'fr', name: 'Français', flag: 'fr' },
+  { code: 'sw', name: 'Kiswahili', flag: 'tz' },
 ];
 
 export const mockCurrentLanguage: Language = mockLanguages[0];
@@ -61,6 +57,30 @@ export const mockNotifications: Notification[] = [
     read: true,
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
   }
+];
+
+export const mockHeaderQuickActions: HeaderQuickAction[] = [
+  {
+    id: 'new-parcel',
+    label: 'New Parcel',
+    icon: 'fas fa-plus',
+    href: '/dashboard/parcels/new',
+    shortcut: '⌘ + N',
+  },
+  {
+    id: 'view-reports',
+    label: 'Reports',
+    icon: 'fas fa-chart-line',
+    href: '/dashboard/reports',
+    shortcut: '⌘ + R',
+  },
+  {
+    id: 'open-support',
+    label: 'Support Center',
+    icon: 'fas fa-headset',
+    href: '/dashboard/support',
+    shortcut: '⌘ + S',
+  },
 ];
 
 export const mockBreadcrumbs: BreadcrumbItem[] = [

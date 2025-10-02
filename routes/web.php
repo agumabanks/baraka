@@ -237,6 +237,16 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDashboard) {
     Auth::routes();
 
+    Route::middleware('guest')->group(function () use ($serveReactDashboard) {
+        Route::get('/login', function () use ($serveReactDashboard) {
+            return $serveReactDashboard(['title' => 'Sign In']);
+        })->name('login');
+
+        Route::get('/register', function () use ($serveReactDashboard) {
+            return $serveReactDashboard(['title' => 'Create Account']);
+        })->name('register');
+    });
+
     // frontend
     Route::controller(FrontendController::class)->group(function () {
         Route::get('/', 'index')->name('home');

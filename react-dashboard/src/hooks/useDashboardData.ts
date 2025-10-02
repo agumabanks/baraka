@@ -27,6 +27,7 @@ interface DashboardApiResponse {
       hub?: StatementData;
     };
     charts: {
+      [key: string]: ChartConfig | undefined;
       incomeExpense?: ChartConfig;
       courierRevenue?: ChartConfig;
       cashCollection?: ChartConfig;

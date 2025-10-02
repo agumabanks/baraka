@@ -1,12 +1,16 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import * as Icons from 'lucide-react';
 import type { SidebarItemProps, NavBadge as NavBadgeType } from '../../types/navigation';
+import { convertFaToLucide } from '../../lib/iconMapping';
+import { resolveDashboardNavigatePath } from '../../lib/spaNavigation';
 
 /**
  * Badge component for navigation items
  * Matches monochrome styling from Blade sidebar
  */
-const NavBadgePill: React.FC<{ badge: NavBadgeType }> = ({ badge }) => {
+type RawBadge = NavBadgeType | number | string;
+
+const NavBadgePill: React.FC<{ badge: RawBadge }> = ({ badge }) => {
   const variantClasses = {
     default: 'bg-mono-black text-mono-white',
     success: 'bg-mono-gray-700 text-mono-white',
@@ -16,15 +20,25 @@ const NavBadgePill: React.FC<{ badge: NavBadgeType }> = ({ badge }) => {
     error: 'bg-mono-black text-mono-white'
   };
 
-  const variantClass = variantClasses[badge.variant || 'default'];
+  const resolvedBadge: NavBadgeType = typeof badge === 'object' && badge !== null
+    ? badge
+    : {
+        count: typeof badge === 'number' ? badge : badge ?? '',
+        variant: 'default'
+      };
+
+  const variantClass = variantClasses[resolvedBadge.variant || 'default'];
+  const displayValue = typeof resolvedBadge.count === 'number'
+    ? (resolvedBadge.count > 999 ? '999+' : resolvedBadge.count)
+    : resolvedBadge.count;
 
   return (
     <span
-      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full ${variantClass} ml-auto mr-2 shadow-sm transition-transform duration-200 group-hover:scale-105`}
-      aria-label={badge.ariaLabel || `${badge.count} items`}
-      title={badge.title}
+      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold rounded-full ${variantClass} ml-auto mr-2 shadow-sm transition-all duration-200 group-hover:scale-105`}
+      aria-label={resolvedBadge.ariaLabel || `${displayValue} items`}
+      title={resolvedBadge.title}
     >
-      {badge.count}
+      {displayValue}
     </span>
   );
 };
@@ -32,6 +46,7 @@ const NavBadgePill: React.FC<{ badge: NavBadgeType }> = ({ badge }) => {
 /**
  * SidebarItem Component
  * Renders individual navigation item with support for nested children
+ * Enhanced with smooth animations and premium interactions
  */
 const SidebarItem: React.FC<SidebarItemProps> = ({
   item,
@@ -40,28 +55,77 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   onClick,
   className = ''
 }) => {
+  const extractPath = (candidate?: string) => {
+    if (!candidate) {
+      return undefined;
+    }
+
+    if (candidate.startsWith('/')) {
+      return candidate.length > 1 && candidate.endsWith('/')
+        ? candidate.slice(0, -1)
+        : candidate;
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const parsed = new URL(candidate, window.location.origin);
+        const pathname = parsed.pathname;
+        return pathname.length > 1 && pathname.endsWith('/')
+          ? pathname.slice(0, -1)
+          : pathname;
+      } catch (error) {
+        return undefined;
+      }
+    }
+
+    return undefined;
+  };
+
+  const normalisedCurrentPath = extractPath(currentPath) ?? currentPath;
+
   const hasChildren = item.children && item.children.length > 0;
   const childActive = hasChildren
-    ? item.children?.some((child) =>
-        child.path ? currentPath?.startsWith(child.path) : false
-      )
+    ? item.children?.some((child) => {
+        const childPath = extractPath(child.path) ?? extractPath(child.url);
+        if (!childPath) {
+          return false;
+        }
+        const normalisedChildPath = extractPath(resolveDashboardNavigatePath(childPath)) ?? childPath;
+        return normalisedChildPath
+          ? normalisedCurrentPath === normalisedChildPath || normalisedCurrentPath.startsWith(`${normalisedChildPath}/`)
+          : false;
+      }) ?? false
     : false;
   const [isExpanded, setIsExpanded] = useState(item.expanded || childActive || false);
-  const isActive = item.path === currentPath || item.active || childActive;
   const isSubmenu = level > 0;
 
-  // Get icon component from lucide-react
-  const IconComponent = item.icon ? (Icons as any)[item.icon] : null;
+  // Initialize expanded state from navigation config
+  useEffect(() => {
+    if (item.expanded !== undefined) {
+      setIsExpanded(item.expanded);
+    }
+  }, [item.expanded]);
+
+  // Get icon component - handle both Lucide and Font Awesome icons
+  const iconName = convertFaToLucide(item.icon || '');
+  const IconComponent = (Icons as any)[iconName];
+  const isFontAwesomeIcon = typeof item.icon === 'string' && /fa[\w-]*\s/i.test(item.icon);
+
+  const resolvedPath = extractPath(item.path) ?? extractPath(item.url);
+  const spaPath = resolvedPath ? resolveDashboardNavigatePath(resolvedPath) : undefined;
+  const normalisedTargetPath = spaPath ? extractPath(spaPath) : resolvedPath;
 
   const handleClick = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
     e.preventDefault();
     
     if (hasChildren) {
       setIsExpanded(prev => !prev);
-    } else if (item.path && onClick) {
-      onClick(item.path);
+    } else if (onClick && (spaPath || item.path)) {
+      onClick(spaPath ?? item.path);
+    } else if (item.url) {
+      window.location.href = item.url;
     }
-  }, [hasChildren, item.path, onClick]);
+  }, [hasChildren, spaPath, item.path, item.url, onClick]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -79,9 +143,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     : 'py-2.5 px-3.5';
 
   // State-based classes
+  const isActive = normalisedTargetPath
+    ? normalisedTargetPath === '/dashboard' || normalisedTargetPath === '/'
+      ? normalisedCurrentPath === normalisedTargetPath
+      : normalisedCurrentPath === normalisedTargetPath || normalisedCurrentPath.startsWith(`${normalisedTargetPath}/`) || childActive
+    : (item.active || childActive || false);
+
   const stateClasses = isActive
-    ? 'bg-mono-black text-mono-white shadow-lg'
-    : 'text-mono-gray-900 hover:bg-mono-gray-50 hover:text-mono-black hover:-translate-y-0.5';
+    ? 'bg-mono-black text-mono-white shadow-lg scale-[1.02]'
+    : 'text-mono-gray-900 hover:bg-mono-gray-50 hover:text-mono-black hover:-translate-y-0.5 hover:shadow-md hover:scale-[1.01]';
 
   // Icon container classes
   const iconContainerBaseClasses = 'flex items-center justify-center rounded-xl transition-all duration-200 flex-shrink-0';
@@ -99,7 +169,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   return (
     <li className={`nav-item ${isSubmenu ? 'mt-0.5' : 'mt-1'}`}>
       <a
-        href={item.path || '#'}
+        href={spaPath || resolvedPath || item.url || '#'}
         className={linkClasses}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
@@ -109,9 +179,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         tabIndex={0}
       >
         {/* Icon */}
-        {IconComponent && (
+        {item.icon && (
           <span className={iconContainerClasses} aria-hidden="true">
-            <IconComponent size={isSubmenu ? 14 : 18} strokeWidth={2.5} />
+            {isFontAwesomeIcon ? (
+              <i className={item.icon} />
+            ) : IconComponent ? (
+              <IconComponent size={isSubmenu ? 14 : 18} strokeWidth={2.5} />
+            ) : (
+              <Icons.Circle size={isSubmenu ? 14 : 18} strokeWidth={2.5} />
+            )}
           </span>
         )}
 
@@ -127,26 +203,37 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         {hasChildren && (
           <Icons.ChevronRight
             size={16}
-            className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}
+            className={`transition-transform duration-250 ease-in-out ${isExpanded ? 'rotate-90' : ''}`}
             aria-hidden="true"
           />
         )}
       </a>
 
-      {/* Submenu */}
-      {hasChildren && isExpanded && (
-        <div className="submenu border-l-2 border-mono-gray-200 ml-10 pl-4 pt-1 mt-1">
-          <ul className="nav flex-col space-y-0.5">
-            {item.children?.filter(child => child.visible !== false).map((child) => (
-              <SidebarItem
-                key={child.id}
-                item={child}
-                currentPath={currentPath}
-                level={level + 1}
-                onClick={onClick}
-              />
-            ))}
-          </ul>
+      {/* Submenu with enhanced animations */}
+      {hasChildren && (
+        <div 
+          className={`overflow-hidden transition-all duration-250 ease-in-out ${
+            isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+          style={{
+            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          <div className={`submenu border-l-2 border-mono-gray-200 ml-10 pl-4 pt-1 mt-1 ${
+            isExpanded ? 'animate-in fade-in slide-in-from-top-1 duration-200' : ''
+          }`}>
+            <ul className="nav flex-col space-y-0.5">
+              {item.children?.filter(child => child.visible !== false).map((child) => (
+                <SidebarItem
+                  key={child.id}
+                  item={child}
+                  currentPath={currentPath}
+                  level={level + 1}
+                  onClick={onClick}
+                />
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </li>

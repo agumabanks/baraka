@@ -4,6 +4,9 @@ return [
 
     'addons' => 'Add-ons',
     'dashboard' => 'Dashboard',
+    'overview' => 'Overview',
+    'analytics' => 'Analytics',
+    'reports' => 'Reports',
     // New bucket labels
     'operations' => 'Operations',
     'tools' => 'Tools',
@@ -87,6 +90,9 @@ return [
     'support' => 'Support Tickets',
     'fraud_check' => 'Fraud Check',
     'hub_mange' => 'Hub Management',
+    'hub_management' => 'Hub Management',
+    'branch_management' => 'Branch Management',
+    'branches' => 'Branches',
     'hub_payment_request' => 'Hub Payment Requests',
     'hub_payment' => 'Hub Payments',
     'payments' => 'Payments',
@@ -98,6 +104,7 @@ return [
     'category_add' => 'Add Category',
     'assets_category' => 'Assets Category',
     'merchant_manage' => 'Merchant Management',
+    'merchant_management' => 'Merchant Management',
     'users' => 'Users',
     'departments' => 'Departments',
     'designations' => 'Designations',

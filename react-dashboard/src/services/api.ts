@@ -59,6 +59,13 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+if (typeof window !== 'undefined') {
+  const storedLocale = window.localStorage.getItem('dashboard_locale');
+  if (storedLocale) {
+    api.defaults.headers.common['Accept-Language'] = storedLocale;
+  }
+}
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -143,6 +150,13 @@ export const dashboardApi = {
 
   getData: async () => {
     const response = await api.get('/v10/dashboard/data');
+    return response.data;
+  },
+};
+
+export const navigationApi = {
+  getAdminNavigation: async () => {
+    const response = await api.get('/navigation/admin');
     return response.data;
   },
 };

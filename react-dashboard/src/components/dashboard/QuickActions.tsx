@@ -2,20 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { t } from '../../lib/i18n';
 import { getUserPermissions, hasPermission } from '../../lib/rbac';
-
-interface QuickAction {
-  id: string;
-  title: string;
-  icon: string;
-  url: string;
-  permission?: string;
-  badge?: number;
-  description?: string;
-  shortcut?: string;
-}
+import type { QuickAction as DashboardQuickAction } from '../../types/dashboard';
 
 interface QuickActionsProps {
-  actions?: QuickAction[];
+  actions?: DashboardQuickAction[];
   loading?: boolean;
 }
 
@@ -24,7 +14,7 @@ interface QuickActionsProps {
  * Matches Blade's quick-action-card design with monochrome styling
  * Black icons on white backgrounds with hover effects
  */
-const FALLBACK_ACTIONS: QuickAction[] = [
+const FALLBACK_ACTIONS: DashboardQuickAction[] = [
   {
     id: 'book-shipment',
     title: t('dashboard.book_shipment'),
@@ -110,16 +100,42 @@ const QuickActions: React.FC<QuickActionsProps> = ({ actions, loading = false })
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {availableActions.map((action) => (
+      {availableActions.map((action) => {
+        const badgeObject = typeof action.badge === 'object' && action.badge !== null
+          ? action.badge
+          : typeof action.badge === 'number'
+            ? { count: action.badge, variant: 'default' as const }
+            : undefined;
+
+        const badgeDisplay = badgeObject
+          ? typeof badgeObject.count === 'number'
+            ? badgeObject.count > 999 ? '999+' : badgeObject.count
+            : badgeObject.count
+          : null;
+
+        const badgeVariantClasses: Record<string, string> = {
+          default: 'bg-mono-black text-mono-white',
+          success: 'bg-mono-gray-700 text-mono-white',
+          warning: 'bg-mono-gray-600 text-mono-white',
+          info: 'bg-mono-gray-500 text-mono-white',
+          attention: 'bg-mono-black text-mono-white animate-pulse',
+          error: 'bg-mono-black text-mono-white',
+        };
+
+        const badgeClasses = badgeObject
+          ? badgeVariantClasses[badgeObject.variant || 'default']
+          : '';
+
+        return (
         <button
           key={action.id}
           onClick={() => handleActionClick(action.url)}
           className="relative bg-mono-white border border-mono-gray-200 rounded-2xl p-6 shadow-lg transition-all duration-200 transform hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-mono-black focus:ring-offset-2 text-left group"
           aria-label={`${action.title}${action.shortcut ? ` (${action.shortcut})` : ''}`}
         >
-          {typeof action.badge === 'number' && action.badge > 0 && (
-            <span className="absolute top-4 right-4 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-mono-black text-mono-white">
-              {action.badge > 999 ? '999+' : action.badge}
+          {badgeObject && (typeof badgeObject.count === 'number' ? badgeObject.count > 0 : !!badgeObject.count) && (
+            <span className={`absolute top-4 right-4 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold ${badgeClasses}`}>
+              {badgeDisplay}
             </span>
           )}
           <div className="text-center space-y-3">
@@ -143,7 +159,8 @@ const QuickActions: React.FC<QuickActionsProps> = ({ actions, loading = false })
             </div>
           </div>
         </button>
-      ))}
+        );
+      })}
     </div>
   );
 };

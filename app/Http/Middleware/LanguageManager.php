@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Schema;
 
 class LanguageManager
 {
@@ -17,9 +16,15 @@ class LanguageManager
      */
     public function handle(Request $request, Closure $next)
     {
+        if (session()->has('locale')) {
+            $locale = session()->get('locale');
+            $allowed = ['en', 'fr', 'sw'];
 
-        if (session()->has('locale') && Schema::hasTable('settings')) {
-            App::setLocale(session()->get('locale'));
+            if (! in_array($locale, $allowed, true)) {
+                $locale = config('app.locale', 'en');
+            }
+
+            App::setLocale($locale);
         }
 
         return $next($request);

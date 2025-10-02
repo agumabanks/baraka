@@ -2,13 +2,9 @@
     $languageDropdownId = $languageDropdownId ?? 'languageDropdown-' . uniqid();
     $currentLocale = app()->getLocale();
     $languages = [
-        'en' => ['flag' => 'us', 'name' => __('levels.english')],
-        'bn' => ['flag' => 'bd', 'name' => __('levels.bangla')],
-        'in' => ['flag' => 'in', 'name' => __('levels.hindi')],
-        'ar' => ['flag' => 'sa', 'name' => __('levels.arabic')],
-        'fr' => ['flag' => 'fr', 'name' => __('levels.franch')],
-        'es' => ['flag' => 'es', 'name' => __('levels.spanish')],
-        'zh' => ['flag' => 'cn', 'name' => __('levels.chinese')]
+        'en' => ['flag' => 'us', 'name' => 'English'],
+        'fr' => ['flag' => 'fr', 'name' => 'Français'],
+        'sw' => ['flag' => 'tz', 'name' => 'Kiswahili'],
     ];
     $currentLanguage = $languages[$currentLocale] ?? $languages['en'];
 @endphp

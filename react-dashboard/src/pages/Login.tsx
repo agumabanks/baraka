@@ -13,6 +13,12 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -127,6 +133,7 @@ const Login: React.FC = () => {
                     type="password"
                     autoComplete="current-password"
                     required
+                    minLength={6}
                     className="w-full rounded-2xl border border-mono-gray-300 bg-mono-white px-4 py-3 text-mono-black placeholder-mono-gray-400 focus:outline-none focus:ring-2 focus:ring-mono-black"
                     placeholder="Enter password"
                     value={password}
