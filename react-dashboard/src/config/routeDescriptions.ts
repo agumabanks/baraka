@@ -1,7 +1,7 @@
 export const routeDescriptions: Record<string, string> = {
   '/dashboard': 'An executive overview of service performance, workflow health, and financial highlights.',
   '/deliveryman': 'Monitor delivery driver availability, performance metrics, and active assignments.',
-  '/hubs': 'Inspect hub throughput, capacity, and SLA adherence across the network.',
+  '/branches': 'Inspect branch throughput, capacity, and SLA adherence across the network.',
   '/hub/payments': 'Track hub-level payouts, pending reconciliations, and settlement status.',
   '/merchants': 'Manage merchant accounts, contractual terms, and escalation notes.',
   '/merchant/payments': 'Review merchant remittances, COD balances, and financial exceptions.',

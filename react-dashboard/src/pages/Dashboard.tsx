@@ -8,12 +8,10 @@ import StatementCard from '../components/dashboard/StatementCard';
 import DateRangeFilter from '../components/dashboard/DateRangeFilter';
 import QuickActions from '../components/dashboard/QuickActions';
 import Card from '../components/ui/Card';
-import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import SkeletonCard from '../components/dashboard/SkeletonCard';
 import { useDashboardData, transformDashboardData } from '../hooks/useDashboardData';
-import { mockDashboardData } from '../data/mockDashboardData';
 import { t } from '../lib/i18n';
 import Can from '../components/rbac/Can';
 import type { KPICard as KPICardType } from '../types/dashboard';
@@ -30,12 +28,9 @@ const Dashboard: React.FC = () => {
   const { data: apiResponse, isLoading, isError, error, refetch } = useDashboardData();
   
   // Transform API data or use mock data as fallback
-  const dashboardData = apiResponse?.success 
-    ? transformDashboardData(apiResponse) 
-    : mockDashboardData;
-  
-  // Use environment variable to determine if we should use mock data in development
-  const useMockData = import.meta.env.DEV && !apiResponse;
+  const dashboardData = apiResponse?.success
+    ? transformDashboardData(apiResponse)
+    : null;
 
   // Handle KPI card click
   const handleKPIClick = (kpi: KPICardType) => {
@@ -54,7 +49,7 @@ const Dashboard: React.FC = () => {
   }
 
   // Show error state with retry option
-  if (isError && !useMockData) {
+  if (isError && !dashboardData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Card className="max-w-md text-center">
@@ -86,8 +81,38 @@ const Dashboard: React.FC = () => {
 
   // Ensure we have data to display
   if (!dashboardData) {
-    return <LoadingSpinner message="Preparing dashboard..." />;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <Card className="max-w-md text-center">
+          <div className="space-y-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-mono-black text-mono-white">
+              <i className="fas fa-database text-2xl" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-mono-black mb-2">
+                No Dashboard Data Available
+              </h2>
+              <p className="text-mono-gray-600 mb-4">
+                We could not retrieve dashboard metrics for the selected period.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => refetch()}
+            >
+              <i className="fas fa-redo mr-2" aria-hidden="true" />
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
   }
+
+  const chartEntries = Object.entries(dashboardData.charts ?? {}).filter(([, chart]) => chart);
+  const primaryChartEntry = chartEntries.find(([key]) => key === 'cashCollection') ?? chartEntries[0];
+  const secondaryCharts = chartEntries.filter((entry) => entry !== primaryChartEntry);
 
   return (
     <div className="space-y-6">
@@ -163,14 +188,35 @@ const Dashboard: React.FC = () => {
 
           {isLoading ? (
             <SkeletonCard />
-          ) : dashboardData.charts.cashCollection ? (
+          ) : primaryChartEntry ? (
             <ChartSection
-              config={dashboardData.charts.cashCollection}
+              config={primaryChartEntry[1]!}
               loading={isLoading}
               error={isError ? (error instanceof Error ? error.message : 'Failed to load chart data') : undefined}
             />
-          ) : null}
+          ) : (
+            <Card>
+              <div className="flex h-64 items-center justify-center text-sm text-mono-gray-500">
+                No charts available for this period.
+              </div>
+            </Card>
+          )}
         </section>
+
+        {secondaryCharts.length > 0 && (
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {secondaryCharts.map(([key, chart]) => (
+              chart ? (
+                <ChartSection
+                  key={key}
+                  config={chart}
+                  loading={isLoading}
+                  error={isError ? (error instanceof Error ? error.message : 'Failed to load chart data') : undefined}
+                />
+              ) : null
+            ))}
+          </section>
+        )}
 
         {/* Financial Statements - Row 3 */}
         <section className="space-y-4">
@@ -294,15 +340,6 @@ const Dashboard: React.FC = () => {
           />
         </section>
       </div>
-
-      {useMockData && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <Badge variant="solid" size="sm">
-            <i className="fas fa-flask mr-2" aria-hidden="true" />
-            Demo Mode
-          </Badge>
-        </div>
-      )}
     </div>
   );
 };

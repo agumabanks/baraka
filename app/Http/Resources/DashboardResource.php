@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+
 class DashboardResource extends JsonResource
 {
     /**
@@ -14,6 +15,20 @@ class DashboardResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $coreKPIs = array_map(fn ($kpi) => (new KPICardResource($kpi))->toArray($request), $this->resource['coreKPIs'] ?? []);
+        $workflowQueue = array_map(fn ($item) => (new WorkflowItemResource($item))->toArray($request), $this->resource['workflowQueue'] ?? []);
+
+        $charts = [];
+        if (isset($this->resource['charts']) && is_array($this->resource['charts'])) {
+            foreach ($this->resource['charts'] as $key => $chart) {
+                if ($chart === null) {
+                    $charts[$key] = null;
+                    continue;
+                }
+                $charts[$key] = (new ChartDataResource($chart))->toArray($request);
+            }
+        }
+
         return [
             'dateFilter' => $this->resource['dateFilter'],
             'healthKPIs' => [
@@ -22,10 +37,10 @@ class DashboardResource extends JsonResource
                 'onTimeDelivery' => $this->resource['healthKPIs']['onTimeDelivery'] ?? null,
                 'openTickets' => $this->resource['healthKPIs']['openTickets'] ?? null,
             ],
-            'coreKPIs' => KPICardResource::collection($this->resource['coreKPIs']),
-            'workflowQueue' => WorkflowItemResource::collection($this->resource['workflowQueue']),
+            'coreKPIs' => $coreKPIs,
+            'workflowQueue' => $workflowQueue,
             'statements' => $this->resource['statements'],
-            'charts' => $this->resource['charts'],
+            'charts' => $charts,
             'quickActions' => $this->resource['quickActions'],
             'loading' => false,
             'error' => null,

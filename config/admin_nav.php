@@ -3,6 +3,127 @@
 return [
     // Collapsible buckets in the admin sidebar
     'buckets' => [
+        'menu' => [
+            'label_trans_key' => 'menus.menu',
+            'children' => [
+                [
+                    'key' => 'dashboard',
+                    'label_trans_key' => 'menus.dashboard',
+                    'icon' => 'fa fa-home',
+                    'route' => 'admin.dashboard',
+                    'active_patterns' => ['admin.dashboard'],
+                    'permission_check' => null,
+                    'expanded' => true,
+                    'children' => [
+                        [
+                            'key' => 'dashboard_overview',
+                            'label_trans_key' => 'menus.overview',
+                            'icon' => 'fa fa-tachometer-alt',
+                            'route' => 'admin.dashboard',
+                            'active_patterns' => ['admin.dashboard'],
+                            'permission_check' => null,
+                        ],
+                        [
+                            'key' => 'dashboard_analytics',
+                            'label_trans_key' => 'menus.analytics',
+                            'icon' => 'fa fa-chart-line',
+                            'route' => 'admin.dashboard.analytics',
+                            'active_patterns' => ['admin.dashboard.analytics'],
+                            'permission_check' => null,
+                        ],
+                        [
+                            'key' => 'dashboard_reports',
+                            'label_trans_key' => 'menus.reports',
+                            'icon' => 'fa fa-file-text',
+                            'route' => 'admin.dashboard.reports',
+                            'active_patterns' => ['admin.dashboard.reports'],
+                            'permission_check' => null,
+                        ],
+                    ],
+                ],
+                [
+                    'key' => 'deliveryman',
+                    'label_trans_key' => 'menus.delivery_drivers',
+                    'icon' => 'fa fa-users',
+                    'route' => 'admin.deliveryman.index',
+                    'active_patterns' => ['admin.deliveryman.*'],
+                    'permission_check' => 'can:viewAny,App\\Models\\DeliveryMan',
+                ],
+                [
+                    'key' => 'branch_manage',
+                    'label_trans_key' => 'menus.branch_management',
+                    'icon' => 'fa fa-building',
+                    'active_patterns' => ['admin.hubs.*', 'admin.hub.payments.*'],
+                    'children' => [
+                        [
+                            'key' => 'branches',
+                            'label_trans_key' => 'menus.branches',
+                            'icon' => 'fa fa-building',
+                            'route' => 'admin.hubs.index',
+                            'active_patterns' => ['admin.hubs.*'],
+                            'permission_check' => 'can:viewAny,App\\Models\\Hub',
+                        ],
+                        [
+                            'key' => 'hub_payments',
+                            'label_trans_key' => 'menus.payments',
+                            'icon' => 'fa fa-credit-card',
+                            'route' => 'admin.hub.payments',
+                            'active_patterns' => ['admin.hub.payments.*'],
+                            'permission_check' => 'hasPermission:hub_payments_read',
+                        ],
+                    ],
+                ],
+                [
+                    'key' => 'merchant_manage',
+                    'label_trans_key' => 'menus.merchant_management',
+                    'icon' => 'fa fa-store',
+                    'active_patterns' => ['admin.merchants.*', 'admin.merchant.payments.*'],
+                    'children' => [
+                        [
+                            'key' => 'merchants',
+                            'label_trans_key' => 'menus.merchants',
+                            'icon' => 'fa fa-user',
+                            'route' => 'admin.merchants.index',
+                            'active_patterns' => ['admin.merchants.*'],
+                            'permission_check' => 'can:viewAny,App\\Models\\Merchant',
+                        ],
+                        [
+                            'key' => 'merchant_payments',
+                            'label_trans_key' => 'menus.payments',
+                            'icon' => 'fa fa-dollar-sign',
+                            'route' => 'admin.merchant.payments',
+                            'active_patterns' => ['admin.merchant.payments.*'],
+                            'permission_check' => 'hasPermission:merchant_payments_read',
+                        ],
+                    ],
+                ],
+                [
+                    'key' => 'todo',
+                    'label_trans_key' => 'menus.todo_list',
+                    'icon' => 'fa fa-check-square',
+                    'route' => 'admin.todo',
+                    'active_patterns' => ['admin.todo'],
+                    'permission_check' => null,
+                ],
+                [
+                    'key' => 'support',
+                    'label_trans_key' => 'menus.support',
+                    'icon' => 'fa fa-message-square',
+                    'route' => 'admin.support',
+                    'active_patterns' => ['admin.support'],
+                    'permission_check' => null,
+                ],
+                [
+                    'key' => 'parcel',
+                    'label_trans_key' => 'menus.parcels',
+                    'icon' => 'fa fa-box',
+                    'route' => 'admin.parcels.index',
+                    'active_patterns' => ['admin.parcels.*'],
+                    'permission_check' => 'can:viewAny,App\\Models\\Parcel',
+                ],
+            ],
+        ],
+
         'operations' => [
             'label_trans_key' => 'menus.operations',
             'children' => [

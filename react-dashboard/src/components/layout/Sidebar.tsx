@@ -54,6 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           border-r border-mono-gray-200
           shadow-2xl lg:shadow-lg
           transform transition-transform duration-300 ease-in-out
+          h-screen overflow-y-auto
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           ${className}
         `}
@@ -78,9 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 className="h-10 w-auto object-contain drop-shadow-sm"
               />
             )}
-            <span className="text-lg tracking-tight">
-              {navigation.appName || 'Dashboard'}
-            </span>
+            
           </a>
 
           {/* Mobile close button */}
@@ -96,17 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation content */}
         <div className="flex flex-col h-full">
-          <div className="px-6 pb-4">
-            <div className="rounded-2xl border border-mono-gray-200 bg-mono-gray-50 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">
-                Control Pulse
-              </p>
-              <p className="mt-1 text-sm text-mono-gray-600">
-                Navigate the operational spine. Every link is monochrome and deliberate.
-              </p>
-            </div>
-          </div>
-
+          
           {/* Scrollable navigation area */}
           <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
             {navigation.buckets.filter(bucket => bucket.visible !== false).map((bucket) => (

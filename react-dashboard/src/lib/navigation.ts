@@ -1,5 +1,4 @@
 import type { NavBucket, NavItem, NavigationConfig } from '../types/navigation';
-import { navigationConfig } from '../config/navigation';
 
 export interface RouteMeta {
   path: string;
@@ -24,7 +23,7 @@ const flattenItems = (
   items.forEach((item) => {
     const currentParents = [...parents];
     if (item.label) {
-      currentParents.push({ label: item.label, path: item.path || undefined });
+      currentParents.push({ label: item.label, path: item.path || item.url || undefined });
     }
 
     if (item.path) {
@@ -38,10 +37,13 @@ const flattenItems = (
 
     if (item.children && item.children.length > 0) {
       routes.push(
-        ...flattenItems(item.children, [
-          ...parents,
-          { label: item.label, path: item.path || undefined },
-        ])
+        ...flattenItems(
+          item.children.filter((child) => child.visible !== false),
+          [
+            ...parents,
+            { label: item.label, path: item.path || item.url || undefined },
+          ]
+        )
       );
     }
   });
@@ -67,8 +69,8 @@ const flattenBuckets = (config: NavigationConfig): RouteMeta[] => {
   return routes;
 };
 
-export const navigationRoutes: RouteMeta[] = (() => {
-  const flattened = flattenBuckets(navigationConfig);
+export const buildNavigationRoutes = (config: NavigationConfig): RouteMeta[] => {
+  const flattened = flattenBuckets(config);
   const uniqueMap = new Map<string, RouteMeta>();
 
   flattened.forEach((meta) => {
@@ -79,18 +81,21 @@ export const navigationRoutes: RouteMeta[] = (() => {
   });
 
   return Array.from(uniqueMap.values());
-})();
+};
 
-export const findRouteMeta = (pathname: string): RouteMeta | undefined => {
+export const findRouteMeta = (
+  pathname: string,
+  routes: RouteMeta[]
+): RouteMeta | undefined => {
   const cleaned = normalisePath(pathname);
 
   if (!cleaned) {
-    return navigationRoutes.find((meta) => meta.path === '/dashboard' || meta.path === '/');
+    return routes.find((meta) => meta.path === '/dashboard' || meta.path === '/');
   }
 
   return (
-    navigationRoutes.find((meta) => meta.path === cleaned) ||
-    navigationRoutes.find(
+    routes.find((meta) => meta.path === cleaned) ||
+    routes.find(
       (meta) =>
         meta.path.length > 1 && cleaned.startsWith(`${meta.path}/`)
     )

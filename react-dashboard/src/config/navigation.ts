@@ -19,7 +19,30 @@ export const navigationConfig: NavigationConfig = {
           id: 'dashboard',
           label: 'Dashboard',
           icon: 'Home',
-          path: '/dashboard',
+          expanded: true,
+          children: [
+            {
+              id: 'dashboard-overview',
+              label: 'Overview',
+              icon: 'LayoutDashboard',
+              path: '/dashboard',
+              visible: true
+            },
+            {
+              id: 'dashboard-analytics',
+              label: 'Analytics',
+              icon: 'TrendingUp',
+              path: '/dashboard/analytics',
+              visible: true
+            },
+            {
+              id: 'dashboard-reports',
+              label: 'Reports',
+              icon: 'FileText',
+              path: '/dashboard/reports',
+              visible: true
+            }
+          ],
           badge: {
             count: 3,
             variant: 'attention',
@@ -42,19 +65,19 @@ export const navigationConfig: NavigationConfig = {
           visible: true
         },
         {
-          id: 'hub-manage',
-          label: 'Hub Management',
+          id: 'branch-manage',
+          label: 'Branch Management',
           icon: 'Building2',
           children: [
             {
-              id: 'hubs',
-              label: 'Hubs',
+              id: 'branches',
+              label: 'Branches',
               icon: 'Building',
-              path: '/hubs',
+              path: '/branches',
               visible: true
             },
             {
-              id: 'hub-payments',
+              id: 'branch-payments',
               label: 'Payments',
               icon: 'CreditCard',
               path: '/hub/payments',
@@ -66,7 +89,7 @@ export const navigationConfig: NavigationConfig = {
         {
           id: 'merchant-manage',
           label: 'Merchant Management',
-          icon: 'Users',
+          icon: 'Store',
           children: [
             {
               id: 'merchants',
@@ -243,6 +266,34 @@ export const navigationConfig: NavigationConfig = {
           label: 'Address Book',
           icon: 'Book',
           path: '/address-book',
+          visible: true
+        }
+      ]
+    },
+    {
+      id: 'compliance',
+      label: 'COMPLIANCE',
+      visible: true,
+      items: [
+        {
+          id: 'audits',
+          label: 'Audits',
+          icon: 'ClipboardCheck',
+          path: '/compliance/audits',
+          visible: true
+        },
+        {
+          id: 'policies',
+          label: 'Policies',
+          icon: 'Shield',
+          path: '/compliance/policies',
+          visible: true
+        },
+        {
+          id: 'compliance-reports',
+          label: 'Reports',
+          icon: 'FileBarChart',
+          path: '/compliance/reports',
           visible: true
         }
       ]

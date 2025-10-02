@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\BookingWizardController;
 use App\Http\Controllers\Api\DashboardApiController;
+use App\Http\Controllers\Api\AdminNavigationController;
 use App\Http\Controllers\Api\V10\AccountTransactionController;
 use App\Http\Controllers\Api\V10\AnalyticsController;
 use App\Http\Controllers\Api\V10\AuthController;
@@ -50,6 +51,8 @@ Route::prefix('auth')->group(function () {
         Route::get('user', [ReactAuthController::class, 'user']);
     });
 });
+
+Route::middleware('auth:sanctum')->get('navigation/admin', AdminNavigationController::class);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

@@ -26,6 +26,15 @@ const ChartSection: React.FC<ChartSectionProps> = ({
 }) => {
   const { title, type, data, height = 300 } = config;
 
+  const sanitizedData = Array.isArray(data) && data.length > 0
+    ? data
+    : [{ label: 'No data', value: 0 }];
+
+  const chartConfig = {
+    ...config,
+    data: sanitizedData,
+  };
+
   // Chart type icon mapping
   const chartIcons = {
     line: 'fas fa-chart-line',
@@ -38,7 +47,7 @@ const ChartSection: React.FC<ChartSectionProps> = ({
   // Render the appropriate chart component
   const renderChart = () => {
     const chartProps = {
-      data: data || [],
+      data: chartConfig.data,
       height,
       loading,
       error,
@@ -97,7 +106,7 @@ const ChartSection: React.FC<ChartSectionProps> = ({
         </div>
       }
     >
-      {renderChart()}
+            {renderChart()}
     </Card>
   );
 };

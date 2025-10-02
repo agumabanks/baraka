@@ -164,6 +164,7 @@ export interface DashboardData {
   
   /** Chart configurations */
   charts: {
+    [key: string]: ChartConfig | undefined;
     incomeExpense?: ChartConfig;
     courierRevenue?: ChartConfig;
     cashCollection?: ChartConfig;
@@ -192,7 +193,10 @@ export interface QuickAction {
   /** Action URL */
   url: string;
   /** Optional badge count */
-  badge?: number;
+  badge?: number | {
+    count: number | string;
+    variant?: 'default' | 'success' | 'warning' | 'info' | 'attention' | 'error';
+  };
   /** Permission required */
   permission?: string;
   /** Short description */

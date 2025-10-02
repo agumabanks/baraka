@@ -30,9 +30,12 @@ use App\Models\Shipment;
 use App\Models\User;
 use App\Repositories\Dashboard\DashboardInterface;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use App\Models\Backend\Support;
+use App\Enums\SupportStatus;
 
 class DashboardApiController extends Controller
 {
@@ -50,11 +53,16 @@ class DashboardApiController extends Controller
     {
         $fromTo = $this->repo->FromTo($request);
 
-        if (Auth::user()->user_type == UserType::MERCHANT) {
-            return new DashboardResource($this->getMerchantDashboardData($fromTo));
-        } else {
-            return new DashboardResource($this->getAdminDashboardData($fromTo));
-        }
+        $data = Auth::user()->user_type == UserType::MERCHANT
+            ? $this->getMerchantDashboardData($fromTo)
+            : $this->getAdminDashboardData($fromTo);
+
+        $resource = new DashboardResource($data);
+
+        return response()->json([
+            'success' => true,
+            'data' => $resource->toArray($request),
+        ]);
     }
 
     /**
@@ -64,13 +72,18 @@ class DashboardApiController extends Controller
     {
         $fromTo = $this->repo->FromTo($request);
 
-        if (Auth::user()->user_type == UserType::MERCHANT) {
-            $data = $this->getMerchantKPIs($fromTo);
-        } else {
-            $data = $this->getAdminKPIs($fromTo);
-        }
+        $data = Auth::user()->user_type == UserType::MERCHANT
+            ? $this->getMerchantKPIs($fromTo)
+            : $this->getAdminKPIs($fromTo);
 
-        return KPICardResource::collection($data);
+        $kpis = array_values(array_filter(array_map(function ($item) use ($request) {
+            return (new KPICardResource($item))->toArray($request);
+        }, $data)));
+
+        return response()->json([
+            'success' => true,
+            'data' => $kpis,
+        ]);
     }
 
     /**
@@ -79,14 +92,30 @@ class DashboardApiController extends Controller
     public function charts(Request $request)
     {
         $fromTo = $this->repo->FromTo($request);
+        $startDate = Carbon::parse($fromTo['from'])->startOfDay();
+        $endDate = Carbon::parse($fromTo['to'])->endOfDay();
+        $datePeriod = $this->buildDatePeriod($startDate, $endDate);
+        $range = [
+            'from' => $startDate->toDateTimeString(),
+            'to' => $endDate->toDateTimeString(),
+        ];
 
         if (Auth::user()->user_type == UserType::MERCHANT) {
-            $data = $this->getMerchantCharts($fromTo);
+            $merchantId = Auth::user()->merchant->id;
+            $data = $this->getMerchantCharts($range, $merchantId, $datePeriod, $startDate, $endDate);
         } else {
-            $data = $this->getAdminCharts($fromTo);
+            $data = $this->getAdminCharts($range, $datePeriod, $startDate, $endDate);
         }
 
-        return ChartDataResource::collection($data);
+        $charts = [];
+        foreach ($data as $key => $chart) {
+            $charts[$key] = (new ChartDataResource($chart))->toArray($request);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $charts,
+        ]);
     }
 
     /**
@@ -94,8 +123,16 @@ class DashboardApiController extends Controller
      */
     public function workflowQueue(Request $request)
     {
-        $items = $this->getWorkflowItems();
-        return WorkflowItemResource::collection($items);
+        $fromTo = $this->repo->FromTo($request);
+        $items = $this->getWorkflowItems($fromTo);
+        $workflow = array_values(array_map(function ($item) use ($request) {
+            return (new WorkflowItemResource($item))->toArray($request);
+        }, $items));
+
+        return response()->json([
+            'success' => true,
+            'data' => $workflow,
+        ]);
     }
 
     /**
@@ -103,62 +140,103 @@ class DashboardApiController extends Controller
      */
     private function getMerchantDashboardData($fromTo)
     {
-        $merchantId = Auth::user()->merchant->id;
+        $merchant = Auth::user()->merchant;
+        $merchantId = $merchant->id;
 
-        // Basic metrics
+        $startDate = Carbon::parse($fromTo['from'])->startOfDay();
+        $endDate = Carbon::parse($fromTo['to'])->endOfDay();
+        $datePeriod = $this->buildDatePeriod($startDate, $endDate);
+        $range = [
+            'from' => $startDate->toDateTimeString(),
+            'to' => $endDate->toDateTimeString(),
+        ];
+
+        // Core metrics scoped to the selected window
         $totalParcels = Parcel::where('merchant_id', $merchantId)->count();
-        $deliveredParcels = Parcel::where('status', ParcelStatus::DELIVERED)
-            ->where('merchant_id', $merchantId)->count();
-        $pendingParcels = Parcel::where('status', ParcelStatus::PENDING)
-            ->where('merchant_id', $merchantId)->count();
+        $deliveredParcels = Parcel::where('merchant_id', $merchantId)
+            ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
+            ->whereBetween('deliverd_date', [$startDate, $endDate])
+            ->count();
+        $pendingParcels = Parcel::where('merchant_id', $merchantId)
+            ->where('status', ParcelStatus::PENDING)
+            ->count();
 
-        // Financial metrics
         $totalSales = Parcel::where('merchant_id', $merchantId)
             ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
+            ->whereBetween(DB::raw('COALESCE(deliverd_date, updated_at)'), [$startDate, $endDate])
             ->sum('cash_collection');
 
         $totalVat = Parcel::where('merchant_id', $merchantId)
             ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
+            ->whereBetween(DB::raw('COALESCE(deliverd_date, updated_at)'), [$startDate, $endDate])
             ->sum('vat_amount');
 
         $totalDeliveryFee = Parcel::where('merchant_id', $merchantId)
             ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
+            ->whereBetween(DB::raw('COALESCE(deliverd_date, updated_at)'), [$startDate, $endDate])
             ->sum('total_delivery_amount');
+
+        $pendingPaymentRequests = Payment::where('merchant_id', $merchantId)
+            ->whereNull('transaction_id')
+            ->count();
+
+        $currencySymbol = optional(settings())->currency_symbol ?? optional(settings())->currency ?? 'UGX';
 
         return [
             'dateFilter' => [
-                'from' => $fromTo['from']->format('Y-m-d'),
-                'to' => $fromTo['to']->format('Y-m-d'),
+                'from' => $startDate->format('Y-m-d'),
+                'to' => $endDate->format('Y-m-d'),
                 'preset' => 'custom'
             ],
             'healthKPIs' => [
-                'slaStatus' => $this->createKPICard('sla_status', 'SLA Status', '98.5%', 'Last 30 days', 'fas fa-clock', ['value' => 2.1, 'direction' => 'up'], 'success'),
+                'slaStatus' => $this->createKPICard('sla_status', 'SLA Performance', '98.5%', 'Last 30 days', 'fas fa-clock', ['value' => 2.1, 'direction' => 'up'], 'success'),
                 'exceptions' => $this->createKPICard('exceptions', 'Exceptions', 3, 'This week', 'fas fa-exclamation-triangle', ['value' => -15, 'direction' => 'down'], 'warning'),
                 'onTimeDelivery' => $this->createKPICard('on_time_delivery', 'On-Time Delivery', '96.2%', 'Last 30 days', 'fas fa-shipping-fast', ['value' => 1.8, 'direction' => 'up'], 'success'),
                 'openTickets' => $this->createKPICard('open_tickets', 'Open Tickets', 7, 'Active', 'fas fa-ticket-alt', ['value' => -2, 'direction' => 'down'], 'neutral'),
             ],
             'coreKPIs' => [
                 $this->createKPICard('total_parcels', 'Total Parcels', $totalParcels, 'All time', 'fas fa-box'),
-                $this->createKPICard('delivered_parcels', 'Delivered', $deliveredParcels, 'This period', 'fas fa-check-circle', ['value' => 12.5, 'direction' => 'up'], 'success'),
-                $this->createKPICard('pending_parcels', 'Pending', $pendingParcels, 'Current', 'fas fa-clock', null, 'warning'),
-                $this->createKPICard('total_sales', 'Total Sales', number_format($totalSales, 2), 'This period', 'fas fa-dollar-sign', ['value' => 8.3, 'direction' => 'up'], 'success'),
-                $this->createKPICard('total_vat', 'VAT Collected', number_format($totalVat, 2), 'This period', 'fas fa-calculator'),
-                $this->createKPICard('delivery_fees', 'Delivery Fees', number_format($totalDeliveryFee, 2), 'This period', 'fas fa-truck'),
+                $this->createKPICard('delivered_parcels', 'Delivered (window)', $deliveredParcels, 'Current filter', 'fas fa-check-circle'),
+                $this->createKPICard('pending_parcels', 'Pending', $pendingParcels, 'Awaiting action', 'fas fa-clock', null, 'warning'),
+                $this->createKPICard('total_sales', 'Cash Collected', number_format($totalSales, 2), 'Current filter', 'fas fa-dollar-sign'),
+                $this->createKPICard('total_vat', 'VAT Collected', number_format($totalVat, 2), 'Current filter', 'fas fa-calculator'),
+                $this->createKPICard('delivery_fees', 'Delivery Fees', number_format($totalDeliveryFee, 2), 'Current filter', 'fas fa-truck'),
             ],
-            'workflowQueue' => $this->getWorkflowItems(),
+            'workflowQueue' => $this->getWorkflowItems($range),
             'statements' => [
                 'merchant' => [
                     'income' => $totalSales,
                     'expense' => $totalDeliveryFee + $totalVat,
                     'balance' => $totalSales - ($totalDeliveryFee + $totalVat),
-                    'currency' => '$'
+                    'currency' => $currencySymbol,
                 ]
             ],
-            'charts' => $this->getMerchantCharts($fromTo),
+            'charts' => $this->getMerchantCharts($range, $merchantId, $datePeriod, $startDate, $endDate),
             'quickActions' => [
-                ['id' => 'create_parcel', 'title' => 'Create Parcel', 'icon' => 'fas fa-plus', 'url' => '/parcels/create', 'badge' => null],
-                ['id' => 'view_reports', 'title' => 'View Reports', 'icon' => 'fas fa-chart-bar', 'url' => '/reports', 'badge' => null],
-                ['id' => 'payment_request', 'title' => 'Payment Request', 'icon' => 'fas fa-money-bill', 'url' => '/payments/request', 'badge' => 2],
+                [
+                    'id' => 'create_parcel',
+                    'title' => 'Create Parcel',
+                    'icon' => 'fas fa-plus',
+                    'url' => '/parcels/create',
+                    'badge' => null,
+                ],
+                [
+                    'id' => 'view_reports',
+                    'title' => 'View Reports',
+                    'icon' => 'fas fa-chart-bar',
+                    'url' => '/reports',
+                    'badge' => null,
+                ],
+                [
+                    'id' => 'payment_request',
+                    'title' => 'Payment Request',
+                    'icon' => 'fas fa-money-bill',
+                    'url' => '/payments/request',
+                    'badge' => $pendingPaymentRequests > 0 ? [
+                        'count' => $pendingPaymentRequests,
+                        'variant' => 'warning',
+                    ] : null,
+                ],
             ]
         ];
     }
@@ -166,66 +244,176 @@ class DashboardApiController extends Controller
     /**
      * Get admin dashboard data
      */
-    private function getAdminDashboardData($fromTo)
-    {
-        $totalParcels = Parcel::whereBetween('created_at', $fromTo)->count();
-        $totalUsers = User::whereBetween('created_at', $fromTo)->count();
-        $totalMerchants = Merchant::whereBetween('created_at', $fromTo)->count();
-        $totalDeliveryMen = DeliveryMan::whereBetween('created_at', $fromTo)->count();
 
-        $deliveredParcels = $this->repo->parcelPosition(new Request(), ParcelStatus::DELIVERED, $fromTo)->count();
-        $pendingParcels = $this->repo->parcelPosition(new Request(), ParcelStatus::PENDING, $fromTo)->count();
+private function getAdminDashboardData($fromTo)
+{
+    $startDate = Carbon::parse($fromTo['from'])->startOfDay();
+    $endDate = Carbon::parse($fromTo['to'])->endOfDay();
+    $datePeriod = $this->buildDatePeriod($startDate, $endDate);
+    $range = [
+        'from' => $startDate->toDateTimeString(),
+        'to' => $endDate->toDateTimeString(),
+    ];
 
-        return [
-            'dateFilter' => [
-                'from' => Carbon::parse($fromTo['from'])->format('Y-m-d'),
-                'to' => Carbon::parse($fromTo['to'])->format('Y-m-d'),
-                'preset' => 'custom'
-            ],
-            'healthKPIs' => [
-                'slaStatus' => $this->createKPICard('sla_status', 'System SLA', '97.8%', 'Last 24h', 'fas fa-server', ['value' => 0.5, 'direction' => 'up'], 'success'),
-                'exceptions' => $this->createKPICard('exceptions', 'System Exceptions', 12, 'Last 24h', 'fas fa-exclamation-triangle', ['value' => -8, 'direction' => 'down'], 'warning'),
-                'onTimeDelivery' => $this->createKPICard('on_time_delivery', 'Avg Delivery Time', '2.3h', 'Last 7 days', 'fas fa-clock', ['value' => -0.2, 'direction' => 'down'], 'success'),
-                'openTickets' => $this->createKPICard('open_tickets', 'Support Tickets', 23, 'Open', 'fas fa-headset', ['value' => 5, 'direction' => 'up'], 'neutral'),
-            ],
-            'coreKPIs' => [
-                $this->createKPICard('total_parcels', 'Total Parcels', $totalParcels, 'This period', 'fas fa-box'),
-                $this->createKPICard('total_users', 'Total Users', $totalUsers, 'All time', 'fas fa-users'),
-                $this->createKPICard('total_merchants', 'Merchants', $totalMerchants, 'Active', 'fas fa-store'),
-                $this->createKPICard('total_delivery_men', 'Delivery Staff', $totalDeliveryMen, 'Active', 'fas fa-truck'),
-                $this->createKPICard('delivered_parcels', 'Delivered', $deliveredParcels, 'This period', 'fas fa-check-circle', ['value' => 15.2, 'direction' => 'up'], 'success'),
-                $this->createKPICard('pending_parcels', 'Pending', $pendingParcels, 'Current', 'fas fa-clock', null, 'warning'),
-            ],
-            'workflowQueue' => $this->getWorkflowItems(),
-            'statements' => [
-                'deliveryMan' => [
-                    'income' => DeliverymanStatement::where('type', StatementType::INCOME)->whereBetween('updated_at', $fromTo)->sum('amount'),
-                    'expense' => DeliverymanStatement::where('type', StatementType::EXPENSE)->whereBetween('updated_at', $fromTo)->sum('amount'),
-                    'balance' => 0,
-                    'currency' => '$'
-                ],
-                'merchant' => [
-                    'income' => MerchantStatement::where('type', StatementType::INCOME)->whereBetween('updated_at', $fromTo)->sum('amount'),
-                    'expense' => MerchantStatement::where('type', StatementType::EXPENSE)->whereBetween('updated_at', $fromTo)->sum('amount'),
-                    'balance' => 0,
-                    'currency' => '$'
-                ],
-                'hub' => [
-                    'income' => HubStatement::where('type', StatementType::INCOME)->whereBetween('updated_at', $fromTo)->sum('amount'),
-                    'expense' => HubStatement::where('type', StatementType::EXPENSE)->whereBetween('updated_at', $fromTo)->sum('amount'),
-                    'balance' => 0,
-                    'currency' => '$'
-                ]
-            ],
-            'charts' => $this->getAdminCharts($fromTo),
-            'quickActions' => [
-                ['id' => 'manage_users', 'title' => 'Manage Users', 'icon' => 'fas fa-users-cog', 'url' => '/admin/users', 'badge' => null],
-                ['id' => 'system_reports', 'title' => 'System Reports', 'icon' => 'fas fa-chart-line', 'url' => '/admin/reports', 'badge' => null],
-                ['id' => 'support_center', 'title' => 'Support Center', 'icon' => 'fas fa-headset', 'url' => '/admin/support', 'badge' => 5],
-            ]
-        ];
-    }
+    $totalParcels = Parcel::whereBetween('created_at', [$startDate, $endDate])->count();
+    $totalUsers = User::whereBetween('created_at', [$startDate, $endDate])->count();
+    $totalMerchants = Merchant::whereBetween('created_at', [$startDate, $endDate])->count();
+    $totalDeliveryMen = DeliveryMan::whereBetween('created_at', [$startDate, $endDate])->count();
 
+    $deliveredParcels = Parcel::whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
+        ->whereNotNull('deliverd_date')
+        ->whereBetween('deliverd_date', [$startDate, $endDate])
+        ->count();
+
+    $pendingParcels = Parcel::where('status', ParcelStatus::PENDING)->count();
+
+    $slaPercent = $totalParcels > 0
+        ? round(($deliveredParcels / max($totalParcels, 1)) * 100, 1)
+        : 0.0;
+
+    $exceptionStatuses = [
+        ParcelStatus::RETURN_WAREHOUSE,
+        ParcelStatus::RETURNED_MERCHANT,
+        ParcelStatus::RETURN_TO_COURIER,
+        ParcelStatus::RETURN_ASSIGN_TO_MERCHANT,
+        ParcelStatus::RETURN_MERCHANT_RE_SCHEDULE,
+        ParcelStatus::DELIVERY_MAN_ASSIGN_CANCEL,
+        ParcelStatus::DELIVERY_RE_SCHEDULE_CANCEL,
+        ParcelStatus::DELIVERED_CANCEL,
+        ParcelStatus::PICKUP_ASSIGN_CANCEL,
+        ParcelStatus::PICKUP_RE_SCHEDULE_CANCEL,
+        ParcelStatus::PARTIAL_DELIVERED_CANCEL,
+    ];
+
+    $exceptionCount = Parcel::whereIn('status', $exceptionStatuses)
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->count();
+
+    $avgDeliveryMinutes = Parcel::whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
+        ->whereNotNull('deliverd_date')
+        ->whereBetween('deliverd_date', [$startDate, $endDate])
+        ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, created_at, deliverd_date)) as avg_minutes')
+        ->value('avg_minutes');
+
+    $avgDeliveryHours = $avgDeliveryMinutes ? round($avgDeliveryMinutes / 60, 1) : 0;
+
+    $openTickets = Support::whereIn('status', [
+        SupportStatus::PENDING,
+        SupportStatus::PROCESSING,
+    ])->count();
+
+    $deliveryManIncome = DeliverymanStatement::where('type', StatementType::INCOME)
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->sum('amount');
+    $deliveryManExpense = DeliverymanStatement::where('type', StatementType::EXPENSE)
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->sum('amount');
+
+    $merchantIncome = MerchantStatement::where('type', StatementType::INCOME)
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->sum('amount');
+    $merchantExpense = MerchantStatement::where('type', StatementType::EXPENSE)
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->sum('amount');
+
+    $hubIncome = HubStatement::where('type', StatementType::INCOME)
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->sum('amount');
+    $hubExpense = HubStatement::where('type', StatementType::EXPENSE)
+        ->whereBetween('updated_at', [$startDate, $endDate])
+        ->sum('amount');
+
+    $currency = optional(settings())->currency_symbol ?? optional(settings())->currency ?? 'UGX';
+
+    $pendingPayments = Payment::whereNull('transaction_id')->count();
+    $recentBankEntries = BankTransaction::whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])->count();
+
+    return [
+        'dateFilter' => [
+            'from' => $startDate->format('Y-m-d'),
+            'to' => $endDate->format('Y-m-d'),
+            'preset' => 'custom',
+        ],
+        'healthKPIs' => [
+            'slaStatus' => $this->createKPICard('sla_status', 'On-time Delivery', sprintf('%.1f%%', $slaPercent), 'Current period', 'fas fa-server'),
+            'exceptions' => $this->createKPICard('exceptions', 'Exceptions', $exceptionCount, 'Parcels flagged in period', 'fas fa-exclamation-triangle'),
+            'onTimeDelivery' => $this->createKPICard('on_time_delivery', 'Avg Delivery Time', $avgDeliveryHours ? sprintf('%.1fh', $avgDeliveryHours) : 'N/A', 'Delivered parcels', 'fas fa-clock'),
+            'openTickets' => $this->createKPICard('open_tickets', 'Open Support Tickets', $openTickets, 'Pending support cases', 'fas fa-headset'),
+        ],
+        'coreKPIs' => [
+            $this->createKPICard('total_parcels', 'Total Parcels', $totalParcels, 'Created in period', 'fas fa-box'),
+            $this->createKPICard('total_users', 'New Users', $totalUsers, 'Registered in period', 'fas fa-users'),
+            $this->createKPICard('total_merchants', 'Merchants', $totalMerchants, 'Onboarded in period', 'fas fa-store'),
+            $this->createKPICard('total_delivery_men', 'Delivery Staff', $totalDeliveryMen, 'Added in period', 'fas fa-truck'),
+            $this->createKPICard('delivered_parcels', 'Delivered', $deliveredParcels, 'Delivered in period', 'fas fa-check-circle'),
+            $this->createKPICard('pending_parcels', 'Pending', $pendingParcels, 'Awaiting processing', 'fas fa-clock'),
+        ],
+        'workflowQueue' => $this->getWorkflowItems($range),
+        'statements' => [
+            'deliveryMan' => [
+                'income' => (float) $deliveryManIncome,
+                'expense' => (float) $deliveryManExpense,
+                'balance' => (float) ($deliveryManIncome - $deliveryManExpense),
+                'currency' => $currency,
+            ],
+            'merchant' => [
+                'income' => (float) $merchantIncome,
+                'expense' => (float) $merchantExpense,
+                'balance' => (float) ($merchantIncome - $merchantExpense),
+                'currency' => $currency,
+            ],
+            'hub' => [
+                'income' => (float) $hubIncome,
+                'expense' => (float) $hubExpense,
+                'balance' => (float) ($hubIncome - $hubExpense),
+                'currency' => $currency,
+            ],
+        ],
+        'charts' => $this->getAdminCharts($range, $datePeriod, $startDate, $endDate),
+        'quickActions' => [
+            [
+                'id' => 'manage_users',
+                'title' => 'Manage Users',
+                'icon' => 'fas fa-users-cog',
+                'url' => '/admin/users',
+                'badge' => $totalUsers > 0 ? [
+                    'count' => $totalUsers,
+                    'variant' => 'info',
+                ] : null,
+            ],
+            [
+                'id' => 'finance_overview',
+                'title' => 'Finance Overview',
+                'icon' => 'fas fa-wallet',
+                'url' => '/admin/reports',
+                'badge' => $pendingPayments > 0 ? [
+                    'count' => $pendingPayments,
+                    'variant' => 'attention',
+                ] : null,
+            ],
+            [
+                'id' => 'support_center',
+                'title' => 'Support Center',
+                'icon' => 'fas fa-headset',
+                'url' => route('support.index', [], false),
+                'badge' => $openTickets > 0 ? [
+                    'count' => $openTickets,
+                    'variant' => 'warning',
+                ] : null,
+            ],
+            [
+                'id' => 'bank_activity',
+                'title' => 'Bank Activity',
+                'icon' => 'fas fa-university',
+                'url' => '/admin/bank-transactions',
+                'badge' => $recentBankEntries > 0 ? [
+                    'count' => $recentBankEntries,
+                    'variant' => 'default',
+                ] : null,
+            ],
+        ],
+    ];
+}
     /**
      * Get merchant KPIs
      */
@@ -263,119 +451,229 @@ class DashboardApiController extends Controller
     /**
      * Get merchant charts
      */
-    private function getMerchantCharts($fromTo)
+
+    private function getMerchantCharts(array $range, int $merchantId, array $datePeriod, Carbon $startDate, Carbon $endDate)
     {
-        $merchantId = Auth::user()->merchant->id;
-        $dates = [];
-        $parcelData = [];
+        $cashRows = Parcel::where('merchant_id', $merchantId)
+            ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
+            ->whereRaw('DATE(COALESCE(deliverd_date, updated_at)) BETWEEN ? AND ?', [
+                $startDate->toDateString(),
+                $endDate->toDateString(),
+            ])
+            ->selectRaw('DATE(COALESCE(deliverd_date, updated_at)) as day, SUM(cash_collection) as total_cash, SUM(total_delivery_amount) as total_fee, SUM(vat_amount) as total_vat')
+            ->groupBy('day')
+            ->get()
+            ->keyBy('day');
 
-        // Last 7 days data
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i)->format('Y-m-d');
-            $dates[] = $date;
+        $cashCollectionData = [];
+        $netRevenueData = [];
 
-            $delivered = Parcel::where('merchant_id', $merchantId)
-                ->where('status', ParcelStatus::DELIVERED)
-                ->whereDate('updated_at', $date)
-                ->count();
+        foreach ($datePeriod as $date) {
+            $dayKey = $date->toDateString();
+            $row = $cashRows[$dayKey] ?? null;
+            $cash = $row ? (float) $row->total_cash : 0.0;
+            $fees = $row ? (float) $row->total_fee : 0.0;
+            $vat = $row ? (float) $row->total_vat : 0.0;
 
-            $pending = Parcel::where('merchant_id', $merchantId)
-                ->where('status', ParcelStatus::PENDING)
-                ->whereDate('updated_at', $date)
-                ->count();
+            $label = $date->format('M d');
 
-            $parcelData[] = [
-                'label' => $date,
-                'value' => $delivered,
-                'category' => 'delivered'
+            $cashCollectionData[] = [
+                'label' => $label,
+                'value' => round($cash, 2),
             ];
-            $parcelData[] = [
-                'label' => $date,
-                'value' => $pending,
-                'category' => 'pending'
+
+            $netRevenueData[] = [
+                'label' => $label,
+                'value' => round($cash - $fees - $vat, 2),
             ];
         }
 
         return [
+            'cashCollection' => [
+                'title' => 'Daily Cash Collection',
+                'type' => 'area',
+                'data' => $cashCollectionData,
+                'height' => 320,
+            ],
             'incomeExpense' => [
-                'title' => 'Parcel Status Trend',
+                'title' => 'Net Revenue Trend',
                 'type' => 'line',
-                'data' => $parcelData,
-                'loading' => false
-            ]
+                'data' => $netRevenueData,
+                'height' => 300,
+            ],
         ];
     }
+
+
 
     /**
      * Get admin charts
      */
-    private function getAdminCharts($fromTo)
-    {
-        $dates = $this->repo->Dates(new Request());
-        $incomeData = $this->repo->income($fromTo);
-        $expenseData = $this->repo->expense($fromTo);
 
-        $chartData = [];
-        foreach ($dates as $index => $date) {
-            $chartData[] = [
-                'label' => $date,
-                'value' => $incomeData[$index] ?? 0,
-                'category' => 'income'
+    private function getAdminCharts(array $range, array $datePeriod, Carbon $startDate, Carbon $endDate)
+    {
+        $cashRows = Parcel::whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
+            ->whereRaw('DATE(COALESCE(deliverd_date, updated_at)) BETWEEN ? AND ?', [
+                $startDate->toDateString(),
+                $endDate->toDateString(),
+            ])
+            ->selectRaw('DATE(COALESCE(deliverd_date, updated_at)) as day, SUM(cash_collection) as total_cash, SUM(total_delivery_amount) as total_fee, SUM(vat_amount) as total_vat')
+            ->groupBy('day')
+            ->get()
+            ->keyBy('day');
+
+        $cashCollectionData = [];
+        $netRevenueData = [];
+
+        foreach ($datePeriod as $date) {
+            $dayKey = $date->toDateString();
+            $row = $cashRows[$dayKey] ?? null;
+            $cash = $row ? (float) $row->total_cash : 0.0;
+            $fees = $row ? (float) $row->total_fee : 0.0;
+            $vat = $row ? (float) $row->total_vat : 0.0;
+
+            $label = $date->format('M d');
+
+            $cashCollectionData[] = [
+                'label' => $label,
+                'value' => round($cash, 2),
             ];
-            $chartData[] = [
-                'label' => $date,
-                'value' => $expenseData[$index] ?? 0,
-                'category' => 'expense'
+
+            $netRevenueData[] = [
+                'label' => $label,
+                'value' => round($cash - $fees - $vat, 2),
+            ];
+        }
+
+        $incomeExpression = 'SUM(CASE WHEN type = ' . StatementType::INCOME . ' THEN amount ELSE 0 END)';
+        $expenseExpression = 'SUM(CASE WHEN type = ' . StatementType::EXPENSE . ' THEN amount ELSE 0 END)';
+
+        $courierSummary = DeliverymanStatement::selectRaw('delivery_man_id, ' . $incomeExpression . ' AS income_total, ' . $expenseExpression . ' AS expense_total')
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->groupBy('delivery_man_id')
+            ->orderByDesc(DB::raw($incomeExpression . ' - ' . $expenseExpression))
+            ->limit(5)
+            ->get();
+
+        $courierData = [];
+        foreach ($courierSummary as $summary) {
+            $deliveryMan = DeliveryMan::with('user')->find($summary->delivery_man_id);
+            $name = optional(optional($deliveryMan)->user)->name ?? 'Courier #' . $summary->delivery_man_id;
+            $net = (float) $summary->income_total - (float) $summary->expense_total;
+            $courierData[] = [
+                'label' => $name,
+                'value' => round($net, 2),
+            ];
+        }
+
+        if (empty($courierData)) {
+            $courierData[] = [
+                'label' => 'No data',
+                'value' => 0,
             ];
         }
 
         return [
+            'cashCollection' => [
+                'title' => 'Daily Cash Collection',
+                'type' => 'area',
+                'data' => $cashCollectionData,
+                'height' => 320,
+            ],
             'incomeExpense' => [
-                'title' => 'Income vs Expense',
+                'title' => 'Net Revenue Trend',
+                'type' => 'line',
+                'data' => $netRevenueData,
+                'height' => 300,
+            ],
+            'courierRevenue' => [
+                'title' => 'Top Courier Net Earnings',
                 'type' => 'bar',
-                'data' => $chartData,
-                'loading' => false
-            ]
+                'data' => $courierData,
+                'height' => 280,
+            ],
         ];
     }
 
-    /**
-     * Get workflow items
-     */
-    private function getWorkflowItems()
+
+
+    private function buildDatePeriod(Carbon $startDate, Carbon $endDate): array
     {
-        // Mock workflow items - in real implementation, this would come from a workflow system
+        if ($startDate->gt($endDate)) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+        }
+
+        $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+        $dates = [];
+
+        foreach ($period as $date) {
+            $dates[] = $date->copy();
+        }
+
+        if (empty($dates)) {
+            $dates[] = $startDate->copy();
+        }
+
+        return $dates;
+    }
+
+    private function getWorkflowItems(array $fromTo): array
+    {
+        $startDate = Carbon::parse($fromTo['from'])->startOfDay();
+        $endDate = Carbon::parse($fromTo['to'])->endOfDay();
+
+        $paymentQueue = Payment::whereBetween('created_at', [$startDate, $endDate])->count();
+
+        $unassignedParcels = Parcel::whereIn('status', [
+                ParcelStatus::PENDING,
+                ParcelStatus::DELIVERY_MAN_ASSIGN,
+                ParcelStatus::DELIVERY_RE_SCHEDULE,
+            ])
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->count();
+
+        $openSupportTickets = Support::whereIn('status', [
+                SupportStatus::PENDING,
+                SupportStatus::PROCESSING,
+            ])->count();
+
         return [
             [
                 'id' => 'pending_payments',
                 'title' => 'Process Pending Payments',
-                'description' => '12 payment requests awaiting approval',
-                'status' => 'pending',
-                'priority' => 3,
+                'description' => $paymentQueue > 0
+                    ? sprintf('%d payment requests awaiting approval', $paymentQueue)
+                    : 'All payment requests are up to date',
+                'status' => $paymentQueue > 0 ? 'pending' : 'completed',
+                'priority' => max(1, min(5, $paymentQueue)),
                 'assignedTo' => 'Finance Team',
-                'dueDate' => Carbon::now()->addDays(2)->format('Y-m-d'),
-                'actionUrl' => '/payments/pending'
+                'dueDate' => $endDate->copy()->format('Y-m-d'),
+                'actionUrl' => '/admin/request/hub/payment/index',
             ],
             [
                 'id' => 'delivery_assignments',
                 'title' => 'Assign Delivery Personnel',
-                'description' => '28 parcels need delivery assignment',
-                'status' => 'in_progress',
-                'priority' => 4,
+                'description' => $unassignedParcels > 0
+                    ? sprintf('%d parcels need delivery assignment', $unassignedParcels)
+                    : 'No parcels awaiting assignment',
+                'status' => $unassignedParcels > 25 ? 'delayed' : ($unassignedParcels > 0 ? 'in_progress' : 'completed'),
+                'priority' => max(1, min(5, (int) ceil($unassignedParcels / 10))),
                 'assignedTo' => 'Operations',
                 'dueDate' => Carbon::now()->addHours(4)->format('Y-m-d'),
-                'actionUrl' => '/deliveries/assign'
+                'actionUrl' => '/admin/deliveryman',
             ],
             [
                 'id' => 'customer_support',
                 'title' => 'Resolve Customer Tickets',
-                'description' => '15 open support tickets',
-                'status' => 'delayed',
-                'priority' => 5,
+                'description' => $openSupportTickets > 0
+                    ? sprintf('%d open support tickets', $openSupportTickets)
+                    : 'Support queue is clear',
+                'status' => $openSupportTickets > 0 ? 'pending' : 'completed',
+                'priority' => max(1, min(5, (int) ceil($openSupportTickets / 5))),
                 'assignedTo' => 'Support Team',
-                'dueDate' => Carbon::now()->addDays(1)->format('Y-m-d'),
-                'actionUrl' => '/support/tickets'
-            ]
+                'dueDate' => Carbon::now()->addDay()->format('Y-m-d'),
+                'actionUrl' => route('support.index', [], false),
+            ],
         ];
     }
 

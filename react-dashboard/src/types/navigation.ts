@@ -42,6 +42,8 @@ export interface NavItem {
   icon: string;
   /** Navigation path/route */
   path?: string;
+  /** Absolute URL fallback for server-rendered pages */
+  url?: string;
   /** Badge configuration */
   badge?: NavBadge;
   /** Child navigation items */

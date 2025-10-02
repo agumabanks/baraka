@@ -19,6 +19,15 @@ export interface Language {
   active?: boolean;
 }
 
+export interface HeaderQuickAction {
+  id: string;
+  label: string;
+  icon?: string;
+  href: string;
+  shortcut?: string;
+  description?: string;
+}
+
 export interface Notification {
   id: string;
   title: string;
@@ -48,6 +57,15 @@ export interface HeaderProps {
   logoUrl?: string;
   appName?: string;
   isSidebarOpen?: boolean;
+  quickActions?: HeaderQuickAction[];
+  onQuickAction?: (action: HeaderQuickAction) => void;
+  theme?: 'light' | 'dark';
+  onThemeToggle?: (theme: 'light' | 'dark') => void;
+  canCreateTodo?: boolean;
+  onCreateTodo?: () => void;
+  todoLabel?: string;
+  frontendUrl?: string;
+  showFrontendLink?: boolean;
 }
 
 export interface UserMenuProps {
