@@ -101,12 +101,12 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex flex-1 items-center gap-4">
           <MobileMenuToggle onToggle={onToggleSidebar} isOpen={isSidebarOpen} />
 
-          <div className="leading-tight">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-mono-gray-500">
+          <div className="hidden items-center gap-3 md:flex">
+            <span className="text-sm font-semibold tracking-[0.35em] uppercase text-mono-gray-700">
               {appName}
-            </p>
-            <p className="text-sm font-medium text-mono-black">Operations Control Centre</p>
+            </span>
           </div>
+
 
           <div className="hidden flex-1 items-center justify-start pl-6 md:flex">
             <Breadcrumb items={breadcrumbs ?? []} />

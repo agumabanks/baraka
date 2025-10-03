@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { authApi } from '../services/api';
+import { authApi, redirectToLogin } from '../services/api';
 
 interface User {
   id: number;
@@ -85,12 +85,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       setUser(null);
+      redirectToLogin();
     }
   };
 
   const checkAuth = async () => {
     const token = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('user');
+    const shouldRedirect = () => {
+      if (typeof window === 'undefined') {
+        return false;
+      }
+      const path = window.location.pathname;
+      return path.startsWith('/dashboard') || path.startsWith('/react-dashboard');
+    };
 
     if (token && storedUser) {
       try {
@@ -104,13 +112,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
           setUser(null);
+          if (shouldRedirect()) {
+            redirectToLogin();
+          }
         }
       } catch (error) {
         // Token is invalid, clear storage
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
         setUser(null);
+        if (shouldRedirect()) {
+          redirectToLogin();
+        }
       }
+    } else if (shouldRedirect()) {
+      redirectToLogin();
     }
 
     setIsLoading(false);

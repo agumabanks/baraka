@@ -109,6 +109,59 @@ export const navigationConfig: NavigationConfig = {
           visible: true
         },
         {
+          id: 'sales',
+          label: 'Sales',
+          icon: 'Handshake',
+          expanded: true,
+          children: [
+            {
+              id: 'sales-customers',
+              label: 'Customers',
+              icon: 'Users',
+              expanded: true,
+              children: [
+                {
+                  id: 'sales-customers-all',
+                  label: 'All Customers',
+                  icon: 'BookUser',
+                  path: '/customers',
+                  visible: true
+                },
+                {
+                  id: 'sales-customers-create',
+                  label: 'Create Customer',
+                  icon: 'UserPlus',
+                  path: '/customers/create',
+                  visible: true
+                }
+              ],
+              visible: true
+            },
+            {
+              id: 'sales-quotations',
+              label: 'Quotations',
+              icon: 'FileSignature',
+              path: '/quotations',
+              visible: true
+            },
+            {
+              id: 'sales-contracts',
+              label: 'Contracts',
+              icon: 'ScrollText',
+              path: '/contracts',
+              visible: true
+            },
+            {
+              id: 'sales-address-book',
+              label: 'Address Book',
+              icon: 'Contact',
+              path: '/address-book',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
           id: 'todo',
           label: 'To-Do List',
           icon: 'CheckSquare',

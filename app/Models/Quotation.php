@@ -22,6 +22,14 @@ class Quotation extends Model
         'valid_until' => 'date',
     ];
 
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->useLogName('Quotation')
+            ->logOnly(['service_type', 'destination_country', 'status', 'total_amount'])
+            ->logOnlyDirty();
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);

@@ -3,6 +3,10 @@
 use App\Http\Controllers\Admin\BookingWizardController;
 use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Controllers\Api\AdminNavigationController;
+use App\Http\Controllers\Api\Sales\AddressBookController as SalesAddressBookController;
+use App\Http\Controllers\Api\Sales\ContractController as SalesContractController;
+use App\Http\Controllers\Api\Sales\CustomerController as SalesCustomerController;
+use App\Http\Controllers\Api\Sales\QuotationController as SalesQuotationController;
 use App\Http\Controllers\Api\V10\AccountTransactionController;
 use App\Http\Controllers\Api\V10\AnalyticsController;
 use App\Http\Controllers\Api\V10\AuthController;
@@ -11,6 +15,7 @@ use App\Http\Controllers\Api\V10\DashboardController;
 use App\Http\Controllers\Api\V10\DeliverymanController;
 use App\Http\Controllers\Api\V10\DeliveryManIncomeExpenseController;
 use App\Http\Controllers\Api\V10\DeliveryManParcelController;
+use App\Http\Controllers\Api\V10\BranchNetworkController;
 use App\Http\Controllers\Api\V10\FraudController;
 use App\Http\Controllers\Api\V10\GeneralSettingCotroller;
 use App\Http\Controllers\Api\V10\HubController;
@@ -25,8 +30,12 @@ use App\Http\Controllers\Api\V10\SearchController;
 use App\Http\Controllers\Api\V10\SettingsController;
 use App\Http\Controllers\Api\V10\ShopsController;
 use App\Http\Controllers\Api\V10\StatementsController;
+use App\Http\Controllers\Api\V10\MerchantManagementController;
+use App\Http\Controllers\Api\V10\WorkflowBoardController;
 use App\Http\Controllers\Api\AuthController as ReactAuthController;
 use App\Http\Controllers\Api\V10\SupportController;
+use App\Http\Controllers\Backend\UnifiedShipmentController;
+use App\Http\Controllers\Backend\OperationsControlCenterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -58,11 +67,40 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::middleware('auth:sanctum')->prefix('sales')->group(function () {
+    Route::get('customers/meta', [SalesCustomerController::class, 'meta']);
+    Route::get('customers', [SalesCustomerController::class, 'index']);
+    Route::post('customers', [SalesCustomerController::class, 'store']);
+    Route::get('customers/{customer}', [SalesCustomerController::class, 'show']);
+    Route::put('customers/{customer}', [SalesCustomerController::class, 'update']);
+    Route::delete('customers/{customer}', [SalesCustomerController::class, 'destroy']);
+
+    Route::get('quotations', [SalesQuotationController::class, 'index']);
+    Route::post('quotations', [SalesQuotationController::class, 'store']);
+
+    Route::get('contracts', [SalesContractController::class, 'index']);
+    Route::post('contracts', [SalesContractController::class, 'store']);
+
+    Route::get('address-book', [SalesAddressBookController::class, 'index']);
+    Route::post('address-book', [SalesAddressBookController::class, 'store']);
+});
+
 Route::prefix('v10')->group(function () {
 
     Route::middleware(['CheckApiKey'])->group(function () {
 
         // all apis goes here
+        Route::prefix('branches')->group(function () {
+            Route::get('/', [BranchNetworkController::class, 'index']);
+            Route::get('hierarchy', [BranchNetworkController::class, 'hierarchy']);
+            Route::get('{branch}', [BranchNetworkController::class, 'show']);
+        });
+
+        Route::prefix('merchants')->group(function () {
+            Route::get('/', [MerchantManagementController::class, 'index']);
+            Route::get('{merchant}', [MerchantManagementController::class, 'show']);
+        });
+
         Route::post('/register', [AuthController::class, 'register']);
         // Customer self-service auth (separate namespace)
         Route::prefix('auth')->group(function () {
@@ -200,6 +238,74 @@ Route::prefix('v10')->group(function () {
 
             Route::get('deliveryman/parcel-status', [DeliverymanController::class, 'parcelStatus']);
             Route::post('deliveryman/parcel-status-update', [DeliverymanController::class, 'parcelStatusUpdate']);
+
+            // Unified Shipment Operations API endpoints
+            Route::prefix('unified-shipments')->group(function () {
+                // Workflow management
+                Route::post('{shipment}/process-workflow', [UnifiedShipmentController::class, 'processWorkflow']);
+                Route::get('{shipment}/workflow-status', [UnifiedShipmentController::class, 'getWorkflowStatus']);
+
+                // HUB operations
+                Route::get('hub-sortation', [UnifiedShipmentController::class, 'getHubSortation']);
+                Route::post('process-sortation', [UnifiedShipmentController::class, 'processSortation']);
+                Route::get('hub-distribution-summary', [UnifiedShipmentController::class, 'getHubDistributionSummary']);
+
+                // Inter-branch operations
+                Route::get('inter-branch-transfers', [UnifiedShipmentController::class, 'getInterBranchTransfers']);
+                Route::post('{shipment}/process-transfer', [UnifiedShipmentController::class, 'processTransfer']);
+
+                // Worker management
+                Route::get('branches/{branch}/worker-assignments', [UnifiedShipmentController::class, 'getWorkerAssignments']);
+                Route::post('{shipment}/assign-to-worker', [UnifiedShipmentController::class, 'assignToWorker']);
+
+                // Analytics and monitoring
+                Route::get('workflow-analytics', [UnifiedShipmentController::class, 'getWorkflowAnalytics']);
+                Route::get('workflow-alerts', [UnifiedShipmentController::class, 'getWorkflowAlerts']);
+                Route::get('workflow-recommendations', [UnifiedShipmentController::class, 'getWorkflowRecommendations']);
+            });
+
+            // Operations Control Center API endpoints
+            Route::prefix('operations')->group(function () {
+
+                // Dispatch Board
+                Route::get('dispatch-board', [OperationsControlCenterController::class, 'getDispatchBoard']);
+                Route::post('assign-shipment', [OperationsControlCenterController::class, 'assignShipmentToWorker']);
+                Route::post('reassign-shipment', [OperationsControlCenterController::class, 'reassignShipment']);
+                Route::get('unassigned-shipments', [OperationsControlCenterController::class, 'getUnassignedShipments']);
+                Route::get('workers/{worker}/workload', [OperationsControlCenterController::class, 'getWorkerWorkload']);
+                Route::get('load-balancing-metrics', [OperationsControlCenterController::class, 'getLoadBalancingMetrics']);
+
+                // Exception Tower
+                Route::get('exceptions', [OperationsControlCenterController::class, 'getActiveExceptions']);
+                Route::post('exceptions', [OperationsControlCenterController::class, 'createException']);
+                Route::post('shipments/{shipment}/assign-exception', [OperationsControlCenterController::class, 'assignExceptionToResolver']);
+                Route::put('shipments/{shipment}/exception-status', [OperationsControlCenterController::class, 'updateExceptionStatus']);
+                Route::get('exception-metrics', [OperationsControlCenterController::class, 'getExceptionMetrics']);
+                Route::get('priority-exceptions', [OperationsControlCenterController::class, 'getPriorityExceptions']);
+
+                // Asset Management
+                Route::get('asset-status', [OperationsControlCenterController::class, 'getAssetStatus']);
+                Route::get('vehicles/{vehicleId}/utilization', [OperationsControlCenterController::class, 'getVehicleUtilization']);
+                Route::get('maintenance-schedule', [OperationsControlCenterController::class, 'getMaintenanceSchedule']);
+                Route::get('vehicles/{vehicleId}/fuel-consumption', [OperationsControlCenterController::class, 'getFuelConsumption']);
+                Route::get('asset-metrics', [OperationsControlCenterController::class, 'getAssetMetrics']);
+                Route::get('available-vehicles', [OperationsControlCenterController::class, 'getAvailableVehicles']);
+
+                // Control Tower
+                Route::get('kpis', [OperationsControlCenterController::class, 'getOperationalKPIs']);
+                Route::get('branch-performance', [OperationsControlCenterController::class, 'getBranchPerformance']);
+                Route::get('worker-utilization', [OperationsControlCenterController::class, 'getWorkerUtilization']);
+                Route::get('shipment-metrics', [OperationsControlCenterController::class, 'getShipmentMetrics']);
+                Route::get('alerts', [OperationsControlCenterController::class, 'getAlerts']);
+                Route::get('operational-trends', [OperationsControlCenterController::class, 'getOperationalTrends']);
+
+                // Notifications
+                Route::get('notifications', [OperationsControlCenterController::class, 'getUserNotifications']);
+                Route::put('notifications/{notificationId}/read', [OperationsControlCenterController::class, 'markNotificationAsRead']);
+                Route::get('notifications/unread-count', [OperationsControlCenterController::class, 'getUnreadNotificationCount']);
+                Route::put('notification-preferences', [OperationsControlCenterController::class, 'updateNotificationPreferences']);
+                Route::get('notification-history', [OperationsControlCenterController::class, 'getNotificationHistory']);
+            });
 
         });
         Route::post('deliveryman/parcel-location-update', [DeliverymanController::class, 'parcelLocationUpdate']);

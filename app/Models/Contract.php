@@ -21,6 +21,14 @@ class Contract extends Model
         'end_date' => 'date',
     ];
 
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->useLogName('Contract')
+            ->logOnly(['name', 'status', 'start_date', 'end_date'])
+            ->logOnlyDirty();
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
