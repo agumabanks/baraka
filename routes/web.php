@@ -47,6 +47,9 @@ use App\Http\Controllers\Backend\FrontWeb\SectionController;
 use App\Http\Controllers\Backend\FrontWeb\ServiceController;
 use App\Http\Controllers\Backend\FrontWeb\SocialLinkController;
 use App\Http\Controllers\Backend\FrontWeb\WhyCourierController;
+use App\Http\Controllers\Backend\BranchController;
+use App\Http\Controllers\Backend\BranchManagerController;
+use App\Http\Controllers\Backend\BranchWorkerController;
 use App\Http\Controllers\Backend\FuelController;
 use App\Http\Controllers\Backend\FundTransferController;
 use App\Http\Controllers\Backend\GeneralSettingsController;
@@ -147,90 +150,115 @@ Route::middleware(['XSS'])->group(function () {
 });
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('customers', CustomerController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
-    Route::get('booking', [BookingWizardController::class, 'step1'])->name('booking.step1');
+        Route::resource('customers', CustomerController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+        Route::get('booking', [BookingWizardController::class, 'step1'])->name('booking.step1');
 
-    // Operations
-    Route::resource('shipments', \App\Http\Controllers\Admin\ShipmentController::class)->only(['index', 'show', 'edit', 'update', 'create', 'store']);
-    Route::resource('bags', \App\Http\Controllers\Admin\BagController::class)->only(['index', 'show', 'create', 'store', 'update']);
-    Route::resource('linehaul-legs', \App\Http\Controllers\Admin\TransportLegController::class)->only(['index', 'show', 'create', 'store', 'update']);
-    Route::resource('scans', \App\Http\Controllers\Admin\ScanEventController::class)->only(['index', 'show', 'create', 'store']);
-    Route::resource('routes', \App\Http\Controllers\Admin\RouteController::class)->only(['index', 'show', 'create', 'store', 'update']);
-    Route::get('epod', [\App\Http\Controllers\Admin\EpodController::class, 'index'])->name('epod.index');
+        // Operations
+        Route::resource('shipments', \App\Http\Controllers\Admin\ShipmentController::class)->only(['index', 'show', 'edit', 'update', 'create', 'store']);
+        Route::resource('bags', \App\Http\Controllers\Admin\BagController::class)->only(['index', 'show', 'create', 'store', 'update']);
+        Route::resource('linehaul-legs', \App\Http\Controllers\Admin\TransportLegController::class)->only(['index', 'show', 'create', 'store', 'update']);
+        Route::resource('scans', \App\Http\Controllers\Admin\ScanEventController::class)->only(['index', 'show', 'create', 'store']);
+        Route::resource('routes', \App\Http\Controllers\Admin\RouteController::class)->only(['index', 'show', 'create', 'store', 'update']);
+        Route::get('epod', [\App\Http\Controllers\Admin\EpodController::class, 'index'])->name('epod.index');
 
-    // Control board
-    Route::get('control-board', [\App\Http\Controllers\Admin\ControlBoardController::class, 'index'])->name('control.board');
+        // Control board
+        Route::get('control-board', [\App\Http\Controllers\Admin\ControlBoardController::class, 'index'])->name('control.board');
 
-    // Customs & compliance
-    Route::resource('commodities', \App\Http\Controllers\Admin\CommodityController::class)->only(['index', 'create', 'store', 'update']);
-    Route::resource('hs-codes', \App\Http\Controllers\Admin\HsCodeController::class)->only(['index']);
-    Route::resource('customs-docs', \App\Http\Controllers\Admin\CustomsDocController::class)->only(['index', 'show', 'store']);
-    Route::get('ics2', [\App\Http\Controllers\Admin\Ics2Controller::class, 'index'])->name('ics2.index');
-    Route::post('dps/run', [\App\Http\Controllers\Admin\DeniedPartyController::class, 'run'])->name('dps.run');
-    Route::get('denied-party', [\App\Http\Controllers\Admin\DeniedPartyController::class, 'index'])->name('dps.index');
+        // customs & compliance
+        Route::resource('commodities', \App\Http\Controllers\Admin\CommodityController::class)->only(['index', 'create', 'store', 'update']);
+        Route::resource('hs-codes', \App\Http\Controllers\Admin\HsCodeController::class)->only(['index']);
+        Route::resource('customs-docs', \App\Http\Controllers\Admin\CustomsDocController::class)->only(['index', 'show', 'store']);
+        Route::get('ics2', [\App\Http\Controllers\Admin\Ics2Controller::class, 'index'])->name('ics2.index');
+        Route::post('dps/run', [\App\Http\Controllers\Admin\DeniedPartyController::class, 'run'])->name('dps.run');
+        Route::get('denied-party', [\App\Http\Controllers\Admin\DeniedPartyController::class, 'index'])->name('dps.index');
 
-    // Rating & finance
-    Route::resource('rate-cards', \App\Http\Controllers\Admin\RateCardController::class)->only(['index', 'create', 'store', 'update']);
-    Route::resource('invoices', \App\Http\Controllers\Admin\InvoiceController::class)->only(['index', 'show']);
-    Route::resource('cod-receipts', \App\Http\Controllers\Admin\CodReceiptController::class)->only(['index', 'show']);
-    Route::resource('settlements', \App\Http\Controllers\Admin\SettlementController::class)->only(['index', 'show']);
+        // rating & finance
+        Route::resource('rate-cards', \App\Http\Controllers\Admin\RateCardController::class)->only(['index', 'create', 'store', 'update']);
+        Route::resource('invoices', \App\Http\Controllers\Admin\InvoiceController::class)->only(['index', 'show']);
+        Route::resource('cod-receipts', \App\Http\Controllers\Admin\CodReceiptController::class)->only(['index', 'show']);
+        Route::resource('settlements', \App\Http\Controllers\Admin\SettlementController::class)->only(['index', 'show']);
 
-    // Dev & search
-    Route::get('search', [\App\Http\Controllers\Admin\SearchController::class, 'index'])->name('search');
-    Route::resource('api-keys', \App\Http\Controllers\Admin\ApiKeyController::class)->only(['index', 'store', 'destroy']);
-    Route::resource('webhooks', \App\Http\Controllers\Admin\WebhookController::class)->only(['index', 'store', 'destroy']);
+        // dev & search
+        Route::get('search', [\App\Http\Controllers\Admin\SearchController::class, 'index'])->name('search');
+        Route::resource('api-keys', \App\Http\Controllers\Admin\ApiKeyController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('webhooks', \App\Http\Controllers\Admin\WebhookController::class)->only(['index', 'store', 'destroy']);
 
-    // NEW: DHL-grade modules
-    // Sales
-    Route::resource('quotations', \App\Http\Controllers\Admin\QuotationController::class)
-        ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-    Route::resource('contracts', \App\Http\Controllers\Admin\ContractController::class);
-    Route::resource('address-book', \App\Http\Controllers\Admin\AddressBookController::class);
+        // NEW: DHL-grade modules
+        // Sales
+        Route::resource('quotations', \App\Http\Controllers\Admin\QuotationController::class)
+            ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+        Route::resource('contracts', \App\Http\Controllers\Admin\ContractController::class);
+        Route::resource('address-book', \App\Http\Controllers\Admin\AddressBookController::class);
 
-    // Foundation
-    Route::resource('zones', \App\Http\Controllers\Admin\ZoneController::class);
-    Route::resource('lanes', \App\Http\Controllers\Admin\LaneController::class)->only(['index', 'create', 'store', 'edit', 'update']);
-    Route::resource('carriers', \App\Http\Controllers\Admin\CarrierController::class);
-    Route::resource('carrier-services', \App\Http\Controllers\Admin\CarrierServiceController::class)->parameters(['carrier-services' => 'carrier_service']);
+        // Foundation
+        Route::resource('zones', \App\Http\Controllers\Admin\ZoneController::class);
+        Route::resource('lanes', \App\Http\Controllers\Admin\LaneController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+        Route::resource('carriers', \App\Http\Controllers\Admin\CarrierController::class);
+        Route::resource('carrier-services', \App\Http\Controllers\Admin\CarrierServiceController::class)->parameters(['carrier-services' => 'carrier_service']);
 
-    // Compliance
-    Route::resource('kyc', \App\Http\Controllers\Admin\KycController::class)
-        ->only(['index', 'show', 'update']);
-    Route::resource('dg', \App\Http\Controllers\Admin\DangerousGoodsController::class);
-    Route::resource('ics2', \App\Http\Controllers\Admin\Ics2MonitorController::class)
-        ->only(['index', 'show']);
+        // Compliance
+        Route::resource('kyc', \App\Http\Controllers\Admin\KycController::class)
+            ->only(['index', 'show', 'update']);
+        Route::resource('dg', \App\Http\Controllers\Admin\DangerousGoodsController::class);
+        Route::resource('ics2', \App\Http\Controllers\Admin\Ics2MonitorController::class)
+            ->only(['index', 'show']);
 
-    // Linehaul
-    Route::resource('awb-stock', \App\Http\Controllers\Admin\AwbStockController::class);
-    Route::resource('manifests', \App\Http\Controllers\Admin\ManifestController::class);
-    Route::resource('ecmr', \App\Http\Controllers\Admin\EcmrController::class);
+        // Linehaul
+        Route::resource('awb-stock', \App\Http\Controllers\Admin\AwbStockController::class);
+        Route::resource('manifests', \App\Http\Controllers\Admin\ManifestController::class);
+        Route::resource('ecmr', \App\Http\Controllers\Admin\EcmrController::class);
 
-    // Hub Ops
-    Route::resource('sortation', \App\Http\Controllers\Admin\SortationController::class)
-        ->only(['index', 'update']);
-    Route::resource('warehouse', \App\Http\Controllers\Admin\WarehouseController::class);
+        // Hub Ops
+        Route::resource('sortation', \App\Http\Controllers\Admin\SortationController::class)
+            ->only(['index', 'update']);
+        Route::resource('warehouse', \App\Http\Controllers\Admin\WarehouseController::class);
 
-    // Customer Care
-    Route::resource('returns', \App\Http\Controllers\Admin\ReturnController::class);
-    Route::resource('claims', \App\Http\Controllers\Admin\ClaimController::class);
+        // Customer Care
+        Route::resource('returns', \App\Http\Controllers\Admin\ReturnController::class);
+        Route::resource('claims', \App\Http\Controllers\Admin\ClaimController::class);
 
-    // Finance & Rating
-    Route::resource('surcharges', \App\Http\Controllers\Admin\SurchargeRuleController::class);
-    Route::resource('cash-office', \App\Http\Controllers\Admin\CashOfficeController::class)
-        ->only(['index', 'store']);
-    Route::resource('fx', \App\Http\Controllers\Admin\FxRateController::class);
-    Route::get('gl-export', [\App\Http\Controllers\Admin\GlExportController::class, 'index'])->name('gl-export.index');
-    Route::get('gl-export/csv', [\App\Http\Controllers\Admin\GlExportController::class, 'exportCsv'])->name('gl-export.csv');
+        // Finance & Rating
+        Route::resource('surcharges', \App\Http\Controllers\Admin\SurchargeRuleController::class);
+        Route::resource('cash-office', \App\Http\Controllers\Admin\CashOfficeController::class)
+            ->only(['index', 'store']);
+        Route::resource('fx', \App\Http\Controllers\Admin\FxRateController::class);
+        Route::get('gl-export', [\App\Http\Controllers\Admin\GlExportController::class, 'index'])->name('gl-export.index');
+        Route::get('gl-export/csv', [\App\Http\Controllers\Admin\GlExportController::class, 'exportCsv'])->name('gl-export.csv');
 
-    // Tech Ops & Integrations
-    Route::get('dispatch', [\App\Http\Controllers\Admin\DispatchController::class, 'index'])->name('dispatch.index');
-    Route::resource('whatsapp-templates', \App\Http\Controllers\Admin\WhatsappTemplateController::class);
-    Route::resource('edi', \App\Http\Controllers\Admin\EdiController::class)->only(['index', 'create', 'store']);
-    Route::get('observability', [\App\Http\Controllers\Admin\ObservabilityController::class, 'index'])->name('observability.index');
-    Route::get('exception-tower', [\App\Http\Controllers\Admin\ExceptionTowerController::class, 'index'])->name('exception-tower.index');
+        // Tech Ops & Integrations
+        Route::get('dispatch', [\App\Http\Controllers\Admin\DispatchController::class, 'index'])->name('dispatch.index');
+        Route::resource('whatsapp-templates', \App\Http\Controllers\Admin\WhatsappTemplateController::class);
+        Route::resource('edi', \App\Http\Controllers\Admin\EdiController::class)->only(['index', 'create', 'store']);
+        Route::get('observability', [\App\Http\Controllers\Admin\ObservabilityController::class, 'index'])->name('observability.index');
+        Route::get('exception-tower', [\App\Http\Controllers\Admin\ExceptionTowerController::class, 'index'])->name('exception-tower.index');
 
-    // Labels
-    Route::get('shipments/{shipment}/labels', [\App\Http\Controllers\Admin\ShipmentController::class, 'labels'])->name('shipments.labels');
+        // Labels
+        Route::get('shipments/{shipment}/labels', [\App\Http\Controllers\Admin\ShipmentController::class, 'labels'])->name('shipments.labels');
+
+        // NEW: Unified Branch Management System
+        Route::resource('branches', \App\Http\Controllers\Backend\BranchController::class)->parameters(['branches' => 'branch']);
+        Route::get('branches/{branch}/analytics', [\App\Http\Controllers\Backend\BranchController::class, 'analytics'])->name('branches.analytics');
+        Route::get('branches/{branch}/capacity', [\App\Http\Controllers\Backend\BranchController::class, 'capacity'])->name('branches.capacity');
+        Route::get('branches/hierarchy/tree', [\App\Http\Controllers\Backend\BranchController::class, 'hierarchy'])->name('branches.hierarchy');
+        Route::get('branches/regional/groupings', [\App\Http\Controllers\Backend\BranchController::class, 'regionalGroupings'])->name('branches.regional.groupings');
+        Route::get('branches/level/{level}', [\App\Http\Controllers\Backend\BranchController::class, 'byLevel'])->name('branches.by.level');
+        Route::post('branches/{branch}/move', [\App\Http\Controllers\Backend\BranchController::class, 'moveBranch'])->name('branches.move');
+        Route::post('branches/suggest-parent', [\App\Http\Controllers\Backend\BranchController::class, 'suggestParent'])->name('branches.suggest.parent');
+
+                Route::resource('branch-managers', \App\Http\Controllers\Backend\BranchManagerController::class)->parameters(['branch-managers' => 'manager']);
+                Route::get('branch-managers/{manager}/dashboard', [\App\Http\Controllers\Backend\BranchManagerController::class, 'dashboard'])->name('branch-managers.dashboard');
+                Route::post('branch-managers/{manager}/balance/update', [\App\Http\Controllers\Backend\BranchManagerController::class, 'updateBalance'])->name('branch-managers.balance.update');
+                Route::get('branch-managers/{manager}/settlements', [\App\Http\Controllers\Backend\BranchManagerController::class, 'settlements'])->name('branch-managers.settlements');
+                Route::get('branch-managers/{manager}/analytics', [\App\Http\Controllers\Backend\BranchManagerController::class, 'analytics'])->name('branch-managers.analytics');
+                Route::get('branch-managers/available-users', [\App\Http\Controllers\Backend\BranchManagerController::class, 'availableUsers'])->name('branch-managers.available-users');
+                Route::post('branch-managers/bulk-status-update', [\App\Http\Controllers\Backend\BranchManagerController::class, 'bulkUpdateStatus'])->name('branch-managers.bulk-status-update');
+
+                Route::resource('branch-workers', \App\Http\Controllers\Backend\BranchWorkerController::class)->parameters(['branch-workers' => 'worker']);
+                Route::post('branch-workers/{worker}/unassign', [\App\Http\Controllers\Backend\BranchWorkerController::class, 'unassign'])->name('branch-workers.unassign');
+                Route::post('branch-workers/{worker}/assign-shipment', [\App\Http\Controllers\Backend\BranchWorkerController::class, 'assignShipment'])->name('branch-workers.assign-shipment');
+                Route::get('branch-workers/{worker}/analytics', [\App\Http\Controllers\Backend\BranchWorkerController::class, 'analytics'])->name('branch-workers.analytics');
+                Route::get('branch-workers/available-users', [\App\Http\Controllers\Backend\BranchWorkerController::class, 'availableUsers'])->name('branch-workers.available-users');
+                Route::post('branch-workers/bulk-status-update', [\App\Http\Controllers\Backend\BranchWorkerController::class, 'bulkUpdateStatus'])->name('branch-workers.bulk-status-update');
 });
 
 // end installer
@@ -246,6 +274,24 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDas
             return $serveReactDashboard(['title' => 'Create Account']);
         })->name('register');
     });
+
+    Route::get('/analytics/{path?}', function (?string $path = null) {
+        $suffix = $path ? '/'.$path : '';
+
+        return redirect('/dashboard/analytics'.$suffix);
+    })->where('path', '.*');
+
+    Route::get('/client-management/{path?}', function (?string $path = null) {
+        $suffix = $path ? '/'.$path : '';
+
+        return redirect('/dashboard/customers'.$suffix);
+    })->where('path', '.*');
+
+    Route::get('/clients/{path?}', function (?string $path = null) {
+        $suffix = $path ? '/'.$path : '';
+
+        return redirect('/dashboard/customers'.$suffix);
+    })->where('path', '.*');
 
     // frontend
     Route::controller(FrontendController::class)->group(function () {
@@ -319,6 +365,9 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDas
             Route::get('/dashboard', function () use ($serveReactDashboard) {
                 return $serveReactDashboard();
             })->name('dashboard.index');
+            Route::get('/dashboard/{path}', function (?string $path = null) use ($serveReactDashboard) {
+                return $serveReactDashboard();
+            })->where('path', '.*');
             Route::get('/dashboard-legacy', [DashboardController::class, 'index'])->name('dashboard.legacy');
             Route::post('search-charts', [DashboardController::class, 'searchCharts'])->name('search-charts');
             // Admin Category Controller
@@ -508,7 +557,7 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDas
                 Route::post('merchant/search', [MerchantmanagePaymentController::class, 'merchantSearch'])->name('merchant-manage.merchant-search');
                 Route::post('payment/store', [MerchantmanagePaymentController::class, 'paymentStore'])->name('merchantmanage.payment.store')->middleware('hasPermission:payment_create');
                 Route::get('payment/edit/{id}', [MerchantmanagePaymentController::class, 'edit'])->name('merchatmanage.payment.edit')->middleware('hasPermission:payment_update');
-                Route::put('payment/update', [MerchantmanagePaymentController::class, 'update'])->name('merchantmanage.payment.update')->middleware('hasPermission:payment_update');
+                Route::put('payment/update/{id}', [MerchantmanagePaymentController::class, 'update'])->name('merchantmanage.payment.update')->middleware('hasPermission:payment_update');
                 Route::delete('payment/delete/{id}', [MerchantmanagePaymentController::class, 'destroy'])->name('merchantmanage.payment.delete')->middleware('hasPermission:payment_delete');
                 // merchant manage payment process
                 Route::get('payment/reject/{id}', [MerchantmanagePaymentController::class, 'reject'])->name('merchantmanage.payment.reject')->middleware('hasPermission:payment_reject');
@@ -584,9 +633,9 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDas
                 Route::post('parcel/return-received-by-merchant', [ParcelController::class, 'returnReceivedByMerchant'])->name('parcel.return-received-by-merchant')->middleware('hasPermission:parcel_status_update');
                 Route::post('parcel/return-received-by-merchant/cancel', [ParcelController::class, 'returnReceivedByMerchantCancel'])->name('parcel.return-received-by-merchant-cancel')->middleware('hasPermission:parcel_status_update');
                 Route::post('parcel/delivered', [ParcelController::class, 'parcelDelivered'])->name('parcel.delivered')->middleware('hasPermission:parcel_status_update');
-                Route::post('parcel/delivered/cancel', [ParcelController::class, 'parcelDeliveredCancel'])->name('parcel.delivered-cancel')->middleware('hasPermission:parcel_status_update');
+                Route::post('parcel/delivered/cancel', [ParcelController::class, 'parcelDeliveredCancel'])->name('parcel.delivered.cancel')->middleware('hasPermission:parcel_status_update');
                 Route::post('parcel/partial-delivered', [ParcelController::class, 'parcelPartialDelivered'])->name('parcel.partial-delivered')->middleware('hasPermission:parcel_status_update');
-                Route::post('parcel/partial-delivered/cancel', [ParcelController::class, 'parcelPartialDeliveredCancel'])->name('parcel.partial-delivered-cancel')->middleware('hasPermission:parcel_status_update');
+                Route::post('parcel/partial-delivered/cancel', [ParcelController::class, 'parcelPartialDeliveredCancel'])->name('parcel.partial-delivered.cancel')->middleware('hasPermission:parcel_status_update');
                 Route::post('/transertohub-selected-hub', [ParcelController::class, 'transfertohubSelectedHub'])->name('transertohub.selected.hub');
                 Route::post('/parcel/received-by-multiple-hub', [ParcelController::class, 'parcelReceivedByMultipleHub'])->name('parcel.received-by-mulbiple-hub')->middleware('hasPermission:parcel_status_update');
                 Route::post('parcel/recived-by-hub/search', [ParcelController::class, 'parcelRecivedByHubSearch'])->name('parcel.received-by-hub-search'); // ajax
@@ -854,7 +903,7 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDas
                     // paypal payment gateway
                     Route::get('paypal-index', [PayoutController::class, 'paypalIndex'])->name('paypal.index');
                     Route::post('paypal-payment', [PayoutController::class, 'paypalpayment'])->name('paypal');
-                    // SSLCOMMERZ Start
+                    // ssl commerz
                     Route::get('/sslcommerz', [AdminSslCommerzController::class, 'sslcommerzIndex'])->name('sslcommerz.index');
                     Route::post('/pay-via-ajax', [AdminSslCommerzController::class, 'payViaAjax'])->name('pay.via.ajax');
                     Route::post('/success', [AdminSslCommerzController::class, 'success']);

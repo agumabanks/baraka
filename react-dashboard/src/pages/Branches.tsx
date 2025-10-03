@@ -1,98 +1,200 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { useBranchList } from '../hooks/useBranches';
+import type { BranchListItem, BranchOperationalState, BranchQueue } from '../types/branches';
 
-type BranchStatus = 'Operational' | 'Delayed' | 'Maintenance';
-
-interface BranchRecord {
-  id: string;
-  name: string;
-  location: string;
-  manager: string;
-  status: BranchStatus;
-  throughput: string;
-  capacity: string;
-  openingTime: string;
-  queues: Array<{ label: string; value: number; max: number }>;
-}
-
-const branches: BranchRecord[] = [
-  {
-    id: 'BR-001',
-    name: 'Kampala Central Branch',
-    location: 'Industrial Area • Kampala',
-    manager: 'Brian Akena',
-    status: 'Operational',
-    throughput: '4,820 parcels / day',
-    capacity: '82% utilisation',
-    openingTime: '05:30',
-    queues: [
-      { label: 'Inbound', value: 42, max: 120 },
-      { label: 'Outbound', value: 58, max: 150 },
-      { label: 'Exceptions', value: 6, max: 30 },
-    ],
-  },
-  {
-    id: 'BR-007',
-    name: 'Entebbe Airside Branch',
-    location: 'Airport Cargo Village • Entebbe',
-    manager: 'Grace Wamalwa',
-    status: 'Delayed',
-    throughput: '2,140 parcels / day',
-    capacity: '67% utilisation',
-    openingTime: '04:10',
-    queues: [
-      { label: 'Inbound', value: 65, max: 100 },
-      { label: 'Outbound', value: 74, max: 120 },
-      { label: 'Exceptions', value: 14, max: 25 },
-    ],
-  },
-  {
-    id: 'BR-014',
-    name: 'Gulu Regional Branch',
-    location: 'Ring Road • Gulu',
-    manager: 'Dinah Komakech',
-    status: 'Operational',
-    throughput: '1,280 parcels / day',
-    capacity: '58% utilisation',
-    openingTime: '06:15',
-    queues: [
-      { label: 'Inbound', value: 24, max: 80 },
-      { label: 'Outbound', value: 37, max: 90 },
-      { label: 'Exceptions', value: 3, max: 20 },
-    ],
-  },
-];
-
-const statusBadge: Record<BranchStatus, React.ReactNode> = {
-  Operational: (
+const statusBadge: Record<BranchOperationalState, React.ReactNode> = {
+  operational: (
     <Badge variant="solid" size="sm" className="bg-mono-black text-mono-white">
       Operational
     </Badge>
   ),
-  Delayed: (
+  delayed: (
     <Badge variant="outline" size="sm">
       Delayed
     </Badge>
   ),
-  Maintenance: (
+  maintenance: (
     <Badge variant="ghost" size="sm" className="text-mono-gray-600">
       Maintenance
     </Badge>
   ),
 };
 
-const renderQueueBar = (value: number, max: number) => {
-  const percentage = Math.min(100, Math.round((value / max) * 100));
+const numberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const percentFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+
+const renderQueueBar = ({ id, label, value, max }: BranchQueue) => {
+  const normalizedMax = Math.max(max, 1);
+  const percentage = Math.min(100, Math.round((value / normalizedMax) * 100));
+
   return (
-    <div className="h-2 w-full rounded-full bg-mono-gray-200" aria-hidden="true">
-      <div className="h-2 rounded-full bg-mono-black transition-all" style={{ width: `${percentage}%` }} />
+    <div key={id} className="space-y-1">
+      <div className="flex items-center justify-between text-xs text-mono-gray-500">
+        <span>{label}</span>
+        <span aria-hidden="true">{value} / {normalizedMax}</span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label={`${label} queue load`}
+        aria-valuemin={0}
+        aria-valuemax={normalizedMax}
+        aria-valuenow={value}
+        className="h-2 w-full rounded-full bg-mono-gray-200"
+      >
+        <div
+          className="h-2 rounded-full bg-mono-black transition-all"
+          style={{ width: `${percentage}%` }}
+          aria-hidden="true"
+        />
+      </div>
+      <span className="sr-only">{label} queue at {percentage}%</span>
     </div>
   );
 };
 
+const BranchCard: React.FC<{ branch: BranchListItem; onOpen: (id: number) => void }> = ({ branch, onOpen }) => {
+  const managerName = branch.manager?.name ?? 'Manager not assigned';
+  const locationLabel = branch.address ?? branch.hierarchy_path;
+  const throughputLabel = `${numberFormatter.format(branch.metrics.throughput_24h)} shipments / 24h`;
+  const capacityLabel = `${percentFormatter.format(branch.metrics.capacity_utilization)}% utilisation`;
+  const openingLabel = branch.operating.opening_time ?? 'Schedule not set';
+
+  return (
+    <Card
+      className="border border-mono-gray-200 transition-transform hover:-translate-y-1"
+      header={
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">{branch.code}</p>
+            <h2 className="text-xl font-semibold text-mono-black">{branch.name}</h2>
+            <p className="text-sm text-mono-gray-600">{locationLabel}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 text-sm text-mono-gray-600">
+              <i className="fas fa-user-tie" aria-hidden="true" />
+              <span>{managerName}</span>
+            </div>
+            {statusBadge[branch.status_state]}
+          </div>
+        </div>
+      }
+      footer={
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.25em] text-mono-gray-500">
+          <span>Opens at {openingLabel}</span>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" className="uppercase tracking-[0.25em]">
+              Incident Log
+            </Button>
+                      <Button variant="ghost" size="sm" className="uppercase tracking-[0.25em]" onClick={() => onOpen(branch.id)}>
+                        Staffing Matrix
+                      </Button>
+                      <Button variant="primary" size="sm" className="uppercase tracking-[0.25em]" onClick={() => onOpen(branch.id)}>
+                        Open Branch
+                      </Button>
+                    </div>
+                  </div>
+                }
+    >
+      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="text-sm text-mono-gray-600">
+              <span className="block text-xs uppercase tracking-[0.25em] text-mono-gray-500">
+                Throughput
+              </span>
+              <span className="text-mono-black">{throughputLabel}</span>
+            </div>
+            <div className="text-sm text-mono-gray-600">
+              <span className="block text-xs uppercase tracking-[0.25em] text-mono-gray-500">
+                Capacity
+              </span>
+              <span className="text-mono-black">{capacityLabel}</span>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {branch.queues.map((queue) => renderQueueBar(queue))}
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-2xl border border-mono-gray-200 bg-mono-gray-50 p-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Active Workforce</p>
+            <p className="text-lg font-semibold text-mono-black">
+              {numberFormatter.format(branch.workforce.active)} <span className="text-sm font-normal text-mono-gray-600">/ {numberFormatter.format(branch.workforce.total)}</span>
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Active Clients</p>
+            <p className="text-lg font-semibold text-mono-black">{numberFormatter.format(branch.metrics.active_clients)}</p>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 const Branches: React.FC = () => {
+  const navigate = useNavigate();
+  const { data, isLoading, isError, error, refetch, isFetching } = useBranchList();
+
+  const branches = useMemo(() => data?.items ?? [], [data]);
+
+  const summary = useMemo(() => {
+    if (!branches.length) {
+      return {
+        throughput: 'No throughput data',
+        exceptions: 'No exceptions logged',
+        utilisation: '0% utilisation',
+      };
+    }
+
+    const totalThroughput = branches.reduce((sum, branch) => sum + (branch.metrics.throughput_24h ?? 0), 0);
+    const totalExceptions = branches.reduce((sum, branch) => {
+      const exceptionQueue = branch.queues.find((queue) => queue.id === 'exceptions');
+      return sum + (exceptionQueue?.value ?? 0);
+    }, 0);
+    const averageUtilisation = branches.reduce((sum, branch) => sum + (branch.metrics.capacity_utilization ?? 0), 0) / branches.length;
+
+    return {
+      throughput: `${numberFormatter.format(totalThroughput)} shipments / 24h`,
+      exceptions: `${numberFormatter.format(totalExceptions)} open`,
+      utilisation: `${percentFormatter.format(Math.round(averageUtilisation))}% average utilisation`,
+    };
+  }, [branches]);
+
+  if (isLoading && !data) {
+    return <LoadingSpinner message="Loading branch network" />;
+  }
+
+  if (isError) {
+    const message = error instanceof Error ? error.message : 'Unable to load branch network';
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center">
+        <Card className="max-w-md text-center">
+          <div className="space-y-4">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-mono-black text-mono-white">
+              <i className="fas fa-exclamation-triangle text-2xl" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-mono-black">Unable to reach branch services</h2>
+              <p className="text-sm text-mono-gray-600">{message}</p>
+            </div>
+            <Button variant="primary" size="md" onClick={() => refetch()}>
+              <i className="fas fa-redo mr-2" aria-hidden="true" />
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-10">
       <section className="rounded-3xl border border-mono-gray-200 bg-mono-white shadow-xl">
@@ -105,13 +207,18 @@ const Branches: React.FC = () => {
               Branch Performance
             </h1>
             <p className="max-w-2xl text-sm leading-relaxed text-mono-gray-600">
-              Track throughput, queue health, and incident flags across regional branches. Act before site resilience dips.
+              Monitor throughput, queue health, and workforce readiness across the branch network in real time.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="secondary" size="sm" className="uppercase tracking-[0.25em]">
-              <i className="fas fa-broadcast-tower mr-2" aria-hidden="true" />
-              Dispatch Alert
+            {isFetching && (
+              <span className="text-xs uppercase tracking-[0.3em] text-mono-gray-500" aria-live="polite">
+                Refreshing…
+              </span>
+            )}
+            <Button variant="secondary" size="sm" className="uppercase tracking-[0.25em]" onClick={() => refetch()}>
+              <i className="fas fa-sync-alt mr-2" aria-hidden="true" />
+              Refresh Data
             </Button>
             <Button variant="primary" size="sm" className="uppercase tracking-[0.25em]">
               <i className="fas fa-plus mr-2" aria-hidden="true" />
@@ -124,116 +231,47 @@ const Branches: React.FC = () => {
           <Card className="border border-mono-gray-200 shadow-inner">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Network Capacity</p>
-              <h2 className="text-3xl font-semibold text-mono-black">8,240 Parcels / hr</h2>
-              <p className="text-sm text-mono-gray-600">Across all active branches in the current duty window</p>
+              <h2 className="text-3xl font-semibold text-mono-black">{summary.throughput}</h2>
+              <p className="text-sm text-mono-gray-600">Total processed shipments across the past 24 hours</p>
             </div>
           </Card>
           <Card className="border border-mono-gray-200 shadow-inner">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Exceptions</p>
-              <h2 className="text-3xl font-semibold text-mono-black">23 Outstanding</h2>
-              <p className="text-sm text-mono-gray-600">Escalated to control centre within 45 minutes</p>
+              <h2 className="text-3xl font-semibold text-mono-black">{summary.exceptions}</h2>
+              <p className="text-sm text-mono-gray-600">Exceptions awaiting control centre action</p>
             </div>
           </Card>
           <Card className="border border-mono-gray-200 shadow-inner">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">SLA Integrity</p>
-              <h2 className="text-3xl font-semibold text-mono-black">94% Protected</h2>
-              <p className="text-sm text-mono-gray-600">On-time handoffs across first and last mile</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Utilisation</p>
+              <h2 className="text-3xl font-semibold text-mono-black">{summary.utilisation}</h2>
+              <p className="text-sm text-mono-gray-600">Average load across active branches</p>
             </div>
           </Card>
         </div>
 
         <div className="border-t border-mono-gray-200 px-8 py-8">
-          <div className="grid gap-6">
-            {branches.map((branch) => (
-              <Card
-                key={branch.id}
-                className="border border-mono-gray-200 transition-transform hover:-translate-y-1"
-                header={
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">{branch.id}</p>
-                      <h2 className="text-xl font-semibold text-mono-black">{branch.name}</h2>
-                      <p className="text-sm text-mono-gray-600">{branch.location}</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-2 text-sm text-mono-gray-600">
-                        <i className="fas fa-user-tie" aria-hidden="true" />
-                        {branch.manager}
-                      </div>
-                      {statusBadge[branch.status]}
-                    </div>
-                  </div>
-                }
-                footer={
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.25em] text-mono-gray-500">
-                    <span>Opened at {branch.openingTime}</span>
-                    <div className="flex items-center gap-3">
-                      <Button variant="ghost" size="sm" className="uppercase tracking-[0.25em]">
-                        Incident Log
-                      </Button>
-                      <Button variant="ghost" size="sm" className="uppercase tracking-[0.25em]">
-                        Staffing Matrix
-                      </Button>
-                    </div>
-                  </div>
-                }
-              >
-                <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-6">
-                      <div className="text-sm text-mono-gray-600">
-                        <span className="block text-xs uppercase tracking-[0.25em] text-mono-gray-500">
-                          Throughput
-                        </span>
-                        <span className="text-mono-black">{branch.throughput}</span>
-                      </div>
-                      <div className="text-sm text-mono-gray-600">
-                        <span className="block text-xs uppercase tracking-[0.25em] text-mono-gray-500">
-                          Capacity
-                        </span>
-                        <span className="text-mono-black">{branch.capacity}</span>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-3">
-                      {branch.queues.map((queue) => (
-                        <div key={queue.label} className="space-y-2">
-                          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.25em] text-mono-gray-500">
-                            <span>{queue.label}</span>
-                            <span>{queue.value}</span>
-                          </div>
-                          {renderQueueBar(queue.value, queue.max)}
-                          <p className="text-xs text-mono-gray-500">Max {queue.max}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 rounded-2xl border border-dashed border-mono-gray-300 bg-mono-gray-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">
-                      Focus Actions
-                    </p>
-                    <ul className="space-y-3 text-sm text-mono-gray-600">
-                      <li className="flex items-start gap-2">
-                        <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-mono-black" aria-hidden="true" />
-                        Synchronise linehaul manifest for {branch.name.split(' ')[0]} corridor.
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-mono-black" aria-hidden="true" />
-                        Audit exception cage and reconcile with operations control.
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-mono-black" aria-hidden="true" />
-                        Confirm staffing roster for twilight sort window.
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+          {branches.length === 0 ? (
+            <Card className="text-center">
+              <div className="space-y-3">
+                <h2 className="text-xl font-semibold text-mono-black">No branches discovered</h2>
+                <p className="text-sm text-mono-gray-600">
+                  Start by registering a branch or adjust the filters to view existing locations.
+                </p>
+                <Button variant="primary" size="sm">
+                  <i className="fas fa-plus mr-2" aria-hidden="true" />
+                  Add Branch
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid gap-6">
+              {branches.map((branch) => (
+                <BranchCard key={branch.id} branch={branch} onOpen={(id) => navigate(`/dashboard/branches/${id}`)} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

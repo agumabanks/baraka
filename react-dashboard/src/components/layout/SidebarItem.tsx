@@ -106,6 +106,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     }
   }, [item.expanded]);
 
+  useEffect(() => {
+    if (childActive) {
+      setIsExpanded(true);
+    }
+  }, [childActive]);
+
   // Get icon component - handle both Lucide and Font Awesome icons
   const iconName = convertFaToLucide(item.icon || '');
   const IconComponent = (Icons as any)[iconName];

@@ -80,8 +80,8 @@ class AdminNavigationController extends Controller
             ];
 
             // Add expanded property if it exists in config
-            if (isset($item['expanded'])) {
-                $entry['expanded'] = $item['expanded'];
+            if (array_key_exists('expanded', $item)) {
+                $entry['expanded'] = (bool) $item['expanded'];
             }
 
             if (!empty($childItems)) {

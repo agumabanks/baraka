@@ -11,9 +11,20 @@ import Dashboard from './pages/Dashboard'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import Customers from './pages/Customers'
 import Bookings from './pages/Bookings'
 import Branches from './pages/Branches'
+import BranchDetail from './pages/BranchDetail'
+import Merchants from './pages/Merchants'
+import MerchantDetail from './pages/MerchantDetail'
+import MerchantPayments from './pages/MerchantPayments'
+import AllCustomers from './pages/sales/AllCustomers'
+import CreateCustomer from './pages/sales/CreateCustomer'
+import Quotations from './pages/sales/Quotations'
+import Contracts from './pages/sales/Contracts'
+import AddressBook from './pages/sales/AddressBook'
+import AllSupport from './pages/support/AllSupport'
+import SupportDetail from './pages/support/SupportDetail'
+import SupportForm from './pages/support/SupportForm'
 import { navigationConfig } from './config/navigation'
 import { buildNavigationRoutes, findRouteMeta } from './lib/navigation'
 import { routeDescriptions } from './config/routeDescriptions'
@@ -239,6 +250,10 @@ function AppContent() {
             <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
             <Route path="reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1></div>} />
             <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1></div>} />
+            <Route path="support/:id" element={<SupportDetail />} />
+            <Route path="support/:id/edit" element={<SupportForm />} />
+            <Route path="branches/:branchId" element={<BranchDetail />} />
+            <Route path="merchants/:merchantId" element={<MerchantDetail />} />
             {enhancedRoutes.map(({ meta, routePath, descriptionKey }) => {
               let element: React.ReactNode
 
@@ -249,8 +264,32 @@ function AppContent() {
                 case 'branches':
                   element = <Branches />
                   break
+                case 'merchants':
+                  element = <Merchants />
+                  break
+                case 'merchant/payments':
+                  element = <MerchantPayments />
+                  break
                 case 'customers':
-                  element = <Customers />
+                  element = <AllCustomers />
+                  break
+                case 'customers/create':
+                  element = <CreateCustomer />
+                  break
+                case 'quotations':
+                  element = <Quotations />
+                  break
+                case 'contracts':
+                  element = <Contracts />
+                  break
+                case 'address-book':
+                  element = <AddressBook />
+                  break
+                case 'support':
+                  element = <AllSupport />
+                  break
+                case 'support/create':
+                  element = <SupportForm />
                   break
                 default:
                   element = (
