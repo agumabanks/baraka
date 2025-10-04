@@ -17,6 +17,8 @@ import BranchDetail from './pages/BranchDetail'
 import Merchants from './pages/Merchants'
 import MerchantDetail from './pages/MerchantDetail'
 import MerchantPayments from './pages/MerchantPayments'
+import Shipments from './pages/Shipments'
+import Todo from './pages/Todo'
 import AllCustomers from './pages/sales/AllCustomers'
 import CreateCustomer from './pages/sales/CreateCustomer'
 import Quotations from './pages/sales/Quotations'
@@ -269,6 +271,12 @@ function AppContent() {
                   break
                 case 'merchant/payments':
                   element = <MerchantPayments />
+                  break
+                case 'shipments':
+                  element = <Shipments />
+                  break
+                case 'todo':
+                  element = <Todo />
                   break
                 case 'customers':
                   element = <AllCustomers />

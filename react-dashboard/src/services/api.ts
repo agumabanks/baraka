@@ -35,6 +35,7 @@ import type {
   MerchantListParams,
   MerchantListResponse,
 } from '../types/merchants';
+import type { WorkflowBoardResponse } from '../types/workflow';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -295,6 +296,36 @@ export const merchantsApi = {
   },
   getMerchant: async (merchantId: number | string): Promise<ApiResponse<MerchantDetailResponse>> => {
     const response = await api.get<ApiResponse<MerchantDetailResponse>>(`/v10/merchants/${merchantId}`);
+    return response.data;
+  },
+};
+
+export const workflowApi = {
+  getBoard: async (): Promise<ApiResponse<WorkflowBoardResponse>> => {
+    const response = await api.get<ApiResponse<WorkflowBoardResponse>>('/v10/workflow-board');
+    return response.data;
+  },
+};
+
+export const operationsApi = {
+  getDispatchBoard: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/operations/dispatch-board');
+    return response.data;
+  },
+  getExceptionMetrics: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/operations/exception-metrics');
+    return response.data;
+  },
+  getAlerts: async (): Promise<ApiResponse<Record<string, unknown>[]>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>[]>>('/v10/operations/alerts');
+    return response.data;
+  },
+  getShipmentMetrics: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/operations/shipment-metrics');
+    return response.data;
+  },
+  getWorkerUtilization: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/operations/worker-utilization');
     return response.data;
   },
 };
