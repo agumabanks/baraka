@@ -101,6 +101,8 @@ Route::prefix('v10')->group(function () {
             Route::get('{merchant}', [MerchantManagementController::class, 'show']);
         });
 
+        Route::get('workflow-board', [WorkflowBoardController::class, 'index']);
+
         Route::post('/register', [AuthController::class, 'register']);
         // Customer self-service auth (separate namespace)
         Route::prefix('auth')->group(function () {
