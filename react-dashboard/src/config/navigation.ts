@@ -52,38 +52,16 @@ export const navigationConfig: NavigationConfig = {
           visible: true
         },
         {
-          id: 'deliveryman',
-          label: 'Delivery Drivers',
-          icon: 'Users',
-          path: '/deliveryman',
+          id: 'todo',
+          label: 'To-Do List',
+          icon: 'CheckSquare',
+          path: '/todo',
           badge: {
-            count: 12,
-            variant: 'success',
-            ariaLabel: '12 active drivers',
-            title: '12 active drivers'
+            count: 7,
+            variant: 'warning',
+            ariaLabel: '7 open tasks',
+            title: '7 open tasks'
           },
-          visible: true
-        },
-        {
-          id: 'branch-manage',
-          label: 'Branch Management',
-          icon: 'Building2',
-          children: [
-            {
-              id: 'branches',
-              label: 'Branches',
-              icon: 'Building',
-              path: '/branches',
-              visible: true
-            },
-            {
-              id: 'branch-payments',
-              label: 'Payments',
-              icon: 'CreditCard',
-              path: '/hub/payments',
-              visible: true
-            }
-          ],
           visible: true
         },
         {
@@ -162,19 +140,6 @@ export const navigationConfig: NavigationConfig = {
           visible: true
         },
         {
-          id: 'todo',
-          label: 'To-Do List',
-          icon: 'CheckSquare',
-          path: '/todo',
-          badge: {
-            count: 7,
-            variant: 'warning',
-            ariaLabel: '7 open tasks',
-            title: '7 open tasks'
-          },
-          visible: true
-        },
-        {
           id: 'support',
           label: 'Support',
           icon: 'MessageSquare',
@@ -197,6 +162,70 @@ export const navigationConfig: NavigationConfig = {
             variant: 'error',
             ariaLabel: '5 exception parcels',
             title: '5 parcels requiring attention'
+          },
+          visible: true
+        }
+      ]
+    },
+    {
+      id: 'branch-management',
+      label: 'BRANCH MANAGEMENT',
+      visible: true,
+      items: [
+        {
+          id: 'branch-management-menu',
+          label: 'Branch Management',
+          icon: 'Building2',
+          expanded: false,
+          children: [
+            {
+              id: 'branches-all',
+              label: 'All Branches',
+              icon: 'Building',
+              path: '/branches',
+              visible: true
+            },
+            {
+              id: 'branches-hierarchy',
+              label: 'Branch Hierarchy',
+              icon: 'GitBranch',
+              path: '/branches/hierarchy',
+              visible: true
+            },
+            {
+              id: 'branches-analytics',
+              label: 'Branch Analytics',
+              icon: 'BarChart3',
+              path: '/branches/analytics',
+              visible: true
+            },
+            {
+              id: 'branches-capacity',
+              label: 'Capacity Planning',
+              icon: 'Gauge',
+              path: '/branches/capacity',
+              visible: true
+            },
+            {
+              id: 'branches-workers',
+              label: 'Branch Workers',
+              icon: 'UserCog',
+              path: '/branches/workers',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'deliveryman',
+          label: 'Delivery Drivers',
+          icon: 'Users',
+          path: '/deliveryman',
+          badge: {
+            count: 12,
+            variant: 'success',
+            ariaLabel: '12 active drivers',
+            title: '12 active drivers'
           },
           visible: true
         }
