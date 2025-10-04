@@ -31,25 +31,46 @@ class WorkflowBoardController extends Controller
         }
 
         $unassignedShipments = collect($dispatchSnapshot['unassigned_shipments'] ?? [])
-            ->take(8)
+            ->take(12)
             ->values();
 
         $loadBalancing = $dispatchSnapshot['load_balancing'] ?? [];
+        $driverQueues = collect($dispatchSnapshot['driver_queues'] ?? [])
+            ->map(function ($queue) {
+                return [
+                    'worker_id' => $queue['worker_id'] ?? null,
+                    'worker_name' => $queue['worker_name'] ?? null,
+                    'assigned_shipments' => $queue['assigned_shipments'] ?? 0,
+                    'capacity' => $queue['capacity'] ?? null,
+                    'utilization' => $queue['utilization'] ?? null,
+                ];
+            })
+            ->values();
 
         $exceptions = $this->exceptionService
             ->getActiveExceptions([
                 'branch_id' => $hubBranch?->id,
             ])
-            ->take(8)
+            ->take(12)
             ->values();
 
+        $windowEnd = Carbon::now();
+        $windowStart = (clone $windowEnd)->subDays(7);
+
+        $exceptionMetrics = $this->exceptionService->getExceptionMetrics(
+            $windowStart,
+            $windowEnd
+        );
+
         $kpiSummary = $this->controlTowerService->getOperationalKPIs();
+        $shipmentMetrics = $this->controlTowerService->getShipmentMetrics($windowStart, $windowEnd);
+        $workerUtilization = $this->controlTowerService->getWorkerUtilization();
 
         $notifications = [];
         if ($request->user()) {
             $notifications = $this->notificationService
                 ->getUnreadNotifications($request->user())
-                ->take(10)
+                ->take(15)
                 ->values()
                 ->all();
         }
@@ -67,8 +88,13 @@ class WorkflowBoardController extends Controller
                     'unassigned_shipments' => $unassignedShipments,
                     'exceptions' => $exceptions,
                     'load_balancing' => $loadBalancing,
+                    'driver_queues' => $driverQueues,
                 ],
+                'dispatch_snapshot' => $dispatchSnapshot,
                 'kpis' => $kpiSummary,
+                'shipment_metrics' => $shipmentMetrics,
+                'worker_utilization' => $workerUtilization,
+                'exception_metrics' => $exceptionMetrics,
                 'notifications' => $notifications,
             ],
         ]);
