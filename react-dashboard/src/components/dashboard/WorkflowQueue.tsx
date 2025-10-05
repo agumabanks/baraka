@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../ui/Card';
 import Badge from '../ui/Badge';
 import { SkeletonWorkflowItem } from './SkeletonCard';
@@ -108,9 +109,19 @@ const WorkflowQueue: React.FC<WorkflowQueueProps> = ({
     <Card
       header={
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-mono-black">Today's Workflow</h3>
-            <p className="text-xs text-mono-gray-500">Live operations queue, refreshed automatically</p>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-mono-black">Today's Workflow</h3>
+              <p className="text-xs text-mono-gray-500">Live operations queue, refreshed automatically</p>
+            </div>
+            <Link
+              to="/dashboard/todo"
+              className="inline-flex items-center gap-2 text-sm font-medium text-mono-gray-700 hover:text-mono-black transition-colors"
+              title="View full workflow board"
+            >
+              Full Board
+              <i className="fas fa-arrow-right" aria-hidden="true" />
+            </Link>
           </div>
           <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter workflow items by priority">
             {filterOptions.map((option) => {
@@ -257,14 +268,23 @@ const WorkflowQueue: React.FC<WorkflowQueueProps> = ({
           })}
 
           {!showAll && items.length > filteredItems.length && (
-            <button
-              type="button"
-              className="w-full text-center py-2 text-sm font-medium text-mono-gray-700 hover:text-mono-black"
-              onClick={() => setShowAll(true)}
-            >
-              View all {items.length} items
-              <i className="fas fa-arrow-right ml-2" aria-hidden="true" />
-            </button>
+            <div className="flex items-center justify-between gap-4 pt-2 border-t border-mono-gray-200">
+              <button
+                type="button"
+                className="flex-1 text-center py-2 text-sm font-medium text-mono-gray-700 hover:text-mono-black transition-colors"
+                onClick={() => setShowAll(true)}
+              >
+                Show all {items.length} items
+                <i className="fas fa-chevron-down ml-2" aria-hidden="true" />
+              </button>
+              <Link
+                to="/dashboard/todo"
+                className="flex-1 text-center py-2 text-sm font-medium text-mono-black hover:bg-mono-gray-50 rounded transition-colors"
+              >
+                Open Workflow Board
+                <i className="fas fa-external-link-alt ml-2" aria-hidden="true" />
+              </Link>
+            </div>
           )}
         </div>
       )}
