@@ -7,7 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Sidebar from './components/layout/Sidebar'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
-import EnhancedDashboard from './pages/EnhancedDashboard'
+import Dashboard from './pages/Dashboard'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -18,7 +18,7 @@ import Merchants from './pages/Merchants'
 import MerchantDetail from './pages/MerchantDetail'
 import MerchantPayments from './pages/MerchantPayments'
 import Shipments from './pages/Shipments'
-import EnhancedTodo from './pages/EnhancedTodo'
+import Todo from './pages/Todo'
 import AllCustomers from './pages/sales/AllCustomers'
 import CreateCustomer from './pages/sales/CreateCustomer'
 import Quotations from './pages/sales/Quotations'
@@ -28,55 +28,54 @@ import AllSupport from './pages/support/AllSupport'
 import SupportDetail from './pages/support/SupportDetail'
 import SupportForm from './pages/support/SupportForm'
 
+// TODO: These components need to be created for full navigation
 // Operations Components
-import DispatchBoard from './pages/operations/DispatchBoard'
-import ExceptionTower from './pages/operations/ExceptionTower'
-import ControlTower from './pages/operations/ControlTower'
-import WorkflowBoard from './pages/operations/WorkflowBoard'
+// import DispatchBoard from './pages/operations/DispatchBoard'
+// import ExceptionTower from './pages/operations/ExceptionTower'
+// import ControlTower from './pages/operations/ControlTower'
+// import WorkflowBoard from './pages/operations/WorkflowBoard'
+// import Parcels from './pages/operations/Parcels'
+// import Bags from './pages/operations/Bags'
+// import RoutesPage from './pages/operations/Routes'
 
 // Finance Components
-import RateCards from './pages/finance/RateCards'
-import Invoices from './pages/finance/Invoices'
-import CODDashboard from './pages/finance/CODDashboard'
-import Settlements from './pages/finance/Settlements'
+// import RateCards from './pages/finance/RateCards'
+// import Invoices from './pages/finance/Invoices'
+// import CODDashboard from './pages/finance/CODDashboard'
+// import Settlements from './pages/finance/Settlements'
 
 // Compliance Components
-import KYCVerification from './pages/compliance/KYCVerification'
-import DangerousGoods from './pages/compliance/DangerousGoods'
-import CustomsDeclarations from './pages/compliance/CustomsDeclarations'
-import FraudDetection from './pages/compliance/FraudDetection'
+// import KYCVerification from './pages/compliance/KYCVerification'
+// import DangerousGoods from './pages/compliance/DangerousGoods'
+// import CustomsDeclarations from './pages/compliance/CustomsDeclarations'
+// import FraudDetection from './pages/compliance/FraudDetection'
 
 // Integration Components
-import APIKeys from './pages/integrations/APIKeys'
-import Webhooks from './pages/integrations/Webhooks'
-import IntegrationMonitoring from './pages/integrations/IntegrationMonitoring'
+// import APIKeys from './pages/integrations/APIKeys'
+// import Webhooks from './pages/integrations/Webhooks'
+// import IntegrationMonitoring from './pages/integrations/IntegrationMonitoring'
 
 // Asset Components
-import AssetStatus from './pages/assets/AssetStatus'
-import Vehicles from './pages/assets/Vehicles'
+// import AssetStatus from './pages/assets/AssetStatus'
+// import Vehicles from './pages/assets/Vehicles'
 
 // Branch Components
-import BranchAnalytics from './pages/branches/BranchAnalytics'
-import BranchHierarchy from './pages/branches/BranchHierarchy'
-import BranchCapacity from './pages/branches/BranchCapacity'
-import BranchWorkers from './pages/branches/BranchWorkers'
-
-// Operations - Additional Components
-import Parcels from './pages/operations/Parcels'
-import Bags from './pages/operations/Bags'
-import RoutesPage from './pages/operations/Routes'
+// import BranchAnalytics from './pages/branches/BranchAnalytics'
+// import BranchHierarchy from './pages/branches/BranchHierarchy'
+// import BranchCapacity from './pages/branches/BranchCapacity'
+// import BranchWorkers from './pages/branches/BranchWorkers'
 
 // Workers
-import DeliveryWorkers from './pages/DeliveryWorkers'
+// import DeliveryWorkers from './pages/DeliveryWorkers'
 
 // Reports
-import Reports from './pages/Reports'
-import OperationsReports from './pages/reports/OperationsReports'
-import FinancialReports from './pages/reports/FinancialReports'
-import ComplianceReports from './pages/reports/ComplianceReports'
+// import Reports from './pages/Reports'
+// import OperationsReports from './pages/reports/OperationsReports'
+// import FinancialReports from './pages/reports/FinancialReports'
+// import ComplianceReports from './pages/reports/ComplianceReports'
 
 // Settings
-import Users from './pages/settings/Users'
+// import Users from './pages/settings/Users'
 import { navigationConfig } from './config/navigation'
 import { buildNavigationRoutes, findRouteMeta } from './lib/navigation'
 import { routeDescriptions } from './config/routeDescriptions'
@@ -297,8 +296,8 @@ function AppContent() {
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6">
           <Routes>
-            <Route index element={<EnhancedDashboard />} />
-            <Route path="dashboard" element={<EnhancedDashboard />} />
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
             <Route path="reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1></div>} />
             <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1></div>} />
@@ -307,61 +306,61 @@ function AppContent() {
             <Route path="branches/:branchId" element={<BranchDetail />} />
             <Route path="merchants/:merchantId" element={<MerchantDetail />} />
             
-            {/* Operations Routes */}
-            <Route path="operations/dispatch" element={<DispatchBoard />} />
-            <Route path="operations/exceptions" element={<ExceptionTower />} />
-            <Route path="operations/control-tower" element={<ControlTower />} />
-            <Route path="dashboard/workflow" element={<WorkflowBoard />} />
+            {/* Operations Routes - TODO: Implement these components */}
+            <Route path="operations/dispatch" element={<div className="p-6"><h1 className="text-2xl font-bold">Dispatch Board</h1><p>Coming soon...</p></div>} />
+            <Route path="operations/exceptions" element={<div className="p-6"><h1 className="text-2xl font-bold">Exception Tower</h1><p>Coming soon...</p></div>} />
+            <Route path="operations/control-tower" element={<div className="p-6"><h1 className="text-2xl font-bold">Control Tower</h1><p>Coming soon...</p></div>} />
+            <Route path="dashboard/workflow" element={<div className="p-6"><h1 className="text-2xl font-bold">Workflow Board</h1><p>Coming soon...</p></div>} />
             
-            {/* Finance Routes */}
-            <Route path="finance/rate-cards" element={<RateCards />} />
-            <Route path="finance/invoices" element={<Invoices />} />
-            <Route path="finance/cod" element={<CODDashboard />} />
-            <Route path="finance/settlements/*" element={<Settlements />} />
+            {/* Finance Routes - TODO: Implement these components */}
+            <Route path="finance/rate-cards" element={<div className="p-6"><h1 className="text-2xl font-bold">Rate Cards</h1><p>Coming soon...</p></div>} />
+            <Route path="finance/invoices" element={<div className="p-6"><h1 className="text-2xl font-bold">Invoices</h1><p>Coming soon...</p></div>} />
+            <Route path="finance/cod" element={<div className="p-6"><h1 className="text-2xl font-bold">COD Dashboard</h1><p>Coming soon...</p></div>} />
+            <Route path="finance/settlements/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Settlements</h1><p>Coming soon...</p></div>} />
             
-            {/* Compliance Routes */}
-            <Route path="compliance/kyc" element={<KYCVerification />} />
-            <Route path="compliance/dg/*" element={<DangerousGoods />} />
-            <Route path="compliance/customs/*" element={<CustomsDeclarations />} />
-            <Route path="compliance/fraud/*" element={<FraudDetection />} />
+            {/* Compliance Routes - TODO: Implement these components */}
+            <Route path="compliance/kyc" element={<div className="p-6"><h1 className="text-2xl font-bold">KYC Verification</h1><p>Coming soon...</p></div>} />
+            <Route path="compliance/dg/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Dangerous Goods</h1><p>Coming soon...</p></div>} />
+            <Route path="compliance/customs/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Customs Declarations</h1><p>Coming soon...</p></div>} />
+            <Route path="compliance/fraud/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Fraud Detection</h1><p>Coming soon...</p></div>} />
             
-            {/* Integration Routes */}
-            <Route path="integrations/api-keys" element={<APIKeys />} />
-            <Route path="integrations/webhooks" element={<Webhooks />} />
-            <Route path="integrations/monitoring" element={<IntegrationMonitoring />} />
+            {/* Integration Routes - TODO: Implement these components */}
+            <Route path="integrations/api-keys" element={<div className="p-6"><h1 className="text-2xl font-bold">API Keys</h1><p>Coming soon...</p></div>} />
+            <Route path="integrations/webhooks" element={<div className="p-6"><h1 className="text-2xl font-bold">Webhooks</h1><p>Coming soon...</p></div>} />
+            <Route path="integrations/monitoring" element={<div className="p-6"><h1 className="text-2xl font-bold">Integration Monitoring</h1><p>Coming soon...</p></div>} />
             
-            {/* Asset Routes */}
-            <Route path="assets" element={<AssetStatus />} />
-            <Route path="vehicles" element={<Vehicles />} />
+            {/* Asset Routes - TODO: Implement these components */}
+            <Route path="assets" element={<div className="p-6"><h1 className="text-2xl font-bold">Asset Status</h1><p>Coming soon...</p></div>} />
+            <Route path="vehicles" element={<div className="p-6"><h1 className="text-2xl font-bold">Vehicles</h1><p>Coming soon...</p></div>} />
             
-            {/* Branch Routes */}
-            <Route path="branches/hierarchy" element={<BranchHierarchy />} />
-            <Route path="branches/analytics" element={<BranchAnalytics />} />
-            <Route path="branches/capacity" element={<BranchCapacity />} />
-            <Route path="branches/workers" element={<BranchWorkers />} />
+            {/* Branch Routes - TODO: Implement these components */}
+            <Route path="branches/hierarchy" element={<div className="p-6"><h1 className="text-2xl font-bold">Branch Hierarchy</h1><p>Coming soon...</p></div>} />
+            <Route path="branches/analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Branch Analytics</h1><p>Coming soon...</p></div>} />
+            <Route path="branches/capacity" element={<div className="p-6"><h1 className="text-2xl font-bold">Capacity Planning</h1><p>Coming soon...</p></div>} />
+            <Route path="branches/workers" element={<div className="p-6"><h1 className="text-2xl font-bold">Branch Workers</h1><p>Coming soon...</p></div>} />
             
-            {/* Additional Operations Routes */}
-            <Route path="parcels" element={<Parcels />} />
-            <Route path="bags" element={<Bags />} />
-            <Route path="routes" element={<RoutesPage />} />
-            <Route path="routes/optimize" element={<RoutesPage />} />
-            <Route path="routes/stops" element={<RoutesPage />} />
+            {/* Additional Operations Routes - TODO: Implement these components */}
+            <Route path="parcels" element={<div className="p-6"><h1 className="text-2xl font-bold">Parcels</h1><p>Coming soon...</p></div>} />
+            <Route path="bags" element={<div className="p-6"><h1 className="text-2xl font-bold">Bags</h1><p>Coming soon...</p></div>} />
+            <Route path="routes" element={<div className="p-6"><h1 className="text-2xl font-bold">Routes</h1><p>Coming soon...</p></div>} />
+            <Route path="routes/optimize" element={<div className="p-6"><h1 className="text-2xl font-bold">Route Optimizer</h1><p>Coming soon...</p></div>} />
+            <Route path="routes/stops" element={<div className="p-6"><h1 className="text-2xl font-bold">Stops</h1><p>Coming soon...</p></div>} />
             
-            {/* Delivery Workers */}
-            <Route path="deliveryman" element={<DeliveryWorkers />} />
-            <Route path="branches/workers" element={<DeliveryWorkers />} />
+            {/* Delivery Workers - TODO: Implement this component */}
+            <Route path="deliveryman" element={<div className="p-6"><h1 className="text-2xl font-bold">Delivery Workers</h1><p>Coming soon...</p></div>} />
+            <Route path="branches/workers" element={<div className="p-6"><h1 className="text-2xl font-bold">Branch Workers</h1><p>Coming soon...</p></div>} />
             
-            {/* Reports Routes */}
-            <Route path="reports" element={<Reports />} />
-            <Route path="reports/operations" element={<OperationsReports />} />
-            <Route path="reports/financial" element={<FinancialReports />} />
-            <Route path="reports/compliance" element={<ComplianceReports />} />
-            <Route path="reports/analytics" element={<Reports />} />
-            <Route path="reports/workforce" element={<Reports />} />
+            {/* Reports Routes - TODO: Implement these components */}
+            <Route path="reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>} />
+            <Route path="reports/operations" element={<div className="p-6"><h1 className="text-2xl font-bold">Operations Reports</h1><p>Coming soon...</p></div>} />
+            <Route path="reports/financial" element={<div className="p-6"><h1 className="text-2xl font-bold">Financial Reports</h1><p>Coming soon...</p></div>} />
+            <Route path="reports/compliance" element={<div className="p-6"><h1 className="text-2xl font-bold">Compliance Reports</h1><p>Coming soon...</p></div>} />
+            <Route path="reports/analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics Reports</h1><p>Coming soon...</p></div>} />
+            <Route path="reports/workforce" element={<div className="p-6"><h1 className="text-2xl font-bold">Workforce Reports</h1><p>Coming soon...</p></div>} />
             
-            {/* Settings Routes */}
-            <Route path="settings/users" element={<Users />} />
-            <Route path="users" element={<Users />} />
+            {/* Settings Routes - TODO: Implement these components */}
+            <Route path="settings/users" element={<div className="p-6"><h1 className="text-2xl font-bold">Users</h1><p>Coming soon...</p></div>} />
+            <Route path="users" element={<div className="p-6"><h1 className="text-2xl font-bold">Users</h1><p>Coming soon...</p></div>} />
             
             {enhancedRoutes.map(({ meta, routePath, descriptionKey }) => {
               let element: React.ReactNode
@@ -383,7 +382,7 @@ function AppContent() {
                   element = <Shipments />
                   break
                 case 'todo':
-                  element = <EnhancedTodo />
+                  element = <Todo />
                   break
                 case 'customers':
                   element = <AllCustomers />
@@ -407,31 +406,31 @@ function AppContent() {
                   element = <SupportForm />
                   break
                 case 'reports':
-                  element = <Reports />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>
                   break
                 case 'reports/operations':
-                  element = <OperationsReports />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Operations Reports</h1><p>Coming soon...</p></div>
                   break
                 case 'reports/financial':
-                  element = <FinancialReports />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Financial Reports</h1><p>Coming soon...</p></div>
                   break
                 case 'reports/compliance':
-                  element = <ComplianceReports />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Compliance Reports</h1><p>Coming soon...</p></div>
                   break
                 case 'parcels':
-                  element = <Parcels />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Parcels</h1><p>Coming soon...</p></div>
                   break
                 case 'bags':
-                  element = <Bags />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Bags</h1><p>Coming soon...</p></div>
                   break
                 case 'routes':
-                  element = <RoutesPage />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Routes</h1><p>Coming soon...</p></div>
                   break
                 case 'deliveryman':
-                  element = <DeliveryWorkers />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Delivery Workers</h1><p>Coming soon...</p></div>
                   break
                 case 'users':
-                  element = <Users />
+                  element = <div className="p-6"><h1 className="text-2xl font-bold">Users</h1><p>Coming soon...</p></div>
                   break
                 default:
                   element = (
