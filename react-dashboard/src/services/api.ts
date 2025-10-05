@@ -307,6 +307,33 @@ export const workflowApi = {
   },
 };
 
+export const workflowQueueApi = {
+  getQueue: async () => {
+    const response = await api.get('/v10/dashboard/workflow-queue');
+    return response.data;
+  },
+  create: async (data: Record<string, unknown>) => {
+    const response = await api.post('/v10/workflow-items', data);
+    return response.data;
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const response = await api.put(`/v10/workflow-items/${id}`, data);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/v10/workflow-items/${id}`);
+    return response.data;
+  },
+  updateStatus: async (id: string, status: string) => {
+    const response = await api.patch(`/v10/workflow-items/${id}/status`, { status });
+    return response.data;
+  },
+  assign: async (id: string, assignedTo: string) => {
+    const response = await api.patch(`/v10/workflow-items/${id}/assign`, { assigned_to: assignedTo });
+    return response.data;
+  },
+};
+
 export const operationsApi = {
   getDispatchBoard: async (): Promise<ApiResponse<Record<string, unknown>>> => {
     const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/operations/dispatch-board');
