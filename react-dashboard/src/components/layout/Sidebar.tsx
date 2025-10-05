@@ -1,7 +1,66 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { X } from 'lucide-react';
-import type { SidebarProps } from '../../types/navigation';
+import type { SidebarProps, NavBucket } from '../../types/navigation';
 import SidebarItem from './SidebarItem';
+
+const branchManagementBucket: NavBucket = {
+  id: 'branch-management',
+  label: 'BRANCH MANAGEMENT',
+  visible: true,
+  items: [
+    {
+      id: 'branch-management-menu',
+      label: 'Branch Management',
+      icon: 'Building2',
+      expanded: false,
+      visible: true,
+      children: [
+        {
+          id: 'branches-all',
+          label: 'All Branches',
+          icon: 'Building',
+          path: '/branches',
+          visible: true
+        },
+        {
+          id: 'branches-hierarchy',
+          label: 'Branch Hierarchy',
+          icon: 'GitBranch',
+          path: '/branches/hierarchy',
+          visible: true
+        },
+        {
+          id: 'branches-analytics',
+          label: 'Branch Analytics',
+          icon: 'BarChart3',
+          path: '/branches/analytics',
+          visible: true
+        },
+        {
+          id: 'branches-capacity',
+          label: 'Capacity Planning',
+          icon: 'Gauge',
+          path: '/branches/capacity',
+          visible: true
+        },
+        {
+          id: 'branches-workers',
+          label: 'Branch Workers',
+          icon: 'UserCog',
+          path: '/branches/workers',
+          visible: true
+        }
+      ]
+    },
+    {
+      id: 'deliveryman',
+      label: 'Delivery Drivers',
+      icon: 'Users',
+      path: '/deliveryman',
+      visible: true
+    }
+  ]
+};
 
 /**
  * Sidebar Component
@@ -16,6 +75,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   onNavigate,
   className = ''
 }) => {
+  const enhancedBuckets = useMemo(() => {
+    const buckets = navigation?.buckets ?? [];
+    if (buckets.some((bucket) => bucket.id === branchManagementBucket.id)) {
+      return buckets;
+    }
+    return [...buckets, branchManagementBucket];
+  }, [navigation]);
+
   // Handle navigation item click
   const handleNavigate = useCallback((path?: string) => {
     if (path && onNavigate) {
@@ -98,7 +165,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           
           {/* Scrollable navigation area */}
           <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
-            {navigation.buckets.filter(bucket => bucket.visible !== false).map((bucket) => (
+            {enhancedBuckets.filter(bucket => bucket.visible !== false).map((bucket) => (
               <div key={bucket.id} className="mb-6">
                 {/* Bucket divider */}
                 <div className="text-xs font-semibold uppercase tracking-wider text-mono-gray-500 mb-3 px-1">
