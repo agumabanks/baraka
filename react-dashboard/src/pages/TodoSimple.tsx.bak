@@ -4,12 +4,8 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import CreateWorkflowModal, { type WorkflowFormData } from '../components/workflow/CreateWorkflowModal';
-import EditWorkflowModal from '../components/workflow/EditWorkflowModal';
-import BulkActionsBar from '../components/workflow/BulkActionsBar';
-import AdvancedFiltersBar, { type AdvancedFilters } from '../components/workflow/AdvancedFiltersBar';
 import { useWorkflowBoard } from '../hooks/useWorkflowBoard';
-import { useCreateWorkflowItem, useUpdateWorkflowItem, useBulkUpdateWorkflowItems, useBulkDeleteWorkflowItems } from '../hooks/useWorkflowQueue';
-import { exportToCSV, exportToExcel, prepareWorkflowDataForExport } from '../utils/export';
+import { useCreateWorkflowItem } from '../hooks/useWorkflowQueue';
 import type { WorkflowBoardShipment, WorkflowBoardException, WorkflowBoardNotification } from '../types/workflow';
 
 const formatDateTime = (value?: string | null) => {
@@ -26,19 +22,22 @@ const priorityTone: Record<string, string> = {
 type SortField = 'priority' | 'status' | 'created_at' | 'tracking_number';
 type SortDirection = 'asc' | 'desc';
 
-type FilterState = AdvancedFilters;
+interface FilterState {
+  priority: string;
+  status: string;
+  severity: string;
+  search: string;
+}
 
 const TodoEnhanced: React.FC = () => {
   const { data, isLoading, isError, error, refetch, isFetching } = useWorkflowBoard();
   const createMutation = useCreateWorkflowItem();
-  const updateMutation = useUpdateWorkflowItem();
-  const bulkUpdateMutation = useBulkUpdateWorkflowItems();
-  const bulkDeleteMutation = useBulkDeleteWorkflowItems();
+  // TODO: Implement edit and delete functionality
+  // const updateMutation = useUpdateWorkflowItem();
+  // const deleteMutation = useDeleteWorkflowItem();
+  // const updateStatusMutation = useUpdateWorkflowStatus();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>('priority');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,10 +48,6 @@ const TodoEnhanced: React.FC = () => {
     status: 'all',
     severity: 'all',
     search: '',
-    dateFrom: '',
-    dateTo: '',
-    assignedTo: '',
-    tags: [],
   });
 
   const handleCreateTask = async (formData: WorkflowFormData) => {
@@ -64,88 +59,14 @@ const TodoEnhanced: React.FC = () => {
     }
   };
 
-  const handleEditTask = (item: any) => {
-    setEditingItem(item);
-    setIsEditModalOpen(true);
-  };
-
-  const handleUpdateTask = async (id: string, formData: WorkflowFormData) => {
-    try {
-      await updateMutation.mutateAsync({ id, data: formData });
-      setIsEditModalOpen(false);
-      setEditingItem(null);
-    } catch (error) {
-      console.error('Failed to update task:', error);
-    }
-  };
-
-  const handleToggleSelect = (id: string | number) => {
-    const idStr = String(id);
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(idStr)) {
-      newSelected.delete(idStr);
-    } else {
-      newSelected.add(idStr);
-    }
-    setSelectedIds(newSelected);
-  };
-
-  const handleSelectAll = () => {
-    if (selectedIds.size === paginatedShipments.length) {
-      setSelectedIds(new Set());
-    } else {
-      const allIds = new Set(paginatedShipments.map(s => String(s.id || s.tracking_number)).filter(Boolean));
-      setSelectedIds(allIds);
-    }
-  };
-
-  const handleBulkUpdateStatus = async (status: 'pending' | 'in_progress' | 'completed' | 'delayed') => {
-    try {
-      await bulkUpdateMutation.mutateAsync({
-        ids: Array.from(selectedIds),
-        data: { status }
-      });
-      setSelectedIds(new Set());
-    } catch (error) {
-      console.error('Failed to bulk update:', error);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedIds.size} selected items?`)) return;
-    try {
-      await bulkDeleteMutation.mutateAsync(Array.from(selectedIds));
-      setSelectedIds(new Set());
-    } catch (error) {
-      console.error('Failed to bulk delete:', error);
-    }
-  };
-
-  const handleExport = (format: 'csv' | 'excel') => {
-    const exportData = prepareWorkflowDataForExport(sortedShipments);
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `workflow-items-${timestamp}.${format === 'csv' ? 'csv' : 'xlsx'}`;
-    
-    if (format === 'csv') {
-      exportToCSV(exportData, filename);
-    } else {
-      exportToExcel(exportData, filename);
-    }
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      priority: 'all',
-      status: 'all',
-      severity: 'all',
-      search: '',
-      dateFrom: '',
-      dateTo: '',
-      assignedTo: '',
-      tags: [],
-    });
-    setCurrentPage(1);
-  };
+  // TODO: Implement update/delete handlers
+  // const handleUpdateStatus = async (id: string, status: 'pending' | 'in_progress' | 'completed' | 'delayed') => {
+  //   try {
+  //     await updateStatusMutation.mutateAsync({ id, status });
+  //   } catch (error) {
+  //     console.error('Failed to update status:', error);
+  //   }
+  // };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -291,30 +212,72 @@ const TodoEnhanced: React.FC = () => {
         </Card>
       </section>
 
-      {/* Advanced Filters */}
-      <AdvancedFiltersBar
-        filters={filters}
-        onFilterChange={setFilters}
-        onClear={clearFilters}
-        onExport={handleExport}
-      />
+      {/* Filters and Search */}
+      <Card className="border border-mono-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500 mb-2">
+              Search
+            </label>
+            <input
+              type="text"
+              placeholder="Search tracking number..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="w-full px-3 py-2 border border-mono-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-mono-black"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500 mb-2">
+              Priority
+            </label>
+            <select
+              value={filters.priority}
+              onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+              className="w-full px-3 py-2 border border-mono-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-mono-black"
+            >
+              <option value="all">All Priorities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500 mb-2">
+              Severity
+            </label>
+            <select
+              value={filters.severity}
+              onChange={(e) => setFilters({ ...filters, severity: e.target.value })}
+              className="w-full px-3 py-2 border border-mono-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-mono-black"
+            >
+              <option value="all">All Severities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div className="flex items-end">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setFilters({ priority: 'all', status: 'all', severity: 'all', search: '' })}
+              className="w-full"
+            >
+              <i className="fas fa-times mr-2" aria-hidden="true" />
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       {/* Unassigned Shipments Section with Pagination */}
       <section>
         <Card className="border border-mono-gray-200">
           <header className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div className="flex items-center gap-4">
-              <input
-                type="checkbox"
-                checked={selectedIds.size > 0 && selectedIds.size === paginatedShipments.length}
-                onChange={handleSelectAll}
-                className="w-4 h-4 rounded border-mono-gray-300 focus:ring-2 focus:ring-mono-black"
-                title="Select all on page"
-              />
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Dispatch Actions</p>
-                <h2 className="text-xl font-semibold text-mono-black">Unassigned queue</h2>
-              </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Dispatch Actions</p>
+              <h2 className="text-xl font-semibold text-mono-black">Unassigned queue</h2>
             </div>
             <div className="flex items-center gap-3">
               <Badge variant="outline" size="sm">{sortedShipments.length} items</Badge>
@@ -339,48 +302,29 @@ const TodoEnhanced: React.FC = () => {
             {paginatedShipments.length === 0 ? (
               <p className="py-6 text-sm text-mono-gray-600 text-center">No shipments match your filters.</p>
             ) : (
-              paginatedShipments.map((shipment) => {
-                const itemId = String(shipment.id || shipment.tracking_number || '');
-                const isSelected = selectedIds.has(itemId);
-                return (
-                  <div key={itemId} className={`flex items-center gap-4 py-4 ${isSelected ? 'bg-mono-gray-50' : ''}`}>
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleToggleSelect(itemId)}
-                      className="w-4 h-4 rounded border-mono-gray-300 focus:ring-2 focus:ring-mono-black"
-                    />
-                    <div className="flex-1 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-mono-black">{shipment.tracking_number ?? 'Unknown shipment'}</p>
-                        <p className="text-xs uppercase tracking-[0.25em] text-mono-gray-500">
-                          {shipment.origin_branch ?? 'Origin pending'} → {shipment.destination_branch ?? 'Destination pending'}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-mono-gray-600">
-                        <span>
-                          <i className="fas fa-clock mr-2" aria-hidden="true" />
-                          {formatDateTime(shipment.promised_at)}
-                        </span>
-                        <Badge
-                          variant="solid"
-                          size="sm"
-                          className={priorityTone[shipment.priority ?? 'low'] ?? 'bg-mono-gray-700 text-mono-white'}
-                        >
-                          {shipment.priority ?? 'Priority TBD'}
-                        </Badge>
-                        <button
-                          onClick={() => handleEditTask(shipment)}
-                          className="px-2 py-1 text-xs bg-mono-gray-100 hover:bg-mono-gray-200 rounded transition-colors"
-                          title="Edit item"
-                        >
-                          <i className="fas fa-edit" aria-hidden="true" />
-                        </button>
-                      </div>
-                    </div>
+              paginatedShipments.map((shipment) => (
+                <div key={shipment.id ?? shipment.tracking_number} className="flex flex-col gap-2 py-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-mono-black">{shipment.tracking_number ?? 'Unknown shipment'}</p>
+                    <p className="text-xs uppercase tracking-[0.25em] text-mono-gray-500">
+                      {shipment.origin_branch ?? 'Origin pending'} → {shipment.destination_branch ?? 'Destination pending'}
+                    </p>
                   </div>
-                );
-              })
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-mono-gray-600">
+                    <span>
+                      <i className="fas fa-clock mr-2" aria-hidden="true" />
+                      {formatDateTime(shipment.promised_at)}
+                    </span>
+                    <Badge
+                      variant="solid"
+                      size="sm"
+                      className={priorityTone[shipment.priority ?? 'low'] ?? 'bg-mono-gray-700 text-mono-white'}
+                    >
+                      {shipment.priority ?? 'Priority TBD'}
+                    </Badge>
+                  </div>
+                </div>
+              ))
             )}
           </div>
 
@@ -501,33 +445,12 @@ const TodoEnhanced: React.FC = () => {
         </Card>
       </section>
 
-      {/* Bulk Actions Bar */}
-      <BulkActionsBar
-        selectedCount={selectedIds.size}
-        onUpdateStatus={handleBulkUpdateStatus}
-        onDelete={handleBulkDelete}
-        onClearSelection={() => setSelectedIds(new Set())}
-        isLoading={bulkUpdateMutation.isPending || bulkDeleteMutation.isPending}
-      />
-
       {/* Create Workflow Modal */}
       <CreateWorkflowModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateTask}
         isLoading={createMutation.isPending}
-      />
-
-      {/* Edit Workflow Modal */}
-      <EditWorkflowModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setEditingItem(null);
-        }}
-        onSubmit={handleUpdateTask}
-        item={editingItem}
-        isLoading={updateMutation.isPending}
       />
     </div>
   );

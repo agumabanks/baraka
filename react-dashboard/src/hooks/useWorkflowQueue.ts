@@ -108,3 +108,38 @@ export const useAssignWorkflowItem = () => {
     },
   });
 };
+
+/**
+ * Hook to bulk update workflow items
+ */
+export const useBulkUpdateWorkflowItems = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ ids, data }: { ids: string[]; data: Record<string, any> }) => {
+      const response = await workflowQueueApi.bulkUpdate(ids, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-board'] });
+    },
+  });
+};
+
+/**
+ * Hook to bulk delete workflow items
+ */
+export const useBulkDeleteWorkflowItems = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await workflowQueueApi.bulkDelete(ids);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflow-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow-board'] });
+    },
+  });
+};

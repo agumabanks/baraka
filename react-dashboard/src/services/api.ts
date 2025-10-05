@@ -332,6 +332,30 @@ export const workflowQueueApi = {
     const response = await api.patch(`/v10/workflow-items/${id}/assign`, { assigned_to: assignedTo });
     return response.data;
   },
+  bulkUpdate: async (ids: string[], data: Record<string, unknown>) => {
+    const response = await api.post('/v10/workflow-items/bulk-update', { ids, data });
+    return response.data;
+  },
+  bulkDelete: async (ids: string[]) => {
+    const response = await api.post('/v10/workflow-items/bulk-delete', { ids });
+    return response.data;
+  },
+  addComment: async (id: string, text: string) => {
+    const response = await api.post(`/v10/workflow-items/${id}/comments`, { text });
+    return response.data;
+  },
+  updateComment: async (id: string, commentId: string, text: string) => {
+    const response = await api.put(`/v10/workflow-items/${id}/comments/${commentId}`, { text });
+    return response.data;
+  },
+  deleteComment: async (id: string, commentId: string) => {
+    const response = await api.delete(`/v10/workflow-items/${id}/comments/${commentId}`);
+    return response.data;
+  },
+  getHistory: async (id: string) => {
+    const response = await api.get(`/v10/workflow-items/${id}/history`);
+    return response.data;
+  },
 };
 
 export const operationsApi = {
