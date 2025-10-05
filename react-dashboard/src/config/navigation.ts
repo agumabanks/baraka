@@ -1,7 +1,6 @@
 /**
- * Mock Navigation Configuration
- * Converted from Laravel config/admin_nav.php
- * Includes common sections: Dashboard, Operations, Sales, Finance, Settings
+ * Complete 360° ERP Navigation Configuration
+ * All 10 Phases of Baraka Courier ERP System
  */
 
 import type { NavigationConfig } from '../types/navigation';
@@ -11,158 +10,40 @@ export const navigationConfig: NavigationConfig = {
   appName: 'Baraka',
   buckets: [
     {
-      id: 'menu',
-      label: 'MENU',
+      id: 'dashboard',
+      label: 'COMMAND CENTER',
       visible: true,
       items: [
         {
-          id: 'dashboard',
-          label: 'Dashboard',
-          icon: 'Home',
-          expanded: true,
-          children: [
-            {
-              id: 'dashboard-overview',
-              label: 'Overview',
-              icon: 'LayoutDashboard',
-              path: '/dashboard',
-              visible: true
-            },
-            {
-              id: 'dashboard-analytics',
-              label: 'Analytics',
-              icon: 'TrendingUp',
-              path: '/dashboard/analytics',
-              visible: true
-            },
-            {
-              id: 'dashboard-reports',
-              label: 'Reports',
-              icon: 'FileText',
-              path: '/dashboard/reports',
-              visible: true
-            }
-          ],
+          id: 'dashboard-home',
+          label: 'Dashboard Home',
+          icon: 'LayoutDashboard',
+          path: '/dashboard',
+          visible: true
+        },
+        {
+          id: 'workflow-board',
+          label: 'Workflow Board',
+          icon: 'Network',
+          path: '/dashboard/todo',
           badge: {
-            count: 3,
-            variant: 'attention',
-            ariaLabel: '3 SLA alerts',
-            title: '3 SLA alerts today'
+            count: 0,
+            variant: 'warning'
           },
           visible: true
         },
         {
-          id: 'todo',
-          label: 'To-Do List',
-          icon: 'CheckSquare',
-          path: '/todo',
-          badge: {
-            count: 7,
-            variant: 'warning',
-            ariaLabel: '7 open tasks',
-            title: '7 open tasks'
-          },
+          id: 'reports-center',
+          label: 'Reports Center',
+          icon: 'FileBarChart',
+          path: '/dashboard/reports',
           visible: true
         },
         {
-          id: 'merchant-manage',
-          label: 'Merchant Management',
-          icon: 'Store',
-          children: [
-            {
-              id: 'merchants',
-              label: 'Merchants',
-              icon: 'User',
-              path: '/merchants',
-              visible: true
-            },
-            {
-              id: 'merchant-payments',
-              label: 'Payments',
-              icon: 'DollarSign',
-              path: '/merchant/payments',
-              visible: true
-            }
-          ],
-          visible: true
-        },
-        {
-          id: 'sales',
-          label: 'Sales',
-          icon: 'Handshake',
-          expanded: true,
-          children: [
-            {
-              id: 'sales-customers',
-              label: 'Customers',
-              icon: 'Users',
-              expanded: true,
-              children: [
-                {
-                  id: 'sales-customers-all',
-                  label: 'All Customers',
-                  icon: 'BookUser',
-                  path: '/customers',
-                  visible: true
-                },
-                {
-                  id: 'sales-customers-create',
-                  label: 'Create Customer',
-                  icon: 'UserPlus',
-                  path: '/customers/create',
-                  visible: true
-                }
-              ],
-              visible: true
-            },
-            {
-              id: 'sales-quotations',
-              label: 'Quotations',
-              icon: 'FileSignature',
-              path: '/quotations',
-              visible: true
-            },
-            {
-              id: 'sales-contracts',
-              label: 'Contracts',
-              icon: 'ScrollText',
-              path: '/contracts',
-              visible: true
-            },
-            {
-              id: 'sales-address-book',
-              label: 'Address Book',
-              icon: 'Contact',
-              path: '/address-book',
-              visible: true
-            }
-          ],
-          visible: true
-        },
-        {
-          id: 'support',
-          label: 'Support',
-          icon: 'MessageSquare',
-          path: '/support',
-          badge: {
-            count: 2,
-            variant: 'attention',
-            ariaLabel: '2 urgent tickets',
-            title: '2 urgent support tickets'
-          },
-          visible: true
-        },
-        {
-          id: 'parcel',
-          label: 'Parcels',
-          icon: 'Package',
-          path: '/parcels',
-          badge: {
-            count: 5,
-            variant: 'error',
-            ariaLabel: '5 exception parcels',
-            title: '5 parcels requiring attention'
-          },
+          id: 'live-tracking',
+          label: 'Live Tracking',
+          icon: 'MapPin',
+          path: '/dashboard/tracking',
           visible: true
         }
       ]
@@ -237,6 +118,39 @@ export const navigationConfig: NavigationConfig = {
       visible: true,
       items: [
         {
+          id: 'control-center',
+          label: 'Control Center',
+          icon: 'Command',
+          children: [
+            {
+              id: 'dispatch-board',
+              label: 'Dispatch Board',
+              icon: 'Monitor',
+              path: '/operations/dispatch',
+              visible: true
+            },
+            {
+              id: 'exception-tower',
+              label: 'Exception Tower',
+              icon: 'AlertTriangle',
+              path: '/operations/exceptions',
+              badge: {
+                count: 12,
+                variant: 'error'
+              },
+              visible: true
+            },
+            {
+              id: 'control-tower',
+              label: 'Control Tower',
+              icon: 'Radio',
+              path: '/operations/control-tower',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
           id: 'bookings',
           label: 'Bookings',
           icon: 'ClipboardList',
@@ -247,7 +161,36 @@ export const navigationConfig: NavigationConfig = {
           id: 'shipments',
           label: 'Shipments',
           icon: 'Box',
-          path: '/shipments',
+          children: [
+            {
+              id: 'shipments-all',
+              label: 'All Shipments',
+              icon: 'Package',
+              path: '/shipments',
+              visible: true
+            },
+            {
+              id: 'shipments-workflow',
+              label: 'Workflow Status',
+              icon: 'Workflow',
+              path: '/shipments/workflow',
+              visible: true
+            },
+            {
+              id: 'shipments-tracking',
+              label: 'Tracking',
+              icon: 'MapPin',
+              path: '/shipments/tracking',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'parcels',
+          label: 'Parcels',
+          icon: 'Package',
+          path: '/parcels',
           visible: true
         },
         {
@@ -263,24 +206,53 @@ export const navigationConfig: NavigationConfig = {
           icon: 'Route',
           children: [
             {
-              id: 'linehaul-legs',
+              id: 'transport-legs',
               label: 'Transport Legs',
               icon: 'Truck',
-              path: '/linehaul',
+              path: '/linehaul/legs',
               visible: true
             },
             {
               id: 'manifests',
               label: 'Manifests',
               icon: 'List',
-              path: '/manifests',
+              path: '/linehaul/manifests',
               visible: true
             },
             {
               id: 'ecmr',
               label: 'e-CMR',
               icon: 'FileText',
-              path: '/ecmr',
+              path: '/linehaul/ecmr',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'routes',
+          label: 'Routes & Optimization',
+          icon: 'Map',
+          children: [
+            {
+              id: 'routes-all',
+              label: 'All Routes',
+              icon: 'Route',
+              path: '/routes',
+              visible: true
+            },
+            {
+              id: 'route-optimization',
+              label: 'Route Optimizer',
+              icon: 'Zap',
+              path: '/routes/optimize',
+              visible: true
+            },
+            {
+              id: 'stops',
+              label: 'Stops',
+              icon: 'MapPin',
+              path: '/routes/stops',
               visible: true
             }
           ],
@@ -290,21 +262,86 @@ export const navigationConfig: NavigationConfig = {
           id: 'scan-events',
           label: 'Scan Events',
           icon: 'Scan',
-          path: '/scans',
-          visible: true
-        },
-        {
-          id: 'routes',
-          label: 'Routes & Stops',
-          icon: 'Truck',
-          path: '/routes',
+          path: '/operations/scans',
           visible: true
         }
       ]
     },
     {
-      id: 'sales',
-      label: 'SALES',
+      id: 'assets',
+      label: 'ASSET MANAGEMENT',
+      visible: true,
+      items: [
+        {
+          id: 'asset-management',
+          label: 'Assets',
+          icon: 'Warehouse',
+          children: [
+            {
+              id: 'assets-all',
+              label: 'All Assets',
+              icon: 'Box',
+              path: '/assets',
+              visible: true
+            },
+            {
+              id: 'asset-status',
+              label: 'Asset Status',
+              icon: 'Activity',
+              path: '/assets/status',
+              visible: true
+            },
+            {
+              id: 'asset-utilization',
+              label: 'Utilization',
+              icon: 'Gauge',
+              path: '/assets/utilization',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'vehicles',
+          label: 'Vehicles',
+          icon: 'Truck',
+          children: [
+            {
+              id: 'vehicles-all',
+              label: 'All Vehicles',
+              icon: 'Car',
+              path: '/vehicles',
+              visible: true
+            },
+            {
+              id: 'vehicle-maintenance',
+              label: 'Maintenance',
+              icon: 'Wrench',
+              path: '/vehicles/maintenance',
+              visible: true
+            },
+            {
+              id: 'vehicle-fuel',
+              label: 'Fuel Management',
+              icon: 'Fuel',
+              path: '/vehicles/fuel',
+              visible: true
+            },
+            {
+              id: 'vehicle-accidents',
+              label: 'Accidents',
+              icon: 'AlertCircle',
+              path: '/vehicles/accidents',
+              visible: true
+            }
+          ],
+          visible: true
+        }
+      ]
+    },
+    {
+      id: 'customers',
+      label: 'CUSTOMER MANAGEMENT',
       visible: true,
       items: [
         {
@@ -315,7 +352,7 @@ export const navigationConfig: NavigationConfig = {
             {
               id: 'customers-all',
               label: 'All Customers',
-              icon: 'Users',
+              icon: 'BookUser',
               path: '/customers',
               visible: true
             },
@@ -324,6 +361,35 @@ export const navigationConfig: NavigationConfig = {
               label: 'New Customer',
               icon: 'UserPlus',
               path: '/customers/create',
+              visible: true
+            },
+            {
+              id: 'customers-analytics',
+              label: 'Analytics',
+              icon: 'TrendingUp',
+              path: '/customers/analytics',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'merchants',
+          label: 'Merchants',
+          icon: 'Store',
+          children: [
+            {
+              id: 'merchants-all',
+              label: 'All Merchants',
+              icon: 'ShoppingBag',
+              path: '/merchants',
+              visible: true
+            },
+            {
+              id: 'merchant-payments',
+              label: 'Payments',
+              icon: 'DollarSign',
+              path: '/merchant/payments',
               visible: true
             }
           ],
@@ -339,7 +405,7 @@ export const navigationConfig: NavigationConfig = {
         {
           id: 'contracts',
           label: 'Contracts',
-          icon: 'FileText',
+          icon: 'ScrollText',
           path: '/contracts',
           visible: true
         },
@@ -353,63 +419,102 @@ export const navigationConfig: NavigationConfig = {
       ]
     },
     {
-      id: 'compliance',
-      label: 'COMPLIANCE',
-      visible: true,
-      items: [
-        {
-          id: 'audits',
-          label: 'Audits',
-          icon: 'ClipboardCheck',
-          path: '/compliance/audits',
-          visible: true
-        },
-        {
-          id: 'policies',
-          label: 'Policies',
-          icon: 'Shield',
-          path: '/compliance/policies',
-          visible: true
-        },
-        {
-          id: 'compliance-reports',
-          label: 'Reports',
-          icon: 'FileBarChart',
-          path: '/compliance/reports',
-          visible: true
-        }
-      ]
-    },
-    {
       id: 'finance',
-      label: 'FINANCE',
+      label: 'FINANCE & BILLING',
       visible: true,
       items: [
         {
           id: 'rate-cards',
           label: 'Rate Cards',
           icon: 'Calculator',
-          path: '/rate-cards',
+          path: '/finance/rate-cards',
           visible: true
         },
         {
           id: 'invoices',
           label: 'Invoices',
           icon: 'Receipt',
-          path: '/invoices',
-          badge: {
-            count: 15,
-            variant: 'info',
-            ariaLabel: '15 pending invoices',
-            title: '15 pending invoices'
-          },
+          children: [
+            {
+              id: 'invoices-all',
+              label: 'All Invoices',
+              icon: 'FileText',
+              path: '/finance/invoices',
+              visible: true
+            },
+            {
+              id: 'invoices-pending',
+              label: 'Pending',
+              icon: 'Clock',
+              path: '/finance/invoices/pending',
+              visible: true
+            },
+            {
+              id: 'invoices-paid',
+              label: 'Paid',
+              icon: 'CheckCircle',
+              path: '/finance/invoices/paid',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'cod-management',
+          label: 'COD Management',
+          icon: 'Banknote',
+          children: [
+            {
+              id: 'cod-dashboard',
+              label: 'COD Dashboard',
+              icon: 'LayoutDashboard',
+              path: '/finance/cod',
+              visible: true
+            },
+            {
+              id: 'cod-reconciliation',
+              label: 'Reconciliation',
+              icon: 'RefreshCw',
+              path: '/finance/cod/reconciliation',
+              visible: true
+            }
+          ],
           visible: true
         },
         {
           id: 'settlements',
           label: 'Settlements',
           icon: 'ArrowLeftRight',
-          path: '/settlements',
+          children: [
+            {
+              id: 'settlements-branch',
+              label: 'Branch Settlements',
+              icon: 'Building',
+              path: '/finance/settlements/branch',
+              visible: true
+            },
+            {
+              id: 'settlements-driver',
+              label: 'Driver Settlements',
+              icon: 'User',
+              path: '/finance/settlements/driver',
+              visible: true
+            },
+            {
+              id: 'settlements-cycles',
+              label: 'Settlement Cycles',
+              icon: 'Calendar',
+              path: '/finance/settlements/cycles',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'payments',
+          label: 'Payments',
+          icon: 'CreditCard',
+          path: '/finance/payments',
           visible: true
         },
         {
@@ -418,27 +523,213 @@ export const navigationConfig: NavigationConfig = {
           icon: 'Wallet',
           children: [
             {
-              id: 'salary-generate',
+              id: 'payroll-generate',
               label: 'Generate Salary',
               icon: 'Calculator',
               path: '/payroll/generate',
               visible: true
             },
             {
-              id: 'salary-index',
+              id: 'payroll-records',
               label: 'Salary Records',
-              icon: 'DollarSign',
+              icon: 'List',
               path: '/payroll',
               visible: true
             }
           ],
+          visible: true
+        },
+        {
+          id: 'financial-reports',
+          label: 'Financial Reports',
+          icon: 'FileBarChart',
+          path: '/finance/reports',
+          visible: true
+        }
+      ]
+    },
+    {
+      id: 'compliance',
+      label: 'COMPLIANCE & RISK',
+      visible: true,
+      items: [
+        {
+          id: 'kyc',
+          label: 'KYC Verification',
+          icon: 'ShieldCheck',
+          path: '/compliance/kyc',
+          visible: true
+        },
+        {
+          id: 'dangerous-goods',
+          label: 'Dangerous Goods',
+          icon: 'AlertOctagon',
+          children: [
+            {
+              id: 'dg-classification',
+              label: 'Classification',
+              icon: 'Tag',
+              path: '/compliance/dg/classification',
+              visible: true
+            },
+            {
+              id: 'dg-shipments',
+              label: 'DG Shipments',
+              icon: 'Package',
+              path: '/compliance/dg/shipments',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'customs',
+          label: 'Customs & Trade',
+          icon: 'Globe',
+          children: [
+            {
+              id: 'customs-declarations',
+              label: 'Declarations',
+              icon: 'FileText',
+              path: '/compliance/customs/declarations',
+              visible: true
+            },
+            {
+              id: 'customs-docs',
+              label: 'Documents',
+              icon: 'Files',
+              path: '/compliance/customs/docs',
+              visible: true
+            },
+            {
+              id: 'hs-codes',
+              label: 'HS Codes',
+              icon: 'Hash',
+              path: '/compliance/customs/hs-codes',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'fraud-detection',
+          label: 'Fraud Detection',
+          icon: 'ShieldAlert',
+          children: [
+            {
+              id: 'fraud-dashboard',
+              label: 'Dashboard',
+              icon: 'LayoutDashboard',
+              path: '/compliance/fraud',
+              visible: true
+            },
+            {
+              id: 'fraud-cases',
+              label: 'Cases',
+              icon: 'FileWarning',
+              path: '/compliance/fraud/cases',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'risk-assessment',
+          label: 'Risk Assessment',
+          icon: 'Scale',
+          path: '/compliance/risk',
+          visible: true
+        },
+        {
+          id: 'regulatory',
+          label: 'Regulatory Reporting',
+          icon: 'FileBarChart2',
+          path: '/compliance/regulatory',
+          visible: true
+        },
+        {
+          id: 'data-privacy',
+          label: 'Data Privacy (GDPR)',
+          icon: 'Lock',
+          path: '/compliance/privacy',
+          visible: true
+        }
+      ]
+    },
+    {
+      id: 'integrations',
+      label: 'INTEGRATIONS',
+      visible: true,
+      items: [
+        {
+          id: 'api-keys',
+          label: 'API Keys',
+          icon: 'Key',
+          path: '/integrations/api-keys',
+          visible: true
+        },
+        {
+          id: 'webhooks',
+          label: 'Webhooks',
+          icon: 'Webhook',
+          children: [
+            {
+              id: 'webhooks-endpoints',
+              label: 'Endpoints',
+              icon: 'Link',
+              path: '/integrations/webhooks',
+              visible: true
+            },
+            {
+              id: 'webhooks-logs',
+              label: 'Delivery Logs',
+              icon: 'FileText',
+              path: '/integrations/webhooks/logs',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'edi',
+          label: 'EDI Integration',
+          icon: 'Share2',
+          path: '/integrations/edi',
+          visible: true
+        },
+        {
+          id: 'marketplace',
+          label: 'Marketplace Connectors',
+          icon: 'ShoppingCart',
+          path: '/integrations/marketplace',
+          visible: true
+        },
+        {
+          id: 'third-party',
+          label: 'Third-Party Apps',
+          icon: 'Puzzle',
+          path: '/integrations/third-party',
+          visible: true
+        },
+        {
+          id: 'data-sync',
+          label: 'Data Sync',
+          icon: 'RefreshCw',
+          path: '/integrations/sync',
+          visible: true
+        },
+        {
+          id: 'integration-monitor',
+          label: 'Monitoring',
+          icon: 'Activity',
+          path: '/integrations/monitoring',
           visible: true
         }
       ]
     },
     {
       id: 'tools',
-      label: 'TOOLS',
+      label: 'TOOLS & UTILITIES',
       visible: true,
       items: [
         {
@@ -449,22 +740,47 @@ export const navigationConfig: NavigationConfig = {
           visible: true
         },
         {
+          id: 'todo',
+          label: 'To-Do List',
+          icon: 'CheckSquare',
+          path: '/todo',
+          visible: true
+        },
+        {
+          id: 'support',
+          label: 'Support Tickets',
+          icon: 'MessageSquare',
+          path: '/support',
+          badge: {
+            count: 2,
+            variant: 'attention'
+          },
+          visible: true
+        },
+        {
           id: 'reports',
           label: 'Reports',
           icon: 'BarChart',
           children: [
             {
-              id: 'parcel-reports',
-              label: 'Parcel Reports',
-              icon: 'Package',
-              path: '/reports/parcels',
+              id: 'reports-operations',
+              label: 'Operations Reports',
+              icon: 'Activity',
+              path: '/reports/operations',
               visible: true
             },
             {
-              id: 'salary-reports',
-              label: 'Salary Reports',
+              id: 'reports-financial',
+              label: 'Financial Reports',
               icon: 'DollarSign',
-              path: '/reports/salary',
+              path: '/reports/financial',
+              visible: true
+            },
+            {
+              id: 'reports-compliance',
+              label: 'Compliance Reports',
+              icon: 'Shield',
+              path: '/reports/compliance',
               visible: true
             }
           ],
@@ -528,17 +844,39 @@ export const navigationConfig: NavigationConfig = {
           visible: true
         },
         {
-          id: 'sms-settings',
-          label: 'SMS Settings',
-          icon: 'MessageCircle',
-          path: '/settings/sms',
-          visible: true
-        },
-        {
           id: 'notification-settings',
           label: 'Notifications',
           icon: 'Bell',
-          path: '/settings/notifications',
+          children: [
+            {
+              id: 'notification-preferences',
+              label: 'Preferences',
+              icon: 'Settings',
+              path: '/settings/notifications',
+              visible: true
+            },
+            {
+              id: 'sms-settings',
+              label: 'SMS',
+              icon: 'MessageCircle',
+              path: '/settings/sms',
+              visible: true
+            },
+            {
+              id: 'email-settings',
+              label: 'Email',
+              icon: 'Mail',
+              path: '/settings/email',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'map-settings',
+          label: 'Map Settings',
+          icon: 'Map',
+          path: '/settings/maps',
           visible: true
         }
       ]

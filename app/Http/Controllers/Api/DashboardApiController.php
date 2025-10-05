@@ -155,7 +155,7 @@ class DashboardApiController extends Controller
         $totalParcels = Parcel::where('merchant_id', $merchantId)->count();
         $deliveredParcels = Parcel::where('merchant_id', $merchantId)
             ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
-            ->whereBetween('deliverd_date', [$startDate, $endDate])
+            ->whereBetween('delivered_date', [$startDate, $endDate])
             ->count();
         $pendingParcels = Parcel::where('merchant_id', $merchantId)
             ->where('status', ParcelStatus::PENDING)
@@ -163,17 +163,17 @@ class DashboardApiController extends Controller
 
         $totalSales = Parcel::where('merchant_id', $merchantId)
             ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
-            ->whereBetween(DB::raw('COALESCE(deliverd_date, updated_at)'), [$startDate, $endDate])
+            ->whereBetween(DB::raw('COALESCE(delivered_date, updated_at)'), [$startDate, $endDate])
             ->sum('cash_collection');
 
         $totalVat = Parcel::where('merchant_id', $merchantId)
             ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
-            ->whereBetween(DB::raw('COALESCE(deliverd_date, updated_at)'), [$startDate, $endDate])
+            ->whereBetween(DB::raw('COALESCE(delivered_date, updated_at)'), [$startDate, $endDate])
             ->sum('vat_amount');
 
         $totalDeliveryFee = Parcel::where('merchant_id', $merchantId)
             ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
-            ->whereBetween(DB::raw('COALESCE(deliverd_date, updated_at)'), [$startDate, $endDate])
+            ->whereBetween(DB::raw('COALESCE(delivered_date, updated_at)'), [$startDate, $endDate])
             ->sum('total_delivery_amount');
 
         $pendingPaymentRequests = Payment::where('merchant_id', $merchantId)
@@ -261,8 +261,8 @@ private function getAdminDashboardData($fromTo)
     $totalDeliveryMen = DeliveryMan::whereBetween('created_at', [$startDate, $endDate])->count();
 
     $deliveredParcels = Parcel::whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
-        ->whereNotNull('deliverd_date')
-        ->whereBetween('deliverd_date', [$startDate, $endDate])
+        ->whereNotNull('delivered_date')
+        ->whereBetween('delivered_date', [$startDate, $endDate])
         ->count();
 
     $pendingParcels = Parcel::where('status', ParcelStatus::PENDING)->count();
@@ -290,9 +290,9 @@ private function getAdminDashboardData($fromTo)
         ->count();
 
     $avgDeliveryMinutes = Parcel::whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
-        ->whereNotNull('deliverd_date')
-        ->whereBetween('deliverd_date', [$startDate, $endDate])
-        ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, created_at, deliverd_date)) as avg_minutes')
+        ->whereNotNull('delivered_date')
+        ->whereBetween('delivered_date', [$startDate, $endDate])
+        ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, created_at, delivered_date)) as avg_minutes')
         ->value('avg_minutes');
 
     $avgDeliveryHours = $avgDeliveryMinutes ? round($avgDeliveryMinutes / 60, 1) : 0;
@@ -456,11 +456,11 @@ private function getAdminDashboardData($fromTo)
     {
         $cashRows = Parcel::where('merchant_id', $merchantId)
             ->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
-            ->whereRaw('DATE(COALESCE(deliverd_date, updated_at)) BETWEEN ? AND ?', [
+            ->whereRaw('DATE(COALESCE(delivered_date, updated_at)) BETWEEN ? AND ?', [
                 $startDate->toDateString(),
                 $endDate->toDateString(),
             ])
-            ->selectRaw('DATE(COALESCE(deliverd_date, updated_at)) as day, SUM(cash_collection) as total_cash, SUM(total_delivery_amount) as total_fee, SUM(vat_amount) as total_vat')
+            ->selectRaw('DATE(COALESCE(delivered_date, updated_at)) as day, SUM(cash_collection) as total_cash, SUM(total_delivery_amount) as total_fee, SUM(vat_amount) as total_vat')
             ->groupBy('day')
             ->get()
             ->keyBy('day');
@@ -513,11 +513,11 @@ private function getAdminDashboardData($fromTo)
     private function getAdminCharts(array $range, array $datePeriod, Carbon $startDate, Carbon $endDate)
     {
         $cashRows = Parcel::whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])
-            ->whereRaw('DATE(COALESCE(deliverd_date, updated_at)) BETWEEN ? AND ?', [
+            ->whereRaw('DATE(COALESCE(delivered_date, updated_at)) BETWEEN ? AND ?', [
                 $startDate->toDateString(),
                 $endDate->toDateString(),
             ])
-            ->selectRaw('DATE(COALESCE(deliverd_date, updated_at)) as day, SUM(cash_collection) as total_cash, SUM(total_delivery_amount) as total_fee, SUM(vat_amount) as total_vat')
+            ->selectRaw('DATE(COALESCE(delivered_date, updated_at)) as day, SUM(cash_collection) as total_cash, SUM(total_delivery_amount) as total_fee, SUM(vat_amount) as total_vat')
             ->groupBy('day')
             ->get()
             ->keyBy('day');

@@ -16,7 +16,7 @@ export const useMerchantList = (params?: MerchantListParams) =>
       return response.data;
     },
     staleTime: STALE_TIME,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
 export const useMerchantDetail = (

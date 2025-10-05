@@ -17,7 +17,7 @@ const MerchantPayments: React.FC = () => {
 
   const totals = useMemo(() => {
     return merchants.reduce(
-      (acc, merchant) => {
+      (acc: any, merchant: any) => {
         acc.codOutstanding += merchant.metrics.cod_open_balance;
         acc.codCollected += merchant.metrics.cod_collected;
         acc.currentBalance += merchant.current_balance;
@@ -120,7 +120,7 @@ const MerchantPayments: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                merchants.map((merchant) => (
+                merchants.map((merchant: any) => (
                   <tr key={merchant.id}>
                     <td className="px-4 py-3 font-medium text-mono-black">{merchant.business_name}</td>
                     <td className="px-4 py-3">{merchant.primary_contact?.email ?? merchant.primary_contact?.name ?? '—'}</td>
