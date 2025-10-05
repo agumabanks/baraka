@@ -3,7 +3,6 @@
 namespace App\Models\Backend;
 
 use App\Enums\Status;
-use Illuminate\Database\Eloquent\Factory\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class BranchWorker extends Model
 {
-    use HasFactory, LogsActivity;
+    use LogsActivity;
 
     protected $fillable = [
         'branch_id',

@@ -154,12 +154,12 @@ const Branches: React.FC = () => {
       };
     }
 
-    const totalThroughput = branches.reduce((sum, branch) => sum + (branch.metrics.throughput_24h ?? 0), 0);
-    const totalExceptions = branches.reduce((sum, branch) => {
-      const exceptionQueue = branch.queues.find((queue) => queue.id === 'exceptions');
+    const totalThroughput = branches.reduce((sum: number, branch: any) => sum + (branch.metrics.throughput_24h ?? 0), 0);
+    const totalExceptions = branches.reduce((sum: number, branch: any) => {
+      const exceptionQueue = branch.queues.find((queue: any) => queue.id === 'exceptions');
       return sum + (exceptionQueue?.value ?? 0);
     }, 0);
-    const averageUtilisation = branches.reduce((sum, branch) => sum + (branch.metrics.capacity_utilization ?? 0), 0) / branches.length;
+    const averageUtilisation = branches.reduce((sum: number, branch: any) => sum + (branch.metrics.capacity_utilization ?? 0), 0) / branches.length;
 
     return {
       throughput: `${numberFormatter.format(totalThroughput)} shipments / 24h`,
@@ -267,8 +267,8 @@ const Branches: React.FC = () => {
             </Card>
           ) : (
             <div className="grid gap-6">
-              {branches.map((branch) => (
-                <BranchCard key={branch.id} branch={branch} onOpen={(id) => navigate(`/dashboard/branches/${id}`)} />
+              {branches.map((branch: any) => (
+                <BranchCard key={branch.id} branch={branch} onOpen={(id: any) => navigate(`/dashboard/branches/${id}`)} />
               ))}
             </div>
           )}

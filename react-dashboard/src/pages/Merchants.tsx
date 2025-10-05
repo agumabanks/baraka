@@ -30,7 +30,7 @@ const Merchants: React.FC = () => {
     }
 
     return merchants.reduce(
-      (acc, merchant) => {
+      (acc: any, merchant: any) => {
         acc.totalMerchants += 1;
         acc.codOutstanding += merchant.metrics.cod_open_balance;
         acc.codCollected += merchant.metrics.cod_collected;

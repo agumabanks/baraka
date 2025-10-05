@@ -66,7 +66,7 @@ const BranchDetail: React.FC = () => {
   const workers = branch.team.active_workers;
   const recentShipments = branch.recent_shipments;
 
-  const capacityMetrics = capacity?.current_capacity ?? capacity?.utilization ?? {};
+  const capacityMetrics: any = capacity?.current_capacity ?? capacity?.utilization ?? {};
   const utilizationRate =
     typeof branch.metrics.capacity_utilization === 'number'
       ? branch.metrics.capacity_utilization

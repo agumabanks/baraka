@@ -9,6 +9,7 @@ use App\Events\OperationalAlertEvent;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class ControlTowerService
@@ -29,69 +30,98 @@ class ControlTowerService
 
     /**
      * Get real-time operational KPIs
+     * Note: Some metrics unavailable due to missing database columns
      */
     public function getOperationalKPIs(): array
     {
         return Cache::remember('operational_kpis', 300, function () { // Cache for 5 minutes
-            $now = now();
-            $today = $now->toDateString();
+            try {
+                $now = now();
+                $today = $now->toDateString();
 
-            // Shipment metrics
-            $totalShipments = Shipment::count();
-            $activeShipments = Shipment::whereIn('current_status', [
-                'assigned', 'picked_up', 'at_hub', 'in_transit_to_destination', 'out_for_delivery'
-            ])->count();
+                // Shipment metrics
+                $totalShipments = Shipment::count();
+                $activeShipments = Shipment::whereIn('current_status', [
+                    'CREATED', 'HANDED_OVER', 'ARRIVE', 'SORT', 'LOAD', 'DEPART', 
+                    'IN_TRANSIT', 'ARRIVE_DEST', 'OUT_FOR_DELIVERY'
+                ])->count();
 
-            $deliveredToday = Shipment::where('current_status', 'delivered')
-                ->whereDate('delivered_at', $today)
-                ->count();
+                // Note: delivered_at column doesn't exist, using updated_at as proxy
+                $deliveredToday = Shipment::where('current_status', 'DELIVERED')
+                    ->whereDate('updated_at', $today)
+                    ->count();
 
-            $exceptionsToday = Shipment::where('has_exception', true)
-                ->whereDate('exception_occurred_at', $today)
-                ->count();
+                // Exception tracking not yet implemented
+                $exceptionsToday = 0;
 
-            // Worker metrics
-            $activeWorkers = BranchWorker::where('status', 'active')
-                ->whereNull('unassigned_at')
-                ->count();
+                // Worker metrics
+                $activeWorkers = BranchWorker::where('status', 'active')
+                    ->whereNull('unassigned_at')
+                    ->count();
 
-            $totalWorkers = BranchWorker::currentlyAssigned()->count();
+                $totalWorkers = BranchWorker::currentlyAssigned()->count();
 
-            // Branch metrics
-            $activeBranches = Branch::active()->count();
+                // Branch metrics
+                $activeBranches = Branch::active()->count();
 
-            // Calculate utilization rates
-            $workerUtilization = $this->calculateWorkerUtilization();
-            $branchUtilization = $this->calculateBranchUtilization();
+                // Calculate utilization rates - wrapped in try-catch
+                try {
+                    $workerUtilization = $this->calculateWorkerUtilization();
+                    $branchUtilization = $this->calculateBranchUtilization();
+                    $onTimeRate = $this->calculateOnTimeDeliveryRate();
+                    $avgProcessingTime = $this->calculateAverageProcessingTime();
+                    $exceptionResolutionRate = $this->calculateExceptionResolutionRate();
+                    $criticalAlerts = $this->getCriticalAlerts();
+                } catch (\Exception $e) {
+                    Log::warning('ControlTowerService: Some metrics unavailable - ' . $e->getMessage());
+                    $workerUtilization = 0;
+                    $branchUtilization = 0;
+                    $onTimeRate = 0;
+                    $avgProcessingTime = 0;
+                    $exceptionResolutionRate = 0;
+                    $criticalAlerts = [];
+                }
 
-            return [
-                'timestamp' => $now->toISOString(),
-                'shipments' => [
-                    'total' => $totalShipments,
-                    'active' => $activeShipments,
-                    'delivered_today' => $deliveredToday,
-                    'exceptions_today' => $exceptionsToday,
-                    'active_percentage' => $totalShipments > 0 ? round(($activeShipments / $totalShipments) * 100, 1) : 0,
-                ],
-                'workers' => [
-                    'total' => $totalWorkers,
-                    'active' => $activeWorkers,
-                    'utilization_rate' => $workerUtilization,
-                    'active_percentage' => $totalWorkers > 0 ? round(($activeWorkers / $totalWorkers) * 100, 1) : 0,
-                ],
-                'branches' => [
-                    'total' => Branch::count(),
-                    'active' => $activeBranches,
-                    'utilization_rate' => $branchUtilization,
-                    'active_percentage' => Branch::count() > 0 ? round(($activeBranches / Branch::count()) * 100, 1) : 0,
-                ],
-                'performance' => [
-                    'on_time_delivery_rate' => $this->calculateOnTimeDeliveryRate(),
-                    'average_processing_time' => $this->calculateAverageProcessingTime(),
-                    'exception_resolution_rate' => $this->calculateExceptionResolutionRate(),
-                ],
-                'alerts' => $this->getCriticalAlerts(),
-            ];
+                return [
+                    'timestamp' => $now->toISOString(),
+                    'shipments' => [
+                        'total' => $totalShipments,
+                        'active' => $activeShipments,
+                        'delivered_today' => $deliveredToday,
+                        'exceptions_today' => $exceptionsToday,
+                        'active_percentage' => $totalShipments > 0 ? round(($activeShipments / $totalShipments) * 100, 1) : 0,
+                    ],
+                    'workers' => [
+                        'total' => $totalWorkers,
+                        'active' => $activeWorkers,
+                        'utilization_rate' => $workerUtilization,
+                        'active_percentage' => $totalWorkers > 0 ? round(($activeWorkers / $totalWorkers) * 100, 1) : 0,
+                    ],
+                    'branches' => [
+                        'total' => Branch::count(),
+                        'active' => $activeBranches,
+                        'utilization_rate' => $branchUtilization,
+                        'active_percentage' => Branch::count() > 0 ? round(($activeBranches / Branch::count()) * 100, 1) : 0,
+                    ],
+                    'performance' => [
+                        'on_time_delivery_rate' => $onTimeRate,
+                        'average_processing_time' => $avgProcessingTime,
+                        'exception_resolution_rate' => $exceptionResolutionRate,
+                    ],
+                    'alerts' => $criticalAlerts,
+                ];
+            } catch (\Exception $e) {
+                // If main query fails, return default KPIs
+                Log::error('ControlTowerService: Failed to fetch KPIs - ' . $e->getMessage());
+                return [
+                    'timestamp' => now()->toISOString(),
+                    'shipments' => ['total' => 0, 'active' => 0, 'delivered_today' => 0, 'exceptions_today' => 0, 'active_percentage' => 0],
+                    'workers' => ['total' => 0, 'active' => 0, 'utilization_rate' => 0, 'active_percentage' => 0],
+                    'branches' => ['total' => 0, 'active' => 0, 'utilization_rate' => 0, 'active_percentage' => 0],
+                    'performance' => ['on_time_delivery_rate' => 0, 'average_processing_time' => 0, 'exception_resolution_rate' => 0],
+                    'alerts' => [],
+                ];
+            }
         });
     }
 

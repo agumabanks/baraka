@@ -7,7 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Sidebar from './components/layout/Sidebar'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
-import Dashboard from './pages/Dashboard'
+import EnhancedDashboard from './pages/EnhancedDashboard'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -18,7 +18,7 @@ import Merchants from './pages/Merchants'
 import MerchantDetail from './pages/MerchantDetail'
 import MerchantPayments from './pages/MerchantPayments'
 import Shipments from './pages/Shipments'
-import Todo from './pages/Todo'
+import EnhancedTodo from './pages/EnhancedTodo'
 import AllCustomers from './pages/sales/AllCustomers'
 import CreateCustomer from './pages/sales/CreateCustomer'
 import Quotations from './pages/sales/Quotations'
@@ -27,6 +27,56 @@ import AddressBook from './pages/sales/AddressBook'
 import AllSupport from './pages/support/AllSupport'
 import SupportDetail from './pages/support/SupportDetail'
 import SupportForm from './pages/support/SupportForm'
+
+// Operations Components
+import DispatchBoard from './pages/operations/DispatchBoard'
+import ExceptionTower from './pages/operations/ExceptionTower'
+import ControlTower from './pages/operations/ControlTower'
+import WorkflowBoard from './pages/operations/WorkflowBoard'
+
+// Finance Components
+import RateCards from './pages/finance/RateCards'
+import Invoices from './pages/finance/Invoices'
+import CODDashboard from './pages/finance/CODDashboard'
+import Settlements from './pages/finance/Settlements'
+
+// Compliance Components
+import KYCVerification from './pages/compliance/KYCVerification'
+import DangerousGoods from './pages/compliance/DangerousGoods'
+import CustomsDeclarations from './pages/compliance/CustomsDeclarations'
+import FraudDetection from './pages/compliance/FraudDetection'
+
+// Integration Components
+import APIKeys from './pages/integrations/APIKeys'
+import Webhooks from './pages/integrations/Webhooks'
+import IntegrationMonitoring from './pages/integrations/IntegrationMonitoring'
+
+// Asset Components
+import AssetStatus from './pages/assets/AssetStatus'
+import Vehicles from './pages/assets/Vehicles'
+
+// Branch Components
+import BranchAnalytics from './pages/branches/BranchAnalytics'
+import BranchHierarchy from './pages/branches/BranchHierarchy'
+import BranchCapacity from './pages/branches/BranchCapacity'
+import BranchWorkers from './pages/branches/BranchWorkers'
+
+// Operations - Additional Components
+import Parcels from './pages/operations/Parcels'
+import Bags from './pages/operations/Bags'
+import RoutesPage from './pages/operations/Routes'
+
+// Workers
+import DeliveryWorkers from './pages/DeliveryWorkers'
+
+// Reports
+import Reports from './pages/Reports'
+import OperationsReports from './pages/reports/OperationsReports'
+import FinancialReports from './pages/reports/FinancialReports'
+import ComplianceReports from './pages/reports/ComplianceReports'
+
+// Settings
+import Users from './pages/settings/Users'
 import { navigationConfig } from './config/navigation'
 import { buildNavigationRoutes, findRouteMeta } from './lib/navigation'
 import { routeDescriptions } from './config/routeDescriptions'
@@ -247,8 +297,8 @@ function AppContent() {
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6">
           <Routes>
-            <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            <Route index element={<EnhancedDashboard />} />
+            <Route path="dashboard" element={<EnhancedDashboard />} />
             <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
             <Route path="reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1></div>} />
             <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1></div>} />
@@ -256,6 +306,63 @@ function AppContent() {
             <Route path="support/:id/edit" element={<SupportForm />} />
             <Route path="branches/:branchId" element={<BranchDetail />} />
             <Route path="merchants/:merchantId" element={<MerchantDetail />} />
+            
+            {/* Operations Routes */}
+            <Route path="operations/dispatch" element={<DispatchBoard />} />
+            <Route path="operations/exceptions" element={<ExceptionTower />} />
+            <Route path="operations/control-tower" element={<ControlTower />} />
+            <Route path="dashboard/workflow" element={<WorkflowBoard />} />
+            
+            {/* Finance Routes */}
+            <Route path="finance/rate-cards" element={<RateCards />} />
+            <Route path="finance/invoices" element={<Invoices />} />
+            <Route path="finance/cod" element={<CODDashboard />} />
+            <Route path="finance/settlements/*" element={<Settlements />} />
+            
+            {/* Compliance Routes */}
+            <Route path="compliance/kyc" element={<KYCVerification />} />
+            <Route path="compliance/dg/*" element={<DangerousGoods />} />
+            <Route path="compliance/customs/*" element={<CustomsDeclarations />} />
+            <Route path="compliance/fraud/*" element={<FraudDetection />} />
+            
+            {/* Integration Routes */}
+            <Route path="integrations/api-keys" element={<APIKeys />} />
+            <Route path="integrations/webhooks" element={<Webhooks />} />
+            <Route path="integrations/monitoring" element={<IntegrationMonitoring />} />
+            
+            {/* Asset Routes */}
+            <Route path="assets" element={<AssetStatus />} />
+            <Route path="vehicles" element={<Vehicles />} />
+            
+            {/* Branch Routes */}
+            <Route path="branches/hierarchy" element={<BranchHierarchy />} />
+            <Route path="branches/analytics" element={<BranchAnalytics />} />
+            <Route path="branches/capacity" element={<BranchCapacity />} />
+            <Route path="branches/workers" element={<BranchWorkers />} />
+            
+            {/* Additional Operations Routes */}
+            <Route path="parcels" element={<Parcels />} />
+            <Route path="bags" element={<Bags />} />
+            <Route path="routes" element={<RoutesPage />} />
+            <Route path="routes/optimize" element={<RoutesPage />} />
+            <Route path="routes/stops" element={<RoutesPage />} />
+            
+            {/* Delivery Workers */}
+            <Route path="deliveryman" element={<DeliveryWorkers />} />
+            <Route path="branches/workers" element={<DeliveryWorkers />} />
+            
+            {/* Reports Routes */}
+            <Route path="reports" element={<Reports />} />
+            <Route path="reports/operations" element={<OperationsReports />} />
+            <Route path="reports/financial" element={<FinancialReports />} />
+            <Route path="reports/compliance" element={<ComplianceReports />} />
+            <Route path="reports/analytics" element={<Reports />} />
+            <Route path="reports/workforce" element={<Reports />} />
+            
+            {/* Settings Routes */}
+            <Route path="settings/users" element={<Users />} />
+            <Route path="users" element={<Users />} />
+            
             {enhancedRoutes.map(({ meta, routePath, descriptionKey }) => {
               let element: React.ReactNode
 
@@ -276,7 +383,7 @@ function AppContent() {
                   element = <Shipments />
                   break
                 case 'todo':
-                  element = <Todo />
+                  element = <EnhancedTodo />
                   break
                 case 'customers':
                   element = <AllCustomers />
@@ -298,6 +405,33 @@ function AppContent() {
                   break
                 case 'support/create':
                   element = <SupportForm />
+                  break
+                case 'reports':
+                  element = <Reports />
+                  break
+                case 'reports/operations':
+                  element = <OperationsReports />
+                  break
+                case 'reports/financial':
+                  element = <FinancialReports />
+                  break
+                case 'reports/compliance':
+                  element = <ComplianceReports />
+                  break
+                case 'parcels':
+                  element = <Parcels />
+                  break
+                case 'bags':
+                  element = <Bags />
+                  break
+                case 'routes':
+                  element = <RoutesPage />
+                  break
+                case 'deliveryman':
+                  element = <DeliveryWorkers />
+                  break
+                case 'users':
+                  element = <Users />
                   break
                 default:
                   element = (

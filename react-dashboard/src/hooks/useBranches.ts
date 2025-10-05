@@ -17,7 +17,7 @@ export const useBranchList = (params?: BranchListParams) =>
       return response.data;
     },
     staleTime: STALE_TIME,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 
 export const useBranchDetail = (

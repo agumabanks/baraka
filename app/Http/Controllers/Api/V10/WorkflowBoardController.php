@@ -11,6 +11,7 @@ use App\Services\OperationsNotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class WorkflowBoardController extends Controller
 {
@@ -23,61 +24,130 @@ class WorkflowBoardController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $hubBranch = Branch::where('is_hub', true)->first() ?? Branch::active()->first();
-        $dispatchSnapshot = null;
+        try {
+            Log::info('WorkflowBoardController: Starting workflow board request', [
+                'user_id' => $request->user()?->id,
+                'has_auth' => $request->user() !== null,
+            ]);
 
-        if ($hubBranch) {
-            $dispatchSnapshot = $this->dispatchService->getDispatchBoard($hubBranch, Carbon::now());
-        }
-
-        $unassignedShipments = collect($dispatchSnapshot['unassigned_shipments'] ?? [])
-            ->take(12)
-            ->values();
-
-        $loadBalancing = $dispatchSnapshot['load_balancing'] ?? [];
-        $driverQueues = collect($dispatchSnapshot['driver_queues'] ?? [])
-            ->map(function ($queue) {
-                return [
-                    'worker_id' => $queue['worker_id'] ?? null,
-                    'worker_name' => $queue['worker_name'] ?? null,
-                    'assigned_shipments' => $queue['assigned_shipments'] ?? 0,
-                    'capacity' => $queue['capacity'] ?? null,
-                    'utilization' => $queue['utilization'] ?? null,
-                ];
-            })
-            ->values();
-
-        $exceptions = $this->exceptionService
-            ->getActiveExceptions([
+            $hubBranch = Branch::where('is_hub', true)->first() ?? Branch::active()->first();
+            
+            Log::info('WorkflowBoardController: Hub branch loaded', [
                 'branch_id' => $hubBranch?->id,
-            ])
-            ->take(12)
-            ->values();
+                'branch_name' => $hubBranch?->name,
+            ]);
+            
+            $dispatchSnapshot = null;
 
-        $windowEnd = Carbon::now();
-        $windowStart = (clone $windowEnd)->subDays(7);
+            if ($hubBranch) {
+                try {
+                    $dispatchSnapshot = $this->dispatchService->getDispatchBoard($hubBranch, Carbon::now());
+                    Log::info('WorkflowBoardController: Dispatch snapshot loaded');
+                } catch (\Exception $e) {
+                    Log::error('WorkflowBoardController: Failed to load dispatch snapshot', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            }
 
-        $exceptionMetrics = $this->exceptionService->getExceptionMetrics(
-            $windowStart,
-            $windowEnd
-        );
+            $unassignedShipments = collect($dispatchSnapshot['unassigned_shipments'] ?? [])
+                ->take(12)
+                ->values();
 
-        $kpiSummary = $this->controlTowerService->getOperationalKPIs();
-        $shipmentMetrics = $this->controlTowerService->getShipmentMetrics($windowStart, $windowEnd);
-        $workerUtilization = $this->controlTowerService->getWorkerUtilization();
+            $loadBalancing = $dispatchSnapshot['load_balancing'] ?? [];
+            $driverQueues = collect($dispatchSnapshot['driver_queues'] ?? [])
+                ->map(function ($queue) {
+                    return [
+                        'worker_id' => $queue['worker_id'] ?? null,
+                        'worker_name' => $queue['worker_name'] ?? null,
+                        'assigned_shipments' => $queue['assigned_shipments'] ?? 0,
+                        'capacity' => $queue['capacity'] ?? null,
+                        'utilization' => $queue['utilization'] ?? null,
+                    ];
+                })
+                ->values();
 
-        $notifications = [];
-        if ($request->user()) {
-            $notifications = $this->notificationService
-                ->getUnreadNotifications($request->user())
-                ->take(15)
-                ->values()
-                ->all();
-        }
+            try {
+                $exceptions = $this->exceptionService
+                    ->getActiveExceptions([
+                        'branch_id' => $hubBranch?->id,
+                    ])
+                    ->take(12)
+                    ->values();
+                Log::info('WorkflowBoardController: Exceptions loaded', ['count' => $exceptions->count()]);
+            } catch (\Exception $e) {
+                Log::error('WorkflowBoardController: Failed to load exceptions', [
+                    'error' => $e->getMessage(),
+                ]);
+                $exceptions = collect();
+            }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
+            $windowEnd = Carbon::now();
+            $windowStart = (clone $windowEnd)->subDays(7);
+
+            try {
+                $exceptionMetrics = $this->exceptionService->getExceptionMetrics($windowStart, $windowEnd);
+                Log::info('WorkflowBoardController: Exception metrics loaded');
+            } catch (\Exception $e) {
+                Log::error('WorkflowBoardController: Failed to load exception metrics', [
+                    'error' => $e->getMessage(),
+                ]);
+                $exceptionMetrics = [];
+            }
+
+            try {
+                $kpiSummary = $this->controlTowerService->getOperationalKPIs();
+                Log::info('WorkflowBoardController: KPIs loaded');
+            } catch (\Exception $e) {
+                Log::error('WorkflowBoardController: Failed to load KPIs', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                $kpiSummary = [];
+            }
+
+            try {
+                $shipmentMetrics = $this->controlTowerService->getShipmentMetrics($windowStart, $windowEnd);
+                Log::info('WorkflowBoardController: Shipment metrics loaded');
+            } catch (\Exception $e) {
+                Log::error('WorkflowBoardController: Failed to load shipment metrics', [
+                    'error' => $e->getMessage(),
+                ]);
+                $shipmentMetrics = [];
+            }
+
+            try {
+                $workerUtilization = $this->controlTowerService->getWorkerUtilization();
+                Log::info('WorkflowBoardController: Worker utilization loaded');
+            } catch (\Exception $e) {
+                Log::error('WorkflowBoardController: Failed to load worker utilization', [
+                    'error' => $e->getMessage(),
+                ]);
+                $workerUtilization = [];
+            }
+
+            $notifications = [];
+            if ($request->user()) {
+                try {
+                    $notifications = $this->notificationService
+                        ->getUnreadNotifications($request->user())
+                        ->take(15)
+                        ->values()
+                        ->all();
+                    Log::info('WorkflowBoardController: Notifications loaded', ['count' => count($notifications)]);
+                } catch (\Exception $e) {
+                    Log::error('WorkflowBoardController: Failed to load notifications', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            Log::info('WorkflowBoardController: Successfully completed workflow board request');
+
+            return response()->json([
+                'success' => true,
+                'data' => [
                 'hub_branch' => $hubBranch ? [
                     'id' => $hubBranch->id,
                     'name' => $hubBranch->name,
@@ -98,6 +168,35 @@ class WorkflowBoardController extends Controller
                 'notifications' => $notifications,
             ],
         ]);
+
+        } catch (\Exception $e) {
+            Log::error('WorkflowBoardController: Fatal error in workflow board request', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load workflow board: ' . $e->getMessage(),
+                'data' => [
+                    'hub_branch' => null,
+                    'queues' => [
+                        'unassigned_shipments' => [],
+                        'exceptions' => [],
+                        'load_balancing' => [],
+                        'driver_queues' => [],
+                    ],
+                    'dispatch_snapshot' => null,
+                    'kpis' => [],
+                    'shipment_metrics' => [],
+                    'worker_utilization' => [],
+                    'exception_metrics' => [],
+                    'notifications' => [],
+                ],
+            ], 500);
+        }
     }
 }
 
