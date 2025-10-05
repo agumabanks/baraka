@@ -12,6 +12,7 @@ import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import SkeletonCard from '../components/dashboard/SkeletonCard';
 import { useDashboardData, transformDashboardData } from '../hooks/useDashboardData';
+import { useWorkflowQueue } from '../hooks/useWorkflowQueue';
 import { t } from '../lib/i18n';
 import Can from '../components/rbac/Can';
 import type { KPICard as KPICardType } from '../types/dashboard';
@@ -27,10 +28,16 @@ const Dashboard: React.FC = () => {
   // Fetch dashboard data from API
   const { data: apiResponse, isLoading, isError, error, refetch } = useDashboardData();
   
+  // Fetch real-time workflow queue data
+  const { data: workflowQueueData, isLoading: isWorkflowLoading } = useWorkflowQueue();
+  
   // Transform API data or use mock data as fallback
   const dashboardData = apiResponse?.success
     ? transformDashboardData(apiResponse)
     : null;
+  
+  // Use real-time workflow data if available, fallback to dashboard data
+  const workflowItems = workflowQueueData || dashboardData?.workflowQueue || [];
 
   // Handle KPI card click
   const handleKPIClick = (kpi: KPICardType) => {
@@ -180,8 +187,8 @@ const Dashboard: React.FC = () => {
         {/* Work in Progress - Row 2 */}
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <WorkflowQueue
-            items={dashboardData.workflowQueue}
-            loading={isLoading}
+            items={workflowItems}
+            loading={isLoading || isWorkflowLoading}
             onItemClick={(item) => handleWorkflowItemClick(item.id)}
             maxItems={5}
           />
