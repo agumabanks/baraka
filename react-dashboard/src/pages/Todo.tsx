@@ -183,9 +183,9 @@ const TodoEnhanced: React.FC = () => {
     );
   }
 
-  const shipments = data.queues.unassigned_shipments as WorkflowBoardShipment[];
-  const exceptions = data.queues.exceptions as WorkflowBoardException[];
-  const notifications = data.notifications as WorkflowBoardNotification[];
+  const shipments = (data?.queues?.unassigned_shipments || []) as WorkflowBoardShipment[];
+  const exceptions = (data?.queues?.exceptions || []) as WorkflowBoardException[];
+  const notifications = (data?.notifications || []) as WorkflowBoardNotification[];
 
   // Filter shipments
   const filteredShipments = useMemo(() => {
@@ -194,7 +194,7 @@ const TodoEnhanced: React.FC = () => {
       if (filters.search && !shipment.tracking_number?.toLowerCase().includes(filters.search.toLowerCase())) return false;
       return true;
     });
-  }, [shipments, filters]);
+  }, [shipments, filters.priority, filters.search]);
 
   // Filter exceptions
   const filteredExceptions = useMemo(() => {
@@ -203,7 +203,7 @@ const TodoEnhanced: React.FC = () => {
       if (filters.search && !exception.tracking_number?.toLowerCase().includes(filters.search.toLowerCase())) return false;
       return true;
     });
-  }, [exceptions, filters]);
+  }, [exceptions, filters.severity, filters.search]);
 
   // Sorted shipments
   const sortedShipments = useMemo(() => {
