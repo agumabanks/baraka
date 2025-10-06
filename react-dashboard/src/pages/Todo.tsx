@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -145,31 +145,11 @@ const TodoEnhanced: React.FC = () => {
     }
   };
 
-  if (isLoading && !data) {
-    return <LoadingSpinner message="Loading workflow actions" />;
-  }
-
-  if (isError || !data) {
-    const message = error instanceof Error ? error.message : 'Unable to load workflow actions';
-    return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center">
-        <Card className="max-w-md text-center">
-          <div className="space-y-4">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-mono-black text-mono-white">
-              <i className="fas fa-exclamation-triangle text-2xl" aria-hidden="true" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-semibold text-mono-black">Workflow board unavailable</h2>
-              <p className="text-sm text-mono-gray-600">{message}</p>
-            </div>
-            <Button variant="primary" size="md" onClick={() => refetch()}>
-              <i className="fas fa-redo mr-2" aria-hidden="true" />
-              Retry
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
+  const renderCountRef = useRef(0);
+  renderCountRef.current += 1;
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log('[Todo] render count', renderCountRef.current);
   }
 
   // Memoize data extraction to prevent new array references on every render
@@ -249,13 +229,40 @@ const TodoEnhanced: React.FC = () => {
     const exportData = prepareWorkflowDataForExport(sortedShipments);
     const timestamp = new Date().toISOString().split('T')[0];
     const filename = `workflow-items-${timestamp}.${format === 'csv' ? 'csv' : 'xlsx'}`;
-    
+
     if (format === 'csv') {
       exportToCSV(exportData, filename);
     } else {
       exportToExcel(exportData, filename);
     }
   }, [sortedShipments]);
+
+  if (isLoading && !data) {
+    return <LoadingSpinner message="Loading workflow actions" />;
+  }
+
+  if (isError || !data) {
+    const message = error instanceof Error ? error.message : 'Unable to load workflow actions';
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center">
+        <Card className="max-w-md text-center">
+          <div className="space-y-4">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-mono-black text-mono-white">
+              <i className="fas fa-exclamation-triangle text-2xl" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-mono-black">Workflow board unavailable</h2>
+              <p className="text-sm text-mono-gray-600">{message}</p>
+            </div>
+            <Button variant="primary" size="md" onClick={() => refetch()}>
+              <i className="fas fa-redo mr-2" aria-hidden="true" />
+              Retry
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">

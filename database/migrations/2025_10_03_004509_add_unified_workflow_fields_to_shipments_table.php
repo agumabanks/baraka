@@ -12,15 +12,25 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('shipments', function (Blueprint $table) {
-            // Hub and transfer management
-            $table->foreignId('transfer_hub_id')->nullable()->after('dest_branch_id')->constrained('unified_branches')->nullOnDelete();
-            $table->timestamp('hub_processed_at')->nullable()->after('assigned_at');
+            // Critical: Tracking number for shipment identification
+            $table->string('tracking_number', 50)->unique()->after('id')->nullable();
+            
+            // Priority
+            $table->integer('priority')->default(1)->after('service_level')->comment('1=standard, 2=priority, 3=express');
+            
+            // Worker assignment
+            $table->foreignId('assigned_worker_id')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
+            $table->timestamp('assigned_at')->nullable()->after('assigned_worker_id');
+            
+            // Delivery worker
+            $table->foreignId('delivered_by')->nullable()->after('assigned_at')->constrained('users')->nullOnDelete();
+            
+            // Hub and transfer management timestamps
+            $table->timestamp('hub_processed_at')->nullable()->after('delivered_by');
             $table->timestamp('transferred_at')->nullable()->after('hub_processed_at');
             $table->timestamp('picked_up_at')->nullable()->after('transferred_at');
             $table->timestamp('processed_at')->nullable()->after('picked_up_at');
-            
-            // Delivery worker
-            $table->foreignId('delivered_by')->nullable()->after('assigned_worker_id')->constrained('users')->nullOnDelete();
+            $table->timestamp('delivered_at')->nullable()->after('processed_at');
             
             // Exception management
             $table->boolean('has_exception')->default(false)->after('current_status');
@@ -34,16 +44,16 @@ return new class extends Migration
             $table->string('return_reason')->nullable()->after('returned_at');
             $table->text('return_notes')->nullable()->after('return_reason');
             
-            // Priority
-            $table->integer('priority')->default(1)->after('service_level')->comment('1=standard, 2=priority, 3=express');
-            
             // Indexes for performance
-            $table->index('transfer_hub_id');
+            $table->index('tracking_number');
+            $table->index('assigned_worker_id');
             $table->index('delivered_by');
             $table->index('has_exception');
             $table->index('priority');
             $table->index('hub_processed_at');
             $table->index('exception_occurred_at');
+            $table->index('assigned_at');
+            $table->index('delivered_at');
         });
     }
 
@@ -54,25 +64,32 @@ return new class extends Migration
     {
         Schema::table('shipments', function (Blueprint $table) {
             // Drop indexes first
-            $table->dropIndex(['transfer_hub_id']);
+            $table->dropIndex(['tracking_number']);
+            $table->dropIndex(['assigned_worker_id']);
             $table->dropIndex(['delivered_by']);
             $table->dropIndex(['has_exception']);
             $table->dropIndex(['priority']);
             $table->dropIndex(['hub_processed_at']);
             $table->dropIndex(['exception_occurred_at']);
+            $table->dropIndex(['assigned_at']);
+            $table->dropIndex(['delivered_at']);
             
             // Drop foreign keys
-            $table->dropForeign(['transfer_hub_id']);
+            $table->dropForeign(['assigned_worker_id']);
             $table->dropForeign(['delivered_by']);
             
             // Drop columns
             $table->dropColumn([
-                'transfer_hub_id',
+                'tracking_number',
+                'priority',
+                'assigned_worker_id',
+                'assigned_at',
+                'delivered_by',
                 'hub_processed_at',
                 'transferred_at',
                 'picked_up_at',
                 'processed_at',
-                'delivered_by',
+                'delivered_at',
                 'has_exception',
                 'exception_type',
                 'exception_severity',
@@ -81,7 +98,6 @@ return new class extends Migration
                 'returned_at',
                 'return_reason',
                 'return_notes',
-                'priority',
             ]);
         });
     }
