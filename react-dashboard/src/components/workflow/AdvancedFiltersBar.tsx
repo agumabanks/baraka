@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import Button from '../ui/Button';
 
 export interface AdvancedFilters {
@@ -19,15 +19,15 @@ interface AdvancedFiltersBarProps {
   onExport: (format: 'csv' | 'excel') => void;
 }
 
-const AdvancedFiltersBar: React.FC<AdvancedFiltersBarProps> = ({
+const AdvancedFiltersBar: React.FC<AdvancedFiltersBarProps> = React.memo(({
   filters,
   onFilterChange,
   onClear,
   onExport,
 }) => {
-  const handleChange = (key: keyof AdvancedFilters, value: string) => {
+  const handleChange = useCallback((key: keyof AdvancedFilters, value: string) => {
     onFilterChange({ ...filters, [key]: value });
-  };
+  }, [filters, onFilterChange]);
 
   return (
     <div className="bg-white border border-mono-gray-200 rounded-lg p-4 space-y-4">
@@ -169,6 +169,8 @@ const AdvancedFiltersBar: React.FC<AdvancedFiltersBarProps> = ({
       </div>
     </div>
   );
-};
+});
+
+AdvancedFiltersBar.displayName = 'AdvancedFiltersBar';
 
 export default AdvancedFiltersBar;

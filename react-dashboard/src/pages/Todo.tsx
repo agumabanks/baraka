@@ -118,6 +118,10 @@ const TodoEnhanced: React.FC = () => {
 
   // Note: handleExport defined later after sortedShipments calculation
 
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
+    setFilters(newFilters);
+  }, []);
+
   const clearFilters = useCallback(() => {
     setFilters({
       priority: 'all',
@@ -168,9 +172,21 @@ const TodoEnhanced: React.FC = () => {
     );
   }
 
-  const shipments = (data?.queues?.unassigned_shipments || []) as WorkflowBoardShipment[];
-  const exceptions = (data?.queues?.exceptions || []) as WorkflowBoardException[];
-  const notifications = (data?.notifications || []) as WorkflowBoardNotification[];
+  // Memoize data extraction to prevent new array references on every render
+  const shipments = useMemo(() => 
+    (data?.queues?.unassigned_shipments || []) as WorkflowBoardShipment[],
+    [data?.queues?.unassigned_shipments]
+  );
+  
+  const exceptions = useMemo(() => 
+    (data?.queues?.exceptions || []) as WorkflowBoardException[],
+    [data?.queues?.exceptions]
+  );
+  
+  const notifications = useMemo(() => 
+    (data?.notifications || []) as WorkflowBoardNotification[],
+    [data?.notifications]
+  );
 
   // Filter shipments
   const filteredShipments = useMemo(() => {
@@ -301,7 +317,7 @@ const TodoEnhanced: React.FC = () => {
       {/* Advanced Filters */}
       <AdvancedFiltersBar
         filters={filters}
-        onFilterChange={setFilters}
+        onFilterChange={handleFilterChange}
         onClear={clearFilters}
         onExport={handleExport}
       />
