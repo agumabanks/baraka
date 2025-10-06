@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -28,6 +28,9 @@ type SortDirection = 'asc' | 'desc';
 
 type FilterState = AdvancedFilters;
 
+// Constant outside component to avoid re-creation
+const ITEMS_PER_PAGE = 10;
+
 const TodoEnhanced: React.FC = () => {
   const { data, isLoading, isError, error, refetch, isFetching } = useWorkflowBoard();
   const createMutation = useCreateWorkflowItem();
@@ -42,7 +45,6 @@ const TodoEnhanced: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('priority');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   const [filters, setFilters] = useState<FilterState>({
     priority: 'all',
@@ -79,7 +81,7 @@ const TodoEnhanced: React.FC = () => {
     }
   };
 
-  const handleToggleSelect = (id: string | number) => {
+  const handleToggleSelect = useCallback((id: string | number) => {
     const idStr = String(id);
     const newSelected = new Set(selectedIds);
     if (newSelected.has(idStr)) {
@@ -88,16 +90,9 @@ const TodoEnhanced: React.FC = () => {
       newSelected.add(idStr);
     }
     setSelectedIds(newSelected);
-  };
+  }, [selectedIds]);
 
-  const handleSelectAll = () => {
-    if (selectedIds.size === paginatedShipments.length) {
-      setSelectedIds(new Set());
-    } else {
-      const allIds = new Set(paginatedShipments.map(s => String(s.id || s.tracking_number)).filter(Boolean));
-      setSelectedIds(allIds);
-    }
-  };
+  // Note: handleSelectAll defined later after paginatedShipments calculation
 
   const handleBulkUpdateStatus = async (status: 'pending' | 'in_progress' | 'completed' | 'delayed') => {
     try {
@@ -121,19 +116,9 @@ const TodoEnhanced: React.FC = () => {
     }
   };
 
-  const handleExport = (format: 'csv' | 'excel') => {
-    const exportData = prepareWorkflowDataForExport(sortedShipments);
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `workflow-items-${timestamp}.${format === 'csv' ? 'csv' : 'xlsx'}`;
-    
-    if (format === 'csv') {
-      exportToCSV(exportData, filename);
-    } else {
-      exportToExcel(exportData, filename);
-    }
-  };
+  // Note: handleExport defined later after sortedShipments calculation
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({
       priority: 'all',
       status: 'all',
@@ -145,7 +130,7 @@ const TodoEnhanced: React.FC = () => {
       tags: [],
     });
     setCurrentPage(1);
-  };
+  }, []);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -228,11 +213,33 @@ const TodoEnhanced: React.FC = () => {
 
   // Paginated shipments
   const paginatedShipments = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return sortedShipments.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedShipments, currentPage, itemsPerPage]);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return sortedShipments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [sortedShipments, currentPage]);
 
-  const totalPages = Math.ceil(sortedShipments.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedShipments.length / ITEMS_PER_PAGE);
+
+  // Handlers that depend on derived data - defined after useMemo calculations
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.size === paginatedShipments.length) {
+      setSelectedIds(new Set());
+    } else {
+      const allIds = new Set(paginatedShipments.map(s => String(s.id || s.tracking_number)).filter(Boolean));
+      setSelectedIds(allIds);
+    }
+  }, [selectedIds, paginatedShipments]);
+
+  const handleExport = useCallback((format: 'csv' | 'excel') => {
+    const exportData = prepareWorkflowDataForExport(sortedShipments);
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `workflow-items-${timestamp}.${format === 'csv' ? 'csv' : 'xlsx'}`;
+    
+    if (format === 'csv') {
+      exportToCSV(exportData, filename);
+    } else {
+      exportToExcel(exportData, filename);
+    }
+  }, [sortedShipments]);
 
   return (
     <div className="space-y-10">
