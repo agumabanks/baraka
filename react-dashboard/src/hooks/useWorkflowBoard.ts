@@ -8,14 +8,32 @@ export const useWorkflowBoard = () =>
   useQuery<WorkflowBoardResponse, Error>({
     queryKey: ['workflow-board'],
     queryFn: async () => {
-      const response = await workflowApi.getBoard();
-      if (!response.success) {
-        throw new Error('Failed to load workflow board');
+      try {
+        const response = await workflowApi.getBoard();
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to load workflow board');
+        }
+        return response.data;
+      } catch (error: any) {
+        // Handle authentication errors
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          throw new Error('Authentication required. Please log in again.');
+        }
+        // Handle API errors
+        if (error.response?.data?.message) {
+          throw new Error(error.response.data.message);
+        }
+        // Handle network errors
+        if (error.message === 'Network Error') {
+          throw new Error('Unable to connect to the server. Please check your connection.');
+        }
+        // Default error
+        throw new Error(error.message || 'Failed to load workflow board');
       }
-      return response.data;
     },
     staleTime: STALE_TIME,
     refetchInterval: STALE_TIME,
+    retry: 1, // Only retry once to fail faster
   });
 
 export const useOperationsInsights = () =>
