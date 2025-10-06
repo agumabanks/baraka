@@ -20,6 +20,7 @@ class Shipment extends Model
     use LogsActivity, SoftDeletes;
 
     protected $fillable = [
+        'tracking_number',
         'customer_id',
         'origin_branch_id',
         'dest_branch_id',
@@ -176,10 +177,7 @@ class Shipment extends Model
     }
 
     // Accessors
-    public function getTrackingNumberAttribute(): string
-    {
-        return $this->parcels->first()?->sscc ?? 'N/A';
-    }
+    // Note: tracking_number is now a database column, not an accessor
 
     public function getTotalWeightAttribute(): float
     {
