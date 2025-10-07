@@ -8,45 +8,31 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('parcel_logs', function (Blueprint $table) {
+        Schema::create('shipment_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('merchant_id')->nullable()->constrained('merchants')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignId('hub_id')->nullable()->constrained('hubs')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignId('delivery_man_id')->nullable()->constrained('delivery_man')->onUpdate('cascade')->onDelete('cascade');
-            $table->foreignId('parcel_id')->nullable()->constrained('parcels')->onUpdate('cascade')->onDelete('cascade');
-            $table->longtext('pickup_address')->nullable();
-            $table->string('pickup_phone')->nullable();
-            $table->string('customer_name')->nullable();
-            $table->string('customer_phone')->nullable();
-            $table->longtext('customer_address')->nullable();
-            $table->string('invoice_no')->nullable();
-            $table->decimal('cash_collection', 13, 2)->nullable();
-            $table->decimal('selling_price', 13, 2)->nullable();
-            $table->decimal('total_delivery_amount', 13, 2)->nullable();
-            $table->decimal('current_payable', 13, 2)->nullable();
-            $table->longtext('note')->nullable();
+            $table->foreignId('shipment_id')->constrained('shipments')->cascadeOnDelete();
+            $table->string('status');
+            $table->text('description')->nullable();
+            $table->string('location')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->json('metadata')->nullable();
+            $table->timestamp('logged_at');
             $table->timestamps();
 
-            $table->index('merchant_id');
-            $table->index('hub_id');
-            $table->index('delivery_man_id');
-            $table->index('parcel_id');
-
+            $table->index('shipment_id');
+            $table->index('status');
+            $table->index('logged_at');
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('parcel_logs');
+        Schema::dropIfExists('shipment_logs');
     }
 };

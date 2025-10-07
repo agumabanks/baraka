@@ -15,7 +15,7 @@ class Branch extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $table = 'unified_branches';
+    protected $table = 'branches';
 
     protected $fillable = [
         'name',

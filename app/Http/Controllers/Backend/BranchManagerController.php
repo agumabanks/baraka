@@ -82,7 +82,7 @@ class BranchManagerController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'required|exists:unified_branches,id',
+            'branch_id' => 'required|exists:branches,id',
             'user_id' => 'nullable|exists:users,id',
             'create_user' => 'boolean',
             'name' => 'required_if:create_user,true|string|max:255',
@@ -230,7 +230,7 @@ class BranchManagerController extends Controller
     public function update(Request $request, BranchManager $manager): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'required|exists:unified_branches,id',
+            'branch_id' => 'required|exists:branches,id',
             'business_name' => 'nullable|string|max:255',
             'cod_charges' => 'nullable|array',
             'payment_info' => 'nullable|array',

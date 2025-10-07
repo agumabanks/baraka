@@ -105,10 +105,10 @@ class BranchController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:10|unique:unified_branches,code',
+            'code' => 'required|string|max:10|unique:branches,code',
             'type' => ['required', Rule::in(['HUB', 'REGIONAL', 'LOCAL'])],
             'is_hub' => 'boolean',
-            'parent_branch_id' => 'nullable|exists:unified_branches,id',
+            'parent_branch_id' => 'nullable|exists:branches,id',
             'address' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -253,10 +253,10 @@ class BranchController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'code' => ['required', 'string', 'max:10', Rule::unique('unified_branches')->ignore($branch->id)],
+            'code' => ['required', 'string', 'max:10', Rule::unique('branches')->ignore($branch->id)],
             'type' => ['required', Rule::in(['HUB', 'REGIONAL', 'LOCAL'])],
             'is_hub' => 'boolean',
-            'parent_branch_id' => ['nullable', 'exists:unified_branches,id', Rule::notIn([$branch->id])],
+            'parent_branch_id' => ['nullable', 'exists:branches,id', Rule::notIn([$branch->id])],
             'address' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
@@ -420,7 +420,7 @@ class BranchController extends Controller
     public function moveBranch(Request $request, Branch $branch): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'new_parent_id' => 'nullable|exists:unified_branches,id',
+            'new_parent_id' => 'nullable|exists:branches,id',
         ]);
 
         if ($validator->fails()) {

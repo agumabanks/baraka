@@ -49,7 +49,7 @@ class OperationsControlCenterController extends Controller
     public function getDispatchBoard(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'nullable|exists:unified_branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'date' => 'nullable|date',
         ]);
 
@@ -154,7 +154,7 @@ class OperationsControlCenterController extends Controller
     public function getUnassignedShipments(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'nullable|exists:unified_branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -211,7 +211,7 @@ class OperationsControlCenterController extends Controller
     public function getLoadBalancingMetrics(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'nullable|exists:unified_branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -435,7 +435,7 @@ class OperationsControlCenterController extends Controller
     public function getAssetStatus(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'nullable|exists:unified_branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -510,7 +510,7 @@ class OperationsControlCenterController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
-            'branch_id' => 'nullable|exists:unified_branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -584,7 +584,7 @@ class OperationsControlCenterController extends Controller
     public function getAssetMetrics(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'nullable|exists:unified_branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -618,7 +618,7 @@ class OperationsControlCenterController extends Controller
     public function getAvailableVehicles(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'required|exists:unified_branches,id',
+            'branch_id' => 'required|exists:branches,id',
             'date' => 'nullable|date',
         ]);
 
@@ -680,7 +680,7 @@ class OperationsControlCenterController extends Controller
     public function getBranchPerformance(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'nullable|exists:unified_branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         if ($validator->fails()) {
@@ -714,7 +714,7 @@ class OperationsControlCenterController extends Controller
     public function getWorkerUtilization(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'nullable|exists:unified_branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         if ($validator->fails()) {

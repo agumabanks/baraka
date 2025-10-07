@@ -6,23 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('shipments', function (Blueprint $table) {
-            $table->string('public_token')->nullable()->unique();
+            if (! Schema::hasColumn('shipments', 'public_token')) {
+                $table->string('public_token')->nullable()->unique();
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('shipments', function (Blueprint $table) {
-            $table->dropColumn('public_token');
+            if (Schema::hasColumn('shipments', 'public_token')) {
+                $table->dropColumn('public_token');
+            }
         });
     }
 };
