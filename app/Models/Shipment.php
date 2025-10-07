@@ -6,6 +6,7 @@ use App\Enums\ScanType;
 use App\Enums\ShipmentStatus;
 use App\Events\ShipmentStatusChanged;
 use App\Models\Backend\Branch;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Backend\BranchWorker;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,14 +18,18 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Shipment extends Model
 {
-    use LogsActivity, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-        'tracking_number',
+  
+        'client_id',
+ 
         'customer_id',
         'origin_branch_id',
         'dest_branch_id',
         'assigned_worker_id',
+        'tracking_number',
+        'status',
         'service_level',
         'incoterm',
         'price_amount',
@@ -56,6 +61,7 @@ class Shipment extends Model
 
     protected $casts = [
         'price_amount' => 'decimal:2',
+        'status' => 'string',
         'current_status' => ShipmentStatus::class,
         'assigned_at' => 'datetime',
         'expected_delivery_date' => 'datetime',
@@ -91,7 +97,7 @@ class Shipment extends Model
     {
         return LogOptions::defaults()
             ->useLogName('shipment')
-            ->logOnly(['customer_id', 'origin_branch_id', 'dest_branch_id', 'assigned_worker_id', 'current_status', 'price_amount'])
+            ->logOnly(['client_id', 'customer_id', 'origin_branch_id', 'dest_branch_id', 'assigned_worker_id', 'status', 'price_amount'])
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName} shipment");
     }
 

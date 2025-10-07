@@ -6,12 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('shipments', function (Blueprint $table) {
+<<<<<<< ours
             // Critical: Tracking number for shipment identification
             $table->string('tracking_number', 50)->unique()->after('id')->nullable();
             
@@ -47,6 +45,55 @@ return new class extends Migration
             // Indexes for performance
             $table->index('tracking_number');
             $table->index('assigned_worker_id');
+=======
+            if (! Schema::hasColumn('shipments', 'transfer_hub_id')) {
+                $table->foreignId('transfer_hub_id')->nullable()->after('dest_branch_id')->constrained('branches')->nullOnDelete();
+            }
+            if (! Schema::hasColumn('shipments', 'hub_processed_at')) {
+                $table->timestamp('hub_processed_at')->nullable()->after('assigned_at');
+            }
+            if (! Schema::hasColumn('shipments', 'transferred_at')) {
+                $table->timestamp('transferred_at')->nullable()->after('hub_processed_at');
+            }
+            if (! Schema::hasColumn('shipments', 'picked_up_at')) {
+                $table->timestamp('picked_up_at')->nullable()->after('transferred_at');
+            }
+            if (! Schema::hasColumn('shipments', 'processed_at')) {
+                $table->timestamp('processed_at')->nullable()->after('picked_up_at');
+            }
+            if (! Schema::hasColumn('shipments', 'delivered_by')) {
+                $table->foreignId('delivered_by')->nullable()->after('assigned_worker_id')->constrained('users')->nullOnDelete();
+            }
+            if (! Schema::hasColumn('shipments', 'has_exception')) {
+                $table->boolean('has_exception')->default(false)->after('status');
+            }
+            if (! Schema::hasColumn('shipments', 'exception_type')) {
+                $table->string('exception_type')->nullable()->after('has_exception');
+            }
+            if (! Schema::hasColumn('shipments', 'exception_severity')) {
+                $table->enum('exception_severity', ['low', 'medium', 'high'])->nullable()->after('exception_type');
+            }
+            if (! Schema::hasColumn('shipments', 'exception_notes')) {
+                $table->text('exception_notes')->nullable()->after('exception_severity');
+            }
+            if (! Schema::hasColumn('shipments', 'exception_occurred_at')) {
+                $table->timestamp('exception_occurred_at')->nullable()->after('exception_notes');
+            }
+            if (! Schema::hasColumn('shipments', 'returned_at')) {
+                $table->timestamp('returned_at')->nullable()->after('delivered_at');
+            }
+            if (! Schema::hasColumn('shipments', 'return_reason')) {
+                $table->string('return_reason')->nullable()->after('returned_at');
+            }
+            if (! Schema::hasColumn('shipments', 'return_notes')) {
+                $table->text('return_notes')->nullable()->after('return_reason');
+            }
+            if (! Schema::hasColumn('shipments', 'priority')) {
+                $table->integer('priority')->default(1)->after('service_level');
+            }
+
+            $table->index('transfer_hub_id');
+>>>>>>> theirs
             $table->index('delivered_by');
             $table->index('has_exception');
             $table->index('priority');
@@ -57,12 +104,10 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('shipments', function (Blueprint $table) {
+<<<<<<< ours
             // Drop indexes first
             $table->dropIndex(['tracking_number']);
             $table->dropIndex(['assigned_worker_id']);
@@ -85,11 +130,26 @@ return new class extends Migration
                 'assigned_worker_id',
                 'assigned_at',
                 'delivered_by',
+=======
+            if (Schema::hasColumn('shipments', 'transfer_hub_id')) {
+                $table->dropForeign(['transfer_hub_id']);
+                $table->dropColumn('transfer_hub_id');
+            }
+            if (Schema::hasColumn('shipments', 'delivered_by')) {
+                $table->dropForeign(['delivered_by']);
+                $table->dropColumn('delivered_by');
+            }
+
+            foreach ([
+>>>>>>> theirs
                 'hub_processed_at',
                 'transferred_at',
                 'picked_up_at',
                 'processed_at',
+<<<<<<< ours
                 'delivered_at',
+=======
+>>>>>>> theirs
                 'has_exception',
                 'exception_type',
                 'exception_severity',
@@ -98,7 +158,16 @@ return new class extends Migration
                 'returned_at',
                 'return_reason',
                 'return_notes',
+<<<<<<< ours
             ]);
+=======
+                'priority',
+            ] as $column) {
+                if (Schema::hasColumn('shipments', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
+>>>>>>> theirs
         });
     }
 };

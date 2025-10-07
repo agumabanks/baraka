@@ -107,7 +107,7 @@ class BranchWorkerController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'required|exists:unified_branches,id',
+            'branch_id' => 'required|exists:branches,id',
             'user_id' => 'nullable|exists:users,id',
             'create_user' => 'boolean',
             'name' => 'required_if:create_user,true|string|max:255',
@@ -259,7 +259,7 @@ class BranchWorkerController extends Controller
     public function update(Request $request, BranchWorker $worker): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'branch_id' => 'required|exists:unified_branches,id',
+            'branch_id' => 'required|exists:branches,id',
             'role' => ['required', Rule::in(self::WORKER_ROLES)],
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
