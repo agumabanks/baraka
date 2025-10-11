@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -32,6 +33,10 @@ type FilterState = AdvancedFilters;
 const ITEMS_PER_PAGE = 10;
 
 const TodoEnhanced: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
+  
   const { data, isLoading, isError, error, refetch, isFetching } = useWorkflowBoard();
   const createMutation = useCreateWorkflowItem();
   const updateMutation = useUpdateWorkflowItem();
@@ -45,6 +50,7 @@ const TodoEnhanced: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('priority');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(highlightId);
 
   const [filters, setFilters] = useState<FilterState>({
     priority: 'all',
@@ -151,6 +157,24 @@ const TodoEnhanced: React.FC = () => {
     // eslint-disable-next-line no-console
     console.log('[Todo] render count', renderCountRef.current);
   }
+
+  // Handle highlighting and scrolling to item
+  useEffect(() => {
+    if (highlightedItemId) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`workflow-item-${highlightedItemId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-mono-black', 'ring-offset-2');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-mono-black', 'ring-offset-2');
+            setHighlightedItemId(null);
+          }, 3000);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedItemId, data]);
 
   // Memoize data extraction to prevent new array references on every render
   const shipments = useMemo(() => 
@@ -268,7 +292,20 @@ const TodoEnhanced: React.FC = () => {
     <div className="space-y-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Control Tower</p>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/dashboard')}
+              className="text-mono-gray-600 hover:text-mono-black"
+              title="Back to Dashboard"
+            >
+              <i className="fas fa-arrow-left mr-2" aria-hidden="true" />
+              Dashboard
+            </Button>
+            <span className="text-mono-gray-300">|</span>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Control Tower</p>
+          </div>
           <h1 className="text-3xl font-semibold text-mono-black sm:text-4xl">Workflow Board</h1>
           <p className="text-sm text-mono-gray-600">
             Coordinate dispatch, resolve exceptions, and keep the network flowing with a single monochrome cockpit.
@@ -297,7 +334,7 @@ const TodoEnhanced: React.FC = () => {
       </header>
 
       {/* Summary Cards */}
-      <section className="grid gap-6 lg:grid-cols-3">
+      <section className="grid gap-6 lg:grid-cols-4">
         <Card className="border border-mono-gray-200 shadow-inner">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Unassigned Shipments</p>
@@ -317,6 +354,26 @@ const TodoEnhanced: React.FC = () => {
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Unread Signals</p>
             <h2 className="text-3xl font-semibold text-mono-black">{notifications.length}</h2>
             <p className="text-sm text-mono-gray-600">Operational alerts for the next shift</p>
+          </div>
+        </Card>
+        <Card className="border border-mono-gray-200 shadow-inner">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Priority Breakdown</p>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-mono-black"></span>
+                <span className="text-sm text-mono-gray-700">High: {shipments.filter(s => s.priority === 'high').length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-mono-gray-600"></span>
+                <span className="text-sm text-mono-gray-700">Med: {shipments.filter(s => s.priority === 'medium').length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-mono-gray-400"></span>
+                <span className="text-sm text-mono-gray-700">Low: {shipments.filter(s => s.priority === 'low').length}</span>
+              </div>
+            </div>
+            <p className="text-sm text-mono-gray-600">Distribution across urgency levels</p>
           </div>
         </Card>
       </section>
@@ -372,8 +429,15 @@ const TodoEnhanced: React.FC = () => {
               paginatedShipments.map((shipment) => {
                 const itemId = String(shipment.id || shipment.tracking_number || '');
                 const isSelected = selectedIds.has(itemId);
+                const isHighlighted = highlightedItemId === itemId;
                 return (
-                  <div key={itemId} className={`flex items-center gap-4 py-4 ${isSelected ? 'bg-mono-gray-50' : ''}`}>
+                  <div 
+                    key={itemId}
+                    id={`workflow-item-${itemId}`}
+                    className={`flex items-center gap-4 py-4 rounded transition-all ${
+                      isSelected ? 'bg-mono-gray-50' : ''
+                    } ${isHighlighted ? 'bg-amber-50' : ''}`}
+                  >
                     <input
                       type="checkbox"
                       checked={isSelected}

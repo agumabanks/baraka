@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import CreateShipmentModal from '../components/shipments/CreateShipmentModal';
 import { useWorkflowBoard, useOperationsInsights } from '../hooks/useWorkflowBoard';
 import type { WorkflowBoardDriverQueue, WorkflowBoardException } from '../types/workflow';
 
@@ -14,6 +15,8 @@ const formatPercent = (value?: number | null) => {
 };
 
 const Shipments: React.FC = () => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
   const {
     data: workflow,
     isLoading: isWorkflowLoading,
@@ -81,27 +84,37 @@ const Shipments: React.FC = () => {
   };
 
   return (
-    <div className="space-y-10">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Operations Command</p>
-          <h1 className="text-3xl font-semibold text-mono-black sm:text-4xl">Unified Shipment Control Centre</h1>
-          <p className="text-sm text-mono-gray-600">
-            Monitor dispatch queues, worker capacity, and SLA performance with Steve Jobs-level monochrome precision.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {(isWorkflowFetching || isOperationsFetching) && (
-            <span className="text-xs uppercase tracking-[0.3em] text-mono-gray-500" aria-live="polite">
-              Refreshing…
-            </span>
-          )}
-          <Button variant="secondary" size="sm" className="uppercase tracking-[0.25em]" onClick={refreshAll}>
-            <i className="fas fa-sync-alt mr-2" aria-hidden="true" />
-            Refresh
-          </Button>
-        </div>
-      </header>
+    <>
+      <div className="space-y-10">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Operations Command</p>
+            <h1 className="text-3xl font-semibold text-mono-black sm:text-4xl">Unified Shipment Control Centre</h1>
+            <p className="text-sm text-mono-gray-600">
+              Monitor dispatch queues, worker capacity, and SLA performance with Steve Jobs-level monochrome precision.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {(isWorkflowFetching || isOperationsFetching) && (
+              <span className="text-xs uppercase tracking-[0.3em] text-mono-gray-500" aria-live="polite">
+                Refreshing…
+              </span>
+            )}
+            <Button 
+              variant="primary" 
+              size="sm" 
+              className="uppercase tracking-[0.25em]" 
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <i className="fas fa-plus mr-2" aria-hidden="true" />
+              New Shipment
+            </Button>
+            <Button variant="secondary" size="sm" className="uppercase tracking-[0.25em]" onClick={refreshAll}>
+              <i className="fas fa-sync-alt mr-2" aria-hidden="true" />
+              Refresh
+            </Button>
+          </div>
+        </header>
 
       <section className="grid gap-6 lg:grid-cols-4">
         <Card className="border border-mono-gray-200 shadow-inner">
@@ -263,7 +276,14 @@ const Shipments: React.FC = () => {
           </div>
         </Card>
       </section>
-    </div>
+      </div>
+
+      {/* Create Shipment Modal */}
+      <CreateShipmentModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
+    </>
   );
 };
 

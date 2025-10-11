@@ -61,7 +61,6 @@ const normalisePriority = (priority?: WorkflowItem['priority']): 'high' | 'mediu
 const WorkflowQueue: React.FC<WorkflowQueueProps> = ({
   items,
   loading = false,
-  onItemClick,
   maxItems = 5,
   onAction,
 }) => {
@@ -115,17 +114,20 @@ const WorkflowQueue: React.FC<WorkflowQueueProps> = ({
               <p className="text-xs text-mono-gray-500">Live operations queue, refreshed automatically</p>
             </div>
             <Link
-              to="/dashboard/todo"
-              className="inline-flex items-center gap-2 text-sm font-medium text-mono-gray-700 hover:text-mono-black transition-colors"
+              to="/dashboard/workflow"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border border-mono-gray-300 rounded-full text-mono-gray-700 hover:border-mono-black hover:bg-mono-black hover:text-mono-white transition-colors"
               title="View full workflow board"
             >
+              <i className="fas fa-th-large mr-1" aria-hidden="true" />
               Full Board
-              <i className="fas fa-arrow-right" aria-hidden="true" />
             </Link>
           </div>
           <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter workflow items by priority">
             {filterOptions.map((option) => {
               const isActive = activeFilter === option.key;
+              const count = option.key === 'all' 
+                ? items.length 
+                : items.filter((item) => normalisePriority(item.priority) === option.key).length;
               return (
                 <button
                   key={option.key}
@@ -139,6 +141,13 @@ const WorkflowQueue: React.FC<WorkflowQueueProps> = ({
                   aria-pressed={isActive}
                 >
                   {option.label}
+                  {count > 0 && (
+                    <span className={`ml-1.5 px-1.5 py-0.5 text-xs rounded-full ${
+                      isActive ? 'bg-mono-white text-mono-black' : 'bg-mono-gray-200 text-mono-gray-700'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -226,22 +235,14 @@ const WorkflowQueue: React.FC<WorkflowQueueProps> = ({
                     </div>
                   </div>
 
-                  {(onItemClick || item.actionUrl) && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onItemClick) {
-                          onItemClick(item);
-                        } else if (item.actionUrl) {
-                          window.location.href = item.actionUrl;
-                        }
-                      }}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-mono-gray-600 hover:text-mono-black"
-                    >
-                      Open details
-                      <i className="fas fa-chevron-right text-[10px]" aria-hidden="true" />
-                    </button>
-                  )}
+                  <Link
+                    to={`/dashboard/workflow?highlight=${item.id}`}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded border border-transparent text-mono-gray-600 hover:border-mono-gray-300 hover:text-mono-black transition-colors"
+                    title="View in workflow board"
+                  >
+                    View Details
+                    <i className="fas fa-external-link-alt text-[10px]" aria-hidden="true" />
+                  </Link>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -278,7 +279,7 @@ const WorkflowQueue: React.FC<WorkflowQueueProps> = ({
                 <i className="fas fa-chevron-down ml-2" aria-hidden="true" />
               </button>
               <Link
-                to="/dashboard/todo"
+                to="/dashboard/workflow"
                 className="flex-1 text-center py-2 text-sm font-medium text-mono-black hover:bg-mono-gray-50 rounded transition-colors"
               >
                 Open Workflow Board

@@ -427,4 +427,103 @@ class BranchNetworkController extends Controller
             'state' => 'operational',
         ];
     }
+
+    /**
+     * Get shipments for a specific branch
+     */
+    public function getBranchShipments(Request $request, $branchId): JsonResponse
+    {
+        try {
+            $perPage = $request->input('per_page', 50);
+            $search = $request->input('search');
+            $status = $request->input('status');
+            $viewType = $request->input('view_type', 'both'); // origin, destination, both
+
+            $branch = Branch::findOrFail($branchId);
+
+            $query = Shipment::with([
+                'originBranch:id,name,code',
+                'destinationBranch:id,name,code',
+                'client:id,business_name',
+                'assignedWorker:id,first_name,last_name',
+            ]);
+
+            // Filter by view type
+            if ($viewType === 'origin') {
+                $query->where('origin_branch_id', $branchId);
+            } elseif ($viewType === 'destination') {
+                $query->where('dest_branch_id', $branchId);
+            } else {
+                $query->where(function ($q) use ($branchId) {
+                    $q->where('origin_branch_id', $branchId)
+                      ->orWhere('dest_branch_id', $branchId);
+                });
+            }
+
+            // Filter by status
+            if ($status) {
+                $query->where('current_status', $status);
+            }
+
+            // Search
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('tracking_number', 'like', "%{$search}%")
+                      ->orWhereHas('client', function ($clientQuery) use ($search) {
+                          $clientQuery->where('business_name', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            $shipments = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+            // Get statistics
+            $stats = [
+                'total' => Shipment::where('origin_branch_id', $branchId)
+                    ->orWhere('dest_branch_id', $branchId)
+                    ->count(),
+                'outbound' => Shipment::where('origin_branch_id', $branchId)->count(),
+                'inbound' => Shipment::where('dest_branch_id', $branchId)->count(),
+                'active' => Shipment::where(function ($q) use ($branchId) {
+                    $q->where('origin_branch_id', $branchId)
+                      ->orWhere('dest_branch_id', $branchId);
+                })->whereNotIn('current_status', ['delivered', 'cancelled'])->count(),
+                'delivered_today' => Shipment::where(function ($q) use ($branchId) {
+                    $q->where('origin_branch_id', $branchId)
+                      ->orWhere('dest_branch_id', $branchId);
+                })->where('current_status', 'delivered')
+                  ->whereDate('delivered_at', today())
+                  ->count(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'branch' => [
+                        'id' => $branch->id,
+                        'name' => $branch->name,
+                        'code' => $branch->code,
+                        'type' => $branch->type,
+                    ],
+                    'shipments' => $shipments->items(),
+                    'statistics' => $stats,
+                ],
+                'pagination' => [
+                    'total' => $shipments->total(),
+                    'per_page' => $shipments->perPage(),
+                    'current_page' => $shipments->currentPage(),
+                    'last_page' => $shipments->lastPage(),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('BranchNetworkController@getBranchShipments: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch branch shipments',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

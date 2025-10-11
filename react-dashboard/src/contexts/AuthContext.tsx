@@ -100,15 +100,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return path.startsWith('/dashboard') || path.startsWith('/react-dashboard');
     };
 
-    if (token && storedUser) {
-      try {
+    try {
+      if (token) {
         // Verify token is still valid by fetching user data
         const response = await authApi.getUser();
 
-        if (response.success) {
+        if (response?.success && response?.data?.user) {
+          // Prefer server user payload; keep localStorage in sync
+          const serverUser = response.data.user as User;
+          setUser(serverUser);
+          try {
+            localStorage.setItem('user', JSON.stringify(serverUser));
+          } catch {}
+        } else if (storedUser) {
+          // Fallback to stored user if API shape differs
           setUser(JSON.parse(storedUser));
         } else {
-          // Token is invalid, clear storage
+          // Invalid token or missing user data
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user');
           setUser(null);
@@ -116,17 +124,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             redirectToLogin();
           }
         }
-      } catch (error) {
-        // Token is invalid, clear storage
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
-        setUser(null);
-        if (shouldRedirect()) {
-          redirectToLogin();
-        }
+      } else if (shouldRedirect()) {
+        redirectToLogin();
       }
-    } else if (shouldRedirect()) {
-      redirectToLogin();
+    } catch (error) {
+      // Token is invalid, clear storage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
+      setUser(null);
+      if (shouldRedirect()) {
+        redirectToLogin();
+      }
     }
 
     setIsLoading(false);

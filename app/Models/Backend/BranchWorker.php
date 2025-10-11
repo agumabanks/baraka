@@ -70,7 +70,7 @@ class BranchWorker extends Model
      */
     public function assignedShipments(): HasMany
     {
-        return $this->hasMany(Shipment::class, 'assigned_worker_id');
+        return $this->hasMany(\App\Models\Shipment::class, 'assigned_worker_id');
     }
 
     /**
@@ -78,7 +78,7 @@ class BranchWorker extends Model
      */
     public function assignedTasks(): HasMany
     {
-        return $this->hasMany(Task::class, 'assigned_worker_id');
+        return $this->hasMany(\App\Models\Task::class, 'assigned_worker_id');
     }
 
     /**
@@ -86,7 +86,7 @@ class BranchWorker extends Model
      */
     public function workLogs(): HasMany
     {
-        return $this->hasMany(WorkLog::class, 'worker_id');
+        return $this->hasMany(\App\Models\WorkLog::class, 'worker_id');
     }
 
     // Scopes
@@ -399,7 +399,7 @@ class BranchWorker extends Model
     /**
      * Assign shipment to worker
      */
-    public function assignShipment(Shipment $shipment): bool
+    public function assignShipment(\App\Models\Shipment $shipment): bool
     {
         if (!$this->canPerform('assign_shipments')) {
             return false;

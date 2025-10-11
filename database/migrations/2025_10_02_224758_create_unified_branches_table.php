@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->enum('type', ['HUB', 'REGIONAL', 'LOCAL'])->default('LOCAL');
             $table->boolean('is_hub')->default(false);
-            $table->foreignId('parent_branch_id')->nullable()->constrained('branches')->nullOnDelete();
+            $table->unsignedBigInteger('parent_branch_id')->nullable();
             $table->text('address')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
@@ -29,6 +29,11 @@ return new class extends Migration
             $table->index(['type', 'status']);
             $table->index('parent_branch_id');
             $table->index(['latitude', 'longitude']);
+        });
+
+        // Add foreign key constraint after table creation
+        Schema::table('branches', function (Blueprint $table) {
+            $table->foreign('parent_branch_id')->references('id')->on('branches')->nullOnDelete();
         });
     }
 

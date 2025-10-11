@@ -25,25 +25,88 @@ export const navigationConfig: NavigationConfig = {
           id: 'workflow-board',
           label: 'Workflow Board',
           icon: 'Network',
-          path: '/dashboard/todo',
-          badge: {
-            count: 0,
-            variant: 'warning'
-          },
+          path: '/workflow',
           visible: true
         },
         {
           id: 'reports-center',
           label: 'Reports Center',
           icon: 'FileBarChart',
-          path: '/dashboard/reports',
+          path: '/reports',
+          visible: true
+        }
+      ]
+    },
+    {
+      id: 'navigation',
+      label: 'NAVIGATION',
+      visible: true,
+      items: [
+        {
+          id: 'merchant-management',
+          label: 'Merchant Management',
+          icon: 'Store',
+          expanded: false,
+          children: [
+            {
+              id: 'merchants-all',
+              label: 'Merchants',
+              icon: 'ShoppingBag',
+              path: '/merchants',
+              visible: true
+            },
+            {
+              id: 'merchant-payments',
+              label: 'Payments',
+              icon: 'DollarSign',
+              path: '/merchant/payments',
+              visible: true
+            }
+          ],
           visible: true
         },
         {
-          id: 'live-tracking',
-          label: 'Live Tracking',
-          icon: 'MapPin',
-          path: '/dashboard/tracking',
+          id: 'sales',
+          label: 'Sales',
+          icon: 'TrendingUp',
+          expanded: false,
+          children: [
+            {
+              id: 'customers-all',
+              label: 'Customers',
+              icon: 'Users',
+              path: '/customers',
+              visible: true
+            },
+            {
+              id: 'quotations',
+              label: 'Quotations',
+              icon: 'FileSignature',
+              path: '/quotations',
+              visible: true
+            },
+            {
+              id: 'contracts',
+              label: 'Contracts',
+              icon: 'ScrollText',
+              path: '/contracts',
+              visible: true
+            }
+          ],
+          visible: true
+        },
+        {
+          id: 'todo-list',
+          label: 'To-do List',
+          icon: 'CheckSquare',
+          path: '/todo',
+          visible: true
+        },
+        {
+          id: 'support-tickets',
+          label: 'Support Tickets',
+          icon: 'MessageSquare',
+          path: '/support',
           visible: true
         }
       ]
@@ -61,9 +124,37 @@ export const navigationConfig: NavigationConfig = {
           children: [
             {
               id: 'branches-all',
-              label: 'All Branches',
+              label: 'Branches',
               icon: 'Building',
               path: '/branches',
+              visible: true
+            },
+            {
+              id: 'branch-managers',
+              label: 'Branch Managers',
+              icon: 'UserTie',
+              path: '/branch-managers',
+              visible: true
+            },
+            {
+              id: 'branch-workers',
+              label: 'Branch Workers',
+              icon: 'UserCog',
+              path: '/branch-workers',
+              visible: true
+            },
+            {
+              id: 'local-clients',
+              label: 'Local Clients',
+              icon: 'Users',
+              path: '/branches/clients',
+              visible: true
+            },
+            {
+              id: 'branch-shipments',
+              label: 'Shipments by Branch',
+              icon: 'Truck',
+              path: '/branches/shipments',
               visible: true
             },
             {
@@ -72,42 +163,8 @@ export const navigationConfig: NavigationConfig = {
               icon: 'GitBranch',
               path: '/branches/hierarchy',
               visible: true
-            },
-            {
-              id: 'branches-analytics',
-              label: 'Branch Analytics',
-              icon: 'BarChart3',
-              path: '/branches/analytics',
-              visible: true
-            },
-            {
-              id: 'branches-capacity',
-              label: 'Capacity Planning',
-              icon: 'Gauge',
-              path: '/branches/capacity',
-              visible: true
-            },
-            {
-              id: 'branches-workers',
-              label: 'Branch Workers',
-              icon: 'UserCog',
-              path: '/branches/workers',
-              visible: true
             }
           ],
-          visible: true
-        },
-        {
-          id: 'deliveryman',
-          label: 'Delivery Drivers',
-          icon: 'Users',
-          path: '/deliveryman',
-          badge: {
-            count: 12,
-            variant: 'success',
-            ariaLabel: '12 active drivers',
-            title: '12 active drivers'
-          },
           visible: true
         }
       ]
@@ -134,10 +191,6 @@ export const navigationConfig: NavigationConfig = {
               label: 'Exception Tower',
               icon: 'AlertTriangle',
               path: '/operations/exceptions',
-              badge: {
-                count: 12,
-                variant: 'error'
-              },
               visible: true
             },
             {
@@ -339,85 +392,7 @@ export const navigationConfig: NavigationConfig = {
         }
       ]
     },
-    {
-      id: 'customers',
-      label: 'CUSTOMER MANAGEMENT',
-      visible: true,
-      items: [
-        {
-          id: 'customers',
-          label: 'Customers',
-          icon: 'Users',
-          children: [
-            {
-              id: 'customers-all',
-              label: 'All Customers',
-              icon: 'BookUser',
-              path: '/customers',
-              visible: true
-            },
-            {
-              id: 'customers-create',
-              label: 'New Customer',
-              icon: 'UserPlus',
-              path: '/customers/create',
-              visible: true
-            },
-            {
-              id: 'customers-analytics',
-              label: 'Analytics',
-              icon: 'TrendingUp',
-              path: '/customers/analytics',
-              visible: true
-            }
-          ],
-          visible: true
-        },
-        {
-          id: 'merchants',
-          label: 'Merchants',
-          icon: 'Store',
-          children: [
-            {
-              id: 'merchants-all',
-              label: 'All Merchants',
-              icon: 'ShoppingBag',
-              path: '/merchants',
-              visible: true
-            },
-            {
-              id: 'merchant-payments',
-              label: 'Payments',
-              icon: 'DollarSign',
-              path: '/merchant/payments',
-              visible: true
-            }
-          ],
-          visible: true
-        },
-        {
-          id: 'quotations',
-          label: 'Quotations',
-          icon: 'FileSignature',
-          path: '/quotations',
-          visible: true
-        },
-        {
-          id: 'contracts',
-          label: 'Contracts',
-          icon: 'ScrollText',
-          path: '/contracts',
-          visible: true
-        },
-        {
-          id: 'address-book',
-          label: 'Address Book',
-          icon: 'Book',
-          path: '/address-book',
-          visible: true
-        }
-      ]
-    },
+
     {
       id: 'finance',
       label: 'FINANCE & BILLING',
@@ -751,10 +726,6 @@ export const navigationConfig: NavigationConfig = {
           label: 'Support Tickets',
           icon: 'MessageSquare',
           path: '/support',
-          badge: {
-            count: 2,
-            variant: 'attention'
-          },
           visible: true
         },
         {

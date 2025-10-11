@@ -60,7 +60,7 @@ class BranchManager extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(AppModelsSER::CLASS, 'USER_ID');
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     /**
@@ -68,7 +68,7 @@ class BranchManager extends Model
      */
     public function shipments(): HasMany
     {
-        return $this->hasMany(Shipment::class, 'created_by');
+        return $this->hasMany(\App\Models\Shipment::class, 'created_by');
     }
 
     /**

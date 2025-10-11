@@ -122,6 +122,11 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   const normalisedTargetPath = spaPath ? extractPath(spaPath) : resolvedPath;
 
   const handleClick = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
+    // Don't prevent default for external links - let them navigate normally
+    if ((item as any).external) {
+      return; // Allow default browser navigation
+    }
+    
     e.preventDefault();
     
     if (hasChildren) {
@@ -131,7 +136,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     } else if (item.url) {
       window.location.href = item.url;
     }
-  }, [hasChildren, spaPath, item.path, item.url, onClick]);
+  }, [hasChildren, spaPath, item.path, item.url, onClick, item]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -141,7 +146,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   }, [handleClick]);
 
   // Base classes for nav link
-  const baseClasses = 'flex items-center gap-3.5 font-medium rounded-2xl relative transition-all duration-200 justify-start group';
+  const baseClasses = 'flex items-center gap-3.5 font-medium rounded-2xl relative transition-all duration-200 justify-start group cursor-pointer';
   
   // Size classes based on level
   const sizeClasses = isSubmenu
@@ -175,7 +180,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   return (
     <li className={`nav-item ${isSubmenu ? 'mt-0.5' : 'mt-1'}`}>
       <a
-        href={spaPath || resolvedPath || item.url || '#'}
+        href={(item as any).external ? (resolvedPath || item.url) : (spaPath || resolvedPath || item.url || '#')}
         className={linkClasses}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
@@ -183,6 +188,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         aria-current={isActive ? 'page' : undefined}
         role={hasChildren ? 'button' : 'link'}
         tabIndex={0}
+        target={(item as any).external ? '_self' : undefined}
+        rel={(item as any).external ? 'noopener' : undefined}
       >
         {/* Icon */}
         {item.icon && (

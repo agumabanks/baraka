@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
+import { shipmentsApi } from '../services/api';
 
 interface BookingRecord {
   id: string;
@@ -14,66 +16,47 @@ interface BookingRecord {
   parcels: number;
 }
 
-const bookingPipeline: Array<{ label: string; total: number; icon: string }> = [
-  { label: 'New Requests', total: 38, icon: 'fas fa-inbox' },
-  { label: 'Route Planning', total: 24, icon: 'fas fa-route' },
-  { label: 'Loading Bays', total: 18, icon: 'fas fa-dolly' },
-  { label: 'Linehaul', total: 12, icon: 'fas fa-truck' },
-  { label: 'Out for Delivery', total: 26, icon: 'fas fa-map-marked-alt' }
-];
+// Map backend shipment payloads into BookingRecord rows
+const mapShipmentsToBookings = (shipments: Array<Record<string, any>>): BookingRecord[] => {
+  return (shipments ?? []).map((s) => {
+    const id = (s.tracking_number as string) || `SH-${s.id}`;
+    const customer = s.client?.business_name ?? s.customer?.name ?? '—';
+    const createdAt = (s.created_at as string) ?? '';
+    const promisedDate = (s.expected_delivery_date as string) ?? '—';
+    const currentStatus = (s.current_status as string) ?? 'pending';
+    const hasException = Boolean(s.has_exception);
+    const pieces = s.metadata?.package?.pieces ?? s.pieces ?? 1;
 
-const bookings: BookingRecord[] = [
-  {
-    id: 'BKG-20931',
-    customer: 'Acme Retail Consortium',
-    channel: 'Portal',
-    createdAt: '2025-02-17 09:32',
-    promisedDate: '2025-02-18 18:00',
-    status: 'Pending Dispatch',
-    slaBreached: false,
-    parcels: 42
-  },
-  {
-    id: 'BKG-20926',
-    customer: 'Nimbus Health Labs',
-    channel: 'API',
-    createdAt: '2025-02-17 07:18',
-    promisedDate: '2025-02-17 23:00',
-    status: 'In Transit',
-    slaBreached: false,
-    parcels: 18
-  },
-  {
-    id: 'BKG-20910',
-    customer: 'Savanna Fresh Collective',
-    channel: 'Sales Desk',
-    createdAt: '2025-02-16 20:05',
-    promisedDate: '2025-02-18 09:00',
-    status: 'Exception',
-    slaBreached: true,
-    parcels: 6
-  },
-  {
-    id: 'BKG-20894',
-    customer: 'Lumen Logistics Partners',
-    channel: 'Portal',
-    createdAt: '2025-02-16 18:42',
-    promisedDate: '2025-02-17 14:00',
-    status: 'Delivered',
-    slaBreached: false,
-    parcels: 28
-  },
-  {
-    id: 'BKG-20877',
-    customer: 'Orbit Media Labs',
-    channel: 'API',
-    createdAt: '2025-02-16 10:12',
-    promisedDate: '2025-02-17 10:00',
-    status: 'Pending Dispatch',
-    slaBreached: false,
-    parcels: 12
-  }
-];
+    let status: BookingRecord['status'] = 'Pending Dispatch';
+    if (hasException) status = 'Exception';
+    else if (currentStatus === 'delivered') status = 'Delivered';
+    else if (['in_transit', 'out_for_delivery', 'arrive', 'depart', 'arrive_dest'].includes(currentStatus)) status = 'In Transit';
+    else status = 'Pending Dispatch';
+
+    // SLA breach if past promised date and not delivered/cancelled
+    let slaBreached = false;
+    if (promisedDate && typeof promisedDate === 'string' && promisedDate !== '—') {
+      try {
+        const due = new Date(promisedDate).getTime();
+        const now = Date.now();
+        if (Number.isFinite(due) && due < now && status !== 'Delivered') {
+          slaBreached = true;
+        }
+      } catch {}
+    }
+
+    return {
+      id,
+      customer,
+      channel: 'Portal',
+      createdAt,
+      promisedDate,
+      status,
+      slaBreached,
+      parcels: Number(pieces) || 1,
+    } as BookingRecord;
+  });
+};
 
 const statusVariantMap: Record<BookingRecord['status'], { badge: React.ReactNode; tone: string }> = {
   Draft: {
@@ -110,6 +93,32 @@ const filterOptions: BookingRecord['status'][] = [
 ];
 
 const Bookings: React.FC = () => {
+  // Fetch shipments and stats from API
+  const { data: shipmentsResp } = useQuery({
+    queryKey: ['shipments', { page: 1, per_page: 50 }],
+    queryFn: () => shipmentsApi.getShipments({ page: 1, per_page: 50 }),
+  });
+  const { data: statsResp } = useQuery({
+    queryKey: ['shipments', 'stats'],
+    queryFn: () => shipmentsApi.getStatistics(),
+  });
+
+  const bookings: BookingRecord[] = useMemo(() => {
+    const rows = mapShipmentsToBookings((shipmentsResp as any)?.data ?? []);
+    return rows;
+  }, [shipmentsResp]);
+
+  const pipelineCounts = useMemo(() => {
+    const stats = (statsResp as any)?.data ?? {};
+    return {
+      newRequests: Number(stats.today ?? 0),
+      pending: Number(stats.pending ?? 0),
+      inTransit: Number(stats.in_transit ?? 0),
+      delivered: Number(stats.delivered ?? 0),
+      outForDelivery: Number(stats.in_transit ?? 0),
+    };
+  }, [statsResp]);
+
   const [statusFilter, setStatusFilter] = useState<BookingRecord['status'][]>(['Pending Dispatch', 'In Transit']);
   const [query, setQuery] = useState('');
 
@@ -136,9 +145,9 @@ const Bookings: React.FC = () => {
   };
 
   const totalExceptions = bookings.filter((booking) => booking.status === 'Exception').length;
-  const onTimeRate = Math.round(
-    (bookings.filter((booking) => !booking.slaBreached).length / bookings.length) * 100
-  );
+  const onTimeRate = bookings.length > 0
+    ? Math.round((bookings.filter((booking) => !booking.slaBreached).length / bookings.length) * 100)
+    : 100;
 
   return (
     <div className="space-y-10">
@@ -192,7 +201,7 @@ const Bookings: React.FC = () => {
           <Card className="border border-mono-gray-200 shadow-inner">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Linehaul Ready</p>
-              <h2 className="text-3xl font-semibold text-mono-black">24 Manifests</h2>
+              <h2 className="text-3xl font-semibold text-mono-black">{pipelineCounts.inTransit}</h2>
               <p className="text-sm text-mono-gray-600">Prepared for late-night linehaul departures</p>
             </div>
           </Card>
@@ -213,7 +222,13 @@ const Bookings: React.FC = () => {
                 </header>
 
                 <ol className="space-y-4">
-                  {bookingPipeline.map((stage) => (
+                  {[
+                    { label: 'New Requests', total: pipelineCounts.newRequests, icon: 'fas fa-inbox' },
+                    { label: 'Route Planning', total: pipelineCounts.pending, icon: 'fas fa-route' },
+                    { label: 'Linehaul', total: pipelineCounts.inTransit, icon: 'fas fa-truck' },
+                    { label: 'Out for Delivery', total: pipelineCounts.outForDelivery, icon: 'fas fa-map-marked-alt' },
+                    { label: 'Delivered', total: pipelineCounts.delivered, icon: 'fas fa-check-circle' },
+                  ].map((stage) => (
                     <li key={stage.label} className="flex items-center justify-between rounded-2xl border border-mono-gray-200 bg-mono-gray-50 px-4 py-3">
                       <div className="flex items-center gap-3">
                         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-mono-white text-mono-black shadow-inner">

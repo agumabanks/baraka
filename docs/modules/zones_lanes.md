@@ -12,5 +12,8 @@ Data Model:
 - zones: code, name, countries[]
 - lanes: origin_zone_id, dest_zone_id, mode (air/road), std_transit_days, dim_divisor, eawb_required
 
-Usage: Lanes feed rating, transit time and e-AWB readiness flags.
+Usage: Lanes feed rating, transit time and e-AWB readiness flags.  
+
+
+
 

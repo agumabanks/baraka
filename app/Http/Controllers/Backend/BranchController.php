@@ -376,11 +376,15 @@ class BranchController extends Controller
     /**
      * Get branch hierarchy as tree structure
      */
-    public function hierarchy(): JsonResponse
+    public function hierarchy(Request $request)
     {
         $tree = $this->hierarchyService->getHierarchyTree();
 
-        return response()->json(['hierarchy' => $tree]);
+        if ($request->wantsJson()) {
+            return response()->json(['hierarchy' => $tree]);
+        }
+
+        return view('backend.branches.hierarchy', compact('tree'));
     }
 
     /**
@@ -741,5 +745,78 @@ class BranchController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Display clients by branch
+     */
+    public function clients(Request $request)
+    {
+        $query = \App\Models\Customer::query();
+
+        // Filter by branch
+        if ($request->filled('branch_id')) {
+            $query->where('primary_branch_id', $request->branch_id);
+        }
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('contact_person', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $clients = $query->with(['primaryBranch'])->paginate(20);
+        $branches = Branch::active()->orderBy('name')->get();
+
+        if ($request->wantsJson()) {
+            return response()->json(['clients' => $clients, 'branches' => $branches]);
+        }
+
+        return view('backend.branches.clients', compact('clients', 'branches'));
+    }
+
+    /**
+     * Display shipments by branch
+     */
+    public function shipments(Request $request)
+    {
+        $query = \App\Models\Shipment::query();
+
+        // Filter by origin or destination branch
+        if ($request->filled('branch_id')) {
+            $branchId = $request->branch_id;
+            $query->where(function ($q) use ($branchId) {
+                $q->where('origin_branch_id', $branchId)
+                  ->orWhere('dest_branch_id', $branchId);
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('current_status', $request->status);
+        }
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('tracking_number', 'like', "%{$search}%")
+                  ->orWhere('awb_number', 'like', "%{$search}%");
+            });
+        }
+
+        $shipments = $query->with(['originBranch', 'destBranch', 'client'])->latest()->paginate(20);
+        $branches = Branch::active()->orderBy('name')->get();
+
+        if ($request->wantsJson()) {
+            return response()->json(['shipments' => $shipments, 'branches' => $branches]);
+        }
+
+        return view('backend.branches.shipments', compact('shipments', 'branches'));
     }
 }

@@ -27,6 +27,18 @@ import AddressBook from './pages/sales/AddressBook'
 import AllSupport from './pages/support/AllSupport'
 import SupportDetail from './pages/support/SupportDetail'
 import SupportForm from './pages/support/SupportForm'
+import BranchManagersIndex from './pages/branch-managers/BranchManagersIndex'
+import BranchManagerCreate from './pages/branch-managers/BranchManagerCreate'
+import BranchManagerShow from './pages/branch-managers/BranchManagerShow'
+import BranchManagerEdit from './pages/branch-managers/BranchManagerEdit'
+import BranchWorkersIndex from './pages/branch-workers/BranchWorkersIndex'
+import BranchWorkerCreate from './pages/branch-workers/BranchWorkerCreate'
+import BranchWorkerShow from './pages/branch-workers/BranchWorkerShow'
+import BranchWorkerEdit from './pages/branch-workers/BranchWorkerEdit'
+import BranchHierarchy from './pages/branches/BranchHierarchy'
+import LocalClients from './pages/branches/LocalClients'
+import ShipmentsByBranch from './pages/branches/ShipmentsByBranch'
+import LiveTracking from './pages/LiveTracking'
 
 // TODO: These components need to be created for full navigation
 // Operations Components
@@ -171,8 +183,26 @@ function AppContent() {
   }, [languageOptions])
 
   const handleNavigate = useCallback((path: string) => {
-    const destination = resolveDashboardNavigatePath(path)
-    navigate(destination)
+    // Backend returns absolute paths like '/branches', '/merchants', etc.
+    // We need to navigate to ABSOLUTE paths to prevent concatenation
+    
+    console.log('[Navigation] Received path:', path);
+    
+    // Strip leading slash to clean up
+    let cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    
+    // Remove 'dashboard' prefix if present in the path
+    if (cleanPath === 'dashboard' || cleanPath.startsWith('dashboard/')) {
+      cleanPath = cleanPath.replace(/^dashboard\/?/, '');
+    }
+    
+    // Build absolute path from root to prevent path concatenation
+    // This ensures navigation works correctly no matter what page we're on
+    const absolutePath = cleanPath ? `/dashboard/${cleanPath}` : '/dashboard';
+    
+    console.log('[Navigation] Navigating to absolute path:', absolutePath);
+    
+    navigate(absolutePath);
     setSidebarOpen(false)
   }, [navigate])
 
@@ -304,13 +334,18 @@ function AppContent() {
             <Route path="support/:id" element={<SupportDetail />} />
             <Route path="support/:id/edit" element={<SupportForm />} />
             <Route path="branches/:branchId" element={<BranchDetail />} />
+            <Route path="branch-managers/:id" element={<BranchManagerShow />} />
+            <Route path="branch-managers/:id/edit" element={<BranchManagerEdit />} />
+            <Route path="branch-workers/:id" element={<BranchWorkerShow />} />
+            <Route path="branch-workers/:id/edit" element={<BranchWorkerEdit />} />
             <Route path="merchants/:merchantId" element={<MerchantDetail />} />
+            <Route path="todo" element={<Todo />} />
             
             {/* Operations Routes - TODO: Implement these components */}
             <Route path="operations/dispatch" element={<div className="p-6"><h1 className="text-2xl font-bold">Dispatch Board</h1><p>Coming soon...</p></div>} />
             <Route path="operations/exceptions" element={<div className="p-6"><h1 className="text-2xl font-bold">Exception Tower</h1><p>Coming soon...</p></div>} />
             <Route path="operations/control-tower" element={<div className="p-6"><h1 className="text-2xl font-bold">Control Tower</h1><p>Coming soon...</p></div>} />
-            <Route path="dashboard/workflow" element={<div className="p-6"><h1 className="text-2xl font-bold">Workflow Board</h1><p>Coming soon...</p></div>} />
+            <Route path="workflow" element={<div className="p-6"><h1 className="text-2xl font-bold">Workflow Board</h1><p>Coming soon...</p></div>} />
             
             {/* Finance Routes - TODO: Implement these components */}
             <Route path="finance/rate-cards" element={<div className="p-6"><h1 className="text-2xl font-bold">Rate Cards</h1><p>Coming soon...</p></div>} />
@@ -333,8 +368,10 @@ function AppContent() {
             <Route path="assets" element={<div className="p-6"><h1 className="text-2xl font-bold">Asset Status</h1><p>Coming soon...</p></div>} />
             <Route path="vehicles" element={<div className="p-6"><h1 className="text-2xl font-bold">Vehicles</h1><p>Coming soon...</p></div>} />
             
-            {/* Branch Routes - TODO: Implement these components */}
-            <Route path="branches/hierarchy" element={<div className="p-6"><h1 className="text-2xl font-bold">Branch Hierarchy</h1><p>Coming soon...</p></div>} />
+            {/* Branch Routes */}
+            <Route path="branches/hierarchy" element={<BranchHierarchy />} />
+            <Route path="branches/clients" element={<LocalClients />} />
+            <Route path="branches/shipments" element={<ShipmentsByBranch />} />
             <Route path="branches/analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Branch Analytics</h1><p>Coming soon...</p></div>} />
             <Route path="branches/capacity" element={<div className="p-6"><h1 className="text-2xl font-bold">Capacity Planning</h1><p>Coming soon...</p></div>} />
             <Route path="branches/workers" element={<div className="p-6"><h1 className="text-2xl font-bold">Branch Workers</h1><p>Coming soon...</p></div>} />
@@ -369,8 +406,26 @@ function AppContent() {
                 case 'bookings':
                   element = <Bookings />
                   break
+                case 'tracking':
+                  element = <LiveTracking />
+                  break
+                case 'shipments/tracking':
+                  element = <LiveTracking />
+                  break
                 case 'branches':
                   element = <Branches />
+                  break
+                case 'branch-managers':
+                  element = <BranchManagersIndex />
+                  break
+                case 'branch-managers/create':
+                  element = <BranchManagerCreate />
+                  break
+                case 'branch-workers':
+                  element = <BranchWorkersIndex />
+                  break
+                case 'branch-workers/create':
+                  element = <BranchWorkerCreate />
                   break
                 case 'merchants':
                   element = <Merchants />

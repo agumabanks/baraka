@@ -28,7 +28,7 @@ const stripPrefix = (path: string, prefix: string) => {
 };
 
 const stripKnownPrefixes = (path: string) => {
-  const prefixes = ['dashboard', 'admin', 'merchant'];
+  const prefixes = ['dashboard', 'admin'];
 
   return prefixes.reduce((acc, prefix) => stripPrefix(acc, prefix), path);
 };
@@ -64,7 +64,16 @@ export const resolveRoutePath = (rawPath?: string): string => {
 };
 
 export const resolveDashboardNavigatePath = (rawPath?: string): string => {
-  const canonical = canonicalisePath(rawPath);
+  const trimmed = rawPath?.trim() ?? '';
+  if (!trimmed) {
+    return '/dashboard';
+  }
+
+  if (/^(https?:)?\/\//.test(trimmed) || trimmed.startsWith('mailto:') || trimmed.startsWith('tel:')) {
+    return trimmed;
+  }
+
+  const canonical = canonicalisePath(trimmed);
 
   if (!canonical || canonical === 'dashboard') {
     return '/dashboard';
@@ -72,7 +81,10 @@ export const resolveDashboardNavigatePath = (rawPath?: string): string => {
 
   const withoutPrefixes = stripKnownPrefixes(canonical);
   const alias = ROUTE_ALIASES[withoutPrefixes] ?? withoutPrefixes;
-  return alias ? `/dashboard/${alias}`.replace('//', '/') : '/dashboard';
+  const target = alias ? `/dashboard/${alias}` : '/dashboard';
+
+  const normalised = target.replace(/\/{2,}/g, '/');
+  return normalised.endsWith('/') && normalised !== '/' ? normalised.slice(0, -1) : normalised;
 };
 
 export const getCanonicalFromAlias = (alias: string): string | undefined => {

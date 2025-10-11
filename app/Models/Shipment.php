@@ -6,6 +6,7 @@ use App\Enums\ScanType;
 use App\Enums\ShipmentStatus;
 use App\Events\ShipmentStatusChanged;
 use App\Models\Backend\Branch;
+use App\Models\Backend\Client as BackendClient;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Backend\BranchWorker;
 use Illuminate\Database\Eloquent\Model;
@@ -105,6 +106,11 @@ class Shipment extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'customer_id');
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(BackendClient::class, 'client_id');
     }
 
     public function originBranch(): BelongsTo

@@ -54,6 +54,8 @@ export interface NavItem {
   expanded?: boolean;
   /** Whether this item is visible (permission-based) */
   visible?: boolean;
+  /** Whether this is an external link (full page navigation, not React Router) */
+  external?: boolean;
 }
 
 /**

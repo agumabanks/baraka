@@ -3,10 +3,16 @@
 return [
 
     'addons' => 'Add-ons',
+    'command_center' => 'Command Center',
     'dashboard' => 'Dashboard',
+    'dashboard_home' => 'Dashboard Home',
     'overview' => 'Overview',
     'analytics' => 'Analytics',
     'reports' => 'Reports',
+    'reports_center' => 'Reports Center',
+    'workflow_board' => 'Workflow Board',
+    'live_tracking' => 'Live Tracking',
+    'navigation' => 'Navigation',
     // New bucket labels
     'operations' => 'Operations',
     'tools' => 'Tools',
@@ -93,6 +99,11 @@ return [
     'hub_management' => 'Hub Management',
     'branch_management' => 'Branch Management',
     'branches' => 'Branches',
+    'branch_managers' => 'Branch Managers',
+    'branch_workers' => 'Branch Workers',
+    'local_clients' => 'Local Clients',
+    'branch_shipments' => 'Shipments by Branch',
+    'branch_hierarchy' => 'Branch Hierarchy',
     'hub_payment_request' => 'Hub Payment Requests',
     'hub_payment' => 'Hub Payments',
     'payments' => 'Payments',

@@ -244,6 +244,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::get('branches/level/{level}', [\App\Http\Controllers\Backend\BranchController::class, 'byLevel'])->name('branches.by.level');
         Route::post('branches/{branch}/move', [\App\Http\Controllers\Backend\BranchController::class, 'moveBranch'])->name('branches.move');
         Route::post('branches/suggest-parent', [\App\Http\Controllers\Backend\BranchController::class, 'suggestParent'])->name('branches.suggest.parent');
+        Route::get('branches/clients', [\App\Http\Controllers\Backend\BranchController::class, 'clients'])->name('branches.clients');
+        Route::get('branches/shipments', [\App\Http\Controllers\Backend\BranchController::class, 'shipments'])->name('branches.shipments');
 
                 Route::resource('branch-managers', \App\Http\Controllers\Backend\BranchManagerController::class)->parameters(['branch-managers' => 'manager']);
                 Route::get('branch-managers/{manager}/dashboard', [\App\Http\Controllers\Backend\BranchManagerController::class, 'dashboard'])->name('branch-managers.dashboard');

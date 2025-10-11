@@ -85,6 +85,25 @@ Route::middleware('auth:sanctum')->prefix('sales')->group(function () {
     Route::post('address-book', [SalesAddressBookController::class, 'store']);
 });
 
+// Admin Branch Management API Routes
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    // Branch Managers API
+    Route::get('branch-managers', [\App\Http\Controllers\Api\Admin\BranchManagerApiController::class, 'index']);
+    Route::post('branch-managers', [\App\Http\Controllers\Api\Admin\BranchManagerApiController::class, 'store']);
+    Route::get('branch-managers/{id}', [\App\Http\Controllers\Api\Admin\BranchManagerApiController::class, 'show']);
+    Route::put('branch-managers/{id}', [\App\Http\Controllers\Api\Admin\BranchManagerApiController::class, 'update']);
+    Route::delete('branch-managers/{id}', [\App\Http\Controllers\Api\Admin\BranchManagerApiController::class, 'destroy']);
+    Route::get('branch-managers/available-users', [\App\Http\Controllers\Api\Admin\BranchManagerApiController::class, 'availableUsers']);
+
+    // Branch Workers API
+    Route::get('branch-workers', [\App\Http\Controllers\Api\Admin\BranchWorkerApiController::class, 'index']);
+    Route::post('branch-workers', [\App\Http\Controllers\Api\Admin\BranchWorkerApiController::class, 'store']);
+    Route::get('branch-workers/{id}', [\App\Http\Controllers\Api\Admin\BranchWorkerApiController::class, 'show']);
+    Route::put('branch-workers/{id}', [\App\Http\Controllers\Api\Admin\BranchWorkerApiController::class, 'update']);
+    Route::delete('branch-workers/{id}', [\App\Http\Controllers\Api\Admin\BranchWorkerApiController::class, 'destroy']);
+    Route::get('branch-workers/available-users', [\App\Http\Controllers\Api\Admin\BranchWorkerApiController::class, 'availableUsers']);
+});
+
 Route::prefix('v10')->group(function () {
 
     Route::middleware(['CheckApiKey'])->group(function () {
@@ -276,6 +295,33 @@ Route::prefix('v10')->group(function () {
                 Route::get('unassigned-shipments', [OperationsControlCenterController::class, 'getUnassignedShipments']);
                 Route::get('workers/{worker}/workload', [OperationsControlCenterController::class, 'getWorkerWorkload']);
                 Route::get('load-balancing-metrics', [OperationsControlCenterController::class, 'getLoadBalancingMetrics']);
+            });
+
+            // Shipments Management API
+            Route::prefix('shipments')->controller(\App\Http\Controllers\Api\V10\ShipmentsApiController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::get('/statistics', 'statistics');
+                Route::get('/clients', 'getClients');
+                Route::post('/clients', 'createClient');
+            });
+
+            // Clients Management API
+            Route::prefix('clients')->controller(\App\Http\Controllers\Api\V10\ClientsApiController::class)->group(function () {
+                Route::get('/', 'index');
+                Route::post('/', 'store');
+                Route::get('/statistics', 'statistics');
+                Route::get('/{client}', 'show');
+                Route::put('/{client}', 'update');
+                Route::delete('/{client}', 'destroy');
+            });
+
+            // Branch-specific endpoints
+            Route::get('branches/{branch}/clients', [\App\Http\Controllers\Api\V10\ClientsApiController::class, 'getByBranch']);
+            Route::get('branches/{branch}/shipments', [\App\Http\Controllers\Api\V10\BranchNetworkController::class, 'getBranchShipments']);
+
+            // Operations Control Center continued
+            Route::prefix('operations')->group(function () {
 
                 // Exception Tower
                 Route::get('exceptions', [OperationsControlCenterController::class, 'getActiveExceptions']);

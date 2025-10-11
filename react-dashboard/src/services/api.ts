@@ -36,6 +36,22 @@ import type {
   MerchantListResponse,
 } from '../types/merchants';
 import type { WorkflowBoardResponse } from '../types/workflow';
+import type {
+  BranchManager,
+  BranchManagerDetail,
+  BranchManagerFormData,
+  BranchManagerListParams,
+  BranchManagerListResponse,
+  BranchOption,
+  UserOption,
+} from '../types/branchManagers';
+import type {
+  BranchWorker,
+  BranchWorkerDetail,
+  BranchWorkerFormData,
+  BranchWorkerListParams,
+  BranchWorkerListResponse,
+} from '../types/branchWorkers';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -289,6 +305,84 @@ export const branchesApi = {
   },
 };
 
+export const branchManagersApi = {
+  getManagers: async (params?: BranchManagerListParams): Promise<ApiResponse<BranchManagerListResponse>> => {
+    const response = await api.get('/admin/branch-managers', { params });
+    return response.data;
+  },
+  getManager: async (managerId: number | string): Promise<ApiResponse<{ manager: BranchManagerDetail; analytics: Record<string, unknown> }>> => {
+    const response = await api.get(`/admin/branch-managers/${managerId}`);
+    return response.data;
+  },
+  createManager: async (data: BranchManagerFormData): Promise<ApiResponse<{ manager: BranchManager }>> => {
+    const response = await api.post('/admin/branch-managers', data);
+    return response.data;
+  },
+  updateManager: async (managerId: number | string, data: BranchManagerFormData): Promise<ApiResponse<{ manager: BranchManager }>> => {
+    const response = await api.put(`/admin/branch-managers/${managerId}`, data);
+    return response.data;
+  },
+  deleteManager: async (managerId: number | string): Promise<ApiResponse<unknown>> => {
+    const response = await api.delete(`/admin/branch-managers/${managerId}`);
+    return response.data;
+  },
+  getAvailableBranches: async (): Promise<ApiResponse<{ branches: BranchOption[] }>> => {
+    const response = await api.get('/admin/branch-managers/create');
+    return response.data;
+  },
+  updateBalance: async (managerId: number | string, amount: number, type: string): Promise<ApiResponse<unknown>> => {
+    const response = await api.post(`/admin/branch-managers/${managerId}/balance/update`, { amount, type });
+    return response.data;
+  },
+  getSettlements: async (managerId: number | string): Promise<ApiResponse<unknown>> => {
+    const response = await api.get(`/admin/branch-managers/${managerId}/settlements`);
+    return response.data;
+  },
+  bulkUpdateStatus: async (managerIds: number[], status: string): Promise<ApiResponse<unknown>> => {
+    const response = await api.post('/admin/branch-managers/bulk-status-update', { manager_ids: managerIds, status });
+    return response.data;
+  },
+};
+
+export const branchWorkersApi = {
+  getWorkers: async (params?: BranchWorkerListParams): Promise<ApiResponse<BranchWorkerListResponse>> => {
+    const response = await api.get('/admin/branch-workers', { params });
+    return response.data;
+  },
+  getWorker: async (workerId: number | string): Promise<ApiResponse<{ worker: BranchWorkerDetail; analytics: Record<string, unknown> }>> => {
+    const response = await api.get(`/admin/branch-workers/${workerId}`);
+    return response.data;
+  },
+  createWorker: async (data: BranchWorkerFormData): Promise<ApiResponse<{ worker: BranchWorker }>> => {
+    const response = await api.post('/admin/branch-workers', data);
+    return response.data;
+  },
+  updateWorker: async (workerId: number | string, data: BranchWorkerFormData): Promise<ApiResponse<{ worker: BranchWorker }>> => {
+    const response = await api.put(`/admin/branch-workers/${workerId}`, data);
+    return response.data;
+  },
+  deleteWorker: async (workerId: number | string): Promise<ApiResponse<unknown>> => {
+    const response = await api.delete(`/admin/branch-workers/${workerId}`);
+    return response.data;
+  },
+  getAvailableResources: async (): Promise<ApiResponse<{ branches: BranchOption[]; users: UserOption[] }>> => {
+    const response = await api.get('/admin/branch-workers/create');
+    return response.data;
+  },
+  unassignWorker: async (workerId: number | string): Promise<ApiResponse<unknown>> => {
+    const response = await api.post(`/admin/branch-workers/${workerId}/unassign`);
+    return response.data;
+  },
+  assignShipment: async (workerId: number | string, shipmentId: number): Promise<ApiResponse<unknown>> => {
+    const response = await api.post(`/admin/branch-workers/${workerId}/assign-shipment`, { shipment_id: shipmentId });
+    return response.data;
+  },
+  bulkUpdateStatus: async (workerIds: number[], status: string): Promise<ApiResponse<unknown>> => {
+    const response = await api.post('/admin/branch-workers/bulk-status-update', { worker_ids: workerIds, status });
+    return response.data;
+  },
+};
+
 export const merchantsApi = {
   getMerchants: async (params?: MerchantListParams): Promise<ApiResponse<MerchantListResponse>> => {
     const response = await api.get<ApiResponse<MerchantListResponse>>('/v10/merchants', { params });
@@ -378,6 +472,21 @@ export const operationsApi = {
   getWorkerUtilization: async (): Promise<ApiResponse<Record<string, unknown>>> => {
     const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/operations/worker-utilization');
     return response.data;
+  },
+};
+
+// Shipments API functions (used by Bookings page)
+export const shipmentsApi = {
+  getShipments: async (params?: ApiListParams) => {
+    const response = await api.get('/v10/shipments', { params });
+    return response.data as ApiResponse<unknown> & {
+      data: Array<Record<string, unknown>>;
+      pagination?: Record<string, unknown>;
+    };
+  },
+  getStatistics: async () => {
+    const response = await api.get('/v10/shipments/statistics');
+    return response.data as ApiResponse<Record<string, number>>;
   },
 };
 

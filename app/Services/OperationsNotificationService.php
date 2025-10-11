@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Backend\Branch;
+use App\Models\OperationsNotification;
+use App\Models\Shipment;
+use App\Http\Services\PushNotificationService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -14,18 +17,40 @@ use Carbon\Carbon;
 
 class OperationsNotificationService
 {
+    protected PushNotificationService $pushService;
+
+    public function __construct(PushNotificationService $pushService)
+    {
+        $this->pushService = $pushService;
+    }
+
     /**
      * Notify about exception creation
      */
     public function notifyException($shipment, array $exceptionData): void
     {
         try {
+            // Get recipients for this exception
+            $recipients = $this->getExceptionNotificationRecipients($shipment, $exceptionData);
+
+            // Create notification in database for each recipient
+            foreach ($recipients as $userId) {
+                $dbNotification = OperationsNotification::createExceptionNotification($shipment, array_merge($exceptionData, [
+                    'user_id' => $userId,
+                    'tracking_number' => $shipment->tracking_number ?? 'N/A',
+                ]));
+
+                // Mark as sent
+                $dbNotification->markAsSent();
+            }
+
+            // Prepare broadcast notification
             $notification = [
                 'type' => 'exception.created',
                 'title' => 'New Exception Created',
-                'message' => "Exception: {$exceptionData['exception_type']} for shipment {$exceptionData['tracking_number']}",
-                'severity' => $exceptionData['severity'],
-                'priority' => $exceptionData['priority'],
+                'message' => "Exception: {$exceptionData['exception_type']} for shipment " . ($shipment->tracking_number ?? 'N/A'),
+                'severity' => $exceptionData['severity'] ?? 'medium',
+                'priority' => $exceptionData['priority'] ?? 3,
                 'data' => $exceptionData,
                 'timestamp' => now()->toISOString(),
                 'requires_action' => true,
@@ -40,13 +65,19 @@ class OperationsNotificationService
                 broadcast()->on("operations.exceptions.branch.{$branchId}", $notification);
             }
 
-            // Send push notification to relevant users
-            $recipients = $this->getExceptionNotificationRecipients($shipment, $exceptionData);
-            $this->sendPushNotification($notification, $recipients);
+            // Send to individual user channels
+            foreach ($recipients as $userId) {
+                broadcast()->on("operations.alerts.user.{$userId}", $notification);
+            }
+
+            // Send push notifications for critical exceptions
+            if (($exceptionData['severity'] ?? 'medium') === 'high' || ($exceptionData['priority'] ?? 3) >= 4) {
+                $this->sendPushNotificationsToUsers($notification, $recipients);
+            }
 
             Log::info('Exception notification sent', [
                 'shipment_id' => $shipment->id,
-                'exception_type' => $exceptionData['exception_type'],
+                'exception_type' => $exceptionData['exception_type'] ?? 'unknown',
                 'recipients_count' => count($recipients),
             ]);
 
@@ -64,6 +95,14 @@ class OperationsNotificationService
     public function notifyAlert(string $alertType, array $alertData, array $recipients = []): void
     {
         try {
+            // Create notification in database for each recipient
+            foreach ($recipients as $userId) {
+                $dbNotification = OperationsNotification::createAlert($alertType, array_merge($alertData, [
+                    'user_id' => $userId,
+                ]));
+                $dbNotification->markAsSent();
+            }
+
             $notification = array_merge([
                 'type' => $alertType,
                 'timestamp' => now()->toISOString(),
@@ -82,7 +121,7 @@ class OperationsNotificationService
 
             // Send push notifications for critical alerts
             if ($this->isCriticalAlert($alertType)) {
-                $this->sendPushNotification($notification, $recipients);
+                $this->sendPushNotificationsToUsers($notification, $recipients);
             }
 
             Log::info('Operational alert sent', [
@@ -130,12 +169,11 @@ class OperationsNotificationService
      */
     public function getUnreadNotifications(User $user): Collection
     {
-        // In a real implementation, this would query a notifications table
-        // For now, return cached notifications
-        $cacheKey = "user_notifications_{$user->id}";
-        $notifications = Cache::get($cacheKey, collect());
-
-        return $notifications->where('read', false);
+        return OperationsNotification::forUser($user->id)
+            ->unread()
+            ->orderBy('created_at', 'desc')
+            ->with(['shipment', 'worker', 'asset', 'branch'])
+            ->get();
     }
 
     /**
@@ -144,20 +182,19 @@ class OperationsNotificationService
     public function markNotificationAsRead(User $user, string $notificationId): bool
     {
         try {
-            $cacheKey = "user_notifications_{$user->id}";
-            $notifications = Cache::get($cacheKey, collect());
+            $notification = OperationsNotification::where(function ($query) use ($notificationId) {
+                $query->where('id', $notificationId)
+                      ->orWhere('notification_uuid', $notificationId);
+            })
+            ->where('user_id', $user->id)
+            ->first();
 
-            $notifications = $notifications->map(function ($notification) use ($notificationId) {
-                if (($notification['id'] ?? null) === $notificationId) {
-                    $notification['read'] = true;
-                    $notification['read_at'] = now()->toISOString();
-                }
-                return $notification;
-            });
+            if ($notification) {
+                $notification->markAsRead();
+                return true;
+            }
 
-            Cache::put($cacheKey, $notifications, now()->addHours(24)); // Cache for 24 hours
-
-            return true;
+            return false;
 
         } catch (\Exception $e) {
             Log::error('Failed to mark notification as read', [
@@ -175,16 +212,11 @@ class OperationsNotificationService
      */
     public function getNotificationHistory(User $user, int $days = 7): Collection
     {
-        $cacheKey = "user_notifications_{$user->id}";
-        $notifications = Cache::get($cacheKey, collect());
-
-        $cutoffDate = now()->subDays($days);
-
-        return $notifications->filter(function ($notification) use ($cutoffDate) {
-            $notificationDate = isset($notification['timestamp']) ?
-                Carbon::parse($notification['timestamp']) : now();
-            return $notificationDate >= $cutoffDate;
-        })->sortByDesc('timestamp');
+        return OperationsNotification::forUser($user->id)
+            ->where('created_at', '>=', now()->subDays($days))
+            ->orderBy('created_at', 'desc')
+            ->with(['shipment', 'worker', 'asset', 'branch'])
+            ->get();
     }
 
     /**
@@ -192,25 +224,16 @@ class OperationsNotificationService
      */
     public function storeNotificationForUser(User $user, array $notification): void
     {
-        $cacheKey = "user_notifications_{$user->id}";
-        $notifications = Cache::get($cacheKey, collect());
-
-        // Add ID if not present
-        if (!isset($notification['id'])) {
-            $notification['id'] = uniqid('notif_', true);
+        try {
+            OperationsNotification::createNotification(array_merge($notification, [
+                'user_id' => $user->id,
+            ]));
+        } catch (\Exception $e) {
+            Log::error('Failed to store notification for user', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
         }
-
-        // Add read status
-        $notification['read'] = $notification['read'] ?? false;
-        $notification['created_at'] = $notification['created_at'] ?? now()->toISOString();
-
-        // Keep only last 100 notifications per user
-        $notifications->push($notification);
-        if ($notifications->count() > 100) {
-            $notifications = $notifications->slice(-100);
-        }
-
-        Cache::put($cacheKey, $notifications, now()->addHours(24));
     }
 
     /**
@@ -269,36 +292,57 @@ class OperationsNotificationService
     }
 
     /**
-     * Send push notification
+     * Send push notifications to multiple users
      */
-    private function sendPushNotification(array $notification, array $recipients): void
+    private function sendPushNotificationsToUsers(array $notification, array $recipients): void
     {
         if (empty($recipients)) {
             return;
         }
 
         try {
-            // In a real implementation, this would integrate with FCM/APNs
-            // For now, we'll simulate by storing notifications for users
-
             foreach ($recipients as $userId) {
                 $user = User::find($userId);
-                if ($user) {
+                if ($user && $user->device_token) {
+                    // Create notification object for FCM
+                    $pushData = (object) [
+                        'title' => $notification['title'] ?? 'Operations Alert',
+                        'description' => $notification['message'] ?? '',
+                        'image' => null,
+                    ];
+
+                    // Send via FCM
+                    $this->pushService->sendPushNotification(
+                        $pushData,
+                        $user->device_token,
+                        'operations_notification'
+                    );
+
+                    // Store notification
                     $this->storeNotificationForUser($user, $notification);
                 }
             }
 
-            Log::info('Push notification sent', [
-                'notification_type' => $notification['type'],
+            Log::info('Push notifications sent', [
+                'notification_type' => $notification['type'] ?? 'unknown',
                 'recipients_count' => count($recipients),
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to send push notification', [
+            Log::error('Failed to send push notifications', [
                 'error' => $e->getMessage(),
                 'notification_type' => $notification['type'] ?? 'unknown',
             ]);
         }
+    }
+
+    /**
+     * Send push notification (legacy method)
+     */
+    private function sendPushNotification(array $notification, array $recipients): void
+    {
+        // Redirect to new method
+        $this->sendPushNotificationsToUsers($notification, $recipients);
     }
 
     /**

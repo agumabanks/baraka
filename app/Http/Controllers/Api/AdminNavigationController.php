@@ -80,6 +80,10 @@ class AdminNavigationController extends Controller
             ];
 
             // Add expanded property if it exists in config
+            // Add external property if it exists in config
+            if (array_key_exists('external', $item)) {
+                $entry['external'] = (bool) $item['external'];
+            }
             if (array_key_exists('expanded', $item)) {
                 $entry['expanded'] = (bool) $item['expanded'];
             }
@@ -114,8 +118,8 @@ class AdminNavigationController extends Controller
             $normalized = substr($normalized, strlen('admin/'));
         }
 
-        if ($normalized === '') {
-            return '/';
+        if ($normalized === '' || $normalized === 'dashboard') {
+            return '/dashboard';
         }
 
         return '/' . $normalized;

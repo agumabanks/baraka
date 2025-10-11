@@ -3,6 +3,8 @@
 namespace App\Models\Backend;
 
 use App\Enums\Status;
+use App\Models\Client;
+use App\Models\Shipment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
