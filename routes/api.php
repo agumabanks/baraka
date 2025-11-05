@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\BookingWizardController;
 use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Controllers\Api\AdminNavigationController;
+use App\Http\Controllers\Api\Admin\RoleApiController;
+use App\Http\Controllers\Api\Admin\UserApiController;
 use App\Http\Controllers\Api\Sales\AddressBookController as SalesAddressBookController;
 use App\Http\Controllers\Api\Sales\ContractController as SalesContractController;
 use App\Http\Controllers\Api\Sales\CustomerController as SalesCustomerController;
@@ -87,6 +89,14 @@ Route::middleware('auth:sanctum')->prefix('sales')->group(function () {
 
 // Admin Branch Management API Routes
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    // Role & User management APIs
+    Route::get('roles/meta', [RoleApiController::class, 'meta']);
+    Route::patch('roles/{role}/status', [RoleApiController::class, 'toggleStatus']);
+    Route::apiResource('roles', RoleApiController::class);
+
+    Route::get('users/meta', [UserApiController::class, 'meta']);
+    Route::apiResource('users', UserApiController::class);
+
     // Branch Managers API
     Route::get('branch-managers', [\App\Http\Controllers\Api\Admin\BranchManagerApiController::class, 'index']);
     Route::post('branch-managers', [\App\Http\Controllers\Api\Admin\BranchManagerApiController::class, 'store']);

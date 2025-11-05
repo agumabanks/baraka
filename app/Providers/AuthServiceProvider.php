@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Backend\Role;
+use App\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -66,6 +69,16 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Gate::define('admin.roles.viewAny', fn (User $user): bool => $user->hasPermission('role_read'));
+        Gate::define('admin.roles.view', fn (User $user, Role $role): bool => $user->hasPermission('role_read'));
+        Gate::define('admin.roles.create', fn (User $user): bool => $user->hasPermission('role_create'));
+        Gate::define('admin.roles.update', fn (User $user, Role $role): bool => $user->hasPermission('role_update'));
+        Gate::define('admin.roles.delete', fn (User $user, Role $role): bool => $user->hasPermission('role_delete'));
+
+        Gate::define('admin.users.viewAny', fn (User $user): bool => $user->hasPermission('user_read'));
+        Gate::define('admin.users.view', fn (User $user, User $subject): bool => $user->hasPermission('user_read'));
+        Gate::define('admin.users.create', fn (User $user): bool => $user->hasPermission('user_create'));
+        Gate::define('admin.users.update', fn (User $user, User $subject): bool => $user->hasPermission('user_update'));
+        Gate::define('admin.users.delete', fn (User $user, User $subject): bool => $user->hasPermission('user_delete'));
     }
 }

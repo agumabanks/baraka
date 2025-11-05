@@ -52,6 +52,17 @@ import type {
   BranchWorkerListParams,
   BranchWorkerListResponse,
 } from '../types/branchWorkers';
+import type {
+  AdminRole,
+  AdminRoleCollection,
+  AdminRoleMeta,
+  AdminRolePayload,
+  AdminUser,
+  AdminUserCollection,
+  AdminUserFilters,
+  AdminUserMeta,
+  AdminUserPayload,
+} from '../types/settings';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -379,6 +390,99 @@ export const branchWorkersApi = {
   },
   bulkUpdateStatus: async (workerIds: number[], status: string): Promise<ApiResponse<unknown>> => {
     const response = await api.post('/admin/branch-workers/bulk-status-update', { worker_ids: workerIds, status });
+    return response.data;
+  },
+};
+
+const buildUserFormData = (payload: AdminUserPayload, isUpdate = false): FormData => {
+  const formData = new FormData();
+  formData.append('name', payload.name);
+  formData.append('email', payload.email);
+  formData.append('mobile', payload.mobile);
+  if (payload.password) {
+    formData.append('password', payload.password);
+  }
+  if (payload.nid_number) {
+    formData.append('nid_number', payload.nid_number);
+  }
+  formData.append('designation_id', String(payload.designation_id));
+  formData.append('department_id', String(payload.department_id));
+  formData.append('role_id', String(payload.role_id));
+  if (payload.hub_id !== undefined && payload.hub_id !== null) {
+    formData.append('hub_id', String(payload.hub_id));
+  }
+  formData.append('joining_date', payload.joining_date);
+  if (typeof payload.salary === 'number') {
+    formData.append('salary', String(payload.salary));
+  }
+  formData.append('address', payload.address);
+  formData.append('status', String(payload.status));
+  if (payload.image instanceof File) {
+    formData.append('image', payload.image);
+  }
+  if (isUpdate) {
+    formData.append('_method', 'PUT');
+  }
+
+  return formData;
+};
+
+export const adminUsersApi = {
+  getUsers: async (filters?: AdminUserFilters): Promise<AdminUserCollection & { success?: boolean; message?: string }> => {
+    const response = await api.get<AdminUserCollection & { success?: boolean; message?: string }>('/admin/users', { params: filters });
+    return response.data;
+  },
+  getUser: async (userId: number | string): Promise<ApiResponse<AdminUser>> => {
+    const response = await api.get<ApiResponse<AdminUser>>(`/admin/users/${userId}`);
+    return response.data;
+  },
+  getMeta: async (): Promise<ApiResponse<AdminUserMeta>> => {
+    const response = await api.get<ApiResponse<AdminUserMeta>>('/admin/users/meta');
+    return response.data;
+  },
+  createUser: async (payload: AdminUserPayload): Promise<ApiResponse<AdminUser>> => {
+    const formData = buildUserFormData(payload);
+    const response = await api.post<ApiResponse<AdminUser>>('/admin/users', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  updateUser: async (userId: number | string, payload: AdminUserPayload): Promise<ApiResponse<AdminUser>> => {
+    const formData = buildUserFormData(payload, true);
+    const response = await api.post<ApiResponse<AdminUser>>(`/admin/users/${userId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  deleteUser: async (userId: number | string): Promise<ApiResponse<unknown>> => {
+    const response = await api.delete<ApiResponse<unknown>>(`/admin/users/${userId}`);
+    return response.data;
+  },
+};
+
+export const adminRolesApi = {
+  getRoles: async (params?: { page?: number; per_page?: number; search?: string; status?: number }): Promise<AdminRoleCollection & { success?: boolean; message?: string }> => {
+    const response = await api.get<AdminRoleCollection & { success?: boolean; message?: string }>('/admin/roles', { params });
+    return response.data;
+  },
+  getMeta: async (): Promise<ApiResponse<AdminRoleMeta>> => {
+    const response = await api.get<ApiResponse<AdminRoleMeta>>('/admin/roles/meta');
+    return response.data;
+  },
+  createRole: async (payload: AdminRolePayload): Promise<ApiResponse<AdminRole>> => {
+    const response = await api.post<ApiResponse<AdminRole>>('/admin/roles', payload);
+    return response.data;
+  },
+  updateRole: async (roleId: number | string, payload: AdminRolePayload): Promise<ApiResponse<AdminRole>> => {
+    const response = await api.put<ApiResponse<AdminRole>>(`/admin/roles/${roleId}`, payload);
+    return response.data;
+  },
+  deleteRole: async (roleId: number | string): Promise<ApiResponse<unknown>> => {
+    const response = await api.delete<ApiResponse<unknown>>(`/admin/roles/${roleId}`);
+    return response.data;
+  },
+  toggleStatus: async (roleId: number | string): Promise<ApiResponse<{ status: number }>> => {
+    const response = await api.patch<ApiResponse<{ status: number }>>(`/admin/roles/${roleId}/status`);
     return response.data;
   },
 };

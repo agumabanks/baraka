@@ -193,4 +193,32 @@ class User extends Authenticatable
 
         return $current === strtolower($roles);
     }
+
+    /**
+     * Determine if the user has a given permission directly or via role.
+     */
+    public function hasPermission(string|array $permissions): bool
+    {
+        if ($this->hasRole(['super-admin', 'admin'])) {
+            return true;
+        }
+
+        $this->loadMissing('role');
+
+        $permissions = (array) $permissions;
+        $ownPermissions = is_array($this->permissions) ? $this->permissions : [];
+        $rolePermissions = [];
+
+        if ($this->role && is_array($this->role->permissions)) {
+            $rolePermissions = $this->role->permissions;
+        }
+
+        foreach ($permissions as $permission) {
+            if (in_array($permission, $ownPermissions, true) || in_array($permission, $rolePermissions, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

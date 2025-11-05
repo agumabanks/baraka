@@ -39,13 +39,15 @@ import BranchHierarchy from './pages/branches/BranchHierarchy'
 import LocalClients from './pages/branches/LocalClients'
 import ShipmentsByBranch from './pages/branches/ShipmentsByBranch'
 import LiveTracking from './pages/LiveTracking'
+import RolesManagement from './pages/settings/RolesManagement'
+import UsersManagement from './pages/settings/UsersManagement'
+import WorkflowBoard from './pages/operations/WorkflowBoard'
 
 // TODO: These components need to be created for full navigation
 // Operations Components
 // import DispatchBoard from './pages/operations/DispatchBoard'
 // import ExceptionTower from './pages/operations/ExceptionTower'
 // import ControlTower from './pages/operations/ControlTower'
-// import WorkflowBoard from './pages/operations/WorkflowBoard'
 // import Parcels from './pages/operations/Parcels'
 // import Bags from './pages/operations/Bags'
 // import RoutesPage from './pages/operations/Routes'
@@ -345,7 +347,7 @@ function AppContent() {
             <Route path="operations/dispatch" element={<div className="p-6"><h1 className="text-2xl font-bold">Dispatch Board</h1><p>Coming soon...</p></div>} />
             <Route path="operations/exceptions" element={<div className="p-6"><h1 className="text-2xl font-bold">Exception Tower</h1><p>Coming soon...</p></div>} />
             <Route path="operations/control-tower" element={<div className="p-6"><h1 className="text-2xl font-bold">Control Tower</h1><p>Coming soon...</p></div>} />
-            <Route path="workflow" element={<div className="p-6"><h1 className="text-2xl font-bold">Workflow Board</h1><p>Coming soon...</p></div>} />
+            <Route path="workflow" element={<WorkflowBoard />} />
             
             {/* Finance Routes - TODO: Implement these components */}
             <Route path="finance/rate-cards" element={<div className="p-6"><h1 className="text-2xl font-bold">Rate Cards</h1><p>Coming soon...</p></div>} />
@@ -396,8 +398,9 @@ function AppContent() {
             <Route path="reports/workforce" element={<div className="p-6"><h1 className="text-2xl font-bold">Workforce Reports</h1><p>Coming soon...</p></div>} />
             
             {/* Settings Routes - TODO: Implement these components */}
-            <Route path="settings/users" element={<div className="p-6"><h1 className="text-2xl font-bold">Users</h1><p>Coming soon...</p></div>} />
-            <Route path="users" element={<div className="p-6"><h1 className="text-2xl font-bold">Users</h1><p>Coming soon...</p></div>} />
+            <Route path="settings/roles" element={<RolesManagement />} />
+            <Route path="settings/users" element={<UsersManagement />} />
+            <Route path="users" element={<UsersManagement />} />
             
             {enhancedRoutes.map(({ meta, routePath, descriptionKey }) => {
               let element: React.ReactNode
@@ -407,6 +410,9 @@ function AppContent() {
                   element = <Bookings />
                   break
                 case 'tracking':
+                  element = <LiveTracking />
+                  break
+                case 'live-tracking':
                   element = <LiveTracking />
                   break
                 case 'shipments/tracking':
@@ -438,6 +444,11 @@ function AppContent() {
                   break
                 case 'todo':
                   element = <Todo />
+                  break
+                case 'workflow':
+                case 'workflow/board':
+                case 'operations/workflow':
+                  element = <WorkflowBoard />
                   break
                 case 'customers':
                   element = <AllCustomers />
@@ -484,8 +495,17 @@ function AppContent() {
                 case 'deliveryman':
                   element = <div className="p-6"><h1 className="text-2xl font-bold">Delivery Workers</h1><p>Coming soon...</p></div>
                   break
+                case 'settings/roles':
+                  element = <RolesManagement />
+                  break
+                case 'settings/users':
+                  element = <UsersManagement />
+                  break
                 case 'users':
-                  element = <div className="p-6"><h1 className="text-2xl font-bold">Users</h1><p>Coming soon...</p></div>
+                  element = <UsersManagement />
+                  break
+                case 'roles':
+                  element = <RolesManagement />
                   break
                 default:
                   element = (
