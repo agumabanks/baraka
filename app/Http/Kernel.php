@@ -80,6 +80,9 @@ class Kernel extends HttpKernel
         'idempotency' => \App\Http\Middleware\IdempotencyMiddleware::class,
         'bind_device' => \App\Http\Middleware\BindDeviceMiddleware::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        // Accessibility and Audit Middleware
+        'audit.logging' => \App\Http\Middleware\AuditLoggingMiddleware::class,
+        'accessibility.validation' => \App\Http\Middleware\AccessibilityValidationMiddleware::class,
 
     ];
 }

@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { authApi, redirectToLogin } from '../services/api';
 
+interface UserRole {
+  id: number | string;
+  name: string;
+  key?: string;
+}
+
 interface User {
   id: number;
   name: string;
@@ -9,6 +15,10 @@ interface User {
   email_verified_at?: string;
   created_at: string;
   updated_at: string;
+  role?: UserRole | null;
+  roles?: UserRole[];
+  permissions?: string[];
+  project_ids?: Array<number | string>;
 }
 
 interface AuthContextType {
@@ -111,7 +121,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(serverUser);
           try {
             localStorage.setItem('user', JSON.stringify(serverUser));
-          } catch {}
+          } catch (storageError) {
+            console.warn('Unable to persist user cache snapshot', storageError);
+          }
         } else if (storedUser) {
           // Fallback to stored user if API shape differs
           setUser(JSON.parse(storedUser));
@@ -128,6 +140,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         redirectToLogin();
       }
     } catch (error) {
+      console.error('Auth verification failed:', error);
       // Token is invalid, clear storage
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
@@ -168,3 +181,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+/* eslint-disable react-refresh/only-export-components */

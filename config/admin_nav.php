@@ -343,7 +343,7 @@ return [
                     'key' => 'general-settings',
                     'label_trans_key' => 'menus.general_settings',
                     'icon' => 'fa fa-cogs',
-                    'route' => 'general-settings.index',
+                    'url' => '/general-settings/index',
                     'active_patterns' => ['general-settings.*'],
                     'permission_check' => null,
                 ],

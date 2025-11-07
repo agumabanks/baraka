@@ -20,7 +20,10 @@ return new class extends Migration
             $table->string('sscc'); // GS1 SSCC code
             $table->enum('type', array_column(\App\Enums\ScanType::cases(), 'value'));
             $table->foreignId('branch_id')->constrained('hubs')->onDelete('cascade');
-            $table->foreignId('leg_id')->nullable()->constrained('transport_legs')->onDelete('set null');
+            $legColumn = $table->foreignId('leg_id')->nullable();
+            if (Schema::hasTable('transport_legs')) {
+                $legColumn->constrained('transport_legs')->onDelete('set null');
+            }
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamp('occurred_at');
             $table->json('geojson')->nullable(); // {"type":"Point","coordinates":[lng,lat]}

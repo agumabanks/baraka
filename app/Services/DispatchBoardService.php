@@ -2,22 +2,49 @@
 
 namespace App\Services;
 
+use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
 use App\Models\Backend\Branch;
 use App\Models\Backend\BranchWorker;
 use App\Models\User;
+use App\Services\Logistics\ShipmentLifecycleService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class DispatchBoardService
 {
+    public function __construct(private ShipmentLifecycleService $lifecycleService)
+    {
+    }
+    private function resolveBranch(?Branch $branch): Branch
+    {
+        if ($branch instanceof Branch) {
+            return $branch;
+        }
+
+        $fallback = Branch::query()
+            ->where('is_hub', true)
+            ->orderBy('id')
+            ->first()
+            ?? Branch::query()->active()->orderBy('id')->first();
+
+        if (! $fallback) {
+            throw new \RuntimeException('No active branches available for dispatch operations.');
+        }
+
+        return $fallback;
+    }
+
     /**
      * Get dispatch board for a branch and date
      */
-    public function getDispatchBoard(Branch $branch, Carbon $date): array
+    public function getDispatchBoard(?Branch $branch, Carbon $date): array
     {
+        $branch = $this->resolveBranch($branch);
+
         $workers = $this->getBranchWorkers($branch);
         $unassignedShipments = $this->getUnassignedShipments($branch, $date);
         $loadBalancingMetrics = $this->getLoadBalancingMetrics($branch, $date);
@@ -46,7 +73,7 @@ class DispatchBoardService
     {
         return $branch->activeWorkers()
             ->with(['user', 'assignedShipments' => function ($query) {
-                $query->whereIn('current_status', ['assigned', 'in_transit', 'out_for_delivery']);
+                $query->whereIn('current_status', $this->activeAssignmentStatusValues());
             }])
             ->get()
             ->map(function ($worker) {
@@ -80,49 +107,74 @@ class DispatchBoardService
     /**
      * Get unassigned shipments for a branch
      */
-    private function getUnassignedShipments(Branch $branch, Carbon $date): Collection
+    public function getUnassignedShipments(?Branch $branch, Carbon $date): Collection
     {
-        return Shipment::where(function ($query) use ($branch) {
+        $branch = $this->resolveBranch($branch);
+        $shipments = $this->fetchUnassignedShipmentModels($branch, $date);
+
+        return $shipments->map(function (Shipment $shipment) {
+            return [
+                'id' => $shipment->id,
+                'tracking_number' => $shipment->tracking_number,
+                'customer_name' => $shipment->customer->name ?? 'Unknown',
+                'origin' => $shipment->originBranch->name ?? 'Unknown',
+                'destination' => $shipment->destBranch->name ?? 'Unknown',
+                'service_level' => $shipment->service_level,
+                'priority' => $shipment->priority ?? 1,
+                'created_at' => $shipment->created_at?->toISOString(),
+                'expected_delivery' => $shipment->expected_delivery_date?->toISOString(),
+                'is_urgent' => $this->isShipmentUrgent($shipment),
+            ];
+        });
+    }
+
+    private function fetchUnassignedShipmentModels(Branch $branch, Carbon $date): Collection
+    {
+        $startOfDay = $date->copy()->startOfDay();
+
+        return Shipment::query()
+            ->where(function ($query) use ($branch) {
                 $query->where('origin_branch_id', $branch->id)
                       ->orWhere('dest_branch_id', $branch->id);
             })
             ->whereNull('assigned_worker_id')
-            ->whereIn('current_status', ['pending', 'ready_for_assignment'])
-            ->whereDate('created_at', '>=', $date->startOfDay())
+            ->whereIn('current_status', $this->pendingAssignmentStatusValues())
+            ->whereDate('created_at', '>=', $startOfDay)
             ->with(['customer', 'originBranch', 'destBranch'])
-            ->orderBy('priority', 'desc')
+            ->orderByDesc('priority')
             ->orderBy('created_at')
-            ->get()
-            ->map(function ($shipment) {
-                return [
-                    'id' => $shipment->id,
-                    'tracking_number' => $shipment->tracking_number,
-                    'customer_name' => $shipment->customer->name ?? 'Unknown',
-                    'origin' => $shipment->originBranch->name ?? 'Unknown',
-                    'destination' => $shipment->destBranch->name ?? 'Unknown',
-                    'service_level' => $shipment->service_level,
-                    'priority' => $shipment->priority ?? 1,
-                    'created_at' => $shipment->created_at->toISOString(),
-                    'expected_delivery' => $shipment->expected_delivery_date?->toISOString(),
-                    'is_urgent' => $this->isShipmentUrgent($shipment),
-                ];
-            });
+            ->get();
     }
 
     /**
      * Get load balancing metrics for a branch
      */
-    private function getLoadBalancingMetrics(Branch $branch, Carbon $date): array
+    public function getLoadBalancingMetrics(?Branch $branch, Carbon $date): array
     {
+        $branch = $this->resolveBranch($branch);
         $workers = $branch->activeWorkers()->with('assignedShipments')->get();
 
-        $workerLoads = $workers->map(function ($worker) {
+        if ($workers->isEmpty()) {
+            return [
+                'total_capacity' => 0,
+                'total_load' => 0,
+                'average_load' => 0.0,
+                'load_variance' => 0.0,
+                'utilization_rate' => 0.0,
+                'balancing_status' => 'no_workers',
+                'recommendations' => ['No active workers available for the selected branch.'],
+                'worker_loads' => [],
+            ];
+        }
+
+        $workerLoads = $workers->map(function (BranchWorker $worker) {
             $activeShipments = $worker->assignedShipments()
-                ->whereIn('current_status', ['assigned', 'in_transit', 'out_for_delivery'])
+                ->whereIn('current_status', $this->activeAssignmentStatusValues())
                 ->count();
 
             return [
                 'worker_id' => $worker->id,
+                'worker_name' => $worker->full_name,
                 'load' => $activeShipments,
                 'capacity' => $this->getWorkerCapacity($worker),
             ];
@@ -130,21 +182,25 @@ class DispatchBoardService
 
         $totalCapacity = $workerLoads->sum('capacity');
         $totalLoad = $workerLoads->sum('load');
-        $averageLoad = $workers->count() > 0 ? $totalLoad / $workers->count() : 0;
+        $workerCount = $workers->count();
+        $averageLoad = (float) ($workerCount > 0 ? $totalLoad / $workerCount : 0.0);
 
-        // Calculate load distribution variance
-        $loadVariance = $workerLoads->map(function ($worker) use ($averageLoad) {
+        $varianceArray = $workerLoads->map(function (array $worker) use ($averageLoad) {
             return pow($worker['load'] - $averageLoad, 2);
-        })->avg();
+        })->toArray();
+        $loadVariance = (float) (count($varianceArray) > 0 ? array_sum($varianceArray) / count($varianceArray) : 0.0);
+
+        $utilisationRate = (float) ($totalCapacity > 0 ? ($totalLoad / $totalCapacity) * 100 : 0.0);
 
         return [
             'total_capacity' => $totalCapacity,
             'total_load' => $totalLoad,
             'average_load' => round($averageLoad, 1),
             'load_variance' => round($loadVariance, 2),
-            'utilization_rate' => $totalCapacity > 0 ? round(($totalLoad / $totalCapacity) * 100, 1) : 0,
+            'utilization_rate' => round($utilisationRate, 1),
             'balancing_status' => $this->getBalancingStatus($loadVariance, $averageLoad),
             'recommendations' => $this->getLoadBalancingRecommendations($workerLoads),
+            'worker_loads' => $workerLoads->values()->all(),
         ];
     }
 
@@ -169,7 +225,7 @@ class DispatchBoardService
         }
 
         $currentLoad = $worker->assignedShipments()
-            ->whereIn('current_status', ['assigned', 'in_transit', 'out_for_delivery'])
+            ->whereIn('current_status', $this->activeAssignmentStatusValues())
             ->count();
 
         $capacity = $this->getWorkerCapacity($worker);
@@ -183,22 +239,30 @@ class DispatchBoardService
 
         DB::beginTransaction();
         try {
-            $shipment->update([
+            $shipment->forceFill([
                 'assigned_worker_id' => $worker->id,
-                'current_status' => 'assigned',
                 'assigned_at' => now(),
+            ])->save();
+
+            $this->lifecycleService->transition($shipment->fresh(), ShipmentStatus::PICKUP_SCHEDULED, [
+                'trigger' => 'dispatch.assign',
+                'performed_by' => Auth::id(),
+                'timestamp' => now(),
+                'location_type' => 'branch',
+                'location_id' => $worker->branch_id,
             ]);
 
-            // Log the assignment
-            activity()
-                ->performedOn($shipment)
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'worker_id' => $worker->id,
-                    'worker_name' => $worker->full_name,
-                    'assigned_by' => auth()->user()->name,
-                ])
-                ->log("Shipment assigned to worker: {$worker->full_name}");
+            if ($actor = Auth::user()) {
+                activity()
+                    ->performedOn($shipment)
+                    ->causedBy($actor)
+                    ->withProperties([
+                        'worker_id' => $worker->id,
+                        'worker_name' => $worker->full_name,
+                        'assigned_by' => $actor->name,
+                    ])
+                    ->log("Shipment assigned to worker: {$worker->full_name}");
+            }
 
             DB::commit();
 
@@ -252,15 +316,17 @@ class DispatchBoardService
             }
 
             // Log reassignment
-            activity()
-                ->performedOn($shipment)
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'old_worker' => $oldWorker->full_name,
-                    'new_worker' => $newWorker->full_name,
-                    'reassigned_by' => auth()->user()->name,
-                ])
-                ->log("Shipment reassigned from {$oldWorker->full_name} to {$newWorker->full_name}");
+            if ($actor = Auth::user()) {
+                activity()
+                    ->performedOn($shipment)
+                    ->causedBy($actor)
+                    ->withProperties([
+                        'old_worker' => $oldWorker->full_name,
+                        'new_worker' => $newWorker->full_name,
+                        'reassigned_by' => $actor->name,
+                    ])
+                    ->log("Shipment reassigned from {$oldWorker->full_name} to {$newWorker->full_name}");
+            }
 
             DB::commit();
 
@@ -297,7 +363,7 @@ class DispatchBoardService
     public function getWorkerWorkload(BranchWorker $worker): array
     {
         $activeShipments = $worker->assignedShipments()
-            ->whereIn('current_status', ['assigned', 'in_transit', 'out_for_delivery'])
+            ->whereIn('current_status', $this->activeAssignmentStatusValues())
             ->with(['customer', 'originBranch', 'destBranch'])
             ->get();
 
@@ -336,9 +402,10 @@ class DispatchBoardService
     /**
      * Auto-assign shipments using load balancing algorithm
      */
-    public function autoAssignShipments(Branch $branch, int $maxAssignments = 10): array
+    public function autoAssignShipments(?Branch $branch, int $maxAssignments = 10): array
     {
-        $unassignedShipments = $this->getUnassignedShipments($branch, now());
+        $branch = $this->resolveBranch($branch);
+        $unassignedShipments = $this->fetchUnassignedShipmentModels($branch, now());
         $workers = $branch->activeWorkers()->get();
 
         $assignments = [];
@@ -385,7 +452,7 @@ class DispatchBoardService
             return $worker->canPerform('deliver_shipments') &&
                    $worker->isCurrentlyActive &&
                    $this->getWorkerCapacity($worker) > $worker->assignedShipments()
-                       ->whereIn('current_status', ['assigned', 'in_transit', 'out_for_delivery'])
+                       ->whereIn('current_status', $this->activeAssignmentStatusValues())
                        ->count();
         });
 
@@ -396,7 +463,7 @@ class DispatchBoardService
         // Find worker with lowest utilization rate
         return $suitableWorkers->sortBy(function ($worker) {
             $currentLoad = $worker->assignedShipments()
-                ->whereIn('current_status', ['assigned', 'in_transit', 'out_for_delivery'])
+                ->whereIn('current_status', $this->activeAssignmentStatusValues())
                 ->count();
             $capacity = $this->getWorkerCapacity($worker);
             return $capacity > 0 ? $currentLoad / $capacity : 1;
@@ -424,7 +491,7 @@ class DispatchBoardService
     private function getWorkerNextAvailable(BranchWorker $worker): ?string
     {
         $lastShipment = $worker->assignedShipments()
-            ->where('current_status', 'delivered')
+            ->where('current_status', ShipmentStatus::DELIVERED->value)
             ->latest('delivered_at')
             ->first();
 
@@ -442,7 +509,7 @@ class DispatchBoardService
     private function isShipmentUrgent(Shipment $shipment): bool
     {
         // High priority shipments are urgent
-        if (($shipment->priority ?? 1) >= 3) {
+        if (($shipment->priority ?? 4) <= 2) {
             return true;
         }
 
@@ -475,6 +542,28 @@ class DispatchBoardService
         return $totalCapacity > 0 ? round(($totalLoad / $totalCapacity) * 100, 1) : 0.0;
     }
 
+    private function activeAssignmentStatusValues(): array
+    {
+        $statuses = array_merge(
+            ShipmentStatus::pickupStages(),
+            ShipmentStatus::transportStages(),
+            ShipmentStatus::deliveryStages(),
+            ShipmentStatus::returnStages()
+        );
+
+        $filtered = array_filter($statuses, fn (ShipmentStatus $status) => ! $status->isTerminal());
+
+        return array_map(fn (ShipmentStatus $status) => $status->value, $filtered);
+    }
+
+    private function pendingAssignmentStatusValues(): array
+    {
+        return array_map(fn (ShipmentStatus $status) => $status->value, [
+            ShipmentStatus::BOOKED,
+            ShipmentStatus::PICKUP_SCHEDULED,
+        ]);
+    }
+
     /**
      * Get balancing status
      */
@@ -496,12 +585,14 @@ class DispatchBoardService
     {
         $recommendations = [];
 
-        $overloadedWorkers = $workerLoads->filter(function ($worker) {
-            return ($worker['load'] / $worker['capacity']) > 0.8;
+        $overloadedWorkers = $workerLoads->filter(function (array $worker) {
+            $capacity = max(1, (int) $worker['capacity']);
+            return ($worker['load'] / $capacity) > 0.8;
         });
 
-        $underloadedWorkers = $workerLoads->filter(function ($worker) {
-            return ($worker['load'] / $worker['capacity']) < 0.3;
+        $underloadedWorkers = $workerLoads->filter(function (array $worker) {
+            $capacity = max(1, (int) $worker['capacity']);
+            return ($worker['load'] / $capacity) < 0.3;
         });
 
         if ($overloadedWorkers->count() > 0) {

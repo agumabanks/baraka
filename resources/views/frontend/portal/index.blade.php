@@ -13,8 +13,16 @@
         $hasShipments = Schema::hasTable('shipments');
         $user = Auth::user();
         $shipmentsCount = $hasShipments ? $user->shipments()->count() : 0;
-        $inTransit = $hasShipments ? $user->shipments()->where('current_status', \App\Enums\ShipmentStatus::DEPART)->orWhere('current_status', \App\Enums\ShipmentStatus::OUT_FOR_DELIVERY)->count() : 0;
-        $delivered = $hasShipments ? $user->shipments()->where('current_status', \App\Enums\ShipmentStatus::DELIVERED)->count() : 0;
+        $inTransit = $hasShipments ? $user->shipments()->whereIn('current_status', array_map(fn($status) => $status->value, [
+          \App\Enums\ShipmentStatus::LINEHAUL_DEPARTED,
+          \App\Enums\ShipmentStatus::LINEHAUL_ARRIVED,
+          \App\Enums\ShipmentStatus::AT_DESTINATION_HUB,
+          \App\Enums\ShipmentStatus::CUSTOMS_HOLD,
+          \App\Enums\ShipmentStatus::CUSTOMS_CLEARED,
+          \App\Enums\ShipmentStatus::OUT_FOR_DELIVERY,
+          \App\Enums\ShipmentStatus::RETURN_IN_TRANSIT,
+        ]))->count() : 0;
+        $delivered = $hasShipments ? $user->shipments()->where('current_status', \App\Enums\ShipmentStatus::DELIVERED->value)->count() : 0;
         $recent = $hasShipments ? $user->shipments()->with(['originBranch','destBranch'])->latest()->limit(5)->get() : collect();
       @endphp
 

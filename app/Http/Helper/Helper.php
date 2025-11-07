@@ -173,17 +173,21 @@ if (! function_exists('SmsSendSettingHelper')) {
 if (! function_exists('hasPermission')) {
     function hasPermission($permission = null)
     {
-        // Super Admin bypass: always allow
-        if (Auth::check() && method_exists(Auth::user(), 'hasRole') && Auth::user()->hasRole('super-admin')) {
+        if (! Auth::check()) {
+            return false;
+        }
+
+        if ($permission === null) {
             return true;
         }
 
-        // Fallback to explicit permission check
-        if (Auth::check() && in_array($permission, Auth::user()->permissions ?? [], true)) {
-            return true;
+        $user = Auth::user();
+
+        if (method_exists($user, 'hasPermission')) {
+            return $user->hasPermission($permission);
         }
 
-        return false;
+        return in_array($permission, $user->permissions ?? [], true);
     }
 }
 

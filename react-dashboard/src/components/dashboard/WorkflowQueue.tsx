@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Card from '../ui/Card';
 import Badge from '../ui/Badge';
 import { SkeletonWorkflowItem } from './SkeletonCard';
-import type { WorkflowItem } from '../../types/dashboard';
+import type { WorkflowItem, WorkflowStatus } from '../../types/dashboard';
 import { getUserPermissions, hasPermission } from '../../lib/rbac';
 
 type WorkflowActionType = 'assign' | 'reschedule' | 'contact';
@@ -28,11 +28,13 @@ const filterOptions: { key: 'all' | 'high' | 'medium' | 'low'; label: string }[]
   { key: 'low', label: 'Low' },
 ];
 
-const statusMetadata = {
-  pending: { label: 'Pending', icon: 'fas fa-clock', variant: 'outline' as const },
-  in_progress: { label: 'In Progress', icon: 'fas fa-spinner', variant: 'solid' as const },
-  completed: { label: 'Completed', icon: 'fas fa-check-circle', variant: 'solid' as const },
-  delayed: { label: 'Delayed', icon: 'fas fa-exclamation-triangle', variant: 'solid' as const },
+const statusMetadata: Record<WorkflowStatus, { label: string; icon: string; variant: 'outline' | 'solid' }> = {
+  pending: { label: 'Pending', icon: 'fas fa-clock', variant: 'outline' },
+  in_progress: { label: 'In Progress', icon: 'fas fa-spinner', variant: 'solid' },
+  testing: { label: 'Testing', icon: 'fas fa-vial', variant: 'solid' },
+  awaiting_feedback: { label: 'Awaiting Feedback', icon: 'fas fa-comment-dots', variant: 'outline' },
+  completed: { label: 'Completed', icon: 'fas fa-check-circle', variant: 'solid' },
+  delayed: { label: 'Delayed', icon: 'fas fa-exclamation-triangle', variant: 'solid' },
 };
 
 const actionDefinitions: { type: WorkflowActionType; label: string; permission: string }[] = [

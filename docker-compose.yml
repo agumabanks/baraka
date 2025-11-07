@@ -1,0 +1,404 @@
+version: '3.8'
+
+networks:
+  courier-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+services:
+  # Database
+  mysql:
+    image: mysql:8.0
+    container_name: courier-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-courier}
+      MYSQL_USER: ${MYSQL_USER:-courier}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
+      MYSQL_TCP_PORT: 3306
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+      - ./database/my.cnf:/etc/mysql/conf.d/custom.cnf
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.10
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: courier-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.11
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Laravel Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: development
+    container_name: courier-backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-1}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${MYSQL_DATABASE:-courier}
+      DB_USERNAME: ${MYSQL_USER:-courier}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-password}
+      CACHE_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MAIL_MAILER: smtp
+      MAIL_HOST: ${MAIL_HOST:-mailhog}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      WEBSOCKET_HOST: 0.0.0.0
+      WEBSOCKET_PORT: 6001
+    ports:
+      - "9000:9000"
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.20
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    mem_limit: 1g
+    cpus: '1.0'
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./react-dashboard
+      dockerfile: Dockerfile
+      target: development
+    container_name: courier-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost/api}
+      VITE_WEBSOCKET_URL: ${VITE_WEBSOCKET_URL:-ws://localhost:6001}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "3000:5173"
+    volumes:
+      - ./react-dashboard:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.30
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # WebSocket Server
+  websocket:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: development
+    container_name: courier-websocket
+    restart: unless-stopped
+    command: php artisan websockets:serve --host=0.0.0.0 --port=6001
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${MYSQL_DATABASE:-courier}
+      DB_USERNAME: ${MYSQL_USER:-courier}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-password}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "6001:6001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.40
+    healthcheck:
+      test: ["CMD", "php", "artisan", "websockets:serve", "--check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Elasticsearch for monitoring
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: courier-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.50
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    mem_limit: 1g
+
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: courier-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.60
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: courier-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SECURITY_DISABLE_GRAVATAR: true
+      GF_ANALYTICS_REPORTING_ENABLED: false
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.70
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: courier-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.80
+
+  # MinIO for S3-compatible object storage
+  minio:
+    image: minio/minio:latest
+    container_name: courier-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "9001:9000"
+      - "9002:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.90
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: courier-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./public:/var/www/html/public
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.100
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Log aggregation
+  fluentd:
+    build:
+      context: ./logging
+      dockerfile: Dockerfile
+    container_name: courier-fluentd
+    restart: unless-stopped
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./logging/conf:/fluentd/etc
+      - /var/log:/var/log
+    depends_on:
+      - elasticsearch
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.110
+    mem_limit: 512m
+
+  # Backup service
+  backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: development
+    container_name: courier-backup
+    restart: "no"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${MYSQL_DATABASE:-courier}
+      DB_USERNAME: ${MYSQL_USER:-courier}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-password}
+      S3_BUCKET: ${S3_BUCKET:-courier-backups}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./backups:/backups
+      - ./storage:/var/www/html/storage
+    command: sh -c "mysqldump -h mysql -u courier -password courier > /backups/backup-$(date +%Y%m%d-%H%M%S).sql"
+    depends_on:
+      - mysql
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.120
+    profiles:
+      - backup
+
+  # Testing environment
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: development
+    container_name: courier-test-runner
+    restart: "no"
+    environment:
+      DB_CONNECTION: sqlite
+      APP_ENV: testing
+    volumes:
+      - .:/var/www/html
+      - ./storage/test:/var/www/html/storage
+    command: vendor/bin/pest --colors=never
+    depends_on:
+      - mysql
+    networks:
+      courier-network:
+    profiles:
+      - testing
+
+  # Redis Cluster (for production scaling)
+  redis-cluster:
+    image: redis:7-alpine
+    container_name: courier-redis-cluster
+    restart: unless-stopped
+    command: redis-server --replica-read-only no --appendonly yes
+    volumes:
+      - redis_cluster_data:/data
+    networks:
+      courier-network:
+        ipv4_address: 172.20.0.130
+    profiles:
+      - production

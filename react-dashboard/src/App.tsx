@@ -42,6 +42,18 @@ import LiveTracking from './pages/LiveTracking'
 import RolesManagement from './pages/settings/RolesManagement'
 import UsersManagement from './pages/settings/UsersManagement'
 import WorkflowBoard from './pages/operations/WorkflowBoard'
+import BagsPage from './pages/operations/Bags'
+import RoutesPage from './pages/operations/Routes'
+import ScansPage from './pages/operations/Scans'
+import DriversPage from './pages/operations/Drivers'
+import InvoicesPage from './pages/finance/Invoices'
+import PaymentsPage from './pages/finance/Payments'
+import SettlementsPage from './pages/finance/Settlements'
+import ReportsCenter from './pages/reports/ReportsCenter'
+import GlobalSearchPage from './pages/search/GlobalSearch'
+import SystemLogsPage from './pages/logs/SystemLogs'
+import GeneralSettingsPage from './pages/settings/GeneralSettings'
+import ToastViewport from './components/ui/ToastViewport'
 
 // TODO: These components need to be created for full navigation
 // Operations Components
@@ -291,7 +303,8 @@ function AppContent() {
   }, [location.pathname, routeMeta])
 
   return (
-    <div className="flex h-screen bg-mono-white text-mono-gray-900 overflow-hidden">
+    <>
+      <div className="flex h-screen bg-mono-white text-mono-gray-900 overflow-hidden">
       {/* Sidebar */}
       <Sidebar
         navigation={navigation}
@@ -351,9 +364,16 @@ function AppContent() {
             
             {/* Finance Routes - TODO: Implement these components */}
             <Route path="finance/rate-cards" element={<div className="p-6"><h1 className="text-2xl font-bold">Rate Cards</h1><p>Coming soon...</p></div>} />
-            <Route path="finance/invoices" element={<div className="p-6"><h1 className="text-2xl font-bold">Invoices</h1><p>Coming soon...</p></div>} />
-            <Route path="finance/cod" element={<div className="p-6"><h1 className="text-2xl font-bold">COD Dashboard</h1><p>Coming soon...</p></div>} />
-            <Route path="finance/settlements/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Settlements</h1><p>Coming soon...</p></div>} />
+            <Route path="finance/invoices" element={<InvoicesPage />} />
+            <Route path="finance/cod" element={<PaymentsPage />} />
+            <Route path="finance/settlements/*" element={<SettlementsPage />} />
+            <Route path="invoices" element={<InvoicesPage />} />
+            <Route path="invoices/index" element={<InvoicesPage />} />
+            <Route path="payments" element={<PaymentsPage />} />
+            <Route path="payments/index" element={<PaymentsPage />} />
+            <Route path="settlements" element={<SettlementsPage />} />
+            <Route path="settlements/*" element={<SettlementsPage />} />
+            <Route path="settlements/index" element={<SettlementsPage />} />
             
             {/* Compliance Routes - TODO: Implement these components */}
             <Route path="compliance/kyc" element={<div className="p-6"><h1 className="text-2xl font-bold">KYC Verification</h1><p>Coming soon...</p></div>} />
@@ -380,27 +400,37 @@ function AppContent() {
             
             {/* Additional Operations Routes - TODO: Implement these components */}
             <Route path="parcels" element={<div className="p-6"><h1 className="text-2xl font-bold">Parcels</h1><p>Coming soon...</p></div>} />
-            <Route path="bags" element={<div className="p-6"><h1 className="text-2xl font-bold">Bags</h1><p>Coming soon...</p></div>} />
-            <Route path="routes" element={<div className="p-6"><h1 className="text-2xl font-bold">Routes</h1><p>Coming soon...</p></div>} />
+            <Route path="bags" element={<BagsPage />} />
+            <Route path="drivers" element={<DriversPage />} />
+            <Route path="routes" element={<RoutesPage />} />
             <Route path="routes/optimize" element={<div className="p-6"><h1 className="text-2xl font-bold">Route Optimizer</h1><p>Coming soon...</p></div>} />
             <Route path="routes/stops" element={<div className="p-6"><h1 className="text-2xl font-bold">Stops</h1><p>Coming soon...</p></div>} />
+            <Route path="scans" element={<ScansPage />} />
             
             {/* Delivery Workers - TODO: Implement this component */}
             <Route path="deliveryman" element={<div className="p-6"><h1 className="text-2xl font-bold">Delivery Workers</h1><p>Coming soon...</p></div>} />
             <Route path="branches/workers" element={<div className="p-6"><h1 className="text-2xl font-bold">Branch Workers</h1><p>Coming soon...</p></div>} />
             
             {/* Reports Routes - TODO: Implement these components */}
-            <Route path="reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>} />
-            <Route path="reports/operations" element={<div className="p-6"><h1 className="text-2xl font-bold">Operations Reports</h1><p>Coming soon...</p></div>} />
-            <Route path="reports/financial" element={<div className="p-6"><h1 className="text-2xl font-bold">Financial Reports</h1><p>Coming soon...</p></div>} />
-            <Route path="reports/compliance" element={<div className="p-6"><h1 className="text-2xl font-bold">Compliance Reports</h1><p>Coming soon...</p></div>} />
-            <Route path="reports/analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics Reports</h1><p>Coming soon...</p></div>} />
-            <Route path="reports/workforce" element={<div className="p-6"><h1 className="text-2xl font-bold">Workforce Reports</h1><p>Coming soon...</p></div>} />
+            <Route path="reports" element={<ReportsCenter />} />
+            <Route path="reports/operations" element={<ReportsCenter />} />
+            <Route path="reports/financial" element={<ReportsCenter />} />
+            <Route path="reports/compliance" element={<ReportsCenter />} />
+            <Route path="reports/analytics" element={<ReportsCenter />} />
+            <Route path="reports/workforce" element={<ReportsCenter />} />
+            <Route path="reports/index" element={<ReportsCenter />} />
             
             {/* Settings Routes - TODO: Implement these components */}
             <Route path="settings/roles" element={<RolesManagement />} />
             <Route path="settings/users" element={<UsersManagement />} />
             <Route path="users" element={<UsersManagement />} />
+            <Route path="settings/general" element={<GeneralSettingsPage />} />
+            <Route path="general-settings" element={<GeneralSettingsPage />} />
+            <Route path="general-settings/index" element={<GeneralSettingsPage />} />
+            <Route path="search" element={<GlobalSearchPage />} />
+            <Route path="search/index" element={<GlobalSearchPage />} />
+            <Route path="logs" element={<SystemLogsPage />} />
+            <Route path="logs/index" element={<SystemLogsPage />} />
             
             {enhancedRoutes.map(({ meta, routePath, descriptionKey }) => {
               let element: React.ReactNode
@@ -472,25 +502,66 @@ function AppContent() {
                   element = <SupportForm />
                   break
                 case 'reports':
-                  element = <div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p>Coming soon...</p></div>
+                  element = <ReportsCenter />
                   break
                 case 'reports/operations':
-                  element = <div className="p-6"><h1 className="text-2xl font-bold">Operations Reports</h1><p>Coming soon...</p></div>
+                  element = <ReportsCenter />
                   break
                 case 'reports/financial':
-                  element = <div className="p-6"><h1 className="text-2xl font-bold">Financial Reports</h1><p>Coming soon...</p></div>
+                  element = <ReportsCenter />
                   break
                 case 'reports/compliance':
-                  element = <div className="p-6"><h1 className="text-2xl font-bold">Compliance Reports</h1><p>Coming soon...</p></div>
+                  element = <ReportsCenter />
+                  break
+                case 'reports/analytics':
+                  element = <ReportsCenter />
+                  break
+                case 'reports/workforce':
+                  element = <ReportsCenter />
+                  break
+                case 'reports/index':
+                  element = <ReportsCenter />
                   break
                 case 'parcels':
                   element = <div className="p-6"><h1 className="text-2xl font-bold">Parcels</h1><p>Coming soon...</p></div>
                   break
                 case 'bags':
-                  element = <div className="p-6"><h1 className="text-2xl font-bold">Bags</h1><p>Coming soon...</p></div>
+                  element = <BagsPage />
                   break
                 case 'routes':
-                  element = <div className="p-6"><h1 className="text-2xl font-bold">Routes</h1><p>Coming soon...</p></div>
+                  element = <RoutesPage />
+                  break
+                case 'drivers':
+                case 'operations/drivers':
+                  element = <DriversPage />
+                  break
+                case 'scans':
+                  element = <ScansPage />
+                  break
+                case 'workflow':
+                  element = <WorkflowBoard />
+                  break
+                case 'finance/invoices':
+                  element = <InvoicesPage />
+                  break
+                case 'invoices':
+                case 'invoices/index':
+                  element = <InvoicesPage />
+                  break
+                case 'finance/cod':
+                case 'finance/payments':
+                  element = <PaymentsPage />
+                  break
+                case 'payments':
+                case 'payments/index':
+                  element = <PaymentsPage />
+                  break
+                case 'finance/settlements':
+                  element = <SettlementsPage />
+                  break
+                case 'settlements':
+                case 'settlements/index':
+                  element = <SettlementsPage />
                   break
                 case 'deliveryman':
                   element = <div className="p-6"><h1 className="text-2xl font-bold">Delivery Workers</h1><p>Coming soon...</p></div>
@@ -506,6 +577,25 @@ function AppContent() {
                   break
                 case 'roles':
                   element = <RolesManagement />
+                  break
+                case 'settings/general':
+                  element = <GeneralSettingsPage />
+                  break
+                case 'general-settings':
+                case 'general-settings/index':
+                  element = <GeneralSettingsPage />
+                  break
+                case 'search':
+                  element = <GlobalSearchPage />
+                  break
+                case 'search/index':
+                  element = <GlobalSearchPage />
+                  break
+                case 'logs':
+                  element = <SystemLogsPage />
+                  break
+                case 'logs/index':
+                  element = <SystemLogsPage />
                   break
                 default:
                   element = (
@@ -530,7 +620,9 @@ function AppContent() {
           <Footer {...mockFooterData} />
         </main>
       </div>
-    </div>
+      </div>
+      <ToastViewport />
+    </>
   )
 }
 

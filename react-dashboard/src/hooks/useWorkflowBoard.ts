@@ -1,11 +1,16 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { workflowApi, operationsApi } from '../services/api';
 import type { WorkflowBoardResponse } from '../types/workflow';
+import useWorkflowStore, { type WorkflowState } from '../stores/workflowStore';
 
 const STALE_TIME = 30 * 1000;
 
-export const useWorkflowBoard = () =>
-  useQuery<WorkflowBoardResponse, Error>({
+export const useWorkflowBoard = () => {
+  const setBoard = useWorkflowStore((state: WorkflowState) => state.setBoard);
+  const setSyncing = useWorkflowStore((state: WorkflowState) => state.setSyncing);
+
+  const query = useQuery<WorkflowBoardResponse, Error>({
     queryKey: ['workflow-board'],
     queryFn: async () => {
       try {
@@ -35,6 +40,26 @@ export const useWorkflowBoard = () =>
     refetchInterval: STALE_TIME,
     retry: 1, // Only retry once to fail faster
   });
+
+  useEffect(() => {
+    setSyncing(query.isFetching);
+  }, [query.isFetching, setSyncing]);
+
+  useEffect(() => {
+    if (query.data) {
+      setBoard(query.data.queues?.unassigned_shipments ?? []);
+      setSyncing(false);
+    }
+  }, [query.data, setBoard, setSyncing]);
+
+  useEffect(() => {
+    if (query.isError) {
+      setSyncing(false);
+    }
+  }, [query.isError, setSyncing]);
+
+  return query;
+};
 
 export const useOperationsInsights = () =>
   useQuery<{

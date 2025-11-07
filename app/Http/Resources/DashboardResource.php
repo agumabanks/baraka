@@ -42,6 +42,8 @@ class DashboardResource extends JsonResource
             'statements' => $this->resource['statements'],
             'charts' => $charts,
             'quickActions' => $this->resource['quickActions'],
+            'teamOverview' => $this->resource['teamOverview'] ?? [],
+            'activityTimeline' => $this->resource['activityTimeline'] ?? [],
             'loading' => false,
             'error' => null,
         ];

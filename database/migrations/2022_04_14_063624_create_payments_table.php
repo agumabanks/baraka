@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('shipment_id')->nullable()->constrained('shipments')->nullOnDelete();
-            $table->foreignId('client_id')->nullable()->constrained('clients')->nullOnDelete();
+            $table->unsignedBigInteger('shipment_id')->nullable();
+            $table->unsignedBigInteger('client_id')->nullable();
             $table->decimal('amount', 12, 2);
             $table->enum('payment_method', ['stripe', 'paypal', 'razorpay', 'cod', 'bank_transfer']);
             $table->enum('status', ['pending', 'completed', 'failed', 'refunded'])->default('pending');

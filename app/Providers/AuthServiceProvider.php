@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\UserType;
 use App\Models\Backend\Role;
 use App\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -33,6 +34,10 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\CustomsDoc::class => \App\Policies\ErpModelPolicy::class,
         \App\Models\ApiKey::class => \App\Policies\ErpModelPolicy::class,
         \App\Models\Webhook::class => \App\Policies\ErpModelPolicy::class,
+        \App\Models\Backend\Branch::class => \App\Policies\BranchPolicy::class,
+        \App\Models\Driver::class => \App\Policies\DriverPolicy::class,
+        \App\Models\DriverRoster::class => \App\Policies\DriverRosterPolicy::class,
+        \App\Models\DriverTimeLog::class => \App\Policies\DriverTimeLogPolicy::class,
         // New DHL-grade modules (branch scoped)
         \App\Models\Quotation::class => \App\Policies\BranchScopedPolicy::class,
         \App\Models\Contract::class => \App\Policies\BranchScopedPolicy::class,
@@ -58,6 +63,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\WhatsappTemplate::class => \App\Policies\BranchScopedPolicy::class,
         \App\Models\EdiProvider::class => \App\Policies\BranchScopedPolicy::class,
         \App\Models\Survey::class => \App\Policies\BranchScopedPolicy::class,
+        \App\Models\WorkflowTask::class => \App\Policies\WorkflowTaskPolicy::class,
     ];
 
     /**
@@ -68,6 +74,14 @@ class AuthServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->registerPolicies();
+
+        Gate::before(function (User $user) {
+            if (isset($user->user_type) && (int) $user->user_type === UserType::ADMIN) {
+                return true;
+            }
+
+            return null;
+        });
 
         Gate::define('admin.roles.viewAny', fn (User $user): bool => $user->hasPermission('role_read'));
         Gate::define('admin.roles.view', fn (User $user, Role $role): bool => $user->hasPermission('role_read'));

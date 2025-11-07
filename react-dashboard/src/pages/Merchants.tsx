@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -13,11 +13,32 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 });
 
+const resolveStatusLabel = (status: number | string | null): string => {
+  if (status === 1 || status === '1' || status === 'active') {
+    return 'Active';
+  }
+
+  if (status === 0 || status === '0' || status === 'inactive') {
+    return 'Inactive';
+  }
+
+  if (status === 'suspended') {
+    return 'Suspended';
+  }
+
+  return typeof status === 'string' ? status : 'Unknown';
+};
+
 const Merchants: React.FC = () => {
   const navigate = useNavigate();
-  const { data, isLoading, isError, error, refetch, isFetching } = useMerchantList();
+  const [selectedStatus, setSelectedStatus] = useState<string | number | null>(null);
+  const [copiedMerchantId, setCopiedMerchantId] = useState<number | null>(null);
+
+  const listParams = useMemo(() => (selectedStatus !== null ? { status: selectedStatus } : undefined), [selectedStatus]);
+  const { data, isLoading, isError, error, refetch, isFetching } = useMerchantList(listParams);
 
   const merchants = useMemo(() => data?.items ?? [], [data]);
+  const statusFilters = useMemo(() => data?.filters?.statuses ?? [], [data]);
 
   const summary = useMemo(() => {
     if (!merchants.length) {
@@ -45,6 +66,51 @@ const Merchants: React.FC = () => {
       },
     );
   }, [merchants]);
+
+  useEffect(() => {
+    if (!copiedMerchantId) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setCopiedMerchantId(null), 2000);
+    return () => window.clearTimeout(timeout);
+  }, [copiedMerchantId]);
+
+  const handleCopyCodSnapshot = async (merchant: MerchantListItem) => {
+    const summaryText = [
+      `Merchant: ${merchant.business_name}`,
+      `Outstanding COD: ${merchant.metrics.cod_open_balance}`,
+      `Collected COD: ${merchant.metrics.cod_collected}`,
+      `Active Shipments: ${merchant.metrics.active_shipments}`,
+    ].join('\n');
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(summaryText);
+        setCopiedMerchantId(merchant.id);
+      }
+    } catch (clipboardError) {
+      console.error('Failed to copy merchant snapshot', clipboardError);
+    }
+  };
+
+  const handlePhoneDial = (phone: string | null | undefined) => {
+    if (!phone) return;
+    try {
+      window.location.href = `tel:${phone}`;
+    } catch (dialError) {
+      console.error('Failed to initiate call', dialError);
+    }
+  };
+
+  const handleEmail = (email: string | null | undefined) => {
+    if (!email) return;
+    try {
+      window.location.href = `mailto:${email}`;
+    } catch (emailError) {
+      console.error('Failed to initiate email', emailError);
+    }
+  };
 
   if (isLoading && !data) {
     return <LoadingSpinner message="Loading merchant network" />;
@@ -105,6 +171,30 @@ const Merchants: React.FC = () => {
           </div>
         </header>
 
+        {statusFilters.length > 0 && (
+          <div className="border-b border-mono-gray-200 bg-mono-gray-50 px-8 py-4">
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant={selectedStatus === null ? 'primary' : 'ghost'}
+                size="sm"
+                onClick={() => setSelectedStatus(null)}
+              >
+                All Merchants
+              </Button>
+              {statusFilters.map((status) => (
+                <Button
+                  key={String(status)}
+                  variant={selectedStatus === status ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setSelectedStatus(status)}
+                >
+                  {resolveStatusLabel(status)}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6 px-8 py-8 lg:grid-cols-4">
           <Card className="border border-mono-gray-200 shadow-inner">
             <div className="space-y-2">
@@ -160,7 +250,7 @@ const Merchants: React.FC = () => {
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
-                        <Badge variant="outline" size="sm">{merchant.status ?? 'Active'}</Badge>
+                        <Badge variant="outline" size="sm">{resolveStatusLabel(merchant.status)}</Badge>
                         <Button variant="primary" size="sm" className="uppercase tracking-[0.25em]" onClick={() => navigate(`/dashboard/merchants/${merchant.id}`)}>
                           View Merchant
                         </Button>
@@ -170,6 +260,38 @@ const Merchants: React.FC = () => {
                 >
                   <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
                     <div className="space-y-4">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-mono-gray-600">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="uppercase tracking-[0.25em]"
+                          disabled={!merchant.primary_contact?.phone}
+                          onClick={() => handlePhoneDial(merchant.primary_contact?.phone)}
+                        >
+                          <i className="fas fa-phone mr-2" aria-hidden="true" />
+                          Call
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="uppercase tracking-[0.25em]"
+                          disabled={!merchant.primary_contact?.email}
+                          onClick={() => handleEmail(merchant.primary_contact?.email)}
+                        >
+                          <i className="fas fa-envelope mr-2" aria-hidden="true" />
+                          Email
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="uppercase tracking-[0.25em]"
+                          onClick={() => handleCopyCodSnapshot(merchant)}
+                        >
+                          <i className="fas fa-clipboard-list mr-2" aria-hidden="true" />
+                          {copiedMerchantId === merchant.id ? 'Copied' : 'COD Snapshot'}
+                        </Button>
+                      </div>
+
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="rounded-2xl border border-mono-gray-200 bg-mono-gray-50 p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">COD Outstanding</p>

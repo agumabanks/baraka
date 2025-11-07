@@ -1,216 +1,197 @@
 <?php
 
+namespace Tests\Feature\Api\V1;
+
 use App\Enums\ScanType;
 use App\Enums\ShipmentStatus;
 use App\Enums\UserType;
+use App\Jobs\SendWebhookNotification;
 use App\Models\Shipment;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Tests\TestCase;
 
-test('complete shipment flow from quote to delivery', function () {
-    Queue::fake();
+class HappyPathTest extends TestCase
+{
+    use RefreshDatabase;
 
-    $merchant = User::factory()->create([
-        'email' => 'merchant@test.com',
-        'password' => bcrypt('password'),
-        'user_type' => UserType::MERCHANT,
-    ]);
+    private function authenticate(User $user, string $deviceUuid, array $headers = []): string
+    {
+        $response = $this->postJson('/api/v1/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ], array_merge([
+            'device_uuid' => $deviceUuid,
+        ], $headers))->assertStatus(200);
 
-    $driver = User::factory()->create([
-        'email' => 'driver@test.com',
-        'password' => bcrypt('password'),
-        'user_type' => UserType::DELIVERYMAN,
-    ]);
+        $token = $response->json('data.token');
+        $this->assertNotNull($token, 'Authentication token was not returned');
 
-    $deviceUuid = 'happy-path-device-uuid';
+        return $token;
+    }
 
-    // 1. Login
-    $loginResponse = $this->postJson('/api/v1/login', [
-        'email' => 'merchant@test.com',
-        'password' => 'password',
-    ], [
-        'device_uuid' => $deviceUuid,
-        'platform' => 'ios',
-    ]);
+    public function test_complete_shipment_flow_from_quote_to_delivery(): void
+    {
+        Queue::fake();
 
-    $loginResponse->assertStatus(200);
-    $token = $loginResponse->json('data.token');
-
-    // 2. Create quote
-    $quoteResponse = $this->postJson('/api/v1/quotes', [
-        'origin_address' => '123 Origin St',
-        'destination_address' => '456 Dest St',
-        'weight_kg' => 5.0,
-        'service_type' => 'express',
-    ], [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => $deviceUuid,
-    ]);
-
-    $quoteResponse->assertStatus(201);
-    $quoteId = $quoteResponse->json('data.quote.id');
-
-    // 3. Create shipment
-    $shipmentResponse = $this->postJson('/api/v1/shipments', [
-        'quote_id' => $quoteId,
-        'origin_address' => '123 Origin St',
-        'destination_address' => '456 Dest St',
-        'recipient_name' => 'John Doe',
-        'recipient_phone' => '+1234567890',
-        'parcels' => [
-            [
-                'description' => 'Test package',
-                'weight_kg' => 5.0,
-                'length_cm' => 30,
-                'width_cm' => 20,
-                'height_cm' => 10,
-            ],
-        ],
-    ], [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => $deviceUuid,
-        'Idempotency-Key' => 'shipment-create-123',
-    ]);
-
-    $shipmentResponse->assertStatus(201);
-    $shipmentId = $shipmentResponse->json('data.shipment.id');
-
-    // 4. Get label
-    $labelResponse = $this->getJson("/api/v1/shipments/{$shipmentId}/label", [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => $deviceUuid,
-    ]);
-
-    $labelResponse->assertStatus(200)
-        ->assertJsonStructure([
-            'success',
-            'data' => ['label_url'],
+        $merchant = User::factory()->create([
+            'email' => 'merchant@test.com',
+            'password' => bcrypt('password'),
+            'user_type' => UserType::MERCHANT,
         ]);
 
-    // 5. Schedule pickup
-    $pickupResponse = $this->postJson('/api/v1/pickups', [
-        'shipment_id' => $shipmentId,
-        'pickup_date' => now()->addDay()->format('Y-m-d'),
-        'pickup_time' => '10:00',
-        'notes' => 'Please call before pickup',
-    ], [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => $deviceUuid,
-        'Idempotency-Key' => 'pickup-schedule-123',
-    ]);
+        $driver = User::factory()->create([
+            'email' => 'driver@test.com',
+            'password' => bcrypt('password'),
+            'user_type' => UserType::DELIVERYMAN,
+        ]);
 
-    $pickupResponse->assertStatus(201);
+        $deviceUuid = 'happy-path-device-uuid';
 
-    // 6. Assign driver (admin action - need admin token)
-    $admin = User::factory()->create([
-        'email' => 'admin@test.com',
-        'password' => bcrypt('password'),
-        'user_type' => UserType::ADMIN,
-    ]);
+        $merchantToken = $this->authenticate($merchant, $deviceUuid, [
+            'platform' => 'ios',
+        ]);
 
-    $adminLoginResponse = $this->postJson('/api/v1/login', [
-        'email' => 'admin@test.com',
-        'password' => 'password',
-    ], [
-        'device_uuid' => 'admin-device-uuid',
-        'platform' => 'web',
-    ]);
+        $quoteResponse = $this->postJson('/api/v1/quotes', [
+            'origin_address' => '123 Origin St',
+            'destination_address' => '456 Dest St',
+            'weight_kg' => 5.0,
+            'service_type' => 'express',
+        ], [
+            'Authorization' => 'Bearer ' . $merchantToken,
+            'device_uuid' => $deviceUuid,
+        ])->assertStatus(201);
 
-    $adminToken = $adminLoginResponse->json('data.token');
+        $quoteId = $quoteResponse->json('data.quote.id');
+        $this->assertNotNull($quoteId);
 
-    $assignResponse = $this->postJson("/api/v1/shipments/{$shipmentId}/assign", [
-        'driver_id' => $driver->id,
-    ], [
-        'Authorization' => 'Bearer '.$adminToken,
-        'device_uuid' => 'admin-device-uuid',
-        'Idempotency-Key' => 'assign-driver-123',
-    ]);
+        $shipmentResponse = $this->postJson('/api/v1/shipments', [
+            'quote_id' => $quoteId,
+            'origin_address' => '123 Origin St',
+            'destination_address' => '456 Dest St',
+            'recipient_name' => 'John Doe',
+            'recipient_phone' => '+1234567890',
+            'parcels' => [
+                [
+                    'description' => 'Test package',
+                    'weight_kg' => 5.0,
+                    'length_cm' => 30,
+                    'width_cm' => 20,
+                    'height_cm' => 10,
+                ],
+            ],
+        ], [
+            'Authorization' => 'Bearer ' . $merchantToken,
+            'device_uuid' => $deviceUuid,
+            'Idempotency-Key' => 'shipment-create-123',
+        ])->assertStatus(201);
 
-    $assignResponse->assertStatus(200);
+        $shipmentId = $shipmentResponse->json('data.shipment.id');
+        $this->assertNotNull($shipmentId);
 
-    // 7. Post out_for_delivery event
-    $eventResponse = $this->postJson("/api/v1/shipments/{$shipmentId}/events", [
-        'type' => ScanType::OUT_FOR_DELIVERY->value,
-        'location' => 'Driver location',
-        'notes' => 'Out for delivery',
-    ], [
-        'Authorization' => 'Bearer '.$adminToken,
-        'device_uuid' => 'admin-device-uuid',
-        'Idempotency-Key' => 'out-for-delivery-123',
-    ]);
+        $this->getJson("/api/v1/shipments/{$shipmentId}/label", [
+            'Authorization' => 'Bearer ' . $merchantToken,
+            'device_uuid' => $deviceUuid,
+        ])->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'data' => ['label_url'],
+            ]);
 
-    $eventResponse->assertStatus(201);
+        $this->postJson('/api/v1/pickups', [
+            'shipment_id' => $shipmentId,
+            'pickup_date' => now()->addDay()->format('Y-m-d'),
+            'pickup_time' => '10:00',
+            'notes' => 'Please call before pickup',
+        ], [
+            'Authorization' => 'Bearer ' . $merchantToken,
+            'device_uuid' => $deviceUuid,
+            'Idempotency-Key' => 'pickup-schedule-123',
+        ])->assertStatus(201);
 
-    // Verify shipment status updated
-    $shipment = Shipment::find($shipmentId);
-    expect($shipment->current_status)->toBe(ShipmentStatus::OUT_FOR_DELIVERY);
+        $admin = User::factory()->create([
+            'email' => 'admin@test.com',
+            'password' => bcrypt('password'),
+            'user_type' => UserType::ADMIN,
+        ]);
 
-    // 8. POD with OTP/photo
-    $podResponse = $this->postJson("/api/v1/shipments/{$shipmentId}/pod", [
-        'otp' => '123456',
-        'location' => 'Recipient address',
-        'notes' => 'Delivered successfully',
-        'recipient_signature' => 'base64signature', // Mock signature
-    ], [
-        'Authorization' => 'Bearer '.$adminToken,
-        'device_uuid' => 'admin-device-uuid',
-        'Idempotency-Key' => 'pod-submit-123',
-    ]);
+        $adminToken = $this->authenticate($admin, 'admin-device-uuid', [
+            'platform' => 'web',
+        ]);
 
-    $podResponse->assertStatus(201);
+        $this->postJson("/api/v1/shipments/{$shipmentId}/assign", [
+            'driver_id' => $driver->id,
+        ], [
+            'Authorization' => 'Bearer ' . $adminToken,
+            'device_uuid' => 'admin-device-uuid',
+            'Idempotency-Key' => 'assign-driver-123',
+        ])->assertStatus(200);
 
-    // Verify shipment status updated to delivered
-    $shipment->refresh();
-    expect($shipment->current_status)->toBe(ShipmentStatus::DELIVERED);
+        $this->postJson("/api/v1/shipments/{$shipmentId}/events", [
+            'type' => ScanType::OUT_FOR_DELIVERY->value,
+            'location' => 'Driver location',
+            'notes' => 'Out for delivery',
+        ], [
+            'Authorization' => 'Bearer ' . $adminToken,
+            'device_uuid' => 'admin-device-uuid',
+            'Idempotency-Key' => 'out-for-delivery-123',
+        ])->assertStatus(201);
 
-    // 9. Delivered event (should already be handled by POD)
-    // This might be redundant, but let's test it
-    $deliveredEventResponse = $this->postJson("/api/v1/shipments/{$shipmentId}/events", [
-        'type' => ScanType::DELIVERED->value,
-        'location' => 'Recipient address',
-        'notes' => 'Delivered',
-    ], [
-        'Authorization' => 'Bearer '.$adminToken,
-        'device_uuid' => 'admin-device-uuid',
-        'Idempotency-Key' => 'delivered-event-123',
-    ]);
+        $shipment = Shipment::find($shipmentId);
+        $this->assertNotNull($shipment);
+        $this->assertSame(ShipmentStatus::OUT_FOR_DELIVERY, $shipment->current_status);
 
-    $deliveredEventResponse->assertStatus(201);
+        $this->postJson("/api/v1/shipments/{$shipmentId}/pod", [
+            'otp' => '123456',
+            'location' => 'Recipient address',
+            'notes' => 'Delivered successfully',
+            'recipient_signature' => 'base64signature',
+        ], [
+            'Authorization' => 'Bearer ' . $adminToken,
+            'device_uuid' => 'admin-device-uuid',
+            'Idempotency-Key' => 'pod-submit-123',
+        ])->assertStatus(201);
 
-    // 10. Mock webhook enqueued (verify job was dispatched)
-    Queue::assertPushed(\App\Jobs\SendWebhookNotification::class, 1);
-});
+        $shipment->refresh();
+        $this->assertSame(ShipmentStatus::DELIVERED, $shipment->current_status);
 
-test('shipment flow fails without authentication', function () {
-    $response = $this->postJson('/api/v1/quotes', [
-        'origin_address' => '123 Origin St',
-        'destination_address' => '456 Dest St',
-        'weight_kg' => 5.0,
-    ]);
+        $this->postJson("/api/v1/shipments/{$shipmentId}/events", [
+            'type' => ScanType::DELIVERY_CONFIRMED->value,
+            'location' => 'Recipient address',
+            'notes' => 'Delivered',
+        ], [
+            'Authorization' => 'Bearer ' . $adminToken,
+            'device_uuid' => 'admin-device-uuid',
+            'Idempotency-Key' => 'delivered-event-123',
+        ])->assertStatus(201);
 
-    $response->assertStatus(401);
-});
+        Queue::assertPushed(SendWebhookNotification::class, 1);
+    }
 
-test('shipment creation fails with invalid data', function () {
-    $user = User::factory()->create([
-        'user_type' => UserType::MERCHANT,
-    ]);
+    public function test_shipment_flow_fails_without_authentication(): void
+    {
+        $this->postJson('/api/v1/quotes', [
+            'origin_address' => '123 Origin St',
+            'destination_address' => '456 Dest St',
+            'weight_kg' => 5.0,
+        ])->assertStatus(401);
+    }
 
-    $loginResponse = $this->postJson('/api/v1/login', [
-        'email' => $user->email,
-        'password' => 'password',
-    ], [
-        'device_uuid' => 'test-device',
-    ]);
+    public function test_shipment_creation_fails_with_invalid_data(): void
+    {
+        $user = User::factory()->create([
+            'user_type' => UserType::MERCHANT,
+            'password' => bcrypt('password'),
+        ]);
 
-    $token = $loginResponse->json('data.token');
+        $token = $this->authenticate($user, 'test-device');
 
-    $response = $this->postJson('/api/v1/shipments', [
-        // Missing required fields
-    ], [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => 'test-device',
-    ]);
-
-    $response->assertStatus(422);
-});
+        $this->postJson('/api/v1/shipments', [
+            // Missing required fields intentionally
+        ], [
+            'Authorization' => 'Bearer ' . $token,
+            'device_uuid' => 'test-device',
+        ])->assertStatus(422);
+    }
+}

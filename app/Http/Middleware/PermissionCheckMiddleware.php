@@ -16,19 +16,20 @@ class PermissionCheckMiddleware
      */
     public function handle(Request $request, Closure $next, $permission = null)
     {
-        if (Auth::check()) {
-            // Super Admin bypass: allow all permissions
-            if (method_exists(Auth::user(), 'hasRole') && Auth::user()->hasRole('super-admin')) {
-                return $next($request);
-            }
-
-            // Explicit permission check
-            if (in_array($permission, Auth::user()->permissions ?? [], true)) {
-                return $next($request);
-            }
+        if (! Auth::check()) {
+            abort(403, 'Unauthorized.');
         }
 
-        return redirect('/');
-        abort('403');
+        $user = Auth::user();
+
+        if (is_null($permission)) {
+            return $next($request);
+        }
+
+        if (method_exists($user, 'hasPermission') && $user->hasPermission($permission)) {
+            return $next($request);
+        }
+
+        abort(403, 'Unauthorized.');
     }
 }

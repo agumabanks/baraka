@@ -2,7 +2,13 @@
 
 namespace App\Models\Backend;
 
+use App\Enums\BranchStatus;
+use App\Enums\BranchType;
+use App\Enums\ShipmentStatus;
 use App\Enums\Status;
+use App\Models\BranchAlert;
+use App\Models\BranchMetric;
+use App\Models\Driver;
 use App\Models\Client;
 use App\Models\Shipment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -26,12 +32,18 @@ class Branch extends Model
         'is_hub',
         'parent_branch_id',
         'address',
+        'country',
+        'city',
         'phone',
         'email',
+        'time_zone',
         'latitude',
         'longitude',
+        'geo_lat',
+        'geo_lng',
         'operating_hours',
         'capabilities',
+        'capacity_parcels_per_day',
         'metadata',
         'status',
     ];
@@ -40,9 +52,18 @@ class Branch extends Model
         'is_hub' => 'boolean',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
+        'geo_lat' => 'decimal:8',
+        'geo_lng' => 'decimal:8',
         'operating_hours' => 'array',
         'capabilities' => 'array',
         'metadata' => 'array',
+        'capacity_parcels_per_day' => 'integer',
+    ];
+
+    protected $appends = [
+        'status_label',
+        'status_enum',
+        'branch_type',
     ];
 
     /**
@@ -98,6 +119,21 @@ class Branch extends Model
         return $this->branchWorkers()->where('status', Status::ACTIVE)->whereNull('unassigned_at');
     }
 
+    public function metrics(): HasMany
+    {
+        return $this->hasMany(BranchMetric::class, 'branch_id');
+    }
+
+    public function alerts(): HasMany
+    {
+        return $this->hasMany(BranchAlert::class, 'branch_id');
+    }
+
+    public function drivers(): HasMany
+    {
+        return $this->hasMany(Driver::class, 'branch_id');
+    }
+
     /**
      * Shipments originating from this branch
      */
@@ -129,7 +165,7 @@ class Branch extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('status', Status::ACTIVE);
+        return $query->where('status', BranchStatus::ACTIVE->toLegacy());
     }
 
     /**
@@ -153,7 +189,9 @@ class Branch extends Model
      */
     public function scopeType($query, string $type)
     {
-        return $query->where('type', $type);
+        $normalized = BranchType::fromString($type)->value;
+
+        return $query->where('type', $normalized);
     }
 
     /**
@@ -266,7 +304,7 @@ class Branch extends Model
         }
 
         // Regional branches can serve their children and siblings
-        if ($this->type === 'REGIONAL') {
+        if ($this->type === BranchType::REGIONAL_BRANCH->value) {
             return $otherBranch->parent_branch_id === $this->id ||
                    $otherBranch->parent_branch_id === $this->parent_branch_id;
         }
@@ -282,9 +320,16 @@ class Branch extends Model
     {
         return [
             'active_workers' => $this->activeWorkers()->count(),
-            'pending_shipments' => $this->originShipments()->where('status', 'pending')->count(),
+            'pending_shipments' => $this->originShipments()
+                ->whereIn('current_status', array_map(fn (ShipmentStatus $status) => $status->value, [
+                    ShipmentStatus::BOOKED,
+                    ShipmentStatus::PICKUP_SCHEDULED,
+                    ShipmentStatus::PICKED_UP,
+                    ShipmentStatus::AT_ORIGIN_HUB,
+                ]))->count(),
             'active_clients' => $this->primaryClients()->where('status', Status::ACTIVE)->count(),
             'utilization_rate' => $this->calculateUtilizationRate(),
+            'capacity_limit' => $this->capacity_parcels_per_day,
         ];
     }
 
@@ -294,14 +339,24 @@ class Branch extends Model
     protected function calculateUtilizationRate(): float
     {
         $activeWorkers = $this->activeWorkers()->count();
-        $pendingShipments = $this->originShipments()->where('status', 'pending')->count();
+        $pendingShipments = $this->originShipments()
+            ->whereIn('current_status', array_map(fn (ShipmentStatus $status) => $status->value, [
+                ShipmentStatus::BOOKED,
+                ShipmentStatus::PICKUP_SCHEDULED,
+                ShipmentStatus::PICKED_UP,
+            ]))->count();
+
+        if ($this->capacity_parcels_per_day) {
+            $ratio = $pendingShipments / max(1, $this->capacity_parcels_per_day);
+            return round(min(100, $ratio * 100), 2);
+        }
 
         if ($activeWorkers === 0) {
             return 0.0;
         }
 
-        // Simple utilization calculation: shipments per worker
-        return min(100.0, ($pendingShipments / $activeWorkers) * 10);
+        // Fallback utilisation using workers (10 shipments capacity per worker baseline)
+        return round(min(100.0, ($pendingShipments / ($activeWorkers * 10)) * 100), 2);
     }
 
     /**
@@ -310,9 +365,11 @@ class Branch extends Model
     public function getPerformanceMetrics(): array
     {
         $totalShipments = $this->originShipments()->count();
-        $deliveredShipments = $this->originShipments()->where('status', 'delivered')->count();
+        $deliveredShipments = $this->originShipments()
+            ->where('current_status', ShipmentStatus::DELIVERED->value)
+            ->count();
         $onTimeDeliveries = $this->originShipments()
-            ->where('status', 'delivered')
+            ->where('current_status', ShipmentStatus::DELIVERED->value)
             ->whereRaw('delivered_at <= expected_delivery_date')
             ->count();
 
@@ -342,7 +399,7 @@ class Branch extends Model
      */
     public function isOperational(\DateTime $datetime = null): bool
     {
-        if ($this->status !== Status::ACTIVE) {
+        if ($this->status !== BranchStatus::ACTIVE->toLegacy()) {
             return false;
         }
 
@@ -385,5 +442,27 @@ class Branch extends Model
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         return $earthRadius * $c;
+    }
+
+    public function getBranchTypeAttribute(): string
+    {
+        return BranchType::fromString($this->type)->value;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return BranchStatus::fromLegacy((int) $this->status)->label();
+    }
+
+    public function getStatusEnumAttribute(): string
+    {
+        return BranchStatus::fromLegacy((int) $this->status)->value;
+    }
+
+    public function scopeWithType($query, BranchType|string $type)
+    {
+        $value = $type instanceof BranchType ? $type->value : BranchType::fromString($type)->value;
+
+        return $query->where('type', $value);
     }
 }

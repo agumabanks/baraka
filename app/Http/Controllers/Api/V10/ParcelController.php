@@ -134,6 +134,26 @@ class ParcelController extends Controller
         }
     }
 
+    public function track(string $trackingId)
+    {
+        try {
+            $parcel = $this->repo->parcelTrack($trackingId);
+
+            if (! $parcel) {
+                return $this->responseWithError(__('parcel.parcel_details'), ['message' => 'Parcel not found'], 404);
+            }
+
+            $events = $this->repo->parcelEvents($parcel->id);
+
+            return $this->responseWithSuccess(__('parcel.parcel_details'), [
+                'parcel' => new ParcelResource($parcel),
+                'parcelEvents' => ParcelLogsResource::collection($events),
+            ], 200);
+        } catch (\Exception $exception) {
+            return $this->responseWithError(__('parcel.parcel_details'), [], 500);
+        }
+    }
+
     public function details($id)
     {
 

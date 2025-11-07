@@ -1,13 +1,31 @@
 const ROUTE_ALIASES: Record<string, string> = {
   'booking/step1': 'bookings',
   hubs: 'branches',
+  'branch-management': 'branches',
+  'branch-management/overview': 'branches',
   customers: 'customers',
+  'reports/index': 'reports',
+  'general-settings': 'general-settings/index',
+  'general-settings/index': 'general-settings/index',
+  'search/index': 'search',
+  'logs/index': 'logs',
+  'invoices/index': 'invoices',
+  'payments/index': 'payments',
+  'settlements/index': 'settlements',
 };
 
 const ALIAS_TO_CANONICAL: Record<string, string> = {
   bookings: 'booking/step1',
   branches: 'hubs',
+  'branch-management': 'branches',
   customers: 'customers',
+  reports: 'reports/index',
+  'general-settings/index': 'general-settings/index',
+  search: 'search/index',
+  logs: 'logs/index',
+  invoices: 'invoices/index',
+  payments: 'payments/index',
+  settlements: 'settlements/index',
 };
 
 const stripPrefix = (path: string, prefix: string) => {

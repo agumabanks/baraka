@@ -27,10 +27,32 @@ class ReportController extends Controller
     {
 
         try {
-            $merchant = Auth::user()->merchant;
-            $totalParcels = $this->repo->merchantparcelTotalSummeryReports($request);
+            if ($request->filled('date_from') || $request->filled('date_to')) {
+                $from = $request->input('date_from') ?: $request->input('date_to');
+                $to = $request->input('date_to') ?: $request->input('date_from');
 
-            $accounts = Auth::user()->accounts;
+                if ($from) {
+                    $range = trim($from);
+                    if ($to) {
+                        $range .= ' To '.trim($to);
+                    }
+
+                    $request->merge(['parcel_date' => $range]);
+                }
+            }
+
+            $user = Auth::user();
+            $isMerchant = (bool) optional($user)->merchant;
+
+            if ($isMerchant) {
+                $merchant = $user->merchant;
+                $totalParcels = $this->repo->merchantparcelTotalSummeryReports($request);
+                $accounts = $user->accounts ?? collect();
+            } else {
+                $merchant = null;
+                $totalParcels = $this->repo->parcelTotalSummeryReports($request);
+                $accounts = $this->repo->accounts($request);
+            }
 
             $parcelsStatus = $totalParcels->countBy('status');
             $parcelStatusWiseCount = [];
@@ -54,9 +76,13 @@ class ReportController extends Controller
 
             $merchantID = [];
             foreach ($parcelsMerchant as $key => $value) {
-                $merchantID[] = $key;
+                if ($key !== null) {
+                    $merchantID[] = $key;
+                }
             }
-            $merchantTotalPayment = merchantPayments($merchantID);
+            $merchantTotalPayment = empty($merchantID)
+                ? ['paidAmount' => 0, 'pendingAmount' => 0]
+                : merchantPayments($merchantID);
 
             $parcelsTotal['totalCashCollection'] = $parcelsDelivered->sum('cash_collection') + $parcelsPartialDelivered->sum('cash_collection');
             $parcelsTotal['totalPaybleAmount'] = $parcelsDelivered->sum('current_payable') + $parcelsPartialDelivered->sum('current_payable');
@@ -76,9 +102,11 @@ class ReportController extends Controller
                 }
             }
 
-            $parcelProfit['total_profit'] = number_format($parcelsTotal['totalCashCollection'] - $parcelsTotal['totalSellingPrice'], 2);
+            $parcelProfit['total_profit'] = $parcelsTotal['totalCashCollection'] - $parcelsTotal['totalSellingPrice'];
             $cashCollectionInfo['totalCashCollection'] = $parcelsTotal['totalCashCollection'];
             $cashCollectionInfo['totalSellingPrice'] = $parcelsTotal['totalSellingPrice'];
+
+            $this->data['currency'] = settings()->currency;
 
             $this->data['request'] = $request->all();
             $this->data['merchant'] = $merchant;

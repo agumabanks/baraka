@@ -8,9 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('shipments')) {
+            return;
+        }
+
         Schema::table('shipments', function (Blueprint $table) {
             if (! Schema::hasColumn('shipments', 'transfer_hub_id')) {
-                $table->foreignId('transfer_hub_id')->nullable()->after('dest_branch_id')->constrained('branches')->nullOnDelete();
+                $transferHubColumn = $table->foreignId('transfer_hub_id')->nullable()->after('dest_branch_id');
+                if (Schema::hasTable('unified_branches')) {
+                    $transferHubColumn->constrained('unified_branches')->nullOnDelete();
+                } elseif (Schema::hasTable('branches')) {
+                    $transferHubColumn->constrained('branches')->nullOnDelete();
+                }
             }
             if (! Schema::hasColumn('shipments', 'hub_processed_at')) {
                 $table->timestamp('hub_processed_at')->nullable()->after('assigned_at');
@@ -64,34 +73,34 @@ return new class extends Migration
                 $table->timestamp('assigned_at')->nullable()->after('assigned_worker_id');
             }
 
-            if (! $table->hasIndex(['transfer_hub_id'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_transfer_hub_id_index')) {
                 $table->index('transfer_hub_id');
             }
-            if (! $table->hasIndex(['delivered_by'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_delivered_by_index')) {
                 $table->index('delivered_by');
             }
-            if (! $table->hasIndex(['has_exception'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_has_exception_index')) {
                 $table->index('has_exception');
             }
-            if (! $table->hasIndex(['priority'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_priority_index')) {
                 $table->index('priority');
             }
-            if (! $table->hasIndex(['hub_processed_at'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_hub_processed_at_index')) {
                 $table->index('hub_processed_at');
             }
-            if (! $table->hasIndex(['exception_occurred_at'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_exception_occurred_at_index')) {
                 $table->index('exception_occurred_at');
             }
-            if (! $table->hasIndex(['assigned_at'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_assigned_at_index')) {
                 $table->index('assigned_at');
             }
-            if (! $table->hasIndex(['delivered_at'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_delivered_at_index')) {
                 $table->index('delivered_at');
             }
-            if (! $table->hasIndex(['tracking_number'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_tracking_number_index') && ! Schema::hasIndex('shipments', 'shipments_tracking_number_unique', 'unique')) {
                 $table->index('tracking_number');
             }
-            if (! $table->hasIndex(['assigned_worker_id'])) {
+            if (! Schema::hasIndex('shipments', 'shipments_assigned_worker_id_index')) {
                 $table->index('assigned_worker_id');
             }
         });

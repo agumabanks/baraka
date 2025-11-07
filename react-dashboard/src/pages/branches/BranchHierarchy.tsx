@@ -94,6 +94,7 @@ const BranchHierarchy: React.FC = () => {
   const { data, isLoading, isError, error, refetch } = useBranchHierarchy();
 
   const hierarchyTree = useMemo(() => data?.tree || [], [data]);
+  const usingFallbackData = useMemo(() => hierarchyTree.some((branch) => typeof branch.id === 'string'), [hierarchyTree]);
 
   const stats = useMemo(() => {
     const countBranches = (branches: BranchHierarchyNode[]): { total: number; hubs: number; regional: number; local: number } => {
@@ -175,6 +176,12 @@ const BranchHierarchy: React.FC = () => {
             </Button>
           </div>
         </header>
+
+        {usingFallbackData && (
+          <div className="border-b border-mono-gray-200 bg-amber-50 px-8 py-4 text-sm text-amber-800">
+            Showing demo hierarchy while the branch table is empty. Create real branches to replace this snapshot.
+          </div>
+        )}
 
         <div className="grid gap-6 px-8 py-8 lg:grid-cols-4">
           <Card className="border border-mono-gray-200 shadow-inner">

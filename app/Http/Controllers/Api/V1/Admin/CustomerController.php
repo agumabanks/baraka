@@ -81,18 +81,22 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::clients();
 
-        if ($request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('email', 'like', '%'.$request->search.'%')
-                    ->orWhere('mobile', 'like', '%'.$request->search.'%');
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('email', 'like', '%'.$search.'%')
+                    ->orWhere('mobile', 'like', '%'.$search.'%');
             });
         }
 
-        if ($request->user_type) {
-            $query->where('user_type', $request->user_type);
+        if ($request->filled('user_type')) {
+            $normalized = User::normalizeUserType($request->user_type);
+            if ($normalized !== null && User::isClientType($normalized)) {
+                $query->where('user_type', $normalized);
+            }
         }
 
         $customers = $query->with(['shipments', 'merchant'])

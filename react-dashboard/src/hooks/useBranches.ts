@@ -1,10 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { branchesApi } from '../services/api';
 import type {
   BranchDetailResponse,
+  BranchFormPayload,
   BranchHierarchyResponse,
   BranchListParams,
   BranchListResponse,
+  BranchStatusValue,
 } from '../types/branches';
 
 const STALE_TIME = 60 * 1000; // 60 seconds
@@ -46,3 +48,39 @@ export const useBranchHierarchy = () =>
     },
     staleTime: STALE_TIME,
   });
+
+export const useBranchMutations = () => {
+  const queryClient = useQueryClient();
+
+  const createBranch = useMutation({
+    mutationFn: (payload: BranchFormPayload) => branchesApi.createBranch(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      queryClient.invalidateQueries({ queryKey: ['branch-hierarchy'] });
+    },
+  });
+
+  const updateBranch = useMutation({
+    mutationFn: ({ branchId, payload }: { branchId: number | string; payload: Partial<BranchFormPayload> }) =>
+      branchesApi.updateBranch(branchId, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      queryClient.invalidateQueries({ queryKey: ['branch', variables.branchId] });
+    },
+  });
+
+  const toggleBranchStatus = useMutation({
+    mutationFn: ({ branchId, status }: { branchId: number | string; status: BranchStatusValue }) =>
+      branchesApi.toggleStatus(branchId, status),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+      queryClient.invalidateQueries({ queryKey: ['branch', variables.branchId] });
+    },
+  });
+
+  return {
+    createBranch,
+    updateBranch,
+    toggleBranchStatus,
+  };
+};

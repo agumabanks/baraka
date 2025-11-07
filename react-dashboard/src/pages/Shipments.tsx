@@ -60,21 +60,23 @@ const Shipments: React.FC = () => {
     );
   }
 
-  const shipmentsKpis = (workflow.kpis?.shipments ?? {}) as Record<string, number>;
-  const performanceKpis = (workflow.kpis?.performance ?? {}) as Record<string, number>;
-  const workerStats = (workflow.kpis?.workers ?? {}) as Record<string, number>;
-  const exceptionSummary = (workflow.exception_metrics?.summary ?? {}) as Record<string, number>;
-  const loadBalancing = (workflow.queues.load_balancing ?? {}) as Record<string, unknown>;
+  const workflowData = workflow as NonNullable<typeof workflow>;
+
+  const shipmentsKpis = (workflowData.kpis?.shipments ?? {}) as Record<string, number>;
+  const performanceKpis = (workflowData.kpis?.performance ?? {}) as Record<string, number>;
+  const workerStats = (workflowData.kpis?.workers ?? {}) as Record<string, number>;
+  const exceptionSummary = (workflowData.exception_metrics?.summary ?? {}) as Record<string, number>;
+  const loadBalancing = (workflowData.queues.load_balancing ?? {}) as Record<string, unknown>;
   const isLoadBalancingActive = Object.keys(loadBalancing ?? {}).length > 0;
-  const driverQueues = (workflow.queues.driver_queues ?? []) as WorkflowBoardDriverQueue[];
-  const exceptions = (workflow.queues.exceptions ?? []) as WorkflowBoardException[];
-  const dispatchSnapshot = (workflow.dispatch_snapshot ?? {}) as Record<string, any>;
+  const driverQueues = (workflowData.queues.driver_queues ?? []) as WorkflowBoardDriverQueue[];
+  const exceptions = (workflowData.queues.exceptions ?? []) as WorkflowBoardException[];
+  const dispatchSnapshot = (workflowData.dispatch_snapshot ?? {}) as Record<string, any>;
 
   const operationsAlerts = Array.isArray(operations?.alerts)
     ? (operations?.alerts as Array<Record<string, unknown>>)
-    : ((workflow.kpis?.alerts ?? []) as Array<Record<string, unknown>>);
+    : ((workflowData.kpis?.alerts ?? []) as Array<Record<string, unknown>>);
 
-  const shipmentMetrics = (operations?.shipmentMetrics ?? workflow.shipment_metrics ?? {}) as Record<string, any>;
+  const shipmentMetrics = (operations?.shipmentMetrics ?? workflowData.shipment_metrics ?? {}) as Record<string, any>;
 
   const exceptionRate = (shipmentMetrics.exceptions?.exception_rate as number | undefined) ?? 0;
 

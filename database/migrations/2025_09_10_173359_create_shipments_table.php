@@ -11,13 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('shipments')) {
+            return;
+        }
+
         Schema::create('shipments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('client_id')->nullable()->constrained('clients')->nullOnDelete();
+            $clientColumn = $table->foreignId('client_id')->nullable();
+            if (Schema::hasTable('clients')) {
+                $clientColumn->constrained('clients')->nullOnDelete();
+            }
             $table->foreignId('customer_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('origin_branch_id')->constrained('branches')->cascadeOnDelete();
-            $table->foreignId('dest_branch_id')->constrained('branches')->cascadeOnDelete();
-            $table->foreignId('assigned_worker_id')->nullable()->constrained('branch_workers')->nullOnDelete();
+            $originBranchColumn = $table->foreignId('origin_branch_id');
+            if (Schema::hasTable('branches')) {
+                $originBranchColumn->constrained('branches')->cascadeOnDelete();
+            }
+            $destBranchColumn = $table->foreignId('dest_branch_id');
+            if (Schema::hasTable('branches')) {
+                $destBranchColumn->constrained('branches')->cascadeOnDelete();
+            }
+            $assignedWorkerColumn = $table->foreignId('assigned_worker_id')->nullable();
+            if (Schema::hasTable('branch_workers')) {
+                $assignedWorkerColumn->constrained('branch_workers')->nullOnDelete();
+            }
             $table->string('tracking_number')->unique();
             $table->enum('status', [
                 'created',

@@ -8,7 +8,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import api from '../../services/api';
 
 interface Branch {
-  id: number;
+  id: number | string;
   name: string;
   code: string;
   type: string;
@@ -41,7 +41,7 @@ interface Statistics {
 }
 
 const ShipmentsByBranch: React.FC = () => {
-  const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
+  const [selectedBranchId, setSelectedBranchId] = useState<number | string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [viewType, setViewType] = useState<'origin' | 'destination' | 'both'>('both');
@@ -57,12 +57,15 @@ const ShipmentsByBranch: React.FC = () => {
   });
 
   const branches: Branch[] = branchesData?.data?.items || [];
+  const usingFallbackData = branches.some((branch) => typeof branch.id === 'string');
 
   // Fetch shipments by branch
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['branch-shipments', selectedBranchId, viewType, searchTerm, selectedStatus, currentPage],
     queryFn: async () => {
-      if (!selectedBranchId) return null;
+      if (!selectedBranchId || typeof selectedBranchId !== 'number') {
+        return null;
+      }
       const response = await api.get(`/v10/branches/${selectedBranchId}/shipments`, {
         params: {
           view_type: viewType,
@@ -74,7 +77,7 @@ const ShipmentsByBranch: React.FC = () => {
       });
       return response.data;
     },
-    enabled: !!selectedBranchId,
+    enabled: typeof selectedBranchId === 'number',
   });
 
   const shipments: Shipment[] = data?.data?.shipments || [];
@@ -128,9 +131,16 @@ const ShipmentsByBranch: React.FC = () => {
             </label>
             <select
               className="w-full px-4 py-3 border border-mono-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-black"
-              value={selectedBranchId || ''}
+              value={selectedBranchId?.toString() ?? ''}
               onChange={(e) => {
-                setSelectedBranchId(e.target.value ? parseInt(e.target.value) : null);
+                const value = e.target.value;
+                if (!value) {
+                  setSelectedBranchId(null);
+                } else if (/^\d+$/.test(value)) {
+                  setSelectedBranchId(Number(value));
+                } else {
+                  setSelectedBranchId(value);
+                }
                 setCurrentPage(1);
               }}
             >
@@ -141,10 +151,15 @@ const ShipmentsByBranch: React.FC = () => {
                 </option>
               ))}
             </select>
+            {usingFallbackData && (
+              <p className="text-xs text-amber-700">
+                Branch list is currently backed by demo data. Register a live branch to unlock shipment analytics.
+              </p>
+            )}
           </div>
         </div>
 
-        {selectedBranchId && (
+        {typeof selectedBranchId === 'number' && (
           <>
             {/* Statistics Cards */}
             {branchInfo && (
@@ -379,6 +394,14 @@ const ShipmentsByBranch: React.FC = () => {
                   Choose a branch from the dropdown above to view its shipments.
                 </p>
               </div>
+            </Card>
+          </div>
+        )}
+
+        {selectedBranchId && typeof selectedBranchId !== 'number' && (
+          <div className="px-8 py-10">
+            <Card className="border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800">
+              Shipment analytics require a real branch record. Please create branches in the core system to replace the demo identifiers.
             </Card>
           </div>
         )}

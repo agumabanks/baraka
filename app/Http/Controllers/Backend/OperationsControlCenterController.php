@@ -62,7 +62,12 @@ class OperationsControlCenterController extends Controller
         }
 
         try {
-            $branch = $request->branch_id ? Branch::findOrFail($request->branch_id) : null;
+            $branch = null;
+            if ($request->branch_id) {
+                $branch = Branch::findOrFail($request->branch_id);
+            }
+            // Let DispatchBoardService::resolveBranch() handle null branch
+            
             $date = $request->date ? Carbon::parse($request->date) : now();
 
             $dispatchBoard = $this->dispatchService->getDispatchBoard($branch, $date);
@@ -72,6 +77,11 @@ class OperationsControlCenterController extends Controller
                 'data' => $dispatchBoard
             ]);
 
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

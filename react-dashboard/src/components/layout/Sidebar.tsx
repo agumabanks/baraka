@@ -50,9 +50,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         className={`
           fixed lg:static inset-y-0 left-0 z-50
           w-80 lg:w-72 xl:w-80
-          bg-white text-gray-900
-          border-r border-gray-200
-          shadow-2xl lg:shadow-none
+          bg-gradient-to-b from-[#f7f7f7] via-white to-[#f1f1f1] text-[#0f0f0f]
+          border-r border-gray-100/80
+          shadow-[0_20px_60px_-30px_rgba(9,9,11,0.35)] lg:shadow-none
           transform transition-all duration-300 ease-out
           flex flex-col
           h-screen
@@ -64,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         aria-label="Main navigation"
       >
         {/* Header with logo - Google Material style */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4">
+        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-gray-100 px-6 py-4">
           <div className="flex items-center justify-between">
             <a
               href="/dashboard"
@@ -81,13 +81,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                   className="h-8 w-auto object-contain"
                 />
               )}
-              <span className="text-lg font-semibold">{navigation.appName}</span>
+              <span className="text-lg font-semibold tracking-wide text-[#111111]">{navigation.appName}</span>
             </a>
 
             {/* Mobile close button - Google Material Design */}
             <button
               type="button"
-              className="lg:hidden p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-700 transition-all duration-200"
+              className="lg:hidden p-2 rounded-full hover:bg-gray-100/80 active:bg-gray-200 text-gray-700 transition-all duration-200"
               onClick={onClose}
               aria-label="Close sidebar"
             >
@@ -97,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Scrollable navigation area with custom scrollbar */}
-        <nav className="flex-1 overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#9CA3AF transparent' }}>
+        <nav className="flex-1 overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#b0b0b0 transparent' }}>
           {navigation.buckets.filter(bucket => bucket.visible !== false).map((bucket, bucketIndex) => (
             <div
               key={bucket.id}
@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               style={{ animationDelay: `${bucketIndex * 50}ms` }}
             >
               {/* Bucket label - Google Material Typography */}
-              <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3 px-3">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gray-400/90 mb-3 px-3">
                 {bucket.label}
               </div>
 
@@ -125,8 +125,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Footer - Version info */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
-          <div className="text-xs text-gray-500 text-center">
+        <div className="sticky bottom-0 bg-white/90 backdrop-blur border-t border-gray-100 px-6 py-4">
+          <div className="text-xs text-gray-500 text-center tracking-[0.1em]">
             <p>Baraka ERP v1.0 by Sanaa</p>
             <p className="mt-1">© 2025 All rights reserved</p>
           </div>

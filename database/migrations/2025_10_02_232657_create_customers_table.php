@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('customers')) {
+            return;
+        }
+
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
@@ -57,7 +61,12 @@ return new class extends Migration
 
             // Relationship Management
             $table->foreignId('account_manager_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('primary_branch_id')->nullable()->constrained('unified_branches')->onDelete('set null');
+            $primaryBranchColumn = $table->foreignId('primary_branch_id')->nullable();
+            if (Schema::hasTable('unified_branches')) {
+                $primaryBranchColumn->constrained('unified_branches')->onDelete('set null');
+            } elseif (Schema::hasTable('branches')) {
+                $primaryBranchColumn->constrained('branches')->onDelete('set null');
+            }
             $table->foreignId('sales_rep_id')->nullable()->constrained('users')->onDelete('set null');
 
             // Status & Lifecycle

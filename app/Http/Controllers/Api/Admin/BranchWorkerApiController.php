@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Enums\BranchWorkerRole;
+use App\Enums\EmploymentStatus;
+use App\Enums\Status;
 use App\Http\Controllers\Controller;
 use App\Models\Backend\BranchWorker;
-use App\Models\User;
 use App\Models\Backend\Branch;
-use Illuminate\Http\Request;
+use App\Models\Shipment;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class BranchWorkerApiController extends Controller
 {
@@ -21,33 +27,43 @@ class BranchWorkerApiController extends Controller
     {
         $query = BranchWorker::with(['user', 'branch']);
 
-        // Filter by branch
-        if ($request->has('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', (int) $request->branch_id);
         }
 
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+        if ($request->filled('role')) {
+            $query->byRole($request->string('role')->value());
         }
 
-        // Filter by worker type
-        if ($request->has('worker_type')) {
-            $query->where('worker_type', $request->worker_type);
+        if ($request->filled('employment_status')) {
+            $query->withEmploymentStatus($request->string('employment_status')->value());
         }
 
-        // Search
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+        if ($request->filled('status')) {
+            $status = strtolower($request->string('status')->value());
+            $legacy = match ($status) {
+                'active', '1', 'true' => Status::ACTIVE,
+                default => Status::INACTIVE,
+            };
+            $query->where('status', $legacy);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->value();
+            $query->where(function ($builder) use ($search) {
+                $builder->where('contact_phone', 'like', "%{$search}%")
+                    ->orWhere('id_number', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%")
+                          ->orWhere('mobile', 'like', "%{$search}%")
+                          ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
         }
 
-        $perPage = $request->get('per_page', 15);
-        $workers = $query->latest()->paginate($perPage);
+        $perPage = $request->integer('per_page', 15);
+        $workers = $query->latest('assigned_at')->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -57,21 +73,55 @@ class BranchWorkerApiController extends Controller
     }
 
     /**
+     * Provide metadata for branch worker creation screens.
+     */
+    public function formMeta(): JsonResponse
+    {
+        $branches = Branch::query()
+            ->select(['id', 'name', 'code', 'type'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Branch $branch) => [
+                'value' => $branch->id,
+                'label' => $branch->name,
+                'code' => $branch->code,
+                'type' => $branch->type,
+            ]);
+
+        $users = User::whereDoesntHave('branchWorker')
+            ->where('status', Status::ACTIVE)
+            ->select('id', 'name', 'email', 'mobile', 'phone', 'phone_e164')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $user) => [
+                'value' => $user->id,
+                'label' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->mobile ?? $user->phone ?? $user->phone_e164,
+            ]);
+
+        $roles = collect(BranchWorkerRole::cases())
+            ->map(fn (BranchWorkerRole $role) => [
+                'value' => $role->value,
+                'label' => Str::headline($role->value),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'branches' => $branches,
+                'users' => $users,
+                'roles' => $roles,
+            ],
+        ]);
+    }
+
+    /**
      * Store a newly created branch worker
      */
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:20',
-            'password' => 'required|string|min:8',
-            'branch_id' => 'required|exists:branches,id',
-            'worker_type' => 'required|in:delivery,pickup,sortation,customer_service',
-            'address' => 'nullable|string',
-            'vehicle_type' => 'nullable|string',
-            'vehicle_number' => 'nullable|string',
-        ]);
+        $validator = Validator::make($request->all(), $this->validationRules(null, $request->filled('user_id')));
 
         if ($validator->fails()) {
             return response()->json([
@@ -83,26 +133,27 @@ class BranchWorkerApiController extends Controller
 
         DB::beginTransaction();
         try {
-            // Create user account
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'password' => Hash::make($request->password),
-                'address' => $request->address,
-                'status' => 1,
-                'role_id' => 4, // Worker role
-            ]);
+            $user = $this->resolveUser($request);
 
-            // Create branch worker record
+            $role = BranchWorkerRole::fromString($request->input('role', $request->input('worker_type', 'ops_agent')));
+            $employmentStatus = $request->filled('employment_status')
+                ? EmploymentStatus::fromString($request->employment_status)
+                : EmploymentStatus::ACTIVE;
+
             $worker = BranchWorker::create([
                 'user_id' => $user->id,
                 'branch_id' => $request->branch_id,
-                'worker_type' => $request->worker_type,
-                'vehicle_type' => $request->vehicle_type,
-                'vehicle_number' => $request->vehicle_number,
-                'status' => 'active',
-                'availability_status' => 'available',
+                'role' => $role->value,
+                'designation' => $request->input('designation'),
+                'employment_status' => $employmentStatus->value,
+                'contact_phone' => $request->input('contact_phone', $user->mobile ?? $user->phone ?? $user->phone_e164),
+                'id_number' => $request->input('id_number'),
+                'permissions' => $request->input('permissions'),
+                'work_schedule' => $request->input('work_schedule'),
+                'notes' => $request->input('notes'),
+                'metadata' => $request->input('metadata'),
+                'status' => Status::ACTIVE,
+                'assigned_at' => now(),
             ]);
 
             DB::commit();
@@ -150,7 +201,7 @@ class BranchWorkerApiController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $worker = BranchWorker::find($id);
+        $worker = BranchWorker::with('user')->find($id);
 
         if (!$worker) {
             return response()->json([
@@ -159,19 +210,7 @@ class BranchWorkerApiController extends Controller
             ], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $worker->user_id,
-            'phone' => 'sometimes|string|max:20',
-            'password' => 'sometimes|string|min:8',
-            'branch_id' => 'sometimes|exists:branches,id',
-            'worker_type' => 'sometimes|in:delivery,pickup,sortation,customer_service',
-            'address' => 'nullable|string',
-            'vehicle_type' => 'nullable|string',
-            'vehicle_number' => 'nullable|string',
-            'status' => 'sometimes|in:active,inactive,suspended',
-            'availability_status' => 'sometimes|in:available,busy,offline',
-        ]);
+        $validator = Validator::make($request->all(), $this->validationRules($worker, true));
 
         if ($validator->fails()) {
             return response()->json([
@@ -198,22 +237,27 @@ class BranchWorkerApiController extends Controller
             }
 
             if (!empty($userUpdates)) {
-                $worker->user->update($userUpdates);
+            $worker->user->update($userUpdates);
             }
 
             // Update worker details
             $workerUpdates = array_filter([
                 'branch_id' => $request->branch_id,
-                'worker_type' => $request->worker_type,
-                'vehicle_type' => $request->vehicle_type,
-                'vehicle_number' => $request->vehicle_number,
-                'status' => $request->status,
-                'availability_status' => $request->availability_status,
-            ], function($value) {
-                return $value !== null;
-            });
+                'role' => ($request->filled('role') || $request->filled('worker_type'))
+                    ? BranchWorkerRole::fromString($request->input('role', $request->input('worker_type')))->value
+                    : null,
+                'designation' => $request->input('designation'),
+                'employment_status' => $request->filled('employment_status') ? EmploymentStatus::fromString($request->employment_status)->value : null,
+                'contact_phone' => $request->input('contact_phone'),
+                'id_number' => $request->input('id_number'),
+                'permissions' => $request->input('permissions'),
+                'work_schedule' => $request->input('work_schedule'),
+                'notes' => $request->input('notes'),
+                'metadata' => $request->input('metadata'),
+                'status' => $request->filled('status') ? (strtolower($request->status) === 'active' ? Status::ACTIVE : Status::INACTIVE) : null,
+            ], fn ($value) => $value !== null);
 
-            if (!empty($workerUpdates)) {
+            if (! empty($workerUpdates)) {
                 $worker->update($workerUpdates);
             }
 
@@ -253,8 +297,12 @@ class BranchWorkerApiController extends Controller
         DB::beginTransaction();
         try {
             // Soft delete or deactivate instead of hard delete
-            $worker->update(['status' => 'inactive']);
-            $worker->user->update(['status' => 0]);
+            $worker->update([
+                'status' => Status::INACTIVE,
+                'employment_status' => EmploymentStatus::INACTIVE->value,
+                'unassigned_at' => now(),
+            ]);
+            $worker->user?->update(['status' => Status::INACTIVE]);
 
             DB::commit();
 
@@ -272,21 +320,166 @@ class BranchWorkerApiController extends Controller
         }
     }
 
+    protected function validationRules(?BranchWorker $worker = null, bool $hasExistingUser = false): array
+    {
+        $isUpdate = $worker !== null;
+        $userId = $worker?->user_id;
+
+        $nameRule = $hasExistingUser ? 'sometimes' : ($isUpdate ? 'sometimes' : 'required');
+        $contactRule = $hasExistingUser ? 'sometimes' : ($isUpdate ? 'sometimes' : 'required');
+        $passwordRule = $hasExistingUser ? 'sometimes' : ($isUpdate ? 'sometimes' : 'required');
+
+        return [
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'name' => [$nameRule, 'string', 'max:255'],
+            'email' => [$hasExistingUser ? 'sometimes' : ($isUpdate ? 'sometimes' : 'required'), 'email', Rule::unique('users', 'email')->ignore($userId)],
+            'phone' => [$contactRule, 'string', 'max:20'],
+            'contact_phone' => ['nullable', 'string', 'max:20'],
+            'password' => [$passwordRule, 'string', 'min:8'],
+            'branch_id' => ['required', 'integer', 'exists:branches,id'],
+            'role' => ['required_without:worker_type', 'string', 'max:60'],
+            'worker_type' => ['nullable', 'string', 'max:60'],
+            'employment_status' => ['nullable', 'string', 'max:40'],
+            'designation' => ['nullable', 'string', 'max:120'],
+            'id_number' => ['nullable', 'string', 'max:60'],
+            'permissions' => ['nullable', 'array'],
+            'work_schedule' => ['nullable', 'array'],
+            'notes' => ['nullable', 'string'],
+            'metadata' => ['nullable', 'array'],
+        ];
+    }
+
+    protected function resolveUser(Request $request): User
+    {
+        if ($request->filled('user_id')) {
+            /** @var User $user */
+            $user = User::findOrFail($request->user_id);
+
+            $updates = array_filter([
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'phone' => $request->input('phone'),
+                'mobile' => $request->input('phone'),
+                'address' => $request->input('address'),
+            ], fn ($value) => $value !== null);
+
+            if (! empty($updates)) {
+                $user->fill($updates);
+            }
+
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->password);
+            }
+
+            if (! empty($updates) || $request->filled('password')) {
+                $user->save();
+            }
+
+            return $user;
+        }
+
+        return User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'mobile' => $request->phone,
+            'password' => Hash::make($request->password),
+            'address' => $request->input('address'),
+            'status' => Status::ACTIVE,
+            'role_id' => $request->input('role_id', 4),
+        ]);
+    }
+
     /**
      * Get available users for branch worker assignment
      */
     public function availableUsers(): JsonResponse
     {
         $users = User::whereDoesntHave('branchWorker')
-            ->where('status', 1)
-            ->where('role_id', 4)
-            ->select('id', 'name', 'email', 'phone')
-            ->get();
+            ->where('status', Status::ACTIVE)
+            ->select('id', 'name', 'email', 'mobile', 'phone', 'phone_e164')
+            ->get()
+            ->map(function (User $user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->mobile ?? $user->phone ?? $user->phone_e164,
+                ];
+            });
 
         return response()->json([
             'success' => true,
             'data' => $users,
             'message' => 'Available users retrieved successfully'
+        ]);
+    }
+
+    /**
+     * Bulk status updater.
+     */
+    public function bulkStatusUpdate(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'worker_ids' => ['required', 'array', 'min:1'],
+            'worker_ids.*' => ['integer', 'exists:branch_workers,id'],
+            'status' => ['required', 'in:active,inactive,suspended'],
+        ]);
+
+        $status = match (strtolower($data['status'])) {
+            'active' => Status::ACTIVE,
+            default => Status::INACTIVE,
+        };
+
+        $updated = BranchWorker::whereIn('id', $data['worker_ids'])
+            ->update(['status' => $status]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Workers updated successfully',
+            'data' => ['updated' => $updated],
+        ]);
+    }
+
+    /**
+     * Assign a shipment to the given worker.
+     */
+    public function assignShipment(Request $request, BranchWorker $worker): JsonResponse
+    {
+        $data = $request->validate([
+            'shipment_id' => ['required', 'integer', 'exists:shipments,id'],
+        ]);
+
+        $shipment = Shipment::findOrFail($data['shipment_id']);
+        $shipment->assigned_worker_id = $worker->id;
+        $shipment->assigned_at = now();
+        $shipment->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Shipment assigned successfully',
+            'data' => [
+                'shipment_id' => $shipment->id,
+                'worker_id' => $worker->id,
+            ],
+        ]);
+    }
+
+    /**
+     * Remove worker assignment from any shipments.
+     */
+    public function unassign(BranchWorker $worker): JsonResponse
+    {
+        $updated = Shipment::where('assigned_worker_id', $worker->id)
+            ->update([
+                'assigned_worker_id' => null,
+                'assigned_at' => null,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Worker unassigned from shipments',
+            'data' => ['shipments_updated' => $updated],
         ]);
     }
 }

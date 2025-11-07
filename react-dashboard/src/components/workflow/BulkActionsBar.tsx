@@ -1,9 +1,10 @@
 import React from 'react';
 import Badge from '../ui/Badge';
+import type { WorkflowStatus } from '../../types/dashboard';
 
 interface BulkActionsBarProps {
   selectedCount: number;
-  onUpdateStatus: (status: 'pending' | 'in_progress' | 'completed' | 'delayed') => void;
+  onUpdateStatus: (status: WorkflowStatus) => void;
   onDelete: () => void;
   onClearSelection: () => void;
   isLoading?: boolean;
@@ -33,8 +34,9 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
         <div className="flex items-center gap-2">
           <select
             onChange={(e) => {
-              if (e.target.value) {
-                onUpdateStatus(e.target.value as any);
+              const value = e.target.value as WorkflowStatus | '';
+              if (value) {
+                onUpdateStatus(value);
                 e.target.value = '';
               }
             }}
@@ -42,8 +44,10 @@ const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
             className="px-3 py-1.5 text-sm bg-mono-gray-800 text-white border border-mono-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-white"
           >
             <option value="">Change Status</option>
-            <option value="pending">Pending</option>
+            <option value="pending">New</option>
             <option value="in_progress">In Progress</option>
+            <option value="testing">Testing</option>
+            <option value="awaiting_feedback">Awaiting Feedback</option>
             <option value="completed">Completed</option>
             <option value="delayed">Delayed</option>
           </select>

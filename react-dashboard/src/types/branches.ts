@@ -66,7 +66,7 @@ export interface BranchRecentShipment {
 }
 
 export interface BranchParentSummary {
-  id: number;
+  id: number | string;
   name: string;
   code: string;
 }
@@ -78,16 +78,52 @@ export interface BranchCoordinates {
 
 export type BranchOperationalState = 'operational' | 'delayed' | 'maintenance';
 
+export type BranchStatusValue = 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE' | 'SUSPENDED';
+
+export const BRANCH_STATUS_LABELS: Record<BranchStatusValue, string> = {
+  ACTIVE: 'Active',
+  INACTIVE: 'Inactive',
+  MAINTENANCE: 'Maintenance',
+  SUSPENDED: 'Suspended',
+};
+
+export type BranchTypeValue =
+  | 'HUB'
+  | 'REGIONAL_BRANCH'
+  | 'DESTINATION_BRANCH'
+  | 'AGENT_POINT'
+  | 'MICRO_DEPOT'
+  | 'FULFILLMENT_CENTER';
+
+export const BRANCH_TYPE_LABELS: Record<BranchTypeValue, string> = {
+  HUB: 'Hub',
+  REGIONAL_BRANCH: 'Regional Branch',
+  DESTINATION_BRANCH: 'Destination Branch',
+  AGENT_POINT: 'Agent Point',
+  MICRO_DEPOT: 'Micro Depot',
+  FULFILLMENT_CENTER: 'Fulfillment Center',
+};
+
 export interface BranchListItem {
-  id: number;
+  id: number | string;
   code: string;
   name: string;
-  type: string;
-  status: number;
+  type: BranchTypeValue | string;
+  type_label?: string;
+  status: number | string;
   status_label: string;
   status_state: BranchOperationalState;
+  status_enum?: BranchStatusValue;
   is_hub: boolean;
   address: string | null;
+  country?: string | null;
+  city?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  time_zone?: string | null;
+  capacity_parcels_per_day?: number | null;
+  geo_lat?: number | null;
+  geo_lng?: number | null;
   coordinates: BranchCoordinates;
   parent: BranchParentSummary | null;
   manager: BranchManagerSummary | null;
@@ -99,7 +135,7 @@ export interface BranchListItem {
 }
 
 export interface BranchChildSummary {
-  id: number;
+  id: number | string;
   name: string;
   code: string;
   type: string;
@@ -121,7 +157,7 @@ export interface BranchDetail extends BranchListItem {
 }
 
 export interface BranchHierarchyNode {
-  id: number;
+  id: number | string;
   name: string;
   code: string;
   type: string;
@@ -129,7 +165,7 @@ export interface BranchHierarchyNode {
   status: number;
   level: number;
   path: string;
-  parent_id: number | null;
+  parent_id: number | string | null;
   managers_count: number;
   workers_count: number;
   capacity_utilization: number;
@@ -137,8 +173,8 @@ export interface BranchHierarchyNode {
 }
 
 export interface BranchHierarchyContext {
-  ancestors: Array<{ id: number; name: string; code: string; type: string; is_hub: boolean }>;
-  descendants: Array<{ id: number; name: string; code: string; type: string; parent_id: number | null }>;
+  ancestors: Array<{ id: number | string; name: string; code: string; type: string; is_hub: boolean }>;
+  descendants: Array<{ id: number | string; name: string; code: string; type: string; parent_id: number | string | null }>;
 }
 
 export interface BranchListResponse {
@@ -173,4 +209,24 @@ export interface BranchListParams {
   status?: string | number;
   is_hub?: boolean;
   parent_id?: number;
+}
+
+export interface BranchFormPayload {
+  name: string;
+  code: string;
+  type: BranchTypeValue;
+  parent_branch_id?: number | null;
+  address?: string | null;
+  country: string;
+  city?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  time_zone: string;
+  capacity_parcels_per_day?: number | null;
+  geo_lat?: number | null;
+  geo_lng?: number | null;
+  operating_hours?: Array<{ start?: string | null; end?: string | null }> | null;
+  capabilities?: string[] | null;
+  metadata?: Record<string, unknown> | null;
+  status?: BranchStatusValue;
 }

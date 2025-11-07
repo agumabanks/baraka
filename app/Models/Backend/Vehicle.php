@@ -3,13 +3,37 @@
 namespace App\Models\Backend;
 
 use App\Enums\Status;
-use Carbon\Carbon;
+use App\Models\Backend\Branch;
+use App\Models\Driver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Vehicle extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'plate_no',
+        'chasis_number',
+        'model',
+        'year',
+        'brand',
+        'color',
+        'description',
+        'branch_id',
+        'type',
+        'capacity_kg',
+        'capacity_volume',
+        'ownership',
+        'status',
+    ];
+
+    protected $casts = [
+        'capacity_kg' => 'float',
+        'capacity_volume' => 'float',
+    ];
 
     // public function getActivitylogOptions(): LogOptions
     // {
@@ -36,15 +60,25 @@ class Vehicle extends Model
         return $this->belongsTo(DeliveryMan::class, 'driver_id', 'id');
     }
 
+    public function currentDriver(): HasOne
+    {
+        return $this->hasOne(Driver::class, 'vehicle_id');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
     public function getMyStatusAttribute()
     {
-        if ($this->status == Status::ACTIVE) {
-            $status = '<span class="badge badge-pill badge-success">'.trans('status.'.$this->status).'</span>';
-        } else {
-            $status = '<span class="badge badge-pill badge-danger">'.trans('status.'.$this->status).'</span>';
+        $statusValue = is_numeric($this->status) ? (int) $this->status : strtoupper((string) $this->status);
+
+        if ($statusValue === Status::ACTIVE || $statusValue === 'ACTIVE') {
+            return '<span class="badge badge-pill badge-success">'.trans('status.'.Status::ACTIVE).'</span>';
         }
 
-        return $status;
+        return '<span class="badge badge-pill badge-danger">'.trans('status.'.Status::INACTIVE).'</span>';
     }
 
     // public function getRenewInsuranceAttribute(){

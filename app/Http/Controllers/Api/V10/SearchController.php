@@ -163,7 +163,7 @@ class SearchController extends Controller
             $stats = [
                 'total_shipments' => \App\Models\Shipment::count(),
                 'total_parcels' => \App\Models\Backend\Parcel::count(),
-                'total_customers' => \App\Models\User::where('user_type', 'customer')->count(),
+                'total_customers' => \App\Models\User::clients()->count(),
                 'recent_searches' => [], // Would be populated from search logs
             ];
 

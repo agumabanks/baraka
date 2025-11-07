@@ -20,6 +20,8 @@ class DeliverymanUserResource extends JsonResource
             'email' => $this->email,
             'phone' => (string) $this->mobile,
             'user_type' => (string) $this->user_type,
+            'user_type_label' => $this->user_type_label,
+            'is_client' => $this->is_client,
             'deliveryman' => $this->deliveryman,
             'hub' => $this->hub,
             'address' => $this->address,

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ScanType;
+use App\Enums\ShipmentStatus;
 use App\Models\Backend\Hub;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,19 +16,29 @@ class ScanEvent extends Model
 
     protected $fillable = [
         'sscc',
+        'shipment_id',
+        'bag_id',
+        'route_id',
+        'stop_id',
         'type',
+        'status_after',
         'branch_id',
         'leg_id',
         'user_id',
+        'location_type',
+        'location_id',
         'occurred_at',
         'geojson',
         'note',
+        'payload',
     ];
 
     protected $casts = [
         'type' => ScanType::class,
+        'status_after' => ShipmentStatus::class,
         'occurred_at' => 'datetime',
         'geojson' => 'array',
+        'payload' => 'array',
     ];
 
     /**
@@ -57,12 +68,35 @@ class ScanEvent extends Model
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
-    public function shipment()
+    public function shipment(): BelongsTo
     {
-        // Find shipment through parcel SSCC
+        return $this->belongsTo(Shipment::class, 'shipment_id');
+    }
+
+    public function bag(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Bag::class, 'bag_id');
+    }
+
+    public function route(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Route::class, 'route_id');
+    }
+
+    public function stop(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Stop::class, 'stop_id');
+    }
+
+    public function resolveShipment(): ?Shipment
+    {
+        if ($this->relationLoaded('shipment') || $this->shipment_id) {
+            return $this->shipment;
+        }
+
         $parcel = \App\Models\Backend\Parcel::where('sscc', $this->sscc)->first();
 
-        return $parcel ? $parcel->shipment : null;
+        return $parcel?->shipment;
     }
 
     // Accessors

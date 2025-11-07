@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V10;
 
+use App\Enums\ShipmentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Shipment;
 use App\Models\Backend\Client;
@@ -10,10 +11,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
+use App\Services\Logistics\ShipmentLifecycleService;
 
 class ShipmentsApiController extends Controller
 {
+    public function __construct(private ShipmentLifecycleService $lifecycleService)
+    {
+    }
+
     /**
      * Get paginated list of shipments
      */
@@ -24,10 +31,16 @@ class ShipmentsApiController extends Controller
             $status = $request->input('status');
             $search = $request->input('search');
 
+            $workerColumns = $this->resolveAssignedWorkerColumns();
+
             $query = Shipment::with([
                 'originBranch:id,name,code',
+                'destBranch:id,name,code',
                 'destinationBranch:id,name,code',
-                'assignedWorker:id,first_name,last_name',
+                'assignedWorker' => function ($relation) use ($workerColumns) {
+                    $relation->select($workerColumns);
+                },
+                'assignedWorker.user:id,name,email',
                 'client:id,business_name',
                 'customer:id,name',
             ])
@@ -35,7 +48,16 @@ class ShipmentsApiController extends Controller
 
             // Filter by status
             if ($status) {
-                $query->where('current_status', $status);
+                $statusEnum = ShipmentStatus::fromString((string) $status);
+
+                if ($statusEnum) {
+                    $query->where('current_status', $statusEnum->value);
+                } else {
+                    $query->where(function ($inner) use ($status) {
+                        $inner->where('status', strtolower((string) $status))
+                              ->orWhere('current_status', strtoupper((string) $status));
+                    });
+                }
             }
 
             // Search
@@ -218,15 +240,15 @@ class ShipmentsApiController extends Controller
             $trackingNumber = 'BRK-' . date('Ymd') . '-' . str_pad(Shipment::whereDate('created_at', today())->count() + 1, 5, '0', STR_PAD_LEFT);
 
             $shipmentData = [
-                // Accept either Client (internal accounts) or Customer (sales accounts)
                 'client_id' => $request->input('client_id'),
                 'customer_id' => $request->input('customer_id'),
                 'origin_branch_id' => $request->input('origin_branch_id'),
                 'dest_branch_id' => $request->input('dest_branch_id'),
                 'tracking_number' => $trackingNumber,
                 'service_level' => $request->input('service_level'),
-                'status' => 'pending',
-                'current_status' => 'pending_processing',
+                'status' => 'booked',
+                'current_status' => ShipmentStatus::BOOKED->value,
+                'booked_at' => now(),
                 'price_amount' => $request->input('price_amount', 0),
                 'currency' => 'UGX',
                 'created_by' => $request->user()?->id,
@@ -244,7 +266,7 @@ class ShipmentsApiController extends Controller
                     ],
                     'package' => [
                         'weight' => $request->input('weight'),
-                        'pieces' => $request->input('pieces'),
+                        'pieces' => $request->input('pieces', 1),
                         'description' => $request->input('description'),
                     ],
                     'payment' => [
@@ -256,22 +278,24 @@ class ShipmentsApiController extends Controller
 
             $shipment = Shipment::create($shipmentData);
 
-            // Create initial tracking event (if relationship exists)
-            // $shipment->trackingLogs()->create([
-            //     'status' => 'pending_processing',
-            //     'location' => $shipment->originBranch->name ?? 'Origin',
-            //     'notes' => 'Shipment created and awaiting processing',
-            //     'created_by' => $request->user()?->id,
-            // ]);
+            DB::commit();
+
+            $this->lifecycleService->transition($shipment->fresh(), ShipmentStatus::BOOKED, [
+                'trigger' => 'api_v10.store',
+                'performed_by' => $request->user()?->id,
+                'timestamp' => $shipment->booked_at ?? now(),
+                'force' => true,
+                'location_type' => 'branch',
+                'location_id' => $request->input('origin_branch_id'),
+            ]);
 
             $shipment->load([
                 'originBranch:id,name,code',
+                'destBranch:id,name,code',
                 'destinationBranch:id,name,code',
                 'client:id,business_name',
                 'customer:id,name',
             ]);
-
-            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -313,11 +337,28 @@ class ShipmentsApiController extends Controller
     public function statistics(Request $request): JsonResponse
     {
         try {
+            $pendingStatuses = array_map(fn (ShipmentStatus $status) => $status->value, [
+                ShipmentStatus::BOOKED,
+                ShipmentStatus::PICKUP_SCHEDULED,
+                ShipmentStatus::PICKED_UP,
+                ShipmentStatus::AT_ORIGIN_HUB,
+                ShipmentStatus::BAGGED,
+            ]);
+
+            $inTransitStatuses = array_map(fn (ShipmentStatus $status) => $status->value, [
+                ShipmentStatus::LINEHAUL_DEPARTED,
+                ShipmentStatus::LINEHAUL_ARRIVED,
+                ShipmentStatus::AT_DESTINATION_HUB,
+                ShipmentStatus::CUSTOMS_HOLD,
+                ShipmentStatus::CUSTOMS_CLEARED,
+                ShipmentStatus::OUT_FOR_DELIVERY,
+            ]);
+
             $stats = [
                 'total' => Shipment::count(),
-                'pending' => Shipment::where('current_status', 'pending_processing')->count(),
-                'in_transit' => Shipment::whereIn('current_status', ['in_transit', 'out_for_delivery'])->count(),
-                'delivered' => Shipment::where('current_status', 'delivered')->count(),
+                'pending' => Shipment::whereIn('current_status', $pendingStatuses)->count(),
+                'in_transit' => Shipment::whereIn('current_status', $inTransitStatuses)->count(),
+                'delivered' => Shipment::where('current_status', ShipmentStatus::DELIVERED->value)->count(),
                 'exceptions' => Shipment::where('has_exception', true)->count(),
                 'today' => Shipment::whereDate('created_at', today())->count(),
             ];
@@ -336,5 +377,29 @@ class ShipmentsApiController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Resolve the columns that exist on the branch_workers table so eager loads do not fail
+     */
+    private function resolveAssignedWorkerColumns(): array
+    {
+        static $columns = null;
+
+        if ($columns !== null) {
+            return $columns;
+        }
+
+        $columns = ['id', 'user_id', 'branch_id', 'role'];
+
+        if (Schema::hasColumn('branch_workers', 'employment_status')) {
+            $columns[] = 'employment_status';
+        }
+
+        if (Schema::hasColumn('branch_workers', 'contact_phone')) {
+            $columns[] = 'contact_phone';
+        }
+
+        return $columns;
     }
 }

@@ -16,10 +16,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"> 
 <link href="https://fonts.googleapis.com/css2?family=Bitter&family=Roboto:wght@400&display=swap" rel="stylesheet">
     @stack('styles') 
+    @php
+        $generalSettings = settings();
+        $primaryColor = $generalSettings->primary_color ?? '#7e0095';
+        $textColor = $generalSettings->text_color ?? '#343f52';
+    @endphp
     <style>
         :root{
-            --bs-white: {{ settings()->text_color }}; 
-            --bs-primary:{{ settings()->primary_color }};
+            --bs-primary: {{ $primaryColor }};
+            --text-color: {{ $textColor }};
+            --h-color: {{ $textColor }};
+            --bs-white: #ffffff;
         }
     </style>
 </head>

@@ -240,8 +240,17 @@ class InvoiceRepository implements InvoiceInterface
 
     public function invoiceLists()
     {
-        $invoices = Invoice::where('merchant_id', Auth::user()->merchant->id)->where('status', InvoiceStatus::PAID, InvoiceStatus::PROCESSING)->paginate(10);
+        $user = Auth::user();
+        $merchantId = $user?->merchant?->id ?? null;
 
-        return $invoices;
+        $query = Invoice::query()->orderByDesc('id');
+
+        if ($merchantId) {
+            $query->where('merchant_id', $merchantId);
+        }
+
+        $query->whereIn('status', [InvoiceStatus::PAID, InvoiceStatus::PROCESSING, InvoiceStatus::UNPAID]);
+
+        return $query->paginate(10);
     }
 }

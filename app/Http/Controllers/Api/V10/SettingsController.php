@@ -25,7 +25,7 @@ class SettingsController extends Controller
             $codCharge = Merchant::where('user_id', auth()->user()->id)->first();
             $codCharges = [];
             $i = 0;
-            if (! blank($codCharge)) {
+            if (! blank($codCharge) && is_array($codCharge->cod_charges)) {
                 foreach ($codCharge->cod_charges as $key => $charge) {
                     $codCharges[$i]['name'] = __('merchant.'.$key);
                     $codCharges[$i]['charge'] = $charge;
@@ -43,8 +43,13 @@ class SettingsController extends Controller
     public function deliveryCharges()
     {
         try {
-            $merchant_id = Merchant::where('user_id', auth()->user()->id)->first();
-            $deliveryCharges = DeliveryChargeResource::collection($this->deliveryCharges->getAll($merchant_id->id));
+            $merchant = Merchant::where('user_id', auth()->user()->id)->first();
+
+            if (blank($merchant)) {
+                return $this->responseWithSuccess(__('delivery_charge.title'), ['deliveryCharges' => []], 200);
+            }
+
+            $deliveryCharges = DeliveryChargeResource::collection($this->deliveryCharges->getAll($merchant->id));
 
             return $this->responseWithSuccess(__('delivery_charge.title'), ['deliveryCharges' => $deliveryCharges], 200);
         } catch (\Exception $exception) {

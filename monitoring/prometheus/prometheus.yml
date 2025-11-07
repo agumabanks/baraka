@@ -1,0 +1,136 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'courier-cluster'
+    environment: 'production'
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+  # Laravel Application Metrics
+  - job_name: 'laravel-app'
+    static_configs:
+      - targets: ['backend:80']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'laravel-app'
+
+  # Node Exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # cAdvisor for container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 15s
+
+  # MySQL Exporter
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+    scrape_interval: 15s
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+
+  # Nginx metrics (via prometheus-nginx-exporter)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 15s
+
+  # Blackbox Exporter for endpoint monitoring
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response
+    static_configs:
+      - targets:
+        - http://backend:80/api/health  # Backend health check
+        - http://frontend:80/health      # Frontend health check
+        - http://nginx:80/health         # Nginx health check
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Custom application metrics
+  - job_name: 'custom-metrics'
+    static_configs:
+      - targets: 
+        - backend:80
+    metrics_path: /api/metrics
+    scrape_interval: 30s
+    params:
+      include: ['requests', 'errors', 'response_time', 'throughput']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: application
+        replacement: 'courier-app'
+
+  # Financial reporting specific metrics
+  - job_name: 'financial-reporting'
+    static_configs:
+      - targets: ['backend:80']
+    metrics_path: /api/v1/financial/metrics
+    scrape_interval: 60s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'financial-reporting'
+
+  # WebSocket metrics
+  - job_name: 'websocket'
+    static_configs:
+      - targets: ['websocket:6001']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'websocket'
+
+# Remote write configuration (for long-term storage)
+remote_write:
+  - url: "https://prometheus-remote-write-endpoint/api/v1/write"
+    basic_auth:
+      username: "${PROMETHEUS_REMOTE_WRITE_USERNAME}"
+      password: "${PROMETHEUS_REMOTE_WRITE_PASSWORD}"
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: ".*"
+        target_label: tenant
+        replacement: "courier"
+
+# Storage configuration
+storage:
+  tsdb:
+    retention.time: 200h
+    retention.size: 10GB

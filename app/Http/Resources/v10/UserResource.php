@@ -20,6 +20,8 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => (string) $this->mobile,
             'user_type' => (string) $this->user_type,
+            'user_type_label' => $this->user_type_label,
+            'is_client' => $this->is_client,
             'hub_id' => (string) $this->hub_id,
             'hub' => $this->hub,
             'merchant' => $this->merchant,

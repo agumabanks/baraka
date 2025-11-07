@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import * as Icons from 'lucide-react';
 import type { SidebarItemProps, NavBadge as NavBadgeType } from '../../types/navigation';
 import { convertFaToLucide } from '../../lib/iconMapping';
@@ -21,11 +21,11 @@ const NavBadgePill: React.FC<{ badge: RawBadge }> = ({ badge }) => {
   };
 
   const resolvedBadge: NavBadgeType = typeof badge === 'object' && badge !== null
-    ? badge
+    ? (badge as NavBadgeType)
     : {
-        count: typeof badge === 'number' ? badge : badge ?? '',
+        count: (typeof badge === 'number' ? badge : (badge ?? '')) as string | number,
         variant: 'default'
-      };
+      } as NavBadgeType;
 
   const variantClass = variantClasses[resolvedBadge.variant || 'default'];
   const displayValue = typeof resolvedBadge.count === 'number'
@@ -83,9 +83,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 
   const normalisedCurrentPath = extractPath(currentPath) ?? currentPath;
 
-  const hasChildren = item.children && item.children.length > 0;
+  const visibleChildren = useMemo(
+    () => item.children?.filter((child) => child.visible !== false) ?? [],
+    [item.children]
+  );
+
+  const hasChildren = visibleChildren.length > 0;
   const childActive = hasChildren
-    ? item.children?.some((child) => {
+    ? visibleChildren.some((child) => {
         const childPath = extractPath(child.path) ?? extractPath(child.url);
         if (!childPath) {
           return false;
@@ -121,6 +126,20 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   const spaPath = resolvedPath ? resolveDashboardNavigatePath(resolvedPath) : undefined;
   const normalisedTargetPath = spaPath ? extractPath(spaPath) : resolvedPath;
 
+  const defaultChildPath = useMemo(() => {
+    if (!hasChildren) {
+      return undefined;
+    }
+
+    const primaryChild = visibleChildren[0];
+    if (!primaryChild) {
+      return undefined;
+    }
+
+    const childResolved = extractPath(primaryChild.path) ?? extractPath(primaryChild.url);
+    return childResolved ? resolveDashboardNavigatePath(childResolved) : undefined;
+  }, [hasChildren, visibleChildren]);
+
   const handleClick = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
     // Don't prevent default for external links - let them navigate normally
     if ((item as any).external) {
@@ -130,13 +149,18 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     e.preventDefault();
     
     if (hasChildren) {
-      setIsExpanded(prev => !prev);
+      const willExpand = !isExpanded;
+      setIsExpanded(willExpand);
+
+      if (willExpand && defaultChildPath && onClick) {
+        onClick(defaultChildPath);
+      }
     } else if (onClick && (spaPath || item.path)) {
       onClick(spaPath ?? item.path);
     } else if (item.url) {
       window.location.href = item.url;
     }
-  }, [hasChildren, spaPath, item.path, item.url, onClick, item]);
+  }, [hasChildren, spaPath, item.path, item.url, onClick, item, isExpanded, defaultChildPath]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -232,11 +256,11 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         >
-          <div className={`submenu border-l-2 border-mono-gray-200 ml-10 pl-4 pt-1 mt-1 ${
+          <div className={`submenu border-l border-gray-200/70 ml-10 pl-4 pt-1 mt-1 ${
             isExpanded ? 'animate-in fade-in slide-in-from-top-1 duration-200' : ''
           }`}>
             <ul className="nav flex-col space-y-0.5">
-              {item.children?.filter(child => child.visible !== false).map((child) => (
+              {visibleChildren.map((child) => (
                 <SidebarItem
                   key={child.id}
                   item={child}

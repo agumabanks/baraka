@@ -11,6 +11,7 @@ use App\Http\Resources\ChartDataResource;
 use App\Http\Resources\DashboardResource;
 use App\Http\Resources\KPICardResource;
 use App\Http\Resources\WorkflowItemResource;
+use App\Http\Resources\WorkflowTaskActivityResource;
 use App\Models\Backend\Account;
 use App\Models\Backend\BankTransaction;
 use App\Models\Backend\CourierStatement;
@@ -23,15 +24,19 @@ use App\Models\Backend\Merchant;
 use App\Models\Backend\MerchantStatement;
 use App\Models\Backend\Parcel;
 use App\Models\Backend\Payment;
+use App\Models\WorkflowTask;
+use App\Models\WorkflowTaskActivity;
 use App\Models\Backend\VatStatement;
 use App\Models\Customer;
 use App\Models\MerchantShops;
 use App\Models\Shipment;
+use App\Enums\Status as StatusEnum;
 use App\Models\User;
 use App\Repositories\Dashboard\DashboardInterface;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Backend\Support;
@@ -40,6 +45,8 @@ use App\Enums\SupportStatus;
 class DashboardApiController extends Controller
 {
     protected $repo;
+
+    private const WORKFLOW_QUEUE_LIMIT = 25;
 
     public function __construct(DashboardInterface $repo)
     {
@@ -124,14 +131,20 @@ class DashboardApiController extends Controller
     public function workflowQueue(Request $request)
     {
         $fromTo = $this->repo->FromTo($request);
-        $items = $this->getWorkflowItems($fromTo);
-        $workflow = array_values(array_map(function ($item) use ($request) {
-            return (new WorkflowItemResource($item))->toArray($request);
-        }, $items));
+        $tasks = $this->getWorkflowItems($fromTo);
+        $summary = $this->buildWorkflowSummary();
 
         return response()->json([
             'success' => true,
-            'data' => $workflow,
+            'data' => [
+                'tasks' => $tasks,
+                'summary' => $summary,
+                'meta' => [
+                    'count' => count($tasks),
+                    'limit' => self::WORKFLOW_QUEUE_LIMIT,
+                    'refreshed_at' => now()->toIso8601String(),
+                ],
+            ],
         ]);
     }
 
@@ -412,8 +425,108 @@ private function getAdminDashboardData($fromTo)
                 ] : null,
             ],
         ],
+        'teamOverview' => $this->buildTeamOverview(),
+        'activityTimeline' => $this->getRecentWorkflowActivities(),
     ];
 }
+
+    private function buildTeamOverview(): array
+    {
+        $admins = User::query()
+            ->where('user_type', UserType::ADMIN)
+            ->select(['id', 'name', 'status', 'role_id', 'hub_id', 'department_id', 'joining_date'])
+            ->with([
+                'role:id,name,slug',
+                'department:id,title',
+                'hub:id,name',
+            ])
+            ->get();
+
+        if ($admins->isEmpty()) {
+            return [];
+        }
+
+        $recentWindow = Carbon::now()->subDays(30);
+
+        return $admins
+            ->groupBy(fn (User $user) => ($user->department_id ?? 'null').'|'.($user->hub_id ?? 'null'))
+            ->map(function ($group) use ($recentWindow) {
+                /** @var \Illuminate\Support\Collection<int, User> $group */
+                $first = $group->first();
+
+                $department = $first?->department ? [
+                    'id' => $first->department->id,
+                    'title' => $first->department->title,
+                ] : null;
+
+                $hub = $first?->hub ? [
+                    'id' => $first->hub->id,
+                    'name' => $first->hub->name,
+                ] : null;
+
+                $labelParts = array_filter([
+                    $department['title'] ?? null,
+                    $hub['name'] ?? null,
+                ]);
+                $label = $labelParts ? implode(' · ', $labelParts) : 'Unassigned';
+
+                $total = $group->count();
+                $active = $group->filter(fn (User $user) => (int) $user->status === StatusEnum::ACTIVE)->count();
+                $recent = $group->filter(function (User $user) use ($recentWindow) {
+                    if (! $user->joining_date) {
+                        return false;
+                    }
+
+                    try {
+                        return Carbon::parse($user->joining_date)->greaterThanOrEqualTo($recentWindow);
+                    } catch (\Throwable $e) {
+                        return false;
+                    }
+                })->count();
+
+                $sampleUsers = $group
+                    ->sortByDesc(fn (User $user) => (int) $user->status)
+                    ->take(3)
+                    ->map(fn (User $user) => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'status' => (int) $user->status,
+                    ])
+                    ->values()
+                    ->all();
+
+                return [
+                    'id' => ($department['id'] ?? 'null').'|'.($hub['id'] ?? 'null'),
+                    'label' => $label,
+                    'department' => $department,
+                    'hub' => $hub,
+                    'total' => $total,
+                    'active' => $active,
+                    'inactive' => $total - $active,
+                    'active_ratio' => $total > 0 ? round(($active / $total) * 100, 1) : 0.0,
+                    'recent_hires' => $recent,
+                    'sample_users' => $sampleUsers,
+                ];
+            })
+            ->sortByDesc(fn (array $team) => $team['total'])
+            ->values()
+            ->take(6)
+            ->all();
+    }
+
+    private function getRecentWorkflowActivities(int $limit = 10): array
+    {
+        $activities = WorkflowTaskActivity::query()
+            ->with([
+                'actor:id,name,email',
+                'task:id,title,status',
+            ])
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+
+        return WorkflowTaskActivityResource::collection($activities)->resolve();
+    }
     /**
      * Get merchant KPIs
      */
@@ -622,59 +735,44 @@ private function getAdminDashboardData($fromTo)
         $startDate = Carbon::parse($fromTo['from'])->startOfDay();
         $endDate = Carbon::parse($fromTo['to'])->endOfDay();
 
-        $paymentQueue = Payment::whereBetween('created_at', [$startDate, $endDate])->count();
+        $orderExpression = "CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END";
 
-        $unassignedParcels = Parcel::whereIn('status', [
-                ParcelStatus::PENDING,
-                ParcelStatus::DELIVERY_MAN_ASSIGN,
-                ParcelStatus::DELIVERY_RE_SCHEDULE,
-            ])
-            ->whereBetween('updated_at', [$startDate, $endDate])
-            ->count();
+        $tasks = WorkflowTask::query()
+            ->withSummary()
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate])
+                    ->orWhereBetween('updated_at', [$startDate, $endDate])
+                    ->orWhereNull('completed_at');
+            })
+            ->orderByRaw($orderExpression)
+            ->orderBy('due_at')
+            ->orderByDesc('updated_at')
+            ->limit(self::WORKFLOW_QUEUE_LIMIT)
+            ->get();
 
-        $openSupportTickets = Support::whereIn('status', [
-                SupportStatus::PENDING,
-                SupportStatus::PROCESSING,
-            ])->count();
+        $request = app('request');
+        if (! $request instanceof HttpRequest) {
+            $request = HttpRequest::create('/', 'GET');
+        }
 
-        return [
-            [
-                'id' => 'pending_payments',
-                'title' => 'Process Pending Payments',
-                'description' => $paymentQueue > 0
-                    ? sprintf('%d payment requests awaiting approval', $paymentQueue)
-                    : 'All payment requests are up to date',
-                'status' => $paymentQueue > 0 ? 'pending' : 'completed',
-                'priority' => max(1, min(5, $paymentQueue)),
-                'assignedTo' => 'Finance Team',
-                'dueDate' => $endDate->copy()->format('Y-m-d'),
-                'actionUrl' => '/admin/request/hub/payment/index',
-            ],
-            [
-                'id' => 'delivery_assignments',
-                'title' => 'Assign Delivery Personnel',
-                'description' => $unassignedParcels > 0
-                    ? sprintf('%d parcels need delivery assignment', $unassignedParcels)
-                    : 'No parcels awaiting assignment',
-                'status' => $unassignedParcels > 25 ? 'delayed' : ($unassignedParcels > 0 ? 'in_progress' : 'completed'),
-                'priority' => max(1, min(5, (int) ceil($unassignedParcels / 10))),
-                'assignedTo' => 'Operations',
-                'dueDate' => Carbon::now()->addHours(4)->format('Y-m-d'),
-                'actionUrl' => '/admin/deliveryman',
-            ],
-            [
-                'id' => 'customer_support',
-                'title' => 'Resolve Customer Tickets',
-                'description' => $openSupportTickets > 0
-                    ? sprintf('%d open support tickets', $openSupportTickets)
-                    : 'Support queue is clear',
-                'status' => $openSupportTickets > 0 ? 'pending' : 'completed',
-                'priority' => max(1, min(5, (int) ceil($openSupportTickets / 5))),
-                'assignedTo' => 'Support Team',
-                'dueDate' => Carbon::now()->addDay()->format('Y-m-d'),
-                'actionUrl' => route('support.index', [], false),
-            ],
+        return WorkflowItemResource::collection($tasks)->toArray($request);
+    }
+
+    private function buildWorkflowSummary(): array
+    {
+        $statusCounts = WorkflowTask::select('status', DB::raw('COUNT(*) as aggregate'))
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $summary = [
+            'total' => WorkflowTask::count(),
         ];
+
+        foreach (WorkflowTask::STATUSES as $status) {
+            $summary[$status] = (int) ($statusCounts[$status] ?? 0);
+        }
+
+        return $summary;
     }
 
     /**

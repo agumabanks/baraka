@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ShipmentStatus;
 use App\Models\Backend\Branch;
 use App\Models\Backend\BranchManager;
 use App\Models\Backend\BranchWorker;
@@ -140,7 +141,7 @@ class BranchAnalyticsService
         $shipments = $this->getBranchShipments($branch, $startDate);
 
         $totalShipments = $shipments->count();
-        $deliveredShipments = $shipments->where('current_status', 'delivered')->count();
+        $deliveredShipments = $shipments->where('current_status', ShipmentStatus::DELIVERED->value)->count();
         $onTimeDeliveries = $this->calculateOnTimeDeliveries($shipments);
 
         $deliveryRate = $totalShipments > 0 ? ($deliveredShipments / $totalShipments) * 100 : 0;
@@ -325,7 +326,7 @@ class BranchAnalyticsService
     private function getActiveShipmentsCount(Branch $branch): int
     {
         return $branch->originShipments()
-            ->whereIn('current_status', ['assigned', 'in_transit', 'out_for_delivery'])
+            ->whereIn('current_status', $this->activeShipmentStatusValues())
             ->count();
     }
 
@@ -338,14 +339,24 @@ class BranchAnalyticsService
     private function getPendingPickupsCount(Branch $branch): int
     {
         return $branch->originShipments()
-            ->where('current_status', 'pending_pickup')
+            ->whereIn('current_status', array_map(fn (ShipmentStatus $status) => $status->value, [
+                ShipmentStatus::BOOKED,
+                ShipmentStatus::PICKUP_SCHEDULED,
+            ]))
             ->count();
     }
 
     private function getOutstandingDeliveriesCount(Branch $branch): int
     {
-        return $branch->destShipments()
-            ->whereIn('current_status', ['in_transit', 'out_for_delivery'])
+        return $branch->destinationShipments()
+            ->whereIn('current_status', array_map(fn (ShipmentStatus $status) => $status->value, [
+                ShipmentStatus::LINEHAUL_ARRIVED,
+                ShipmentStatus::AT_DESTINATION_HUB,
+                ShipmentStatus::CUSTOMS_HOLD,
+                ShipmentStatus::CUSTOMS_CLEARED,
+                ShipmentStatus::OUT_FOR_DELIVERY,
+                ShipmentStatus::RETURN_IN_TRANSIT,
+            ]))
             ->count();
     }
 
@@ -380,7 +391,7 @@ class BranchAnalyticsService
 
     private function calculateOnTimeDeliveries(Collection $shipments): int
     {
-        return $shipments->where('current_status', 'delivered')
+        return $shipments->where('current_status', ShipmentStatus::DELIVERED->value)
             ->filter(function ($shipment) {
                 return $shipment->delivered_at &&
                        $shipment->delivered_at <= $shipment->expected_delivery_date;
@@ -390,7 +401,7 @@ class BranchAnalyticsService
 
     private function calculateAverageDeliveryTime(Collection $shipments): ?float
     {
-        $deliveredShipments = $shipments->where('current_status', 'delivered')
+        $deliveredShipments = $shipments->where('current_status', ShipmentStatus::DELIVERED->value)
             ->whereNotNull('delivered_at')
             ->whereNotNull('created_at');
 
@@ -457,7 +468,8 @@ class BranchAnalyticsService
 
         return [
             'total_shipments' => $shipments->count(),
-            'delivered_shipments' => $shipments->where('current_status', 'delivered')->count(),
+            'delivered_shipments' => $shipments->where('current_status', ShipmentStatus::DELIVERED->value)->count(),
+
             'on_time_rate' => $this->calculateOnTimeDeliveries($shipments),
         ];
     }
@@ -479,5 +491,19 @@ class BranchAnalyticsService
             'total_branches_compared' => $peers->count() + 1,
             'performance_percentile' => 75,
         ];
+    }
+
+    private function activeShipmentStatusValues(): array
+    {
+        $statuses = array_merge(
+            ShipmentStatus::pickupStages(),
+            ShipmentStatus::transportStages(),
+            ShipmentStatus::deliveryStages(),
+            ShipmentStatus::returnStages()
+        );
+
+        $filtered = array_filter($statuses, fn (ShipmentStatus $status) => ! $status->isTerminal());
+
+        return array_map(fn (ShipmentStatus $status) => $status->value, $filtered);
     }
 }

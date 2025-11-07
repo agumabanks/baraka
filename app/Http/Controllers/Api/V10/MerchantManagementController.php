@@ -39,7 +39,7 @@ class MerchantManagementController extends Controller
         ];
 
         $query = Merchant::query()
-            ->with(['user:id,name,email,phone', 'merchantShops:id,merchant_id,name,contact_no,address'])
+            ->with(['user:id,name,email,mobile,phone_e164', 'merchantShops:id,merchant_id,name,contact_no,address'])
             ->withCount([
                 'merchantShops as active_shops_count' => function ($builder) {
                     $builder->where('status', Status::ACTIVE);
@@ -110,7 +110,7 @@ class MerchantManagementController extends Controller
         ];
 
         $merchant->load([
-            'user:id,name,email,phone',
+            'user:id,name,email,mobile,phone_e164',
             'merchantShops:id,merchant_id,name,contact_no,address,default_shop',
         ]);
 
@@ -146,6 +146,7 @@ class MerchantManagementController extends Controller
     protected function toListPayload(Merchant $merchant): array
     {
         $primaryContact = $merchant->user;
+        $phoneNumber = $this->resolvePhone($primaryContact);
 
         return [
             'id' => $merchant->id,
@@ -155,7 +156,7 @@ class MerchantManagementController extends Controller
             'primary_contact' => $primaryContact ? [
                 'name' => $primaryContact->name,
                 'email' => $primaryContact->email,
-                'phone' => $primaryContact->phone ?? null,
+                'phone' => $phoneNumber,
             ] : null,
             'metrics' => [
                 'active_shipments' => (int) ($merchant->active_shipments_count ?? 0),
@@ -212,6 +213,17 @@ class MerchantManagementController extends Controller
             })->values(),
             'recent_parcels' => $recentParcelsFormatted,
         ]);
+    }
+
+    protected function resolvePhone(?\App\Models\User $user): ?string
+    {
+        if (! $user) {
+            return null;
+        }
+
+        return $user->mobile
+            ?? $user->phone_e164
+            ?? null;
     }
 }
 

@@ -61,14 +61,14 @@ class ApiV1DemoSeeder extends Seeder
 
         // Create shipments in various statuses
         $statuses = [
-            ShipmentStatus::CREATED,
-            ShipmentStatus::HANDED_OVER,
-            ShipmentStatus::ARRIVE,
-            ShipmentStatus::SORT,
-            ShipmentStatus::LOAD,
-            ShipmentStatus::DEPART,
-            ShipmentStatus::IN_TRANSIT,
-            ShipmentStatus::ARRIVE_DEST,
+            ShipmentStatus::BOOKED,
+            ShipmentStatus::PICKUP_SCHEDULED,
+            ShipmentStatus::PICKED_UP,
+            ShipmentStatus::AT_ORIGIN_HUB,
+            ShipmentStatus::BAGGED,
+            ShipmentStatus::LINEHAUL_DEPARTED,
+            ShipmentStatus::LINEHAUL_ARRIVED,
+            ShipmentStatus::AT_DESTINATION_HUB,
             ShipmentStatus::OUT_FOR_DELIVERY,
             ShipmentStatus::DELIVERED,
         ];

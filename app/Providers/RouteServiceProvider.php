@@ -29,6 +29,10 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
 
+        Route::model('branch', \App\Models\Backend\Branch::class);
+        Route::model('driver', \App\Models\Driver::class);
+        Route::model('roster', \App\Models\DriverRoster::class);
+
         $this->routes(function () {
             Route::prefix('api')
                 ->middleware('api')

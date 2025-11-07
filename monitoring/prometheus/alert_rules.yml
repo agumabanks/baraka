@@ -1,0 +1,207 @@
+groups:
+  - name: courier-application-alerts
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: courier-app
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second (threshold: 0.1)"
+
+      # High response time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: courier-app
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s (threshold: 2s)"
+
+      # Database connection issues
+      - alert: DatabaseConnectionFailure
+        expr: mysql_global_status_threads_connected < 1
+        for: 1m
+        labels:
+          severity: critical
+          service: mysql
+        annotations:
+          summary: "Database connection failure"
+          description: "No active database connections detected"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} (threshold: 90%)"
+
+      # Disk space low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Disk space running low"
+          description: "Disk space is {{ $value | humanizePercentage }} available"
+
+      # Service down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.job }} service is down"
+
+  - name: financial-reporting-alerts
+    rules:
+      # Financial data processing errors
+      - alert: FinancialDataProcessingError
+        expr: rate(financial_processing_errors_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: critical
+          service: financial-reporting
+        annotations:
+          summary: "Financial data processing errors"
+          description: "Financial data processing error rate is {{ $value }} per second"
+
+      # Revenue recognition delays
+      - alert: RevenueRecognitionDelay
+        expr: financial_revenue_recognition_delay_seconds > 300
+        for: 5m
+        labels:
+          severity: warning
+          service: financial-reporting
+        annotations:
+          summary: "Revenue recognition processing delay"
+          description: "Revenue recognition processing delay is {{ $value }}s (threshold: 300s)"
+
+      # Database query performance
+      - alert: DatabaseQueryPerformance
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database query performance degradation"
+          description: "95th percentile database query time is {{ $value }}s (threshold: 5s)"
+
+  - name: infrastructure-alerts
+    rules:
+      # Container CPU usage
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total{name!=""}[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High container CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is {{ $value }}%"
+
+      # Container memory usage
+      - alert: HighContainerMemoryUsage
+        expr: container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High container memory usage"
+          description: "Container {{ $labels.name }} memory usage is {{ $value }}%"
+
+      # Redis connection issues
+      - alert: RedisConnectionFailure
+        expr: redis_connected_clients == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis connection failure"
+          description: "No Redis connections active"
+
+  - name: business-metrics-alerts
+    rules:
+      # Low transaction volume
+      - alert: LowTransactionVolume
+        expr: rate(financial_transactions_total[1h]) < 10
+        for: 15m
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Low transaction volume"
+          description: "Transaction volume is {{ $value }} per hour (expected: >10)"
+
+      # High failed transaction rate
+      - alert: HighFailedTransactionRate
+        expr: rate(financial_transactions_failed_total[5m]) / rate(financial_transactions_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: critical
+          service: business
+        annotations:
+          summary: "High failed transaction rate"
+          description: "Failed transaction rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+  - name: security-alerts
+    rules:
+      # Suspicious API activity
+      - alert: SuspiciousAPIActivity
+        expr: rate(api_requests_total{status="401"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "High number of unauthorized API requests"
+          description: "{{ $value }} unauthorized requests per second"
+
+      # Rate limiting triggered
+      - alert: RateLimitTriggered
+        expr: rate(rate_limit_exceeded_total[5m]) > 1
+        for: 1m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Rate limiting frequently triggered"
+          description: "Rate limiting exceeded {{ $value }} times per second"
+
+  - name: gdpr-compliance-alerts
+    rules:
+      # Data retention policy violation
+      - alert: DataRetentionPolicyViolation
+        expr: gdpr_data_retention_violations_total > 0
+        for: 0m
+        labels:
+          severity: critical
+          service: compliance
+        annotations:
+          summary: "GDPR data retention policy violation"
+          description: "Found {{ $value }} records violating data retention policies"
+
+      # Personal data access without authorization
+      - alert: UnauthorizedPersonalDataAccess
+        expr: rate(gdpr_unauthorized_data_access_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: compliance
+        annotations:
+          summary: "Unauthorized personal data access detected"
+          description: "{{ $value }} unauthorized personal data access attempts per second"

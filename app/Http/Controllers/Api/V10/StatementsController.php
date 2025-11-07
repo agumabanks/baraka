@@ -17,9 +17,25 @@ class StatementsController extends Controller
     public function index()
     {
         try {
-            $statements = MerchantStatement::where('merchant_id', auth()->user()->merchant->id)->orderByDesc('id')->get();
+            $user = auth()->user();
+            $merchantId = $user?->merchant->id ?? null;
 
-            return $this->responseWithSuccess(__('statements.title'), ['statements' => StatementsResource::collection($statements)], 200);
+            $statementsQuery = MerchantStatement::with(['merchant', 'parcel'])->orderByDesc('id');
+
+            if ($merchantId) {
+                $statementsQuery->where('merchant_id', $merchantId);
+            }
+
+            $limit = (int) request('limit', 100);
+            if ($limit > 0) {
+                $statementsQuery->limit($limit);
+            }
+
+            $statements = $statementsQuery->get();
+
+            return $this->responseWithSuccess(__('statements.title'), [
+                'statements' => StatementsResource::collection($statements),
+            ], 200);
         } catch (\Exception $exception) {
             return $this->responseWithError(__('statements.title'), [], 500);
 
@@ -30,35 +46,42 @@ class StatementsController extends Controller
     {
 
         try {
+            $user = auth()->user();
+            $merchantId = $user?->merchant->id ?? $request->integer('merchant_id');
 
-            $id = auth()->user()->merchant->id;
+            $statementsQuery = MerchantStatement::with(['merchant', 'parcel'])->orderByDesc('id');
 
-            $parcelID = Parcel::where('tracking_id', $request->parcel_tracking_id)->first();
-            $statements = MerchantStatement::where('merchant_id', $id)->orderByDesc('id')->where(function ($query) use ($request, $parcelID) {
+            if ($merchantId) {
+                $statementsQuery->where('merchant_id', $merchantId);
+            }
 
-                if ($request->date) {
-                    $date = explode('To', $request->date);
-                    if (is_array($date)) {
-                        $from = Carbon::parse(trim($date[0]))->startOfDay()->toDateTimeString();
-                        $to = Carbon::parse(trim($date[1]))->endOfDay()->toDateTimeString();
-                        $query->whereBetween('created_at', [$from, $to]);
-                    }
+            if ($request->filled('date')) {
+                $date = explode('To', $request->date);
+                if (is_array($date)) {
+                    $from = Carbon::parse(trim($date[0]))->startOfDay()->toDateTimeString();
+                    $to = Carbon::parse(trim($date[1]))->endOfDay()->toDateTimeString();
+                    $statementsQuery->whereBetween('created_at', [$from, $to]);
                 }
+            }
 
-                if ($request->type) {
-                    $query->where('type', $request->type);
+            if ($request->filled('type')) {
+                $statementsQuery->where('type', $request->type);
+            }
+
+            if ($request->filled('parcel_tracking_id')) {
+                $parcel = Parcel::where('tracking_id', $request->parcel_tracking_id)->first();
+                if ($parcel) {
+                    $statementsQuery->where('parcel_id', $parcel->id);
+                } else {
+                    $statementsQuery->whereRaw('1 = 0');
                 }
+            }
 
-                if (! blank($parcelID)) {
-                    $query->where(['parcel_id' => $parcelID->id]);
-                }
-                if ($request->parcel_tracking_id && blank($parcelID)) {
-                    $query->where(['parcel_id' => 0]);
-                }
+            $statements = $statementsQuery->get();
 
-            })->get();
-
-            return $this->responseWithSuccess(__('statements.title'), ['statements' => StatementsResource::collection($statements)], 200);
+            return $this->responseWithSuccess(__('statements.title'), [
+                'statements' => StatementsResource::collection($statements),
+            ], 200);
 
         } catch (\Exception $exception) {
 

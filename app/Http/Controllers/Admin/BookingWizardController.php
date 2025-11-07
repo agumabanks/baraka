@@ -9,15 +9,21 @@ use App\Models\RateCard;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Services\Gs1LabelGenerator;
+use App\Services\Logistics\ShipmentLifecycleService;
 use App\Services\SsccGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class BookingWizardController extends Controller
 {
+    public function __construct(private ShipmentLifecycleService $lifecycleService)
+    {
+    }
+
     /**
      * Show the booking wizard
      */
@@ -66,6 +72,29 @@ class BookingWizardController extends Controller
                 'delivery_address' => $request->delivery_address,
             ]);
 
+        if (! $customer) {
+            Log::warning('Booking wizard: requested customer not found', [
+                'customer_id' => $request->customer_id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer could not be located. Please re-enter customer details.',
+            ], 404);
+        }
+
+        if ($request->customer_id) {
+            Log::info('Booking wizard re-using existing customer', [
+                'customer_id' => $customer->id,
+                'email' => $customer->email,
+            ]);
+        } else {
+            Log::info('Booking wizard created new customer', [
+                'customer_id' => $customer->id,
+                'email' => $customer->email,
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'customer' => $customer,
@@ -97,6 +126,15 @@ class BookingWizardController extends Controller
             'booking_declared_value' => $request->declared_value,
         ]);
 
+        Log::info('Booking wizard stored shipment parameters', [
+            'customer_id' => $request->customer_id,
+            'origin_branch_id' => $request->origin_branch_id,
+            'dest_branch_id' => $request->dest_branch_id,
+            'service_level' => $request->service_level,
+            'incoterm' => $request->incoterm,
+            'declared_value' => $request->declared_value,
+        ]);
+
         return response()->json([
             'success' => true,
             'next_step' => 3,
@@ -124,6 +162,25 @@ class BookingWizardController extends Controller
         // Calculate pricing
         $pricing = $this->calculatePricing($request->parcels);
 
+        if (isset($pricing['error'])) {
+            Log::warning('Booking wizard pricing unavailable', [
+                'customer_id' => session('booking_customer_id'),
+                'reason' => $pricing['error'],
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $pricing['error'],
+            ], 422);
+        }
+
+        Log::info('Booking wizard priced parcels', [
+            'customer_id' => session('booking_customer_id'),
+            'parcels' => count($request->parcels),
+            'total' => $pricing['total'] ?? null,
+            'currency' => $pricing['currency'] ?? null,
+        ]);
+
         return response()->json([
             'success' => true,
             'pricing' => $pricing,
@@ -136,25 +193,56 @@ class BookingWizardController extends Controller
      */
     public function step4(Request $request): JsonResponse
     {
+        $customerId = session('booking_customer_id');
+        $originBranchId = session('booking_origin_branch_id');
+        $destBranchId = session('booking_dest_branch_id');
+        $serviceLevel = session('booking_service_level');
+        $incoterm = session('booking_incoterm');
+        $parcelPayloads = session('booking_parcels', []);
+        $priceAmount = session('booking_total_price');
+
+        if (! $customerId || ! $originBranchId || ! $destBranchId || empty($parcelPayloads)) {
+            Log::warning('Booking wizard step4 invoked without complete session payload', [
+                'customer_id' => $customerId,
+                'origin_branch_id' => $originBranchId,
+                'dest_branch_id' => $destBranchId,
+                'parcels' => count($parcelPayloads ?? []),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking session expired. Please restart the booking wizard.',
+            ], 409);
+        }
+
         DB::beginTransaction();
 
         try {
             // Create shipment
             $shipment = Shipment::create([
-                'customer_id' => session('booking_customer_id'),
-                'origin_branch_id' => session('booking_origin_branch_id'),
-                'dest_branch_id' => session('booking_dest_branch_id'),
-                'service_level' => session('booking_service_level'),
-                'incoterm' => session('booking_incoterm'),
-                'price_amount' => session('booking_total_price'),
+                'customer_id' => $customerId,
+                'origin_branch_id' => $originBranchId,
+                'dest_branch_id' => $destBranchId,
+                'service_level' => $serviceLevel,
+                'incoterm' => $incoterm,
+                'price_amount' => $priceAmount ?? 0,
                 'currency' => 'EUR',
-                'current_status' => \App\Enums\ShipmentStatus::CREATED,
+                'current_status' => \App\Enums\ShipmentStatus::BOOKED,
                 'created_by' => auth()->id(),
             ]);
 
+            $this->lifecycleService->transition($shipment, \App\Enums\ShipmentStatus::BOOKED, [
+                'trigger' => 'booking_wizard.step4',
+                'performed_by' => auth()->id(),
+                'timestamp' => now(),
+                'force' => true,
+                'location_type' => 'branch',
+                'location_id' => $originBranchId,
+            ]);
+
             // Create parcels with SSCC
-            $parcels = [];
-            foreach (session('booking_parcels') as $parcelData) {
+            $createdParcels = [];
+            foreach ($parcelPayloads as $parcelData) {
                 $sscc = SsccGenerator::generate();
 
                 $parcel = Parcel::create([
@@ -172,17 +260,24 @@ class BookingWizardController extends Controller
                     'declared_value' => $parcelData['declared_value'] ?? null,
                 ]);
 
-                $parcels[] = $parcel;
+                $createdParcels[] = $parcel;
             }
 
             // Generate labels
-            $labelPdf = Gs1LabelGenerator::generateBulkLabels(collect($parcels));
+            $labelPdf = Gs1LabelGenerator::generateBulkLabels(collect($createdParcels));
 
             // Save labels to storage
             $labelPath = 'labels/shipment_'.$shipment->id.'.pdf';
             Storage::put($labelPath, $labelPdf);
 
             DB::commit();
+
+            Log::info('Booking wizard created shipment', [
+                'shipment_id' => $shipment->id,
+                'customer_id' => $shipment->customer_id,
+                'parcels' => count($createdParcels),
+                'price_amount' => $priceAmount,
+            ]);
 
             // Clear session
             session()->forget(['booking_customer_id', 'booking_origin_branch_id', 'booking_dest_branch_id',
@@ -197,6 +292,11 @@ class BookingWizardController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('Booking wizard failed to create shipment', [
+                'message' => $e->getMessage(),
+                'customer_id' => $customerId,
+            ]);
 
             return response()->json([
                 'success' => false,
@@ -216,11 +316,22 @@ class BookingWizardController extends Controller
 
         $shipment = Shipment::find($request->shipment_id);
 
+        if (! $shipment) {
+            Log::warning('Booking wizard handover requested for missing shipment', [
+                'shipment_id' => $request->shipment_id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Shipment not found for handover.',
+            ], 404);
+        }
+
         // Create ARRIVE scan events for all parcels
         foreach ($shipment->parcels as $parcel) {
             \App\Models\ScanEvent::create([
                 'sscc' => $parcel->sscc,
-                'type' => \App\Enums\ScanType::ARRIVE,
+                'type' => \App\Enums\ScanType::ORIGIN_ARRIVAL,
                 'branch_id' => $shipment->origin_branch_id,
                 'user_id' => auth()->id(),
                 'occurred_at' => now(),
@@ -229,7 +340,18 @@ class BookingWizardController extends Controller
         }
 
         // Update shipment status
-        $shipment->update(['current_status' => \App\Enums\ShipmentStatus::HANDED_OVER]);
+        $this->lifecycleService->transition($shipment, \App\Enums\ShipmentStatus::AT_ORIGIN_HUB, [
+            'trigger' => 'booking_wizard.step5',
+            'performed_by' => auth()->id(),
+            'timestamp' => now(),
+            'location_type' => 'branch',
+            'location_id' => $shipment->origin_branch_id,
+        ]);
+
+        Log::info('Booking wizard handover complete', [
+            'shipment_id' => $shipment->id,
+            'parcels' => $shipment->parcels()->count(),
+        ]);
 
         return response()->json([
             'success' => true,
@@ -241,19 +363,36 @@ class BookingWizardController extends Controller
     /**
      * Download labels
      */
-    public function downloadLabels(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function downloadLabels(Request $request, ?int $shipmentId = null): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
+        $shipmentId = $shipmentId ?? (int) $request->input('shipment_id');
+
+        if (! $shipmentId) {
+            abort(422, 'Shipment ID is required');
+        }
+
+        $request->merge(['shipment_id' => $shipmentId]);
+
         $request->validate([
             'shipment_id' => 'required|exists:shipments,id',
         ]);
 
-        $labelPath = 'labels/shipment_'.$request->shipment_id.'.pdf';
+        $labelPath = 'labels/shipment_'.$shipmentId.'.pdf';
 
         if (! Storage::exists($labelPath)) {
+            Log::warning('Booking wizard requested labels not found', [
+                'shipment_id' => $shipmentId,
+                'path' => $labelPath,
+            ]);
             abort(404, 'Labels not found');
         }
 
-        return Storage::download($labelPath, 'shipment_'.$request->shipment_id.'_labels.pdf');
+        Log::info('Booking wizard labels downloaded', [
+            'shipment_id' => $shipmentId,
+            'path' => $labelPath,
+        ]);
+
+        return Storage::download($labelPath, 'shipment_'.$shipmentId.'_labels.pdf');
     }
 
     /**
@@ -267,6 +406,11 @@ class BookingWizardController extends Controller
             ->first();
 
         if (! $rateCard) {
+            Log::warning('Booking wizard rate card not found', [
+                'origin_country' => 'DE',
+                'dest_country' => 'CD',
+            ]);
+
             return ['error' => 'No rate card found'];
         }
 

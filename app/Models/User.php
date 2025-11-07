@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\Status;
+use App\Enums\UserType;
 use App\Models\Backend\Account;
+use App\Models\Backend\BranchWorker;
 use App\Models\Backend\DeliveryMan;
 use App\Models\Backend\Department;
 use App\Models\Backend\Designation;
@@ -12,6 +14,8 @@ use App\Models\Backend\Merchant;
 use App\Models\Backend\Role;
 use App\Models\Backend\Salary;
 use App\Models\Backend\Upload;
+use App\Models\Driver;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -23,6 +27,35 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, LogsActivity, Notifiable;
+
+    public const CLIENT_TYPES = [UserType::MERCHANT];
+
+    public const TEAM_MEMBER_TYPES = [UserType::DELIVERYMAN, UserType::INCHARGE, UserType::HUB];
+
+    public const SYSTEM_ADMIN_TYPES = [UserType::ADMIN];
+
+    private const USER_TYPE_LABELS = [
+        UserType::ADMIN => 'admin',
+        UserType::MERCHANT => 'client',
+        UserType::DELIVERYMAN => 'deliveryman',
+        UserType::INCHARGE => 'incharge',
+        UserType::HUB => 'hub',
+    ];
+
+    private const USER_TYPE_ALIAS_MAP = [
+        'admin' => UserType::ADMIN,
+        'system_admin' => UserType::ADMIN,
+        'merchant' => UserType::MERCHANT,
+        'client' => UserType::MERCHANT,
+        'customer' => UserType::MERCHANT,
+        'deliveryman' => UserType::DELIVERYMAN,
+        'delivery_man' => UserType::DELIVERYMAN,
+        'courier' => UserType::DELIVERYMAN,
+        'driver' => UserType::DELIVERYMAN,
+        'incharge' => UserType::INCHARGE,
+        'in_charge' => UserType::INCHARGE,
+        'hub' => UserType::HUB,
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -75,6 +108,97 @@ class User extends Authenticatable
         'permissions' => 'array',
         'notification_prefs' => 'array',
     ];
+
+    public function getUserTypeLabelAttribute(): ?string
+    {
+        $type = self::normalizeUserType($this->attributes['user_type'] ?? null);
+
+        return $type !== null ? (self::USER_TYPE_LABELS[$type] ?? null) : null;
+    }
+
+    public function getIsClientAttribute(): bool
+    {
+        return $this->isClient();
+    }
+
+    public function isClient(): bool
+    {
+        $type = self::normalizeUserType($this->attributes['user_type'] ?? null);
+
+        return $type !== null && in_array($type, self::CLIENT_TYPES, true);
+    }
+
+    public static function isClientType(int|string|null $value): bool
+    {
+        $type = self::normalizeUserType($value);
+
+        return $type !== null && in_array($type, self::CLIENT_TYPES, true);
+    }
+
+    public static function labelForUserType(int|string|null $value): ?string
+    {
+        $type = self::normalizeUserType($value);
+
+        return $type !== null ? (self::USER_TYPE_LABELS[$type] ?? null) : null;
+    }
+
+    public static function normalizeUserType(int|string|null $value): ?int
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        $key = strtolower(trim((string) $value));
+
+        return self::USER_TYPE_ALIAS_MAP[$key] ?? null;
+    }
+
+    public function scopeClients(Builder $query): Builder
+    {
+        return $query->whereIn('user_type', self::CLIENT_TYPES);
+    }
+
+    public function scopeTeamMembers(Builder $query): Builder
+    {
+        return $query->whereIn('user_type', self::TEAM_MEMBER_TYPES);
+    }
+
+    public function scopeSystemAdmins(Builder $query): Builder
+    {
+        return $query->whereIn('user_type', self::SYSTEM_ADMIN_TYPES);
+    }
+
+    public function scopeInternalUsers(Builder $query): Builder
+    {
+        return $query->whereIn('user_type', array_merge(self::TEAM_MEMBER_TYPES, self::SYSTEM_ADMIN_TYPES));
+    }
+
+    public function setUserTypeAttribute($value): void
+    {
+        $normalized = self::normalizeUserType($value);
+
+        if ($normalized === null) {
+            if (is_null($value)) {
+                $this->attributes['user_type'] = null;
+            } elseif (is_numeric($value)) {
+                $this->attributes['user_type'] = (int) $value;
+            } else {
+                $this->attributes['user_type'] = null;
+            }
+
+            return;
+        }
+
+        $this->attributes['user_type'] = $normalized;
+    }
 
     // Get single row in Hub table.
     public function hub()
@@ -159,6 +283,21 @@ class User extends Authenticatable
         return $this->belongsTo(DeliveryMan::class, 'id', 'user_id');
     }
 
+    public function branchWorker()
+    {
+        return $this->hasOne(BranchWorker::class, 'user_id');
+    }
+
+    public function branchWorkers(): HasMany
+    {
+        return $this->hasMany(BranchWorker::class, 'user_id');
+    }
+
+    public function drivers(): HasMany
+    {
+        return $this->hasMany(Driver::class, 'user_id');
+    }
+
     public function salary()
     {
         return $this->hasMany(Salary::class, 'user_id', 'id');
@@ -182,6 +321,10 @@ class User extends Authenticatable
      */
     public function hasRole(string|array $roles): bool
     {
+        if (isset($this->user_type) && (int) $this->user_type === UserType::ADMIN) {
+            return true;
+        }
+
         $this->loadMissing('role');
         $current = strtolower($this->role->slug ?? $this->role->name ?? '');
 
@@ -200,6 +343,10 @@ class User extends Authenticatable
     public function hasPermission(string|array $permissions): bool
     {
         if ($this->hasRole(['super-admin', 'admin'])) {
+            return true;
+        }
+
+        if (isset($this->user_type) && (int) $this->user_type === UserType::ADMIN) {
             return true;
         }
 

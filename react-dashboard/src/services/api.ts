@@ -27,15 +27,32 @@ import type {
 import type {
   BranchDetailResponse,
   BranchHierarchyResponse,
+  BranchFormPayload,
   BranchListParams,
   BranchListResponse,
+  BranchStatusValue,
 } from '../types/branches';
+import type {
+  DriverDetailResponse,
+  DriverFormPayload,
+  DriverListParams,
+  DriverListResponse,
+  DriverRosterFormPayload,
+  DriverRosterListParams,
+  DriverRosterListResponse,
+  DriverRosterRecord,
+  DriverTimeLogFormPayload,
+  DriverTimeLogListParams,
+  DriverTimeLogListResponse,
+  DriverTimeLogRecord,
+} from '../types/drivers';
 import type {
   MerchantDetailResponse,
   MerchantListParams,
   MerchantListResponse,
 } from '../types/merchants';
 import type { WorkflowBoardResponse } from '../types/workflow';
+import { toast } from '../stores/toastStore';
 import type {
   BranchManager,
   BranchManagerDetail,
@@ -62,6 +79,8 @@ import type {
   AdminUserFilters,
   AdminUserMeta,
   AdminUserPayload,
+  AdminUsersBulkAssignPayload,
+  AdminUsersBulkAssignResult,
 } from '../types/settings';
 
 export interface ApiResponse<T> {
@@ -174,9 +193,33 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     const status = error.response?.status;
+    const responseData = error.response?.data as Record<string, unknown> | undefined;
+    const message = typeof responseData?.message === 'string'
+      ? responseData.message
+      : error.message ?? 'An unexpected error occurred';
 
-    if (status && [401, 403, 419].includes(status)) {
+    if (!status) {
+      toast.error({
+        title: 'Network error',
+        description: 'Unable to reach the server. Check your connection and try again.',
+      });
+    } else if (status === 401 || status === 419) {
       redirectToLogin();
+    } else if (status === 403) {
+      toast.error({
+        title: 'Access denied',
+        description: message,
+      });
+    } else if (status >= 500) {
+      toast.error({
+        title: 'Server error',
+        description: message,
+      });
+    } else {
+      toast.warning({
+        title: 'Request failed',
+        description: message,
+      });
     }
 
     return Promise.reject(error);
@@ -314,6 +357,18 @@ export const branchesApi = {
     const response = await api.get<ApiResponse<BranchHierarchyResponse>>('/v10/branches/hierarchy');
     return response.data;
   },
+  createBranch: async (payload: BranchFormPayload): Promise<ApiResponse<BranchDetailResponse>> => {
+    const response = await api.post<ApiResponse<BranchDetailResponse>>('/v10/branches', payload);
+    return response.data;
+  },
+  updateBranch: async (branchId: number | string, payload: Partial<BranchFormPayload>): Promise<ApiResponse<BranchDetailResponse>> => {
+    const response = await api.put<ApiResponse<BranchDetailResponse>>(`/v10/branches/${branchId}`, payload);
+    return response.data;
+  },
+  toggleStatus: async (branchId: number | string, status: BranchStatusValue): Promise<ApiResponse<BranchDetailResponse>> => {
+    const response = await api.patch<ApiResponse<BranchDetailResponse>>(`/v10/branches/${branchId}/status`, { status });
+    return response.data;
+  },
 };
 
 export const branchManagersApi = {
@@ -394,6 +449,59 @@ export const branchWorkersApi = {
   },
 };
 
+export const driversApi = {
+  getDrivers: async (params?: DriverListParams): Promise<ApiResponse<DriverListResponse>> => {
+    const response = await api.get<ApiResponse<DriverListResponse>>('/v10/drivers', { params });
+    return response.data;
+  },
+  getDriver: async (driverId: number | string): Promise<ApiResponse<DriverDetailResponse>> => {
+    const response = await api.get<ApiResponse<DriverDetailResponse>>(`/v10/drivers/${driverId}`);
+    return response.data;
+  },
+  createDriver: async (payload: DriverFormPayload): Promise<ApiResponse<DriverDetailResponse>> => {
+    const response = await api.post<ApiResponse<DriverDetailResponse>>('/v10/drivers', payload);
+    return response.data;
+  },
+  updateDriver: async (driverId: number | string, payload: DriverFormPayload): Promise<ApiResponse<DriverDetailResponse>> => {
+    const response = await api.put<ApiResponse<DriverDetailResponse>>(`/v10/drivers/${driverId}`, payload);
+    return response.data;
+  },
+  toggleStatus: async (driverId: number | string, status: DriverDetailResponse['status']): Promise<ApiResponse<DriverDetailResponse>> => {
+    const response = await api.patch<ApiResponse<DriverDetailResponse>>(`/v10/drivers/${driverId}/status`, { status });
+    return response.data;
+  },
+};
+
+export const driverRostersApi = {
+  getRosters: async (params?: DriverRosterListParams): Promise<ApiResponse<DriverRosterListResponse>> => {
+    const response = await api.get<ApiResponse<DriverRosterListResponse>>('/v10/driver-rosters', { params });
+    return response.data;
+  },
+  createRoster: async (payload: DriverRosterFormPayload): Promise<ApiResponse<DriverRosterRecord>> => {
+    const response = await api.post<ApiResponse<DriverRosterRecord>>('/v10/driver-rosters', payload);
+    return response.data;
+  },
+  updateRoster: async (rosterId: number | string, payload: Partial<DriverRosterFormPayload>): Promise<ApiResponse<DriverRosterRecord>> => {
+    const response = await api.put<ApiResponse<DriverRosterRecord>>(`/v10/driver-rosters/${rosterId}`, payload);
+    return response.data;
+  },
+  deleteRoster: async (rosterId: number | string): Promise<ApiResponse<unknown>> => {
+    const response = await api.delete<ApiResponse<unknown>>(`/v10/driver-rosters/${rosterId}`);
+    return response.data;
+  },
+};
+
+export const driverTimeLogsApi = {
+  getLogs: async (params?: DriverTimeLogListParams): Promise<ApiResponse<DriverTimeLogListResponse>> => {
+    const response = await api.get<ApiResponse<DriverTimeLogListResponse>>('/v10/driver-time-logs', { params });
+    return response.data;
+  },
+  createLog: async (payload: DriverTimeLogFormPayload): Promise<ApiResponse<DriverTimeLogRecord>> => {
+    const response = await api.post<ApiResponse<DriverTimeLogRecord>>('/v10/driver-time-logs', payload);
+    return response.data;
+  },
+};
+
 const buildUserFormData = (payload: AdminUserPayload, isUpdate = false): FormData => {
   const formData = new FormData();
   formData.append('name', payload.name);
@@ -456,6 +564,10 @@ export const adminUsersApi = {
   },
   deleteUser: async (userId: number | string): Promise<ApiResponse<unknown>> => {
     const response = await api.delete<ApiResponse<unknown>>(`/admin/users/${userId}`);
+    return response.data;
+  },
+  bulkAssign: async (payload: AdminUsersBulkAssignPayload): Promise<ApiResponse<AdminUsersBulkAssignResult>> => {
+    const response = await api.post<ApiResponse<AdminUsersBulkAssignResult>>('/admin/users/bulk-assign', payload);
     return response.data;
   },
 };
@@ -577,6 +689,18 @@ export const operationsApi = {
     const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/operations/worker-utilization');
     return response.data;
   },
+  getNotifications: async (): Promise<ApiResponse<Record<string, unknown>[]>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>[]>>('/v10/operations/notifications');
+    return response.data;
+  },
+  getNotificationHistory: async (): Promise<ApiResponse<Record<string, unknown>[]>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>[]>>('/v10/operations/notification-history');
+    return response.data;
+  },
+  getUnreadNotifications: async (): Promise<ApiResponse<{ count: number }>> => {
+    const response = await api.get<ApiResponse<{ count: number }>>('/v10/operations/notifications/unread-count');
+    return response.data;
+  },
 };
 
 // Shipments API functions (used by Bookings page)
@@ -591,6 +715,151 @@ export const shipmentsApi = {
   getStatistics: async () => {
     const response = await api.get('/v10/shipments/statistics');
     return response.data as ApiResponse<Record<string, number>>;
+  },
+};
+
+export const reportsApi = {
+  getSummary: async (payload: Record<string, unknown> = {}) => {
+    const response = await api.post<ApiResponse<Record<string, unknown>>>('/v10/statement-reports', payload);
+    return response.data;
+  },
+};
+
+export const unifiedShipmentsApi = {
+  getHubSortation: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/unified-shipments/hub-sortation');
+    return response.data;
+  },
+  getInterBranchTransfers: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/unified-shipments/inter-branch-transfers');
+    return response.data;
+  },
+  getWorkflowAnalytics: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/unified-shipments/workflow-analytics');
+    return response.data;
+  },
+  getWorkflowAlerts: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/unified-shipments/workflow-alerts');
+    return response.data;
+  },
+};
+
+export const parcelsApi = {
+  getLogs: async (parcelId: string | number): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>(`/v10/parcel/logs/${parcelId}`);
+    return response.data;
+  },
+  trackByNumber: async (trackingNumber: string): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>(`/v10/parcel/tracking/${trackingNumber}`);
+    return response.data;
+  },
+};
+
+export const financeApi = {
+  getInvoices: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/invoice-list/index');
+    return response.data;
+  },
+  getInvoiceDetails: async (invoiceId: number | string): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>(`/v10/invoice-details/${invoiceId}`);
+    return response.data;
+  },
+  getPaymentAccounts: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/payment-accounts/index');
+    return response.data;
+  },
+  getPaymentRequests: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/payment-request/index');
+    return response.data;
+  },
+  getSettlements: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/statements/index');
+    return response.data;
+  },
+};
+
+export const searchApi = {
+  search: async (query: string, params: Record<string, unknown> = {}): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/search', {
+      params: {
+        q: query,
+        ...params,
+      },
+    });
+    return response.data;
+  },
+  autocomplete: async (query: string, limit = 10) => {
+    const response = await api.get('/v10/search/autocomplete', {
+      params: { q: query, limit },
+    });
+    return response.data as ApiResponse<Record<string, unknown>> & {
+      suggestions?: Array<Record<string, unknown>>;
+    };
+  },
+  advanced: async (params: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/search/advanced', { params });
+    return response.data;
+  },
+  stats: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/search/stats');
+    return response.data;
+  },
+};
+
+export const generalSettingsApi = {
+  getGeneralSettings: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/general-settings');
+    return response.data;
+  },
+  getCodCharges: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/settings/cod-charges');
+    return response.data;
+  },
+  getDeliveryCharges: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/settings/delivery-charges');
+    return response.data;
+  },
+  getCurrencies: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.get<ApiResponse<Record<string, unknown>>>('/v10/all-currencies');
+    return response.data;
+  },
+  updateGeneralSettings: async (payload: FormData): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await api.put<ApiResponse<Record<string, unknown>>>('/v10/general-settings', payload, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  },
+};
+
+export const bookingWizardApi = {
+  step1: async (payload: Record<string, unknown>) => {
+    const response = await api.post<ApiResponse<Record<string, unknown>>>('/v10/booking/step1', payload);
+    return response.data;
+  },
+  step2: async (payload: Record<string, unknown>) => {
+    const response = await api.post<ApiResponse<Record<string, unknown>>>('/v10/booking/step2', payload);
+    return response.data;
+  },
+  step3: async (payload: Record<string, unknown>) => {
+    const response = await api.post<ApiResponse<Record<string, unknown>>>('/v10/booking/step3', payload);
+    return response.data;
+  },
+  step4: async () => {
+    const response = await api.post<ApiResponse<Record<string, unknown>>>('/v10/booking/step4');
+    return response.data;
+  },
+  step5: async (payload: Record<string, unknown>) => {
+    const response = await api.post<ApiResponse<Record<string, unknown>>>('/v10/booking/step5', payload);
+    return response.data;
+  },
+  downloadLabels: async (shipmentId: string | number) => {
+    const response = await api.get(`/v10/booking/download-labels/${shipmentId}`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
   },
 };
 

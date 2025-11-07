@@ -31,9 +31,16 @@ class PaymentRequestController extends Controller
     public function index()
     {
         try {
-            $payments = $this->merchantPayments->getSingleMerchantPayments(auth()->user()->merchant->id);
+            $user = auth()->user();
+            $merchantId = $user?->merchant->id ?? null;
 
-            return $this->responseWithSuccess(__('paymentrequest.title'), ['payments' => PaymentResource::collection($payments)], 200);
+            if ($merchantId) {
+                $payments = $this->merchantPayments->getSingleMerchantPayments($merchantId);
+            } else {
+                $payments = $this->merchantPayments->all();
+            }
+
+            return $this->responseWithSuccess(__('paymentrequest.title'), ['requests' => PaymentResource::collection($payments)], 200);
         } catch (\Exception $exception) {
             return $this->responseWithError(__('paymentrequest.title'), [], 500);
 

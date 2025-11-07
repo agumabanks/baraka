@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '../services/api';
-import type { DashboardData, KPICard, WorkflowItem, ChartConfig, StatementData, QuickAction } from '../types/dashboard';
+import type {
+  DashboardActivityEntry,
+  DashboardData,
+  KPICard,
+  TeamOverviewEntry,
+  WorkflowItem,
+  ChartConfig,
+  StatementData,
+  QuickAction,
+} from '../types/dashboard';
 
 /**
  * API Response Types
@@ -33,6 +42,8 @@ interface DashboardApiResponse {
       cashCollection?: ChartConfig;
     };
     quickActions: QuickAction[];
+    teamOverview?: TeamOverviewEntry[];
+    activityTimeline?: DashboardActivityEntry[];
   };
 }
 
@@ -155,6 +166,8 @@ export const transformDashboardData = (
     statements: data.statements,
     charts: data.charts,
     quickActions: data.quickActions,
+    teamOverview: data.teamOverview ?? [],
+    activityTimeline: data.activityTimeline ?? [],
     loading: false,
   };
 };

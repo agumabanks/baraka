@@ -42,6 +42,13 @@ export const navigationConfig: NavigationConfig = {
           path: '/tracking',
           visible: true,
         },
+        {
+          id: 'reports-center',
+          label: 'Reports Center',
+          icon: 'BarChart2',
+          path: '/reports',
+          visible: true,
+        },
       ],
     },
     {
@@ -63,6 +70,27 @@ export const navigationConfig: NavigationConfig = {
           path: '/shipments',
           visible: true,
         },
+        {
+          id: 'bags',
+          label: 'Bags',
+          icon: 'Briefcase',
+          path: '/bags',
+          visible: true,
+        },
+        {
+          id: 'routes',
+          label: 'Routes',
+          icon: 'Route',
+          path: '/routes',
+          visible: true,
+        },
+        {
+          id: 'scans',
+          label: 'Scan Logs',
+          icon: 'Barcode',
+          path: '/scans',
+          visible: true,
+        },
       ],
     },
     {
@@ -80,7 +108,7 @@ export const navigationConfig: NavigationConfig = {
           children: [
             {
               id: 'branches-overview',
-              label: 'Overview',
+              label: 'Branch Performance',
               icon: 'LayoutDashboard',
               path: '/branches',
               visible: true,
@@ -97,6 +125,13 @@ export const navigationConfig: NavigationConfig = {
               label: 'Workers',
               icon: 'Users',
               path: '/branch-workers',
+              visible: true,
+            },
+            {
+              id: 'drivers',
+              label: 'Drivers & Rosters',
+              icon: 'Truck',
+              path: '/drivers',
               visible: true,
             },
             {

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api\V1\Client;
 
-use App\Events\ShipmentStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StorePodRequest;
 use App\Models\ScanEvent;
 use App\Models\Shipment;
 use App\Traits\ApiReturnFormatTrait;
+use App\Enums\ScanType;
+use App\Enums\ShipmentStatus;
+use App\Events\ShipmentStatusUpdated;
+use App\Services\Logistics\ShipmentLifecycleService;
 
 /**
  * @OA\Tag(
@@ -69,8 +72,16 @@ class PodController extends Controller
     {
         $this->authorize('pod', $shipment);
 
-        // Update shipment status to delivered
-        $shipment->update(['current_status' => \App\Enums\ShipmentStatus::DELIVERED]);
+        $lifecycleService = app(ShipmentLifecycleService::class);
+        $lifecycleService->transition($shipment, ShipmentStatus::DELIVERED, [
+            'trigger' => 'pod_submission',
+            'timestamp' => now(),
+            'location_type' => 'address',
+            'metadata' => [
+                'location' => $request->location,
+                'notes' => $request->notes,
+            ],
+        ]);
 
         // Broadcast status update
         broadcast(new ShipmentStatusUpdated($shipment));
@@ -78,10 +89,14 @@ class PodController extends Controller
         // Create POD event
         $event = ScanEvent::create([
             'shipment_id' => $shipment->id,
-            'type' => \App\Enums\ScanType::DELIVERED,
+            'type' => ScanType::DELIVERY_CONFIRMED,
+            'status_after' => ShipmentStatus::DELIVERED,
             'occurred_at' => now(),
-            'location' => $request->location,
             'notes' => 'POD: '.$request->notes,
+            'payload' => array_filter([
+                'location' => $request->location,
+                'recipient_signature' => $request->recipient_signature ?? null,
+            ]),
         ]);
 
         // Handle file upload if provided

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: courier-production
+  labels:
+    name: courier-production
+    environment: production
+    compliance: gdpr
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: courier-staging
+  labels:
+    name: courier-staging
+    environment: staging
+    compliance: gdpr
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring
+    environment: production

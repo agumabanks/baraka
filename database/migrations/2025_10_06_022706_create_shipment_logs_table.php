@@ -11,10 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('shipment_logs')) {
+            return;
+        }
+
         Schema::create('shipment_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('shipment_id')->constrained('shipments')->onDelete('cascade');
-            $table->foreignId('branch_id')->nullable()->constrained('unified_branches')->nullOnDelete();
+            $branchColumn = $table->foreignId('branch_id')->nullable();
+            if (Schema::hasTable('unified_branches')) {
+                $branchColumn->constrained('unified_branches')->nullOnDelete();
+            } elseif (Schema::hasTable('branches')) {
+                $branchColumn->constrained('branches')->nullOnDelete();
+            }
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('status', 50);
             $table->text('description')->nullable();

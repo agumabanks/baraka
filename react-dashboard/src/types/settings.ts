@@ -2,6 +2,65 @@ import type { PaginatedResponse } from './common';
 
 export type ActiveState = 'active' | 'inactive';
 
+export interface AdminUserTeam {
+  id: string;
+  label: string;
+  department: {
+    id: number;
+    title: string;
+  } | null;
+  hub: {
+    id: number;
+    name: string;
+  } | null;
+}
+
+export interface TeamMemberPreview {
+  id: number;
+  name: string;
+  initials?: string;
+  status: number;
+  role?: string | null;
+}
+
+export interface TeamSummary {
+  id: string;
+  label: string;
+  department: {
+    id: number;
+    title: string;
+  } | null;
+  hub: {
+    id: number;
+    name: string;
+  } | null;
+  total: number;
+  active: number;
+  inactive: number;
+  recent_hires: number;
+  active_ratio: number;
+  sample_users: TeamMemberPreview[];
+}
+
+export interface RoleSummary {
+  role_id: number | null;
+  label: string;
+  slug?: string | null;
+  total: number;
+  active: number;
+  inactive: number;
+  teams: number;
+  sample_users: Array<Pick<TeamMemberPreview, 'id' | 'name' | 'initials' | 'status'>>;
+}
+
+export interface RecentHireSummary {
+  id: number;
+  name: string;
+  role?: string | null;
+  team?: string | null;
+  joining_date?: string | null;
+}
+
 export interface AdminRole {
   id: number;
   name: string;
@@ -47,6 +106,7 @@ export interface AdminUser {
     slug: string;
     status: number;
   } | null;
+  role_label?: string | null;
   hub: {
     id: number;
     name: string;
@@ -59,6 +119,8 @@ export interface AdminUser {
     id: number;
     title: string;
   } | null;
+  team: AdminUserTeam | null;
+  team_label?: string | null;
   permissions: string[];
   created_at: string | null;
   updated_at: string | null;
@@ -100,6 +162,37 @@ export interface AdminUserMeta {
     value: number;
     label: string;
   }>;
+  totals?: {
+    total: number;
+    active: number;
+    inactive: number;
+    recent_hires: number;
+    active_ratio: number;
+  };
+  team_summary?: TeamSummary[];
+  role_summary?: RoleSummary[];
+  people_pulse?: {
+    recent_hires: RecentHireSummary[];
+    awaiting_activation: number;
+    trend_window_days?: number;
+  };
+}
+
+export interface TeamPulseData {
+  totals?: {
+    total: number;
+    active: number;
+    inactive: number;
+    recent_hires: number;
+    active_ratio: number;
+  };
+  team_summary?: TeamSummary[];
+  role_summary?: RoleSummary[];
+  people_pulse?: {
+    recent_hires: RecentHireSummary[];
+    awaiting_activation: number;
+    trend_window_days?: number;
+  };
 }
 
 export interface AdminUserPayload {
@@ -118,6 +211,24 @@ export interface AdminUserPayload {
   address: string;
   status: number;
   image?: File | null;
+}
+
+export interface AdminUsersBulkAssignPayload {
+  user_ids: number[];
+  role_id?: number | null;
+  hub_id?: number | null;
+  department_id?: number | null;
+  designation_id?: number | null;
+  status?: number | null;
+}
+
+export interface AdminUsersBulkAssignResult {
+  users: AdminUser[];
+  meta: AdminUserMeta;
+  applied: {
+    fields: string[];
+    count: number;
+  };
 }
 
 export interface AdminRolePayload {

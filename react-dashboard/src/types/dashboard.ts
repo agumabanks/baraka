@@ -84,11 +84,88 @@ export interface ChartConfig {
 /**
  * Workflow queue item status
  */
-export type WorkflowStatus = 'pending' | 'in_progress' | 'completed' | 'delayed';
+export type WorkflowStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'testing'
+  | 'awaiting_feedback'
+  | 'completed'
+  | 'delayed';
 
 /**
  * Individual workflow item
  */
+export interface WorkflowDependency {
+  id: string;
+  title?: string;
+  status?: 'blocked' | 'at_risk' | 'complete';
+}
+
+export interface WorkflowAttachment {
+  id: string;
+  name: string;
+  url: string;
+  preview_url?: string;
+  mime_type?: string;
+  size_bytes?: number;
+}
+
+export interface WorkflowTimeTracking {
+  totalSeconds: number;
+  running?: boolean;
+  started_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface WorkflowActivityEntry {
+  id: string;
+  message: string;
+  created_at: string;
+  user_name?: string;
+  user_id?: number | string;
+}
+
+export interface DashboardActivityEntry {
+  id: string;
+  action: string;
+  details: Record<string, unknown>;
+  createdAt?: string | null;
+  actor?: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    avatar?: string | null;
+  } | null;
+  task?: {
+    id: string;
+    title?: string | null;
+    status?: string | null;
+  } | null;
+}
+
+export interface TeamOverviewEntry {
+  id: string;
+  label: string;
+  department: {
+    id: number;
+    title: string;
+  } | null;
+  hub: {
+    id: number;
+    name: string;
+  } | null;
+  total: number;
+  active: number;
+  inactive: number;
+  active_ratio: number;
+  recent_hires: number;
+  sample_users: Array<{
+    id: number;
+    name: string;
+    status: number;
+  }>;
+}
+
 export interface WorkflowItem {
   /** Unique identifier */
   id: string;
@@ -100,12 +177,109 @@ export interface WorkflowItem {
   status: WorkflowStatus;
   /** Priority level (1-5, 5 being highest) */
   priority?: number | 'low' | 'medium' | 'high';
-  /** Assigned user */
+  /** Assigned user display name */
   assignedTo?: string;
+  /** Assigned user identifier (for permissions) */
+  assignedUserId?: number | string | null;
+  /** Related tracking number */
+  trackingNumber?: string;
+  /** Associated tags */
+  tags?: string[];
   /** Due date */
   dueDate?: string;
   /** Action URL */
   actionUrl?: string;
+  /** Project context */
+  projectId?: number | string | null;
+  /** Workspace / hub context */
+  workspaceId?: number | string | null;
+  /** Dependency graph */
+  dependencies?: WorkflowDependency[];
+  /** Attachment metadata */
+  attachments?: WorkflowAttachment[];
+  /** Time tracking snapshot */
+  timeTracking?: WorkflowTimeTracking;
+  /** Activity log entries */
+  activityLog?: WorkflowActivityEntry[];
+  /** Allowed transitions definition */
+  allowedTransitions?: Partial<Record<WorkflowStatus | 'any', WorkflowStatus[]>>;
+  /** Roles permitted to mutate this task */
+  restrictedRoles?: string[];
+  /** Arbitrary metadata */
+  metadata?: Record<string, unknown>;
+  /** Alternative snake_case tracking number */
+  tracking_number?: string | null;
+  /** Service level */
+  serviceLevel?: string | null;
+  /** Status label */
+  statusLabel?: string | null;
+  /** Status label (snake_case) */
+  status_label?: string | null;
+  /** Project name/context */
+  project?: string | null;
+  /** Client name */
+  client?: string | null;
+  /** Stage information */
+  stage?: string | null;
+  /** Origin branch */
+  originBranch?: string | null;
+  /** Origin branch (snake_case) */
+  origin_branch?: string | null;
+  /** Destination branch */
+  destinationBranch?: string | null;
+  /** Destination branch (snake_case) */
+  destination_branch?: string | null;
+  /** Promised delivery date */
+  promisedAt?: string | null;
+  /** Promised delivery date (snake_case) */
+  promised_at?: string | null;
+  /** Created at timestamp */
+  createdAt?: string | null;
+  /** Created at timestamp (snake_case) */
+  created_at?: string | null;
+  /** Due at timestamp */
+  due_at?: string | null;
+  /** Assigned user ID (snake_case) */
+  assigned_user_id?: number | string | null;
+  /** Assigned user name (snake_case) */
+  assigned_user_name?: string | null;
+  /** Assigned user avatar */
+  assignedUserAvatar?: string | null;
+  /** Assigned user avatar (snake_case) */
+  assigned_user_avatar?: string | null;
+  /** Assigned user initials */
+  assigned_user_initials?: string | null;
+  /** Attachments count */
+  attachmentsCount?: number | null;
+  /** Attachments count (snake_case) */
+  attachments_count?: number | null;
+  /** Time tracking (snake_case) */
+  time_tracking?: {
+    total_seconds?: number;
+    running?: boolean;
+    started_at?: string | null;
+    updated_at?: string | null;
+  } | null;
+  /** Watchers */
+  watchers?: Array<{
+    id: number | string;
+    name: string | null;
+    avatar?: string | null;
+  }> | null;
+  /** Comments count */
+  commentsCount?: number | null;
+  /** Comments count (snake_case) */
+  comments_count?: number | null;
+  /** Activity count */
+  activityCount?: number | null;
+  /** Activity count (snake_case) */
+  activity_count?: number | null;
+  /** Allowed transitions (snake_case) */
+  allowed_transitions?: Partial<Record<WorkflowStatus | 'any', WorkflowStatus[]>>;
+  /** Restricted roles (snake_case) */
+  restricted_roles?: string[];
+  /** Project ID (snake_case) */
+  project_id?: number | string | null;
 }
 
 /**
@@ -172,6 +346,12 @@ export interface DashboardData {
   
   /** Quick actions */
   quickActions: QuickAction[];
+
+  /** Team operations overview */
+  teamOverview: TeamOverviewEntry[];
+
+  /** Recent workflow activity timeline */
+  activityTimeline: DashboardActivityEntry[];
   
   /** Loading state */
   loading?: boolean;

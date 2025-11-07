@@ -95,14 +95,14 @@ export interface BranchManagerFormData {
 }
 
 export interface BranchOption {
-  value: number;
+  value: number | string;
   label: string;
   code: string;
   type: string;
 }
 
 export interface UserOption {
-  value: number;
+  value: number | string;
   label: string;
   email: string;
 }

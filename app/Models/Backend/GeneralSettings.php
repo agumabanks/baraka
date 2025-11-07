@@ -13,12 +13,15 @@ class GeneralSettings extends Model
     use HasFactory,LogsActivity;
 
     protected $fillable = [
-
         'phone',
         'name',
         'tracking_id',
         'details',
         'prefix',
+    ];
+
+    protected $casts = [
+        'details' => 'array',
     ];
 
     public function getActivitylogOptions(): LogOptions

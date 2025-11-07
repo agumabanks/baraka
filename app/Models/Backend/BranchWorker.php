@@ -2,7 +2,11 @@
 
 namespace App\Models\Backend;
 
+use App\Enums\BranchWorkerRole;
+use App\Enums\EmploymentStatus;
+use App\Enums\ShipmentStatus;
 use App\Enums\Status;
+use App\Services\Logistics\ShipmentLifecycleService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,6 +21,10 @@ class BranchWorker extends Model
         'branch_id',
         'user_id',
         'role',
+        'designation',
+        'employment_status',
+        'contact_phone',
+        'id_number',
         'permissions',
         'work_schedule',
         'hourly_rate',
@@ -28,12 +36,21 @@ class BranchWorker extends Model
     ];
 
     protected $casts = [
+        'role' => BranchWorkerRole::class,
+        'employment_status' => EmploymentStatus::class,
         'permissions' => 'array',
         'work_schedule' => 'array',
         'hourly_rate' => 'decimal:2',
         'assigned_at' => 'date',
         'unassigned_at' => 'date',
         'metadata' => 'array',
+    ];
+
+    protected $appends = [
+        'full_name',
+        'first_name',
+        'last_name',
+        'email',
     ];
 
     /**
@@ -97,7 +114,14 @@ class BranchWorker extends Model
     public function scopeActive($query)
     {
         return $query->where('status', Status::ACTIVE)
-                    ->whereNull('unassigned_at');
+                    ->whereNull('unassigned_at')
+                    ->where(function ($q) {
+                        $q->whereNull('employment_status')
+                          ->orWhereIn('employment_status', [
+                              EmploymentStatus::ACTIVE->value,
+                              EmploymentStatus::PROBATION->value,
+                          ]);
+                    });
     }
 
     /**
@@ -111,9 +135,18 @@ class BranchWorker extends Model
     /**
      * Scope: By role
      */
-    public function scopeByRole($query, string $role)
+    public function scopeByRole($query, BranchWorkerRole|string $role)
     {
-        return $query->where('role', $role);
+        $value = $role instanceof BranchWorkerRole ? $role->value : BranchWorkerRole::fromString($role)->value;
+
+        return $query->where('role', $value);
+    }
+
+    public function scopeWithEmploymentStatus($query, EmploymentStatus|string $status)
+    {
+        $value = $status instanceof EmploymentStatus ? $status->value : EmploymentStatus::fromString($status)->value;
+
+        return $query->where('employment_status', $value);
     }
 
     /**
@@ -143,11 +176,50 @@ class BranchWorker extends Model
     }
 
     /**
+     * Legacy compatibility: first name accessor.
+     */
+    public function getFirstNameAttribute(): string
+    {
+        $name = $this->resolveUserName();
+
+        if ($name === '') {
+            return '';
+        }
+
+        $segments = preg_split('/\s+/', $name, 2) ?: [];
+
+        return $segments[0] ?? $name;
+    }
+
+    /**
+     * Legacy compatibility: last name accessor.
+     */
+    public function getLastNameAttribute(): string
+    {
+        $name = $this->resolveUserName();
+
+        if ($name === '') {
+            return '';
+        }
+
+        $segments = preg_split('/\s+/', $name, 2) ?: [];
+
+        return $segments[1] ?? '';
+    }
+
+    /**
      * Get worker's email
      */
     public function getEmailAttribute(): string
     {
         return $this->user ? $this->user->email : '';
+    }
+
+    protected function resolveUserName(): string
+    {
+        $user = $this->relationLoaded('user') ? $this->getRelation('user') : $this->user;
+
+        return trim((string) ($user->name ?? ''));
     }
 
     /**
@@ -163,7 +235,13 @@ class BranchWorker extends Model
      */
     public function getFormattedRoleAttribute(): string
     {
-        return __('branch_worker.roles.' . $this->role, [], 'en');
+        $role = $this->role;
+
+        if (!$role instanceof BranchWorkerRole) {
+            $role = BranchWorkerRole::fromString((string) $role);
+        }
+
+        return $role->label();
     }
 
     /**
@@ -184,7 +262,13 @@ class BranchWorker extends Model
      */
     public function getIsCurrentlyActiveAttribute(): bool
     {
-        return $this->status === Status::ACTIVE && is_null($this->unassigned_at);
+        $employmentStatus = $this->employment_status instanceof EmploymentStatus
+            ? $this->employment_status
+            : ($this->employment_status ? EmploymentStatus::fromString((string) $this->employment_status) : EmploymentStatus::ACTIVE);
+
+        return $this->status === Status::ACTIVE
+            && is_null($this->unassigned_at)
+            && in_array($employmentStatus, [EmploymentStatus::ACTIVE, EmploymentStatus::PROBATION], true);
     }
 
     // Business Logic Methods
@@ -225,21 +309,25 @@ class BranchWorker extends Model
      */
     protected function getRolePermissions(): array
     {
-        return match($this->role) {
-            'dispatcher' => [
+        $role = $this->role instanceof BranchWorkerRole
+            ? $this->role
+            : BranchWorkerRole::fromString((string) $this->role);
+
+        return match($role) {
+            BranchWorkerRole::DISPATCHER => [
                 'view_shipments',
                 'assign_shipments',
                 'update_shipment_status',
                 'create_tasks',
                 'view_reports',
             ],
-            'driver' => [
+            BranchWorkerRole::DRIVER, BranchWorkerRole::COURIER => [
                 'view_assigned_shipments',
                 'update_shipment_status',
                 'pod_upload',
                 'view_route',
             ],
-            'supervisor' => [
+            BranchWorkerRole::OPS_SUPERVISOR, BranchWorkerRole::BRANCH_MANAGER => [
                 'view_shipments',
                 'assign_shipments',
                 'update_shipment_status',
@@ -247,13 +335,13 @@ class BranchWorker extends Model
                 'view_reports',
                 'approve_time_off',
             ],
-            'warehouse_worker' => [
+            BranchWorkerRole::SORTATION_AGENT => [
                 'view_shipments',
                 'update_shipment_status',
                 'manage_inventory',
                 'process_returns',
             ],
-            'customer_service' => [
+            BranchWorkerRole::CUSTOMER_SUPPORT => [
                 'view_shipments',
                 'update_shipment_status',
                 'handle_complaints',
@@ -272,7 +360,7 @@ class BranchWorker extends Model
     public function getCurrentWorkload(): array
     {
         $activeShipments = $this->assignedShipments()
-            ->whereIn('status', ['assigned', 'in_transit', 'out_for_delivery'])
+            ->whereIn('current_status', $this->assignmentStatusValues())
             ->count();
 
         $pendingTasks = $this->assignedTasks()
@@ -297,7 +385,7 @@ class BranchWorker extends Model
     protected function calculateCapacityUtilization(): float
     {
         $activeShipments = $this->assignedShipments()
-            ->whereIn('status', ['assigned', 'in_transit', 'out_for_delivery'])
+            ->whereIn('current_status', $this->assignmentStatusValues())
             ->count();
 
         // Assume max capacity of 10 shipments per worker
@@ -314,43 +402,43 @@ class BranchWorker extends Model
 
         $completedShipments = $this->assignedShipments()
             ->where('updated_at', '>=', $thirtyDaysAgo)
-            ->where('status', 'delivered')
+            ->where('current_status', ShipmentStatus::DELIVERED->value)
             ->count();
 
         $onTimeDeliveries = $this->assignedShipments()
             ->where('updated_at', '>=', $thirtyDaysAgo)
-            ->where('status', 'delivered')
+            ->where('current_status', ShipmentStatus::DELIVERED->value)
             ->whereRaw('delivered_at <= expected_delivery_date')
             ->count();
 
         $averageDeliveryTime = $this->assignedShipments()
             ->where('updated_at', '>=', $thirtyDaysAgo)
-            ->where('status', 'delivered')
+            ->where('current_status', ShipmentStatus::DELIVERED->value)
             ->whereNotNull('delivered_at')
             ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, delivered_at)) as avg_hours')
-            ->first();
+            ->value('avg_hours');
+
+        $workload = $this->getCurrentWorkload();
+        $onTimeRate = $completedShipments > 0 ? ($onTimeDeliveries / $completedShipments) * 100 : 0;
+        $workloadEfficiency = $this->calculateWorkloadEfficiency($onTimeRate, $workload['capacity_utilization']);
 
         return [
             'completed_shipments_30_days' => $completedShipments,
-            'on_time_delivery_rate' => $completedShipments > 0 ? ($onTimeDeliveries / $completedShipments) * 100 : 0,
-            'average_delivery_time_hours' => $averageDeliveryTime ? (float) $averageDeliveryTime->avg_hours : null,
-            'workload_efficiency' => $this->calculateWorkloadEfficiency(),
+            'on_time_delivery_rate' => $onTimeRate,
+            'average_delivery_time_hours' => $averageDeliveryTime ? (float) $averageDeliveryTime : null,
+            'workload_efficiency' => $workloadEfficiency,
         ];
     }
 
     /**
      * Calculate workload efficiency
      */
-    protected function calculateWorkloadEfficiency(): float
+    protected function calculateWorkloadEfficiency(float $onTimeRate, float $capacityUtilization): float
     {
-        $metrics = $this->getPerformanceMetrics();
-        $workload = $this->getCurrentWorkload();
+        $normalizedOnTime = $onTimeRate / 100;
+        $normalizedCapacity = $capacityUtilization / 100;
 
-        // Simple efficiency calculation based on on-time delivery rate and capacity utilization
-        $onTimeRate = $metrics['on_time_delivery_rate'] / 100;
-        $capacityRate = $workload['capacity_utilization'] / 100;
-
-        return ($onTimeRate * 0.7 + $capacityRate * 0.3) * 100;
+        return round(($normalizedOnTime * 0.7 + $normalizedCapacity * 0.3) * 100, 2);
     }
 
     /**
@@ -369,7 +457,7 @@ class BranchWorker extends Model
 
         // Check capacity (max 10 active shipments)
         $activeShipments = $this->assignedShipments()
-            ->whereIn('status', ['assigned', 'in_transit', 'out_for_delivery'])
+            ->whereIn('current_status', $this->assignmentStatusValues())
             ->count();
 
         return $activeShipments < 10;
@@ -409,10 +497,17 @@ class BranchWorker extends Model
             return false;
         }
 
-        $shipment->update([
+        $shipment->forceFill([
             'assigned_worker_id' => $this->id,
-            'status' => 'assigned',
             'assigned_at' => now(),
+        ])->save();
+
+        app(ShipmentLifecycleService::class)->transition($shipment->fresh(), ShipmentStatus::PICKUP_SCHEDULED, [
+            'trigger' => 'branch_worker.assign',
+            'performed_by' => $this->user?->id,
+            'timestamp' => now(),
+            'location_type' => 'branch',
+            'location_id' => $this->branch_id,
         ]);
 
         // Log the assignment
@@ -454,7 +549,7 @@ class BranchWorker extends Model
     protected function reassignActiveShipments(): void
     {
         $activeShipments = $this->assignedShipments()
-            ->whereIn('status', ['assigned', 'in_transit', 'out_for_delivery'])
+            ->whereIn('current_status', $this->assignmentStatusValues())
             ->get();
 
         foreach ($activeShipments as $shipment) {
@@ -478,6 +573,20 @@ class BranchWorker extends Model
         }
     }
 
+    private function assignmentStatusValues(): array
+    {
+        $statuses = array_merge(
+            ShipmentStatus::pickupStages(),
+            ShipmentStatus::transportStages(),
+            ShipmentStatus::deliveryStages(),
+            ShipmentStatus::returnStages()
+        );
+
+        $filtered = array_filter($statuses, fn (ShipmentStatus $status) => ! $status->isTerminal());
+
+        return array_map(fn (ShipmentStatus $status) => $status->value, $filtered);
+    }
+
     /**
      * Get worker's schedule for the week
      */
@@ -499,6 +608,15 @@ class BranchWorker extends Model
         }
 
         return $schedule;
+    }
+
+    public function getEmploymentStatusLabelAttribute(): string
+    {
+        $status = $this->employment_status instanceof EmploymentStatus
+            ? $this->employment_status
+            : ($this->employment_status ? EmploymentStatus::fromString((string) $this->employment_status) : EmploymentStatus::ACTIVE);
+
+        return $status->label();
     }
 
     /**

@@ -149,13 +149,16 @@ class CoreErpSeeder extends Seeder
             ]);
         }
 
+        $transactionReference = 'PAY-' . Str::upper(Str::random(8));
+
         Payment::create([
             'shipment_id' => $shipment->id,
             'client_id' => $client->id,
             'amount' => 49.99,
             'payment_method' => 'stripe',
             'status' => 'completed',
-            'transaction_reference' => 'PAY-' . Str::upper(Str::random(8)),
+            'transaction_id' => $transactionReference,
+            'transaction_reference' => $transactionReference,
             'paid_at' => Carbon::now(),
         ]);
     }

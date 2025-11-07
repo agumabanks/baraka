@@ -3,6 +3,7 @@
 namespace App\Http\Resources\v10;
 
 use App\Enums\BooleanStatus;
+use App\Enums\InvoiceStatus;
 use App\Enums\ParcelStatus;
 use App\Models\Backend\Parcel;
 use Carbon\Carbon;
@@ -18,37 +19,47 @@ class InvoiceDetailsResource extends JsonResource
      */
     public function toArray($request)
     {
-        $total_deliverd = Parcel::whereIn('id', $this->parcels_id)->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])->sum('cash_collection');
+        $parcelIds = collect($this->parcels_id ?? []);
 
-        $partials_deliverd = Parcel::whereIn('id', $this->parcels_id)->whereIn('status', [ParcelStatus::RETURN_RECEIVED_BY_MERCHANT, ParcelStatus::RETURN_ASSIGN_TO_MERCHANT, ParcelStatus::RETURN_TO_COURIER])->where('partial_delivered', BooleanStatus::YES)->sum('cash_collection');
+        $parcels = $parcelIds->isNotEmpty()
+            ? Parcel::whereIn('id', $parcelIds)->get()
+            : collect();
 
-        $total_delivery_charge = Parcel::whereIn('id', $this->parcels_id)->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])->sum('delivery_charge');
+        $deliveredParcels = $parcels->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED]);
+        $returnParcels = $parcels->whereIn('status', [ParcelStatus::RETURN_RECEIVED_BY_MERCHANT, ParcelStatus::RETURN_ASSIGN_TO_MERCHANT, ParcelStatus::RETURN_TO_COURIER]);
+        $partialDeliveryReturns = $returnParcels->where('partial_delivered', BooleanStatus::YES);
 
-        $total_cod_charge = Parcel::whereIn('id', $this->parcels_id)->sum('cod_amount');
+        $totalDeliveredAmount = $deliveredParcels->sum('cash_collection') + $partialDeliveryReturns->sum('cash_collection');
+        $totalDeliveryCharge = $deliveredParcels->sum('delivery_charge');
+        $totalCodCharge = $parcels->sum('cod_amount');
+        $totalReturnFee = $returnParcels->sum('return_charges');
+        $totalReturnDeliveryCharge = $returnParcels->sum('delivery_charge');
 
-        $total_return_fee = Parcel::whereIn('id', $this->parcels_id)->whereIn('status', [ParcelStatus::RETURN_TO_COURIER, ParcelStatus::RETURN_RECEIVED_BY_MERCHANT, ParcelStatus::RETURN_ASSIGN_TO_MERCHANT])->sum('return_charges');
+        $payableAmount = ($totalDeliveredAmount - $totalDeliveryCharge - $totalCodCharge - $totalReturnFee - $totalReturnDeliveryCharge);
 
-        $total_return_charge = Parcel::whereIn('id', $this->parcels_id)->whereIn('status', [ParcelStatus::RETURN_TO_COURIER, ParcelStatus::RETURN_RECEIVED_BY_MERCHANT, ParcelStatus::RETURN_ASSIGN_TO_MERCHANT])->sum('delivery_charge');
-
-        $total_delivered_amount = ($total_deliverd + $partials_deliverd);
-        $payable_amount = ((($total_delivered_amount - $total_delivery_charge) - $total_cod_charge) - $total_return_fee - $total_return_charge);
-
-        $total_parcels = Parcel::whereIn('id', $this->parcels_id)->count();
+        $status = $this->status;
+        $statusLabel = match ((int) $status) {
+            InvoiceStatus::PAID => __('invoice.'.InvoiceStatus::PAID),
+            InvoiceStatus::PROCESSING => __('invoice.'.InvoiceStatus::PROCESSING),
+            InvoiceStatus::UNPAID => __('invoice.'.InvoiceStatus::UNPAID),
+            default => null,
+        };
 
         return [
             'id' => $this->id,
             'invoice_id' => $this->invoice_id,
-            'status' => $this->InvoiceStatus,
-            'total_deliverd_amount' => $total_delivered_amount,
-            'delivery_charge' => $total_delivery_charge,
-            'cod_amount' => $total_cod_charge,
-            'total_return_fee' => $total_return_fee,
-            'payable_amount' => $payable_amount,
-            'invoice_date' => Carbon::parse($this->invoice_date)->format('d M Y'),
-            'merchant_name' => $this->merchant->business_name,
-            'merchant_phone' => $this->merchant->user->mobile,
-            'merchant_address' => $this->merchant->address,
-            'total_parcels' => $total_parcels,
+            'status' => $status,
+            'status_label' => $statusLabel,
+            'total_delivered_amount' => $totalDeliveredAmount,
+            'delivery_charge' => $totalDeliveryCharge,
+            'cod_amount' => $totalCodCharge,
+            'total_return_fee' => $totalReturnFee,
+            'payable_amount' => $payableAmount,
+            'invoice_date' => $this->invoice_date ? Carbon::parse($this->invoice_date)->format('d M Y') : optional($this->created_at)->format('d M Y'),
+            'merchant_name' => optional($this->merchant)->business_name,
+            'merchant_phone' => optional(optional($this->merchant)->user)->mobile,
+            'merchant_address' => optional($this->merchant)->address,
+            'total_parcels' => $parcels->count(),
             'parcels' => $this->InvoiceParcelList,
 
         ];

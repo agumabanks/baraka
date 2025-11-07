@@ -17,7 +17,7 @@ class UpdateCustomerRequest extends FormRequest
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,'.$this->route('customer')->id,
             'mobile' => 'sometimes|string|max:20',
-            'user_type' => 'sometimes|string|in:merchant,customer',
+            'user_type' => 'sometimes|string|in:merchant,customer,client',
             'status' => 'sometimes|string|in:active,inactive',
         ];
     }
@@ -31,7 +31,7 @@ class UpdateCustomerRequest extends FormRequest
             'email.unique' => 'This email is already in use',
             'mobile.string' => 'Mobile must be a string',
             'mobile.max' => 'Mobile must not exceed 20 characters',
-            'user_type.in' => 'User type must be merchant or customer',
+            'user_type.in' => 'User type must be merchant, customer, or client',
             'status.in' => 'Status must be active or inactive',
         ];
     }

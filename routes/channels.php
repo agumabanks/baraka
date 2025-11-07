@@ -20,6 +20,18 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
+Broadcast::channel('workflow-tasks', function ($user) {
+    if (! $user) {
+        return false;
+    }
+
+    return [
+        'id' => (string) $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+    ];
+});
+
 Broadcast::channel('shipment.{id}', function ($user, $id) {
     $shipment = Shipment::find($id);
 

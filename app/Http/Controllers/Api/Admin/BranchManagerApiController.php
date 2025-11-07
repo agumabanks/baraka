@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Backend\BranchManager;
-use App\Models\User;
 use App\Models\Backend\Branch;
+use App\Models\User;
+use App\Models\Shipment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -260,20 +261,133 @@ class BranchManagerApiController extends Controller
     }
 
     /**
-     * Get available users for branch manager assignment
+     * Provide available branches and users for the create form.
      */
-    public function availableUsers(): JsonResponse
+    public function formMeta(): JsonResponse
     {
+        $branches = Branch::query()
+            ->select(['id', 'name', 'code', 'type', 'status'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Branch $branch) => [
+                'value' => $branch->id,
+                'label' => $branch->name,
+                'code' => $branch->code,
+                'type' => $branch->type,
+                'status' => $branch->status,
+            ]);
+
         $users = User::whereDoesntHave('branchManager')
             ->where('status', 1)
-            ->where('role_id', 3)
             ->select('id', 'name', 'email', 'phone')
-            ->get();
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $user) => [
+                'value' => $user->id,
+                'label' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+            ]);
 
         return response()->json([
             'success' => true,
-            'data' => $users,
-            'message' => 'Available users retrieved successfully'
+            'data' => [
+                'branches' => $branches,
+                'users' => $users,
+            ],
+        ]);
+    }
+
+    /**
+     * Adjust a manager's balance.
+     */
+    public function updateBalance(Request $request, BranchManager $manager): JsonResponse
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric'],
+            'type' => ['required', 'in:credit,debit,adjustment'],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        DB::transaction(function () use (&$manager, $data) {
+            $amount = (float) $data['amount'];
+            if ($data['type'] === 'debit') {
+                $amount *= -1;
+            }
+
+            $manager->current_balance = round(max(0, ($manager->current_balance ?? 0) + $amount), 2);
+            $metadata = $manager->metadata ?? [];
+            $metadata['balance_adjustments'][] = [
+                'type' => $data['type'],
+                'amount' => $amount,
+                'notes' => $data['notes'] ?? null,
+                'updated_at' => now()->toIso8601String(),
+            ];
+            $manager->metadata = $metadata;
+            $manager->save();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Balance updated successfully',
+            'data' => [
+                'current_balance' => (float) $manager->current_balance,
+            ],
+        ]);
+    }
+
+    /**
+     * Basic settlement feed for a branch manager.
+     */
+    public function settlements(BranchManager $manager): JsonResponse
+    {
+        $shipments = Shipment::query()
+            ->where('origin_branch_id', $manager->branch_id)
+            ->orWhere('assigned_worker_id', $manager->user_id)
+            ->latest('created_at')
+            ->take(25)
+            ->get(['id', 'tracking_number', 'price_amount', 'currency', 'current_status', 'created_at']);
+
+        $items = $shipments->map(function (Shipment $shipment) {
+            return [
+                'id' => $shipment->id,
+                'reference' => $shipment->tracking_number,
+                'amount' => (float) ($shipment->price_amount ?? 0),
+                'currency' => $shipment->currency ?? 'UGX',
+                'status' => $shipment->current_status,
+                'date' => optional($shipment->created_at)->toIso8601String(),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'settlements' => $items,
+                'total_amount' => $items->sum('amount'),
+            ],
+        ]);
+    }
+
+    /**
+     * Bulk status update for branch managers.
+     */
+    public function bulkStatusUpdate(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'manager_ids' => ['required', 'array', 'min:1'],
+            'manager_ids.*' => ['integer', 'exists:branch_managers,id'],
+            'status' => ['required', 'in:active,inactive,suspended'],
+        ]);
+
+        $updated = BranchManager::whereIn('id', $data['manager_ids'])
+            ->update(['status' => $data['status']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Statuses updated successfully',
+            'data' => [
+                'updated' => $updated,
+            ],
         ]);
     }
 }

@@ -1,0 +1,3503 @@
+openapi: 3.0.3
+info:
+  title: Unified Logistics Pricing API
+  description: |
+    Comprehensive API for the enhanced logistics pricing system providing instant quote generation, contract management, promotional campaigns, and analytics.
+    
+    ## Features
+    - **Real-time Pricing**: Instant quote generation with dynamic calculations
+    - **Contract Management**: Full CRUD operations for customer contracts
+    - **Promotion Engine**: Discount validation, application, and milestone tracking
+    - **Analytics & Insights**: ROI tracking, customer insights, and effectiveness metrics
+    - **Third-party Integration**: Carrier rates, partner sync, EDI support
+    - **Webhook Management**: Real-time event notifications
+    - **Bulk Operations**: High-volume processing for enterprise customers
+    
+    ## Authentication
+    API uses Bearer token authentication. Include your API key in the Authorization header:
+    ```
+    Authorization: Bearer YOUR_API_KEY
+    ```
+    
+    ## Rate Limiting
+    - **Quotes**: 100 requests per minute
+    - **Bulk Operations**: 10 requests per hour
+    - **Contracts**: 50 requests per minute
+    - **Promotions**: 60 requests per minute
+    
+    ## Response Format
+    All responses follow a consistent format:
+    ```json
+    {
+      "success": true,
+      "data": {},
+      "meta": {
+        "timestamp": "2024-01-01T00:00:00Z",
+        "request_id": "req_1234567890",
+        "api_version": "1.0"
+      }
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api-support@logistics.com
+    url: https://docs.logistics.com/support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.logistics.com/v1
+    description: Production server
+  - url: https://staging-api.logistics.com/v1
+    description: Staging server
+  - url: http://localhost:8000/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ================================
+  # QUOTE GENERATION ENDPOINTS
+  # ================================
+  
+  /pricing/quote:
+    post:
+      tags:
+        - Quotes
+      summary: Generate instant quote
+      description: Calculate real-time shipping quote with dynamic pricing, promotions, and contract discounts
+      operationId: generateInstantQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstantQuoteRequest'
+            examples:
+              basic_quote:
+                summary: Basic shipping quote
+                value:
+                  origin: "US"
+                  destination: "CA"
+                  service_level: "standard"
+                  shipment_data:
+                    weight_kg: 2.5
+                    pieces: 1
+                  currency: "USD"
+              express_international:
+                summary: Express international shipping
+                value:
+                  origin: "US"
+                  destination: "DE"
+                  service_level: "express"
+                  shipment_data:
+                    weight_kg: 5.0
+                    pieces: 2
+                    dimensions:
+                      length_cm: 40
+                      width_cm: 30
+                      height_cm: 20
+                    declared_value: 150.00
+                  customer_id: 12345
+                  contract_id: 67890
+                  promo_code: "WELCOME10"
+                  include_competitor_data: true
+                  include_alternatives: true
+      responses:
+        '200':
+          description: Quote generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+        '400':
+          $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          $ref: '#/components/schemas/RateLimitErrorResponse'
+
+  /pricing/quote/bulk:
+    post:
+      tags:
+        - Quotes
+      summary: Generate bulk quotes
+      description: Process multiple quote requests asynchronously for optimization scenarios
+      operationId: generateBulkQuotes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkQuoteRequest'
+            examples:
+              small_batch:
+                summary: Small batch (≤10 requests)
+                value:
+                  shipment_requests:
+                    - origin: "US"
+                      destination: "CA"
+                      service_level: "standard"
+                      shipment_data:
+                        weight_kg: 1.0
+                        pieces: 1
+                    - origin: "US"
+                      destination: "UK"
+                      service_level: "express"
+                      shipment_data:
+                        weight_kg: 2.0
+                        pieces: 1
+                  customer_id: 12345
+                  currency: "USD"
+                  optimization_mode: "cost"
+              large_batch:
+                summary: Large batch (>10 requests)
+                value:
+                  shipment_requests: []
+                  customer_id: 12345
+                  priority: "high"
+                  callback_url: "https://client.com/webhooks/bulk-quotes"
+                  include_analytics: true
+      responses:
+        '200':
+          description: Bulk quotes processed (synchronous for small batches)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkQuoteResponse'
+        '202':
+          description: Bulk quote processing started (asynchronous for large batches)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkQuoteAsyncResponse'
+        '400':
+          $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/schemas/ValidationErrorResponse'
+        '429':
+          $ref: '#/components/schemas/RateLimitErrorResponse'
+
+  /pricing/quote/{id}:
+    get:
+      tags:
+        - Quotes
+      summary: Get quote by ID
+      description: Retrieve a previously generated quote by its unique identifier
+      operationId: getQuote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique quote identifier
+          schema:
+            type: string
+            example: "Q20240101001ABC"
+      responses:
+        '200':
+          description: Quote retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+        '404':
+          $ref: '#/components/schemas/NotFoundErrorResponse'
+
+  # ================================
+  # CONTRACT MANAGEMENT ENDPOINTS
+  # ================================
+  
+  /contracts:
+    get:
+      tags:
+        - Contracts
+      summary: Get all contracts
+      description: Retrieve contracts with advanced filtering, pagination, and sorting
+      operationId: getContracts
+      parameters:
+        - name: status
+          in: query
+          description: Filter by contract status
+          schema:
+            type: string
+            enum: [active, inactive, draft, expired, suspended, all]
+            default: all
+        - name: customer_id
+          in: query
+          description: Filter by customer ID
+          schema:
+            type: integer
+            example: 12345
+        - name: contract_type
+          in: query
+          description: Filter by contract type
+          schema:
+            type: string
+            enum: [standard, premium, enterprise, custom]
+        - name: search
+          in: query
+          description: Search in contract names
+          schema:
+            type: string
+            example: "Enterprise"
+        - name: date_from
+          in: query
+          description: Filter contracts starting from date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+        - name: date_to
+          in: query
+          description: Filter contracts ending at date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+        - name: per_page
+          in: query
+          description: Number of contracts per page
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 100
+            default: 20
+        - name: include_metrics
+          in: query
+          description: Include contract metrics
+          schema:
+            type: boolean
+            default: false
+        - name: include_compliance
+          in: query
+          description: Include compliance status
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Contracts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractListResponse'
+        '400':
+          $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Contracts
+      summary: Create a new contract
+      description: Create a new customer contract with terms, pricing, and volume commitments
+      operationId: createContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractCreateRequest'
+            examples:
+              enterprise_contract:
+                summary: Enterprise contract with volume commitment
+                value:
+                  customer_id: 12345
+                  name: "Enterprise Shipping Agreement 2024"
+                  contract_type: "enterprise"
+                  start_date: "2024-02-01"
+                  end_date: "2025-01-31"
+                  volume_commitment: 10000
+                  discount_structure:
+                    volume_tiers:
+                      - threshold: 1000
+                        discount: 5.0
+                      - threshold: 5000
+                        discount: 10.0
+                      - threshold: 10000
+                        discount: 15.0
+                  special_terms: "Priority customer support, dedicated account manager"
+                  auto_renewal: true
+                  notification_settings:
+                    renewal_notice_days: 60
+                    volume_alert_threshold: 80
+      responses:
+        '201':
+          description: Contract created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractResponse'
+        '400':
+          $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /contracts/{id}:
+    get:
+      tags:
+        - Contracts
+      summary: Get contract details
+      description: Retrieve complete contract information including terms, pricing, and compliance status
+      operationId: getContract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Contract ID
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Contract details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractResponse'
+        '404':
+          $ref: '#/components/schemas/NotFoundErrorResponse'
+
+    put:
+      tags:
+        - Contracts
+      summary: Update contract
+      description: Update contract terms, dates, or pricing structure
+      operationId: updateContract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Contract ID
+          schema:
+            type: integer
+            example: 123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractUpdateRequest'
+      responses:
+        '200':
+          description: Contract updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractResponse'
+        '400':
+          $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/schemas/NotFoundErrorResponse'
+
+  /contracts/{id}/activate:
+    post:
+      tags:
+        - Contracts
+      summary: Activate contract
+      description: Activate a draft or suspended contract
+      operationId: activateContract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Contract ID
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Contract activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractActivationResponse'
+        '400':
+          $ref: '#/components/schemas/ErrorResponse'
+
+  /contracts/{id}/renew:
+    post:
+      tags:
+        - Contracts
+      summary: Renew contract
+      description: Process contract renewal with new terms and end date
+      operationId: renewContract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Contract ID
+          schema:
+            type: integer
+            example: 123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContractRenewalRequest'
+      responses:
+        '200':
+          description: Contract renewed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractResponse'
+
+  # ================================
+  # PROMOTION MANAGEMENT ENDPOINTS
+  # ================================
+  
+  /promotions/validate:
+    get:
+      tags:
+        - Promotions
+      summary: Validate promotional code
+      description: Validate promotional code with customer context and order details
+      operationId: validatePromoCode
+      parameters:
+        - name: code
+          in: query
+          required: true
+          description: Promotional code to validate
+          schema:
+            type: string
+            example: "WELCOME10"
+        - name: customer_id
+          in: query
+          description: Customer ID for eligibility check
+          schema:
+            type: integer
+            example: 12345
+        - name: order_data.total_amount
+          in: query
+          description: Order total for minimum value check
+          schema:
+            type: number
+            example: 50.00
+        - name: validation_context
+          in: query
+          description: Context of validation
+          schema:
+            type: string
+            enum: [checkout, quote, quote_bulk]
+            default: checkout
+      responses:
+        '200':
+          description: Promo code validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromoValidationResponse'
+        '400':
+          $ref: '#/components/schemas/ErrorResponse'
+
+  /promotions/apply:
+    post:
+      tags:
+        - Promotions
+      summary: Apply promotional discount
+      description: Apply validated promotional discount to an order or quote
+      operationId: applyPromoDiscount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoApplicationRequest'
+            examples:
+              percentage_discount:
+                summary: Apply percentage discount
+                value:
+                  campaign_type: "percentage"
+                  amount: 100.00
+                  customer_id: 12345
+                  context_data:
+                    percentage: 10.0
+                    max_discount: 25.00
+                  quote_id: "Q20240101001ABC"
+              free_shipping:
+                summary: Apply free shipping
+                value:
+                  campaign_type: "free_shipping"
+                  amount: 50.00
+                  context_data:
+                    shipping_cost: 12.50
+      responses:
+        '200':
+          description: Discount applied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromoApplicationResponse'
+
+  /promotions/milestones:
+    get:
+      tags:
+        - Promotions
+      summary: Get milestone progress
+      description: Retrieve customer milestone progress and achievements
+      operationId: getCustomerMilestones
+      parameters:
+        - name: customer_id
+          in: query
+          required: true
+          description: Customer ID
+          schema:
+            type: integer
+            example: 12345
+        - name: category
+          in: query
+          description: Filter by milestone category
+          schema:
+            type: string
+            enum: [shipment_count, volume, revenue, tenure]
+        - name: include_rewards
+          in: query
+          description: Include available rewards
+          schema:
+            type: boolean
+            default: false
+        - name: include_next_milestone
+          in: query
+          description: Include next milestone information
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Milestone progress retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MilestoneProgressResponse'
+
+  /promotions/milestones/track:
+    post:
+      tags:
+        - Promotions
+      summary: Track milestone progress
+      description: Update customer milestone progress based on completed actions
+      operationId: trackMilestone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneTrackingRequest'
+      responses:
+        '200':
+          description: Milestone progress updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MilestoneTrackingResponse'
+
+  # ================================
+  # ANALYTICS ENDPOINTS
+  # ================================
+  
+  /analytics/roi:
+    get:
+      tags:
+        - Analytics
+      summary: Get promotion ROI analytics
+      description: Retrieve detailed ROI metrics for promotional campaigns
+      operationId: getPromotionROI
+      parameters:
+        - name: promotion_id
+          in: query
+          required: true
+          description: Promotion ID
+          schema:
+            type: integer
+            example: 123
+        - name: timeframe
+          in: query
+          description: Analysis timeframe
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+            default: 30d
+        - name: detailed
+          in: query
+          description: Include detailed breakdown
+          schema:
+            type: boolean
+            default: true
+        - name: segment_breakdown
+          in: query
+          description: Include segment analysis
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: ROI analytics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ROIAnalyticsResponse'
+
+  /analytics/customer-insights:
+    get:
+      tags:
+        - Analytics
+      summary: Get customer insights
+      description: Retrieve detailed customer analytics including behavior patterns and predictions
+      operationId: getCustomerInsights
+      parameters:
+        - name: customer_id
+          in: query
+          required: true
+          description: Customer ID
+          schema:
+            type: integer
+            example: 12345
+        - name: timeframe
+          in: query
+          description: Analysis timeframe
+          schema:
+            type: string
+            enum: [30d, 90d, 1y, all]
+            default: 30d
+        - name: include_predictions
+          in: query
+          description: Include predictive analytics
+          schema:
+            type: boolean
+            default: false
+        - name: include_recommendations
+          in: query
+          description: Include personalized recommendations
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Customer insights retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerInsightsResponse'
+
+  # ================================
+  # WEBHOOK MANAGEMENT ENDPOINTS
+  # ================================
+  
+  /webhooks/register:
+    post:
+      tags:
+        - Webhooks
+      summary: Register webhook endpoint
+      description: Register a new webhook endpoint for receiving real-time event notifications
+      operationId: registerWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookRegistrationRequest'
+            examples:
+              pricing_webhook:
+                summary: Webhook for pricing events
+                value:
+                  url: "https://client.com/webhooks/pricing"
+                  events:
+                    - "quote.calculated"
+                    - "quote.expired"
+                    - "pricing.updated"
+                  secret: "webhook_secret_key_32_chars_long"
+                  description: "Pricing event notifications"
+                  active: true
+      responses:
+        '201':
+          description: Webhook registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookRegistrationResponse'
+
+  /webhooks/events:
+    get:
+      tags:
+        - Webhooks
+      summary: Get webhook events
+      description: Retrieve webhook delivery events and status
+      operationId: getWebhookEvents
+      parameters:
+        - name: webhook_id
+          in: query
+          required: true
+          description: Webhook ID
+          schema:
+            type: integer
+            example: 123
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Events per page
+          schema:
+            type: integer
+            minimum: 10
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          description: Filter by delivery status
+          schema:
+            type: string
+            enum: [pending, delivered, failed]
+        - name: event_type
+          in: query
+          description: Filter by event type
+          schema:
+            type: string
+            example: "quote.calculated"
+      responses:
+        '200':
+          description: Webhook events retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEventsResponse'
+
+  # ================================
+  # INTEGRATION ENDPOINTS
+  # ================================
+  
+  /integration/carriers/rates:
+    post:
+      tags:
+        - Integration
+      summary: Get carrier rates
+      description: Retrieve real-time rates from multiple carriers for comparison
+      operationId: getCarrierRates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarrierRatesRequest'
+      responses:
+        '200':
+          description: Carrier rates retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarrierRatesResponse'
+
+  /integration/partners/sync:
+    post:
+      tags:
+        - Integration
+      summary: Sync with partner systems
+      description: Initiate data synchronization with partner systems (ERP, CRM, WMS, etc.)
+      operationId: syncPartnerData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerSyncRequest'
+      responses:
+        '202':
+          description: Sync initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerSyncResponse'
+
+  /integration/status:
+    get:
+      tags:
+        - Integration
+      summary: Get integration status
+      description: Check the status of all integration services and external connections
+      operationId: getIntegrationStatus
+      responses:
+        '200':
+          description: Integration status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationStatusResponse'
+
+  # ================================
+  # SYSTEM ENDPOINTS
+  # ================================
+  
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: System health check and status monitoring
+      operationId: healthCheck
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        '503':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+  /business-rules:
+    get:
+      tags:
+        - System
+      summary: Get business rules
+      description: Retrieve current business rules, rate limits, and configuration
+      operationId: getBusinessRules
+      responses:
+        '200':
+          description: Business rules retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessRulesResponse'
+
+  /version:
+    get:
+      tags:
+        - System
+      summary: API version information
+      description: Get API version, build information, and compatibility details
+      operationId: getVersion
+      responses:
+        '200':
+          description: Version information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: API key obtained from your developer portal
+
+  schemas:
+    # ================================
+    # REQUEST SCHEMAS
+    # ================================
+    
+    InstantQuoteRequest:
+      type: object
+      required:
+        - origin
+        - destination
+        - service_level
+        - shipment_data
+      properties:
+        origin:
+          type: string
+          description: Origin country code
+          example: "US"
+          enum: [US, CA, UK, DE, FR, JP, AU]
+        destination:
+          type: string
+          description: Destination country code
+          example: "CA"
+          enum: [US, CA, UK, DE, FR, JP, AU]
+        service_level:
+          type: string
+          description: Shipping service level
+          example: "standard"
+          enum: [express, priority, standard, economy]
+        shipment_data:
+          $ref: '#/components/schemas/ShipmentData'
+        customer_id:
+          type: integer
+          description: Customer ID for personalized pricing
+          example: 12345
+        contract_id:
+          type: integer
+          description: Contract ID for contracted pricing
+          example: 67890
+        promo_code:
+          type: string
+          description: Promotional code to apply
+          example: "WELCOME10"
+        currency:
+          type: string
+          description: Currency for pricing
+          example: "USD"
+          enum: [USD, EUR, GBP, CAD, JPY, AUD]
+        include_competitor_data:
+          type: boolean
+          description: Include competitor price analysis
+          default: false
+        include_alternatives:
+          type: boolean
+          description: Include alternative service options
+          default: false
+        include_breakdown:
+          type: boolean
+          description: Include detailed price breakdown
+          default: true
+        response_format:
+          type: string
+          description: Response format preference
+          example: "detailed"
+          enum: [standard, detailed, summary]
+        delivery_date:
+          type: string
+          format: date
+          description: Desired delivery date
+          example: "2024-02-15"
+        urgent_processing:
+          type: boolean
+          description: Request urgent processing
+          default: false
+        source:
+          type: string
+          description: Request source
+          example: "api"
+          enum: [web, api, mobile, partner, admin]
+        reference_id:
+          type: string
+          description: Client reference ID
+          maxLength: 100
+          example: "ORDER-12345"
+
+    ShipmentData:
+      type: object
+      required:
+        - weight_kg
+        - pieces
+      properties:
+        weight_kg:
+          type: number
+          description: Total weight in kilograms
+          minimum: 0.1
+          maximum: 150
+          example: 2.5
+        pieces:
+          type: integer
+          description: Number of packages
+          minimum: 1
+          maximum: 1000
+          example: 1
+        dimensions:
+          $ref: '#/components/schemas/Dimensions'
+        declared_value:
+          type: number
+          description: Declared value for customs
+          minimum: 1
+          maximum: 100000
+          example: 150.00
+        contents:
+          type: string
+          description: Package contents description
+          maxLength: 500
+          example: "Electronics - Mobile phone"
+        hazardous:
+          type: boolean
+          description: Contains hazardous materials
+          default: false
+        refrigerated:
+          type: boolean
+          description: Requires refrigeration
+          default: false
+        fragile:
+          type: boolean
+          description: Contains fragile items
+          default: false
+
+    Dimensions:
+      type: object
+      properties:
+        length_cm:
+          type: number
+          description: Length in centimeters
+          minimum: 1
+          maximum: 200
+          example: 40
+        width_cm:
+          type: number
+          description: Width in centimeters
+          minimum: 1
+          maximum: 150
+          example: 30
+        height_cm:
+          type: number
+          description: Height in centimeters
+          minimum: 1
+          maximum: 150
+          example: 20
+
+    BulkQuoteRequest:
+      type: object
+      required:
+        - shipment_requests
+      properties:
+        shipment_requests:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/BulkShipmentRequest'
+        customer_id:
+          type: integer
+          description: Default customer ID for all requests
+          example: 12345
+        contract_id:
+          type: integer
+          description: Contract ID for contracted pricing
+          example: 67890
+        currency:
+          type: string
+          description: Currency for all quotes
+          example: "USD"
+          enum: [USD, EUR, GBP, CAD, JPY, AUD]
+        include_analytics:
+          type: boolean
+          description: Include batch analytics
+          default: false
+        optimization_mode:
+          type: string
+          description: Optimization criteria
+          example: "cost"
+          enum: [cost, time, reliability, balanced]
+        priority:
+          type: string
+          description: Processing priority
+          example: "normal"
+          enum: [low, normal, high, urgent]
+        callback_url:
+          type: string
+          format: url
+          description: Webhook URL for completion notification
+          example: "https://client.com/webhooks/bulk-quotes"
+        batch_name:
+          type: string
+          description: Custom batch identifier
+          maxLength: 255
+          example: "Q1 2024 Optimization"
+        notify_on_completion:
+          type: boolean
+          description: Send email notification on completion
+          default: true
+        include_service_alternatives:
+          type: boolean
+          description: Include alternative service levels
+          default: false
+
+    BulkShipmentRequest:
+      type: object
+      required:
+        - origin
+        - destination
+        - service_level
+        - shipment_data
+      properties:
+        origin:
+          type: string
+          description: Origin country code
+          example: "US"
+        destination:
+          type: string
+          description: Destination country code
+          example: "CA"
+        service_level:
+          type: string
+          description: Service level
+          example: "standard"
+        shipment_data:
+          $ref: '#/components/schemas/ShipmentData'
+        customer_reference:
+          type: string
+          description: Client reference for this shipment
+          maxLength: 100
+          example: "ORDER-12345-ITEM-1"
+
+    ContractCreateRequest:
+      type: object
+      required:
+        - customer_id
+        - name
+        - contract_type
+        - start_date
+        - end_date
+      properties:
+        customer_id:
+          type: integer
+          description: Customer ID
+          example: 12345
+        name:
+          type: string
+          description: Contract name
+          maxLength: 255
+          example: "Enterprise Shipping Agreement 2024"
+        contract_type:
+          type: string
+          description: Contract type
+          example: "enterprise"
+          enum: [standard, premium, enterprise, custom]
+        start_date:
+          type: string
+          format: date
+          description: Contract start date
+          example: "2024-02-01"
+        end_date:
+          type: string
+          format: date
+          description: Contract end date
+          example: "2025-01-31"
+        volume_commitment:
+          type: number
+          description: Minimum volume commitment
+          minimum: 0
+          example: 10000
+        discount_structure:
+          type: object
+          description: Discount structure configuration
+          properties:
+            volume_tiers:
+              type: array
+              items:
+                $ref: '#/components/schemas/VolumeTier'
+            service_discounts:
+              type: object
+              additionalProperties:
+                type: number
+                minimum: 0
+                maximum: 50
+        special_terms:
+          type: string
+          description: Special contract terms
+          maxLength: 2000
+          example: "Priority customer support, dedicated account manager"
+        auto_renewal:
+          type: boolean
+          description: Enable automatic renewal
+          default: false
+        notification_settings:
+          type: object
+          description: Notification preferences
+          properties:
+            renewal_notice_days:
+              type: integer
+              minimum: 1
+              maximum: 365
+              example: 60
+            volume_alert_threshold:
+              type: integer
+              minimum: 50
+              maximum: 100
+              example: 80
+        template_id:
+          type: integer
+          description: Contract template ID
+          example: 456
+        billing_terms:
+          type: object
+          description: Billing and payment terms
+          properties:
+            payment_terms_days:
+              type: integer
+              example: 30
+            billing_frequency:
+              type: string
+              example: "monthly"
+            currency:
+              type: string
+              example: "USD"
+
+    VolumeTier:
+      type: object
+      required:
+        - threshold
+        - discount
+      properties:
+        threshold:
+          type: number
+          description: Volume threshold
+          example: 1000
+        discount:
+          type: number
+          description: Discount percentage
+          minimum: 0
+          maximum: 50
+          example: 5.0
+
+    ContractUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Contract name
+          maxLength: 255
+        end_date:
+          type: string
+          format: date
+          description: New end date
+        volume_commitment:
+          type: number
+          description: Updated volume commitment
+          minimum: 0
+        discount_structure:
+          type: object
+          description: Updated discount structure
+        special_terms:
+          type: string
+          description: Updated special terms
+          maxLength: 2000
+        status:
+          type: string
+          description: Contract status
+          enum: [draft, active, inactive, suspended]
+        notification_settings:
+          type: object
+          description: Updated notification settings
+
+    ContractRenewalRequest:
+      type: object
+      required:
+        - new_end_date
+      properties:
+        new_end_date:
+          type: string
+          format: date
+          description: New contract end date
+          example: "2026-01-31"
+        renewal_terms:
+          type: object
+          description: Renewal terms and conditions
+        volume_adjustment:
+          type: number
+          description: Volume commitment adjustment
+        discount_review:
+          type: boolean
+          description: Request discount rate review
+          default: false
+
+    PromoApplicationRequest:
+      type: object
+      required:
+        - campaign_type
+        - amount
+      properties:
+        campaign_type:
+          type: string
+          description: Type of promotional campaign
+          example: "percentage"
+          enum: [percentage, fixed_amount, free_shipping, tier_upgrade]
+        amount:
+          type: number
+          description: Order amount to apply discount to
+          minimum: 0
+          example: 100.00
+        customer_id:
+          type: integer
+          description: Customer ID
+          example: 12345
+        context_data:
+          type: object
+          description: Campaign-specific data
+          properties:
+            percentage:
+              type: number
+              description: Discount percentage (for percentage campaigns)
+              minimum: 0
+              maximum: 100
+              example: 10.0
+            fixed_amount:
+              type: number
+              description: Fixed discount amount (for fixed_amount campaigns)
+              minimum: 0
+              example: 25.00
+            max_discount:
+              type: number
+              description: Maximum discount limit
+              minimum: 0
+              example: 50.00
+            new_tier:
+              type: string
+              description: New customer tier (for tier_upgrade campaigns)
+              example: "gold"
+            benefits:
+              type: array
+              description: Tier benefits
+              items:
+                type: string
+              example: ["5% discount", "Priority support", "Free returns"]
+            shipping_cost:
+              type: number
+              description: Shipping cost (for free_shipping campaigns)
+              minimum: 0
+              example: 12.50
+        quote_id:
+          type: string
+          description: Associated quote ID
+          example: "Q20240101001ABC"
+
+    MilestoneTrackingRequest:
+      type: object
+      required:
+        - customer_id
+        - trigger_type
+      properties:
+        customer_id:
+          type: integer
+          description: Customer ID
+          example: 12345
+        shipment_data:
+          type: object
+          description: Shipment data for milestone calculation
+          properties:
+            weight:
+              type: number
+              description: Shipment weight
+              minimum: 0
+              example: 2.5
+            volume:
+              type: number
+              description: Shipment volume
+              minimum: 0
+              example: 0.012
+            value:
+              type: number
+              description: Shipment value
+              minimum: 0
+              example: 150.00
+            shipment_id:
+              type: integer
+              description: Associated shipment ID
+              example: 98765
+        trigger_type:
+          type: string
+          description: Type of milestone trigger
+          example: "shipment_completed"
+          enum: [shipment_completed, volume_reached, revenue_milestone, tenure_achieved]
+
+    WebhookRegistrationRequest:
+      type: object
+      required:
+        - url
+        - events
+        - secret
+      properties:
+        url:
+          type: string
+          format: url
+          description: Webhook endpoint URL
+          example: "https://client.com/webhooks/pricing"
+        events:
+          type: array
+          minItems: 1
+          description: List of events to subscribe to
+          items:
+            type: string
+            example: "quote.calculated"
+            enum:
+              - quote.calculated
+              - quote.expired
+              - contract.created
+              - contract.updated
+              - contract.activated
+              - contract.expired
+              - promotion.applied
+              - promotion.expired
+              - milestone.achieved
+              - pricing.updated
+        secret:
+          type: string
+          minLength: 32
+          description: Secret key for webhook signature validation
+          example: "webhook_secret_key_32_characters_long"
+        description:
+          type: string
+          description: Webhook description
+          maxLength: 255
+          example: "Pricing event notifications for client application"
+        active:
+          type: boolean
+          description: Webhook status
+          default: true
+
+    CarrierRatesRequest:
+      type: object
+      required:
+        - shipment_data
+      properties:
+        shipment_data:
+          type: object
+          required:
+            - origin
+            - destination
+            - weight
+          properties:
+            origin:
+              type: string
+              description: Origin country code
+              example: "US"
+            destination:
+              type: string
+              description: Destination country code
+              example: "CA"
+            weight:
+              type: number
+              description: Package weight
+              minimum: 0.1
+              example: 2.5
+            dimensions:
+              $ref: '#/components/schemas/Dimensions'
+        carriers:
+          type: array
+          description: Specific carriers to query
+          items:
+            type: string
+            example: "fedex"
+            enum: [fedex, ups, dhl, usps, canada_post, royal_mail]
+        service_levels:
+          type: array
+          description: Service levels to include
+          items:
+            type: string
+            example: "express"
+            enum: [express, priority, standard, economy]
+        include_transit_times:
+          type: boolean
+          description: Include estimated transit times
+          default: false
+        include_delivery_dates:
+          type: boolean
+          description: Include delivery date estimates
+          default: false
+        currency:
+          type: string
+          description: Currency for rates
+          example: "USD"
+          enum: [USD, EUR, GBP, CAD, JPY, AUD]
+
+    PartnerSyncRequest:
+      type: object
+      required:
+        - partner_type
+        - data_type
+        - sync_direction
+      properties:
+        partner_type:
+          type: string
+          description: Type of partner system
+          example: "erp"
+          enum: [marketplace, erp, crm, warehouse, wms]
+        data_type:
+          type: string
+          description: Type of data to sync
+          example: "orders"
+          enum: [orders, customers, products, inventory, pricing]
+        sync_direction:
+          type: string
+          description: Synchronization direction
+          example: "bidirectional"
+          enum: [push, pull, bidirectional]
+        filters:
+          type: object
+          description: Sync filters and criteria
+          example:
+            date_from: "2024-01-01"
+            status: "pending"
+        batch_id:
+          type: string
+          description: Custom batch identifier
+          maxLength: 100
+          example: "sync-2024-01-15-001"
+        callback_url:
+          type: string
+          format: url
+          description: Completion notification URL
+          example: "https://client.com/webhooks/sync-completion"
+
+    # ================================
+    # RESPONSE SCHEMAS
+    # ================================
+    
+    QuoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            quote_id:
+              type: string
+              description: Unique quote identifier
+              example: "Q20240101001ABC"
+            service_level:
+              type: string
+              description: Service level
+              example: "standard"
+            route:
+              type: object
+              properties:
+                origin:
+                  type: string
+                  example: "US"
+                destination:
+                  type: string
+                  example: "CA"
+            pricing:
+              $ref: '#/components/schemas/PricingBreakdown'
+            delivery_info:
+              $ref: '#/components/schemas/DeliveryInfo'
+            competitor_analysis:
+              $ref: '#/components/schemas/CompetitorAnalysis'
+            service_alternatives:
+              type: array
+              items:
+                $ref: '#/components/schemas/ServiceAlternative'
+            promotion_applied:
+              $ref: '#/components/schemas/PromotionApplied'
+            contract_discounts:
+              $ref: '#/components/schemas/ContractDiscounts'
+            processing_time_ms:
+              type: number
+              description: Processing time in milliseconds
+              example: 245.67
+            calculated_at:
+              type: string
+              format: date-time
+              description: Quote calculation timestamp
+              example: "2024-01-01T12:00:00Z"
+            valid_until:
+              type: string
+              format: date-time
+              description: Quote expiration time
+              example: "2024-01-02T12:00:00Z"
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            request_id:
+              type: string
+              example: "req_1234567890"
+            api_version:
+              type: string
+              example: "1.0"
+            currency:
+              type: string
+              example: "USD"
+            customer_id:
+              type: integer
+              nullable: true
+              example: 12345
+
+    PricingBreakdown:
+      type: object
+      properties:
+        base_rate:
+          type: number
+          description: Base shipping rate
+          example: 25.00
+        service_level_multiplier:
+          type: number
+          description: Service level price multiplier
+          example: 1.0
+        dimensional_weight_surcharge:
+          type: number
+          description: Dimensional weight surcharge
+          example: 5.00
+        fuel_surcharge:
+          type: number
+          description: Fuel surcharge amount
+          example: 3.50
+        customs_clearance:
+          type: number
+          description: Customs clearance fees
+          example: 0.00
+        taxes:
+          type: number
+          description: Tax amount
+          example: 2.75
+        volume_discount:
+          type: number
+          description: Volume discount amount
+          example: -2.50
+        promotional_discount:
+          type: number
+          description: Promotional discount amount
+          example: -3.00
+        final_total:
+          type: number
+          description: Final total amount
+          example: 30.75
+        currency:
+          type: string
+          example: "USD"
+        tax_breakdown:
+          type: object
+          properties:
+            sales_tax:
+              type: number
+              example: 2.75
+            fuel_tax:
+              type: number
+              example: 0.25
+
+    DeliveryInfo:
+      type: object
+      properties:
+        estimated_delivery:
+          type: string
+          format: date-time
+          description: Estimated delivery timestamp
+          example: "2024-01-05T17:00:00Z"
+        transit_time_days:
+          type: integer
+          description: Transit time in days
+          example: 3
+        service_guarantee:
+          type: string
+          description: Service guarantee level
+          example: "money_back"
+        tracking_available:
+          type: boolean
+          description: Tracking capability
+          example: true
+        signature_required:
+          type: boolean
+          description: Signature requirement
+          example: false
+
+    CompetitorAnalysis:
+      type: object
+      properties:
+        available:
+          type: boolean
+          description: Competitor data availability
+          example: true
+        analysis:
+          type: object
+          properties:
+            overall_average:
+              type: number
+              description: Average competitor price
+              example: 32.50
+            price_position:
+              type: string
+              description: Price positioning
+              example: "market_rate"
+              enum: [competitive_advantage, market_rate, premium_pricing]
+            percentile_rank:
+              type: number
+              description: Price percentile ranking
+              minimum: 0
+              maximum: 100
+              example: 65
+        data_points:
+          type: integer
+          description: Number of competitor data points
+          example: 12
+        last_updated:
+          type: string
+          format: date-time
+          description: Data collection timestamp
+          example: "2024-01-01T00:00:00Z"
+
+    ServiceAlternative:
+      type: object
+      properties:
+        service_level:
+          type: string
+          example: "express"
+        total_price:
+          type: number
+          example: 45.75
+        transit_time_days:
+          type: integer
+          example: 1
+        price_difference:
+          type: number
+          example: 15.00
+        features:
+          type: array
+          items:
+            type: string
+          example: ["Next day delivery", "Priority handling", "Signature required"]
+
+    PromotionApplied:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          description: Promotion validation status
+          example: true
+        original_amount:
+          type: number
+          description: Original order amount
+          example: 35.75
+        discount_amount:
+          type: number
+          description: Discount amount applied
+          example: 3.00
+        discount_percentage:
+          type: number
+          description: Discount percentage
+          example: 8.4
+        final_amount:
+          type: number
+          description: Final amount after discount
+          example: 32.75
+        promotion_details:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "WELCOME10"
+            description:
+              type: string
+              example: "10% off for new customers"
+            campaign_type:
+              type: string
+              example: "percentage"
+
+    ContractDiscounts:
+      type: object
+      properties:
+        applicable:
+          type: boolean
+          description: Contract pricing applicability
+          example: true
+        contract_id:
+          type: integer
+          description: Applied contract ID
+          example: 67890
+        discount_rate:
+          type: number
+          description: Contract discount rate
+          example: 12.5
+        savings_amount:
+          type: number
+          description: Total savings from contract
+          example: 4.25
+        volume_tier:
+          type: string
+          description: Current volume tier
+          example: "tier_2"
+
+    BulkQuoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            total_requests:
+              type: integer
+              description: Total number of requests
+              example: 50
+            successful_quotes:
+              type: integer
+              description: Number of successful quotes
+              example: 48
+            failed_quotes:
+              type: integer
+              description: Number of failed quotes
+              example: 2
+            total_processing_time_ms:
+              type: number
+              description: Total processing time
+              example: 2340.56
+            average_time_per_quote_ms:
+              type: number
+              description: Average time per quote
+              example: 46.81
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/BulkQuoteResult'
+            generated_at:
+              type: string
+              format: date-time
+              description: Generation timestamp
+              example: "2024-01-01T12:00:00Z"
+
+    BulkQuoteResult:
+      type: object
+      properties:
+        request_index:
+          type: integer
+          description: Original request index
+          example: 0
+        success:
+          type: boolean
+          description: Request success status
+          example: true
+        quote:
+          $ref: '#/components/schemas/QuoteResponse/data'
+        error:
+          type: string
+          description: Error message if failed
+          example: "Invalid destination code"
+
+    BulkQuoteAsyncResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            job_id:
+              type: string
+              description: Async job identifier
+              example: "bulk_1234567890"
+            status:
+              type: string
+              description: Job status
+              example: "processing"
+            message:
+              type: string
+              description: Status message
+              example: "Bulk quote calculation started asynchronously"
+            estimated_completion_time:
+              type: string
+              format: date-time
+              description: Estimated completion time
+              example: "2024-01-01T12:10:00Z"
+            webhook_url:
+              type: string
+              format: url
+              description: Webhook for result notification
+              example: "https://api.logistics.com/v1/bulk/quotes/bulk_1234567890/results"
+            priority:
+              type: string
+              description: Processing priority
+              example: "normal"
+            request_count:
+              type: integer
+              description: Number of requests
+              example: 50
+
+    ContractListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            contracts:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContractSummary'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            total_count:
+              type: integer
+              description: Total contracts matching criteria
+              example: 156
+
+    ContractSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Contract ID
+          example: 123
+        name:
+          type: string
+          description: Contract name
+          example: "Enterprise Agreement 2024"
+        customer_id:
+          type: integer
+          description: Customer ID
+          example: 12345
+        contract_type:
+          type: string
+          description: Contract type
+          example: "enterprise"
+        status:
+          type: string
+          description: Contract status
+          example: "active"
+        start_date:
+          type: string
+          format: date
+          description: Start date
+          example: "2024-01-01"
+        end_date:
+          type: string
+          format: date
+          description: End date
+          example: "2025-01-01"
+        volume_commitment:
+          type: number
+          nullable: true
+          description: Volume commitment
+          example: 10000
+        current_volume:
+          type: number
+          nullable: true
+          description: Current volume achieved
+          example: 2500
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-01-01T00:00:00Z"
+        metrics:
+          $ref: '#/components/schemas/ContractMetrics'
+        compliance:
+          $ref: '#/components/schemas/ContractCompliance'
+
+    ContractMetrics:
+      type: object
+      properties:
+        monthly_volume:
+          type: number
+          description: Current monthly volume
+          example: 250
+        discount_earned:
+          type: number
+          description: Total discount earned
+          example: 125.50
+        savings_to_date:
+          type: number
+          description: Total savings achieved
+          example: 890.25
+        volume_utilization_percent:
+          type: number
+          description: Volume commitment utilization
+          minimum: 0
+          maximum: 100
+          example: 25.0
+
+    ContractCompliance:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Compliance status
+          example: "compliant"
+          enum: [compliant, warning, breach]
+        issues:
+          type: array
+          items:
+            type: string
+          example: []
+        last_check:
+          type: string
+          format: date-time
+          description: Last compliance check
+          example: "2024-01-01T12:00:00Z"
+
+    ContractResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/ContractFull'
+        meta:
+          type: object
+          properties:
+            contract_id:
+              type: integer
+            created_at:
+              type: string
+              format: date-time
+            last_updated:
+              type: string
+              format: date-time
+
+    ContractFull:
+      allOf:
+        - $ref: '#/components/schemas/ContractSummary'
+        - type: object
+          properties:
+            customer:
+              $ref: '#/components/schemas/Customer'
+            terms:
+              $ref: '#/components/schemas/ContractTerms'
+            pricing_structure:
+              $ref: '#/components/schemas/ContractPricing'
+            sla_terms:
+              $ref: '#/components/schemas/ContractSLATerms'
+            renewal_history:
+              type: array
+              items:
+                $ref: '#/components/schemas/RenewalHistory'
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        customer_type:
+          type: string
+          example: "enterprise"
+
+    ContractTerms:
+      type: object
+      properties:
+        special_terms:
+          type: string
+          example: "Priority support included"
+        auto_renewal:
+          type: boolean
+        notification_settings:
+          $ref: '#/components/schemas/NotificationSettings'
+        billing_terms:
+          $ref: '#/components/schemas/BillingTerms'
+
+    ContractPricing:
+      type: object
+      properties:
+        base_rate_structure:
+          type: string
+          example: "tiered"
+        discount_tiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscountTier'
+        volume_commitments:
+          type: array
+          items:
+            $ref: '#/components/schemas/VolumeCommitment'
+
+    ContractSLATerms:
+      type: object
+      properties:
+        delivery_guarantee:
+          type: string
+          example: "99% on-time"
+        response_time_sla:
+          type: string
+          example: "4 hours"
+        penalty_clauses:
+          type: array
+          items:
+            type: string
+
+    RenewalHistory:
+      type: object
+      properties:
+        renewal_date:
+          type: string
+          format: date
+        previous_end_date:
+          type: string
+          format: date
+        terms_changed:
+          type: boolean
+        renewed_by:
+          type: integer
+
+    DiscountTier:
+      type: object
+      properties:
+        min_volume:
+          type: number
+          example: 1000
+        discount_rate:
+          type: number
+          example: 5.0
+        tier_name:
+          type: string
+          example: "Bronze"
+
+    VolumeCommitment:
+      type: object
+      properties:
+        period:
+          type: string
+          example: "monthly"
+        target_volume:
+          type: number
+          example: 500
+        penalty_rate:
+          type: number
+          example: 10.0
+
+    NotificationSettings:
+      type: object
+      properties:
+        renewal_notice_days:
+          type: integer
+          example: 60
+        volume_alert_threshold:
+          type: integer
+          example: 80
+        email_notifications:
+          type: boolean
+          example: true
+
+    BillingTerms:
+      type: object
+      properties:
+        payment_terms_days:
+          type: integer
+          example: 30
+        billing_frequency:
+          type: string
+          example: "monthly"
+        currency:
+          type: string
+          example: "USD"
+
+    ContractActivationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Contract activated successfully"
+        data:
+          type: object
+          properties:
+            contract:
+              $ref: '#/components/schemas/ContractFull'
+            activated_by:
+              type: integer
+              example: 999
+            activated_at:
+              type: string
+              format: date-time
+              example: "2024-01-01T12:00:00Z"
+
+    PromoValidationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            valid:
+              type: boolean
+              description: Validation result
+              example: true
+            message:
+              type: string
+              description: Validation message
+              example: "Promo code is valid"
+            campaign:
+              $ref: '#/components/schemas/PromotionCampaign'
+            customer:
+              $ref: '#/components/schemas/CustomerSummary'
+            order_data:
+              type: object
+              description: Order context data
+            processing_time_ms:
+              type: number
+              description: Processing time
+              example: 45.23
+        meta:
+          type: object
+          properties:
+            validated_at:
+              type: string
+              format: date-time
+            validation_context:
+              type: string
+              example: "checkout"
+
+    PromotionCampaign:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          example: "New Customer Welcome Discount"
+        code:
+          type: string
+          example: "WELCOME10"
+        campaign_type:
+          type: string
+          example: "percentage"
+        value:
+          type: number
+          description: Campaign value (percentage, amount, etc.)
+          example: 10.0
+        minimum_order_value:
+          type: number
+          nullable: true
+          example: 25.00
+        usage_limit:
+          type: integer
+          nullable: true
+          example: 1000
+        usage_count:
+          type: integer
+          example: 150
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-12-31T23:59:59Z"
+        is_active:
+          type: boolean
+          example: true
+
+    CustomerSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12345
+        name:
+          type: string
+          example: "Acme Corporation"
+        email:
+          type: string
+          format: email
+          example: "contact@acme.com"
+        customer_type:
+          type: string
+          example: "enterprise"
+        tier:
+          type: string
+          example: "gold"
+
+    PromoApplicationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            valid:
+              type: boolean
+              example: true
+            original_amount:
+              type: number
+              example: 100.00
+            discount_amount:
+              type: number
+              example: 10.00
+            discount_percentage:
+              type: number
+              example: 10.0
+            final_amount:
+              type: number
+              example: 90.00
+            breakdown:
+              $ref: '#/components/schemas/DiscountBreakdown'
+            applied_at:
+              type: string
+              format: date-time
+              example: "2024-01-01T12:00:00Z"
+            customer_id:
+              type: integer
+              nullable: true
+              example: 12345
+        meta:
+          type: object
+          properties:
+            quote_id:
+              type: string
+              nullable: true
+              example: "Q20240101001ABC"
+
+    DiscountBreakdown:
+      type: object
+      properties:
+        percentage:
+          type: object
+          properties:
+            rate:
+              type: number
+              example: 10.0
+            amount:
+              type: number
+              example: 10.00
+        fixed:
+          type: object
+          properties:
+            amount:
+              type: number
+              example: 25.00
+            applied:
+              type: number
+              example: 20.00
+        free_shipping:
+          type: object
+          properties:
+            shipping_cost:
+              type: number
+              example: 12.50
+        tier_upgrade:
+          type: object
+          properties:
+            new_tier:
+              type: string
+              example: "gold"
+            benefits:
+              type: array
+              items:
+                type: string
+              example: ["5% discount", "Priority support"]
+
+    MilestoneProgressResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            customer_id:
+              type: integer
+              example: 12345
+            milestones_updated:
+              type: integer
+              example: 0
+            milestones:
+              type: array
+              items:
+                $ref: '#/components/schemas/Milestone'
+            current_stats:
+              $ref: '#/components/schemas/CustomerStats'
+            rewards:
+              type: array
+              items:
+                $ref: '#/components/schemas/MilestoneReward'
+            next_milestone:
+              $ref: '#/components/schemas/NextMilestone'
+
+    Milestone:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          description: Milestone type
+          example: "shipment_count"
+        value:
+          type: number
+          description: Milestone value
+          example: 100
+        achieved_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        reward_claimed:
+          type: boolean
+          example: false
+
+    CustomerStats:
+      type: object
+      properties:
+        shipment_count:
+          type: integer
+          description: Total shipments completed
+          example: 87
+        total_volume:
+          type: number
+          description: Total shipping volume (kg)
+          example: 245.5
+        total_revenue:
+          type: number
+          description: Total revenue generated
+          example: 1250.75
+        tenure_months:
+          type: integer
+          description: Customer tenure in months
+          example: 6
+
+    MilestoneReward:
+      type: object
+      properties:
+        milestone_id:
+          type: integer
+        reward_type:
+          type: string
+          example: "discount_code"
+        reward_value:
+          type: string
+          example: "SAVE15"
+        description:
+          type: string
+          example: "15% off next order"
+        expiry_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-02-01T00:00:00Z"
+
+    NextMilestone:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "shipment_count"
+        target_value:
+          type: integer
+          example: 100
+        current_value:
+          type: integer
+          example: 87
+        remaining:
+          type: integer
+          example: 13
+        estimated_progress_percent:
+          type: number
+          example: 87.0
+        reward:
+          $ref: '#/components/schemas/MilestoneReward'
+
+    MilestoneTrackingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            customer_id:
+              type: integer
+              example: 12345
+            milestones_updated:
+              type: integer
+              example: 1
+            milestones:
+              type: array
+              items:
+                $ref: '#/components/schemas/NewMilestone'
+            current_stats:
+              $ref: '#/components/schemas/CustomerStats'
+        meta:
+          type: object
+          properties:
+            trigger_type:
+              type: string
+              example: "shipment_completed"
+            tracked_at:
+              type: string
+              format: date-time
+              example: "2024-01-01T12:00:00Z"
+
+    NewMilestone:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "shipment_count"
+        value:
+          type: number
+          example: 100
+        achieved_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    ROIAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            promotion_id:
+              type: integer
+              example: 123
+            timeframe:
+              type: string
+              example: "30d"
+            roi_percentage:
+              type: number
+              example: 156.8
+            revenue_impact:
+              type: number
+              example: 2560.75
+            cost_impact:
+              type: number
+              example: 1632.50
+            net_impact:
+              type: number
+              example: 928.25
+            usage_count:
+              type: integer
+              example: 145
+            usage_metrics:
+              $ref: '#/components/schemas/UsageMetrics'
+            financial_impact:
+              $ref: '#/components/schemas/FinancialImpact'
+            roi_metrics:
+              $ref: '#/components/schemas/ROIMetrics'
+            segment_analysis:
+              $ref: '#/components/schemas/SegmentAnalysis'
+
+    UsageMetrics:
+      type: object
+      properties:
+        total_uses:
+          type: integer
+          example: 145
+        total_discounts:
+          type: number
+          example: 1632.50
+        total_order_value:
+          type: number
+          example: 12850.75
+        average_order_value:
+          type: number
+          example: 88.63
+
+    FinancialImpact:
+      type: object
+      properties:
+        baseline_order_value:
+          type: number
+          description: Order value without promotion
+          example: 15483.25
+        revenue_impact:
+          type: number
+          description: Additional revenue generated
+          example: 2560.75
+        cost_impact:
+          type: number
+          description: Cost of providing discounts
+          example: 1632.50
+        net_impact:
+          type: number
+          description: Net financial impact
+          example: 928.25
+
+    ROIMetrics:
+      type: object
+      properties:
+        roi_percentage:
+          type: number
+          description: Return on investment percentage
+          example: 156.8
+        revenue_per_use:
+          type: number
+          description: Revenue generated per promotion use
+          example: 17.66
+        cost_per_use:
+          type: number
+          description: Cost per promotion use
+          example: 11.26
+
+    SegmentAnalysis:
+      type: object
+      properties:
+        customer_types:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SegmentMetrics'
+        regions:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SegmentMetrics'
+        service_levels:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SegmentMetrics'
+
+    SegmentMetrics:
+      type: object
+      properties:
+        usage_count:
+          type: integer
+        total_revenue:
+          type: number
+        average_order_value:
+          type: number
+        roi_percentage:
+          type: number
+
+    CustomerInsightsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            customer_id:
+              type: integer
+              example: 12345
+            timeframe:
+              type: string
+              example: "30d"
+            shipping_patterns:
+              $ref: '#/components/schemas/ShippingPatterns'
+            price_sensitivity:
+              $ref: '#/components/schemas/PriceSensitivity'
+            service_preferences:
+              $ref: '#/components/schemas/ServicePreferences'
+            loyalty_metrics:
+              $ref: '#/components/schemas/LoyaltyMetrics'
+            predictions:
+              $ref: '#/components/schemas/CustomerPredictions'
+            recommendations:
+              $ref: '#/components/schemas/CustomerRecommendations'
+
+    ShippingPatterns:
+      type: object
+      properties:
+        average_shipment_frequency:
+          type: number
+          description: Average shipments per week
+          example: 2.3
+        peak_shipping_days:
+          type: array
+          items:
+            type: string
+          example: ["Monday", "Tuesday", "Wednesday"]
+        common_routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoutePattern'
+        seasonal_trends:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                example: "January"
+              volume_change:
+                type: number
+                example: 15.5
+
+    RoutePattern:
+      type: object
+      properties:
+        origin:
+          type: string
+          example: "US"
+        destination:
+          type: string
+          example: "CA"
+        frequency:
+          type: integer
+          example: 25
+        percentage_of_total:
+          type: number
+          example: 35.7
+
+    PriceSensitivity:
+      type: object
+      properties:
+        elasticity_score:
+          type: number
+          description: Price sensitivity score (0-1)
+          example: 0.65
+        threshold_price:
+          type: number
+          description: Price threshold for behavior change
+          example: 45.00
+        discount_response:
+          type: number
+          description: Response rate to discounts (%)
+          example: 78.5
+        premium_service_acceptance:
+          type: number
+          description: Premium service acceptance rate (%)
+          example: 23.1
+
+    ServicePreferences:
+      type: object
+      properties:
+        preferred_service_level:
+          type: string
+          example: "standard"
+        service_level_distribution:
+          type: object
+          additionalProperties:
+            type: number
+          example:
+            express: 15.0
+            priority: 25.0
+            standard: 50.0
+            economy: 10.0
+        delivery_time_expectations:
+          type: object
+          properties:
+            ideal_delivery_days:
+              type: integer
+              example: 3
+            acceptable_delivery_days:
+              type: integer
+              example: 5
+        special_service_usage:
+          type: object
+          properties:
+            insurance:
+              type: number
+              example: 45.0
+            signature_required:
+              type: number
+              example: 12.0
+            saturday_delivery:
+              type: number
+              example: 8.0
+
+    LoyaltyMetrics:
+      type: object
+      properties:
+        loyalty_score:
+          type: number
+          description: Overall loyalty score (0-100)
+          example: 78.5
+        retention_risk:
+          type: string
+          description: Customer retention risk level
+          example: "low"
+          enum: [low, medium, high]
+        lifetime_value:
+          type: number
+          description: Customer lifetime value
+          example: 12500.75
+        churn_probability:
+          type: number
+          description: Probability of churn (0-1)
+          example: 0.12
+        engagement_level:
+          type: string
+          description: Customer engagement level
+          example: "high"
+          enum: [low, medium, high]
+
+    CustomerPredictions:
+      type: object
+      properties:
+        next_purchase_date:
+          type: string
+          format: date
+          description: Predicted next purchase date
+          example: "2024-01-15"
+        predicted_order_value:
+          type: number
+          description: Predicted order value
+          example: 125.50
+        likely_service_level:
+          type: string
+          description: Most likely service level for next order
+          example: "standard"
+        volume_growth_trajectory:
+          type: string
+          description: Expected volume growth
+          example: "increasing"
+          enum: [declining, stable, increasing]
+
+    CustomerRecommendations:
+      type: object
+      properties:
+        service_upgrades:
+          type: array
+          items:
+            type: string
+          example: ["Express service for time-sensitive shipments"]
+        promotional_offers:
+          type: array
+          items:
+            type: string
+          example: ["Volume discount at 200 shipments", "Seasonal promotion in Q2"]
+        contract_suggestions:
+          type: array
+          items:
+            type: string
+          example: ["Enterprise contract for better rates", "Annual agreement for predictability"]
+        operational_improvements:
+          type: array
+          items:
+            type: string
+          example: ["Consolidate shipments for better rates", "Use economy service for non-urgent items"]
+
+    WebhookRegistrationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Webhook registered successfully"
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              description: Webhook ID
+              example: 123
+            url:
+              type: string
+              format: url
+              description: Registered webhook URL
+              example: "https://client.com/webhooks/pricing"
+            events:
+              type: array
+              items:
+                type: string
+              example: ["quote.calculated", "pricing.updated"]
+            secret:
+              type: string
+              description: Webhook secret (truncated)
+              example: "webhook_***"
+            status:
+              type: string
+              description: Webhook status
+              example: "active"
+            created_at:
+              type: string
+              format: date-time
+              example: "2024-01-01T12:00:00Z"
+            test_url:
+              type: string
+              format: url
+              description: Webhook test endpoint
+              example: "https://api.logistics.com/v1/webhooks/test/123"
+
+    WebhookEventsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            webhook_id:
+              type: integer
+              example: 123
+            events:
+              type: array
+              items:
+                $ref: '#/components/schemas/WebhookEvent'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+            summary:
+              $ref: '#/components/schemas/WebhookEventSummary'
+
+    WebhookEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Event ID
+          example: 456
+        event_type:
+          type: string
+          description: Type of event
+          example: "quote.calculated"
+        payload:
+          type: object
+          description: Event payload data
+          example: {"quote_id": "Q20240101001ABC", "amount": 25.50}
+        status:
+          type: string
+          description: Delivery status
+          example: "delivered"
+          enum: [pending, delivered, failed]
+        attempts:
+          type: integer
+          description: Number of delivery attempts
+          example: 1
+        last_attempt:
+          type: string
+          format: date-time
+          description: Last delivery attempt
+          example: "2024-01-01T12:05:00Z"
+        next_retry:
+          type: string
+          format: date-time
+          nullable: true
+          description: Next retry time
+          example: null
+        response_code:
+          type: integer
+          nullable: true
+          description: HTTP response code
+          example: 200
+        error_message:
+          type: string
+          nullable: true
+          description: Error message if failed
+          example: null
+        signature:
+          type: string
+          description: Event signature for verification
+          example: "sha256=abc123..."
+
+    WebhookEventSummary:
+      type: object
+      properties:
+        total_events:
+          type: integer
+          example: 150
+        delivered_events:
+          type: integer
+          example: 145
+        failed_events:
+          type: integer
+          example: 3
+        pending_events:
+          type: integer
+          example: 2
+        success_rate:
+          type: number
+          description: Delivery success rate (%)
+          example: 96.7
+
+    CarrierRatesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            carriers_queried:
+              type: integer
+              example: 4
+            query_time_ms:
+              type: number
+              description: Query processing time
+              example: 245.67
+            carrier_rates:
+              type: array
+              items:
+                $ref: '#/components/schemas/CarrierRate'
+            transit_times:
+              type: array
+              items:
+                $ref: '#/components/schemas/TransitTime'
+            delivery_estimates:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeliveryEstimate'
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            currency:
+              type: string
+              example: "USD"
+
+    CarrierRate:
+      type: object
+      properties:
+        carrier:
+          type: string
+          description: Carrier name
+          example: "FedEx"
+        service_level:
+          type: string
+          description: Service level
+          example: "Express"
+        rate:
+          type: number
+          description: Shipping rate
+          example: 32.50
+        currency:
+          type: string
+          example: "USD"
+        transit_time_days:
+          type: integer
+          description: Transit time in days
+          example: 1
+        delivery_date:
+          type: string
+          format: date
+          description: Estimated delivery date
+          example: "2024-01-05"
+        features:
+          type: array
+          items:
+            type: string
+          example: ["Tracking", "Insurance", "Signature"]
+        restrictions:
+          type: array
+          items:
+            type: string
+          example: ["No hazardous materials"]
+
+    TransitTime:
+      type: object
+      properties:
+        carrier:
+          type: string
+          example: "FedEx"
+        service_level:
+          type: string
+          example: "Express"
+        transit_days:
+          type: integer
+          example: 1
+        cutoff_time:
+          type: string
+          description: Daily cutoff time
+          example: "15:00"
+        weekend_delivery:
+          type: boolean
+          example: false
+
+    DeliveryEstimate:
+      type: object
+      properties:
+        carrier:
+          type: string
+          example: "FedEx"
+        service_level:
+          type: string
+          example: "Express"
+        estimated_date:
+          type: string
+          format: date
+          example: "2024-01-05"
+        guaranteed:
+          type: boolean
+          example: true
+        confidence_level:
+          type: number
+          description: Estimate confidence (0-100)
+          example: 95.0
+
+    PartnerSyncResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            sync_job_id:
+              type: string
+              description: Sync job identifier
+              example: "sync_1234567890"
+            status:
+              type: string
+              description: Sync status
+              example: "initiated"
+            estimated_completion:
+              type: string
+              format: date-time
+              description: Estimated completion time
+              example: "2024-01-01T13:00:00Z"
+            partner_type:
+              type: string
+              example: "erp"
+            data_type:
+              type: string
+              example: "orders"
+            records_to_process:
+              type: integer
+              example: 1250
+
+    IntegrationStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            overall_status:
+              type: string
+              description: Overall integration health
+              example: "healthy"
+              enum: [healthy, degraded, unhealthy]
+            services:
+              type: object
+              properties:
+                carriers:
+                  $ref: '#/components/schemas/ServiceStatus'
+                partner_systems:
+                  $ref: '#/components/schemas/ServiceStatus'
+                edi_connections:
+                  $ref: '#/components/schemas/ServiceStatus'
+                webhooks:
+                  $ref: '#/components/schemas/ServiceStatus'
+            last_updated:
+              type: string
+              format: date-time
+              example: "2024-01-01T12:00:00Z"
+
+    ServiceStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+          enum: [healthy, degraded, unhealthy]
+        response_time_ms:
+          type: number
+          example: 125.4
+        uptime_percentage:
+          type: number
+          description: Service uptime percentage
+          example: 99.8
+        last_incident:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2023-12-15T10:30:00Z"
+        active_connections:
+          type: integer
+          example: 15
+
+    HealthCheckResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              description: Overall system status
+              example: "healthy"
+              enum: [healthy, degraded, unhealthy]
+            timestamp:
+              type: string
+              format: date-time
+              example: "2024-01-01T12:00:00Z"
+            version:
+              type: string
+              description: API version
+              example: "1.0.0"
+            services:
+              type: object
+              properties:
+                pricing:
+                  $ref: '#/components/schemas/ServiceHealth'
+                contracts:
+                  $ref: '#/components/schemas/ServiceHealth'
+                promotions:
+                  $ref: '#/components/schemas/ServiceHealth'
+                database:
+                  $ref: '#/components/schemas/ServiceHealth'
+                cache:
+                  $ref: '#/components/schemas/ServiceHealth'
+            metrics:
+              type: object
+              properties:
+                active_quotes:
+                  type: integer
+                  example: 45
+                active_contracts:
+                  type: integer
+                  example: 1250
+                active_promotions:
+                  type: integer
+                  example: 8
+            overall_status:
+              type: string
+              description: Calculated overall status
+              example: "healthy"
+
+    ServiceHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+          enum: [healthy, degraded, unhealthy]
+        response_time_ms:
+          type: number
+          example: 45.2
+        last_check:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        error:
+          type: string
+          nullable: true
+          description: Error message if unhealthy
+          example: null
+
+    BusinessRulesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            service_levels:
+              type: object
+              description: Available service levels
+              example:
+                express:
+                  name: "Express"
+                  multiplier: 1.5
+                  description: "Next day delivery"
+                priority:
+                  name: "Priority"
+                  multiplier: 1.25
+                  description: "2-3 day delivery"
+            fuel_surcharge_rules:
+              type: object
+              description: Fuel surcharge configuration
+              example:
+                base_index: 100.0
+                factor: 0.08
+                threshold: 100.0
+            dimensional_weight_rules:
+              type: object
+              description: Dimensional weight rules
+              example:
+                domestic: 5000
+                international: 4000
+                express: 6000
+            tax_rules:
+              type: object
+              description: Tax calculation rules by jurisdiction
+              example:
+                US:
+                  sales_tax: 8.0
+                  fuel_tax: 0.2
+                CA:
+                  gst: 5.0
+                  pst: 7.0
+            customer_tier_discounts:
+              type: object
+              description: Customer tier discount rates
+              example:
+                platinum: 15.0
+                gold: 10.0
+                silver: 5.0
+                standard: 0.0
+            promotion_stacking_rules:
+              type: object
+              description: Promotion stacking limitations
+              example:
+                percentage_cap: 50.0
+                mutual_exclusion: true
+                tier_priority: true
+            rate_limits:
+              type: object
+              description: API rate limits
+              example:
+                quotes_per_minute: 100
+                bulk_quotes_per_hour: 10
+                contracts_per_minute: 50
+                promotions_per_minute: 60
+        meta:
+          type: object
+          properties:
+            version:
+              type: string
+              example: "1.0"
+            last_updated:
+              type: string
+              format: date-time
+              example: "2024-01-01T00:00:00Z"
+
+    VersionResponse:
+      type: object
+      properties:
+        api_version:
+          type: string
+          example: "1.0"
+        build_version:
+          type: string
+          example: "1.0.0"
+        php_version:
+          type: string
+          example: "8.2.1"
+        laravel_version:
+          type: string
+          example: "10.15.0"
+        documentation_url:
+          type: string
+          format: url
+          example: "https://docs.logistics.com/api"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    # ================================
+    # ERROR SCHEMAS
+    # ================================
+    
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+          example: "Failed to process request"
+        message:
+          type: string
+          description: Detailed error description
+          example: "An unexpected error occurred while processing your request"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        debug:
+          type: string
+          description: Debug information (only in development)
+          example: "Stack trace details..."
+      required:
+        - success
+        - error
+        - timestamp
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Validation failed"
+        message:
+          type: string
+          example: "The given data was invalid."
+        errors:
+          type: object
+          description: Field-specific validation errors
+          example:
+            origin:
+              - "The origin field is required."
+            destination:
+              - "The destination must be a 3-character string."
+            service_level:
+              - "The service level field is required."
+              - "The selected service level is invalid."
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+      required:
+        - success
+        - error
+        - message
+        - errors
+        - timestamp
+
+    RateLimitErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Rate limit exceeded"
+        message:
+          type: string
+          example: "Too many requests. Please try again later."
+        retry_after:
+          type: integer
+          description: Seconds to wait before retry
+          example: 60
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+      required:
+        - success
+        - error
+        - message
+        - retry_after
+        - timestamp
+
+    NotFoundErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Resource not found"
+        message:
+          type: string
+          example: "The requested resource could not be found."
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+      required:
+        - success
+        - error
+        - message
+        - timestamp
+
+    # ================================
+    # COMMON SCHEMAS
+    # ================================
+    
+    Pagination:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 156
+        last_page:
+          type: integer
+          example: 8
+        from:
+          type: integer
+          example: 1
+        to:
+          type: integer
+          example: 20

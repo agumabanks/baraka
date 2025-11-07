@@ -5,7 +5,7 @@ import React from 'react';
  */
 interface BadgeProps {
   /** Visual variant of the badge */
-  variant?: 'solid' | 'outline' | 'ghost';
+  variant?: 'solid' | 'outline' | 'ghost' | 'warning' | 'error' | 'info' | 'success' | 'default';
   /** Size variant of the badge */
   size?: 'sm' | 'md' | 'lg';
   /** Badge content */
@@ -17,10 +17,15 @@ interface BadgeProps {
 const Badge: React.FC<BadgeProps> = ({ variant = 'solid', size = 'md', children, className = '' }) => {
   const baseClasses = 'inline-flex items-center font-medium rounded-md';
 
-  const variantClasses = {
+  const variantClasses: Record<NonNullable<BadgeProps['variant']>, string> = {
     solid: 'bg-mono-black text-mono-white',
     outline: 'border border-mono-gray-300 text-mono-gray-900',
     ghost: 'text-mono-gray-700',
+    warning: 'bg-amber-500/20 text-amber-700 border border-amber-600/50',
+    error: 'bg-rose-500/20 text-rose-700 border border-rose-600/50',
+    info: 'bg-sky-500/20 text-sky-700 border border-sky-600/50',
+    success: 'bg-emerald-500/20 text-emerald-700 border border-emerald-600/50',
+    default: 'bg-mono-gray-200 text-mono-gray-900',
   };
 
   const sizeClasses = {

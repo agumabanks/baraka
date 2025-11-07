@@ -7,6 +7,7 @@ use App\Enums\ShipmentStatus;
 use App\Events\ShipmentStatusChanged;
 use App\Models\Backend\Branch;
 use App\Models\Backend\Client as BackendClient;
+use App\Models\ShipmentTransition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Backend\BranchWorker;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -24,7 +26,6 @@ class Shipment extends Model
     protected $fillable = [
   
         'client_id',
- 
         'customer_id',
         'origin_branch_id',
         'dest_branch_id',
@@ -43,10 +44,20 @@ class Shipment extends Model
         'metadata',
         'public_token',
         // Unified workflow fields
+        'booked_at',
+        'pickup_scheduled_at',
         'transfer_hub_id',
         'hub_processed_at',
         'transferred_at',
         'picked_up_at',
+        'origin_hub_arrived_at',
+        'bagged_at',
+        'linehaul_departed_at',
+        'linehaul_arrived_at',
+        'destination_hub_arrived_at',
+        'customs_hold_at',
+        'customs_cleared_at',
+        'out_for_delivery_at',
         'delivered_by',
         'has_exception',
         'exception_type',
@@ -54,10 +65,16 @@ class Shipment extends Model
         'exception_notes',
         'exception_occurred_at',
         'returned_at',
+        'return_initiated_at',
+        'return_in_transit_at',
         'return_reason',
         'return_notes',
         'priority',
         'processed_at',
+        'cancelled_at',
+        'current_location_type',
+        'current_location_id',
+        'last_scan_event_id',
     ];
 
     protected $casts = [
@@ -69,15 +86,28 @@ class Shipment extends Model
         'delivered_at' => 'datetime',
         'metadata' => 'array',
         // Unified workflow casts
+        'booked_at' => 'datetime',
+        'pickup_scheduled_at' => 'datetime',
         'hub_processed_at' => 'datetime',
         'transferred_at' => 'datetime',
         'picked_up_at' => 'datetime',
+        'origin_hub_arrived_at' => 'datetime',
+        'bagged_at' => 'datetime',
+        'linehaul_departed_at' => 'datetime',
+        'linehaul_arrived_at' => 'datetime',
+        'destination_hub_arrived_at' => 'datetime',
+        'customs_hold_at' => 'datetime',
+        'customs_cleared_at' => 'datetime',
+        'out_for_delivery_at' => 'datetime',
         'has_exception' => 'boolean',
         'exception_severity' => 'string',
         'exception_occurred_at' => 'datetime',
         'returned_at' => 'datetime',
+        'return_initiated_at' => 'datetime',
+        'return_in_transit_at' => 'datetime',
         'priority' => 'integer',
         'processed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -123,6 +153,11 @@ class Shipment extends Model
         return $this->belongsTo(Branch::class, 'dest_branch_id');
     }
 
+    public function destinationBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'dest_branch_id');
+    }
+
     public function assignedWorker(): BelongsTo
     {
         return $this->belongsTo(BranchWorker::class, 'assigned_worker_id');
@@ -146,6 +181,11 @@ class Shipment extends Model
     public function transportLegs(): HasMany
     {
         return $this->hasMany(TransportLeg::class);
+    }
+
+    public function transitions(): HasMany
+    {
+        return $this->hasMany(ShipmentTransition::class);
     }
 
     public function bags(): HasMany
@@ -286,7 +326,8 @@ class Shipment extends Model
         $this->update([
             'assigned_worker_id' => $worker->id,
             'assigned_at' => now(),
-            'current_status' => ShipmentStatus::ASSIGNED,
+            'pickup_scheduled_at' => $this->pickup_scheduled_at ?? now(),
+            'current_status' => ShipmentStatus::PICKUP_SCHEDULED,
         ]);
 
         // Log the assignment
@@ -309,7 +350,8 @@ class Shipment extends Model
         $this->update([
             'assigned_worker_id' => null,
             'assigned_at' => null,
-            'current_status' => ShipmentStatus::PENDING,
+            'pickup_scheduled_at' => null,
+            'current_status' => ShipmentStatus::BOOKED,
         ]);
 
         if ($oldWorker) {
@@ -333,7 +375,6 @@ class Shipment extends Model
     {
         $newStatus = $this->calculateStatusFromScan($scanEvent);
         if ($newStatus && $newStatus !== $this->current_status) {
-            $oldStatus = $this->current_status;
             $this->update(['current_status' => $newStatus]);
 
             // Set delivered timestamp if status is delivered
@@ -342,34 +383,91 @@ class Shipment extends Model
             }
 
             // Fire event for notifications
-            event(new ShipmentStatusChanged($this, $scanEvent, $oldStatus));
+            event(new ShipmentStatusChanged($this, $scanEvent));
         }
     }
 
     private function calculateStatusFromScan(ScanEvent $scanEvent): ?ShipmentStatus
     {
-        return match ($scanEvent->type) {
-            ScanType::ARRIVE => ShipmentStatus::ARRIVE,
-            ScanType::DEPART => ShipmentStatus::DEPART,
-            ScanType::ARRIVE_DEST => ShipmentStatus::ARRIVE_DEST,
-            ScanType::OUT_FOR_DELIVERY => ShipmentStatus::OUT_FOR_DELIVERY,
-            ScanType::DELIVERED => ShipmentStatus::DELIVERED,
-            default => null
-        };
+        $scanType = $scanEvent->type;
+
+        if (! $scanType instanceof ScanType) {
+            return null;
+        }
+
+        return $scanType->resultingStatus();
     }
 
     public function getStatusBadgeAttribute(): string
     {
-        return match($this->current_status) {
-            ShipmentStatus::PENDING => '<span class="badge badge-warning">Pending</span>',
-            ShipmentStatus::ASSIGNED => '<span class="badge badge-info">Assigned</span>',
-            ShipmentStatus::ARRIVE => '<span class="badge badge-primary">Arrived</span>',
-            ShipmentStatus::DEPART => '<span class="badge badge-secondary">Departed</span>',
-            ShipmentStatus::ARRIVE_DEST => '<span class="badge badge-info">At Destination</span>',
+        return match ($this->current_status) {
+            ShipmentStatus::BOOKED => '<span class="badge badge-warning">Booked</span>',
+            ShipmentStatus::PICKUP_SCHEDULED => '<span class="badge badge-info">Pickup Scheduled</span>',
+            ShipmentStatus::PICKED_UP => '<span class="badge badge-primary">Picked Up</span>',
+            ShipmentStatus::AT_ORIGIN_HUB => '<span class="badge badge-primary">At Origin Hub</span>',
+            ShipmentStatus::BAGGED => '<span class="badge badge-secondary">Bagged</span>',
+            ShipmentStatus::LINEHAUL_DEPARTED => '<span class="badge badge-secondary">Linehaul Departed</span>',
+            ShipmentStatus::LINEHAUL_ARRIVED => '<span class="badge badge-secondary">Linehaul Arrived</span>',
+            ShipmentStatus::AT_DESTINATION_HUB => '<span class="badge badge-primary">At Destination Hub</span>',
+            ShipmentStatus::CUSTOMS_HOLD => '<span class="badge badge-danger">Customs Hold</span>',
+            ShipmentStatus::CUSTOMS_CLEARED => '<span class="badge badge-success">Customs Cleared</span>',
             ShipmentStatus::OUT_FOR_DELIVERY => '<span class="badge badge-warning">Out for Delivery</span>',
             ShipmentStatus::DELIVERED => '<span class="badge badge-success">Delivered</span>',
-            ShipmentStatus::CANCELLED => '<span class="badge badge-danger">Cancelled</span>',
+            ShipmentStatus::RETURN_INITIATED => '<span class="badge badge-danger">Return Initiated</span>',
+            ShipmentStatus::RETURN_IN_TRANSIT => '<span class="badge badge-danger">Return In Transit</span>',
+            ShipmentStatus::RETURNED => '<span class="badge badge-danger">Returned</span>',
+            ShipmentStatus::CANCELLED => '<span class="badge badge-dark">Cancelled</span>',
+            ShipmentStatus::EXCEPTION => '<span class="badge badge-danger">Exception</span>',
             default => '<span class="badge badge-light">Unknown</span>',
         };
+    }
+
+    public function setCurrentStatusAttribute($value): void
+    {
+        if ($value === null) {
+            $this->attributes['current_status'] = null;
+            return;
+        }
+
+        $status = match (true) {
+            $value instanceof ShipmentStatus => $value,
+            is_string($value) => ShipmentStatus::fromString($value),
+            default => null,
+        };
+
+        if (! $status instanceof ShipmentStatus) {
+            Log::warning('Attempted to set unknown shipment current_status', [
+                'shipment_id' => $this->id,
+                'provided_status' => $value,
+            ]);
+
+            return;
+        }
+
+        $this->attributes['current_status'] = $status->value;
+    }
+
+    public function setStatusAttribute($value): void
+    {
+        if ($value === null) {
+            $this->attributes['status'] = null;
+            return;
+        }
+
+        if (is_string($value)) {
+            $derived = ShipmentStatus::fromString($value);
+            if ($derived) {
+                $this->attributes['status'] = strtolower($derived->value);
+            } else {
+                Log::warning('Attempted to set unknown shipment status', [
+                    'shipment_id' => $this->id,
+                    'provided_status' => $value,
+                ]);
+            }
+
+            return;
+        }
+
+        throw new \InvalidArgumentException('Invalid status value provided for Shipment');
     }
 }

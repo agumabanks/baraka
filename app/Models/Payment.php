@@ -16,6 +16,7 @@ class Payment extends Model
         'amount',
         'payment_method',
         'status',
+        'transaction_id',
         'transaction_reference',
         'paid_at',
         'metadata',
@@ -35,5 +36,18 @@ class Payment extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $payment): void {
+            if (! $payment->transaction_id && $payment->transaction_reference) {
+                $payment->transaction_id = $payment->transaction_reference;
+            }
+
+            if (! $payment->transaction_reference && $payment->transaction_id) {
+                $payment->transaction_reference = $payment->transaction_id;
+            }
+        });
     }
 }

@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BranchWorkerRole;
+use App\Enums\EmploymentStatus;
+use App\Enums\Status;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -36,8 +39,8 @@ class BranchWorkersSeeder extends Seeder
 
         foreach ($branches as $branch) {
             // LOCAL branches: 5-8 workers, REGIONAL: 10-12, HUB: 15-20
-            $workersNeeded = $branch->type === 'HUB' ? rand(15, 20) : 
-                           ($branch->type === 'REGIONAL' ? rand(10, 12) : rand(5, 8));
+            $workersNeeded = $branch->type === 'HUB' ? rand(15, 20) :
+                           ($branch->type === 'REGIONAL_BRANCH' ? rand(10, 12) : rand(5, 8));
 
             for ($i = 0; $i < $workersNeeded; $i++) {
                 // Create a delivery worker user
@@ -62,28 +65,34 @@ class BranchWorkersSeeder extends Seeder
                 }
 
                 // Determine role: 1 supervisor per 10 workers
-                $role = ($i === 0 && $workersNeeded > 5) ? 'supervisor' : 
-                       (($i === 1 && $workersNeeded > 10) ? 'dispatcher' : 'worker');
+                $role = ($i === 0 && $workersNeeded > 5)
+                    ? BranchWorkerRole::OPS_SUPERVISOR
+                    : (($i === 1 && $workersNeeded > 10)
+                        ? BranchWorkerRole::DISPATCHER
+                        : BranchWorkerRole::OPS_AGENT);
 
                 // Check if assignment already exists
-                $exists = \App\Models\BranchWorker::where('branch_id', $branch->id)
+                $exists = \App\Models\Backend\BranchWorker::where('branch_id', $branch->id)
                     ->where('user_id', $user->id)
                     ->exists();
 
                 if (!$exists) {
-                    \App\Models\BranchWorker::create([
+                    \App\Models\Backend\BranchWorker::create([
                         'branch_id' => $branch->id,
                         'user_id' => $user->id,
-                        'role' => $role,
-                        'permissions' => json_encode([
+                        'role' => $role->value,
+                        'designation' => $role === BranchWorkerRole::OPS_SUPERVISOR ? 'Team Supervisor' : null,
+                        'employment_status' => EmploymentStatus::ACTIVE->value,
+                        'contact_phone' => $mobile,
+                        'permissions' => [
                             'can_pickup' => true,
                             'can_deliver' => true,
                             'can_scan' => true,
-                            'can_update_status' => $role !== 'worker',
+                            'can_update_status' => $role !== BranchWorkerRole::OPS_AGENT,
                             'can_handle_cod' => true,
-                            'can_manage_team' => $role === 'supervisor',
-                        ]),
-                        'work_schedule' => json_encode([
+                            'can_manage_team' => $role === BranchWorkerRole::OPS_SUPERVISOR,
+                        ],
+                        'work_schedule' => [
                             'monday' => ['start' => '08:00', 'end' => '17:00'],
                             'tuesday' => ['start' => '08:00', 'end' => '17:00'],
                             'wednesday' => ['start' => '08:00', 'end' => '17:00'],
@@ -91,16 +100,16 @@ class BranchWorkersSeeder extends Seeder
                             'friday' => ['start' => 'off', 'end' => 'off'],
                             'saturday' => ['start' => '08:00', 'end' => '17:00'],
                             'sunday' => ['start' => '08:00', 'end' => '17:00'],
-                        ]),
-                        'hourly_rate' => $role === 'supervisor' ? 75 : ($role === 'dispatcher' ? 60 : 45),
+                        ],
+                        'hourly_rate' => $role === BranchWorkerRole::OPS_SUPERVISOR ? 75 : ($role === BranchWorkerRole::DISPATCHER ? 60 : 45),
                         'assigned_at' => now()->subDays(rand(1, 180))->toDateString(),
-                        'notes' => $role === 'supervisor' ? 'Team supervisor' : null,
-                        'metadata' => json_encode([
-                            'vehicle_assigned' => $role !== 'dispatcher',
+                        'notes' => $role === BranchWorkerRole::OPS_SUPERVISOR ? 'Team supervisor' : null,
+                        'metadata' => [
+                            'vehicle_assigned' => $role !== BranchWorkerRole::DISPATCHER,
                             'zone' => $branch->code,
                             'experience_years' => rand(1, 10),
-                        ]),
-                        'status' => 1,
+                        ],
+                        'status' => Status::ACTIVE,
                     ]);
 
                     $workerCount++;

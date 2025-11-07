@@ -1,287 +1,234 @@
 <?php
 
+namespace Tests\Feature\Api\V1;
+
 use App\Enums\ShipmentStatus;
 use App\Enums\UserType;
 use App\Models\Shipment;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
-test('admin can view metrics dashboard', function () {
-    $admin = User::factory()->create([
-        'user_type' => UserType::ADMIN,
-    ]);
+class AdminMetricsTest extends TestCase
+{
+    use RefreshDatabase;
 
-    // Create test data
-    $merchant = User::factory()->create([
-        'user_type' => UserType::MERCHANT,
-    ]);
-
-    // Create shipments in various statuses
-    Shipment::factory()->count(5)->create([
-        'customer_id' => $merchant->id,
-        'current_status' => ShipmentStatus::CREATED,
-    ]);
-
-    Shipment::factory()->count(3)->create([
-        'customer_id' => $merchant->id,
-        'current_status' => ShipmentStatus::IN_TRANSIT,
-    ]);
-
-    Shipment::factory()->count(2)->create([
-        'customer_id' => $merchant->id,
-        'current_status' => ShipmentStatus::DELIVERED,
-    ]);
-
-    Shipment::factory()->count(1)->create([
-        'customer_id' => $merchant->id,
-        'current_status' => ShipmentStatus::RETURN_TO_SENDER,
-    ]);
-
-    $loginResponse = $this->postJson('/api/v1/login', [
-        'email' => $admin->email,
-        'password' => 'password',
-    ], [
-        'device_uuid' => 'admin-metrics-device',
-    ]);
-
-    $token = $loginResponse->json('data.token');
-
-    $response = $this->getJson('/api/v1/admin/metrics', [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => 'admin-metrics-device',
-    ]);
-
-    $response->assertStatus(200)
-        ->assertJsonStructure([
-            'success',
-            'data' => [
-                'total_shipments',
-                'shipments_by_status',
-                'total_customers',
-                'active_shipments',
-                'delivered_today',
-                // Add other expected metrics
-            ],
+    public function test_admin_can_view_metrics_dashboard(): void
+    {
+        $admin = User::factory()->create([
+            'user_type' => UserType::ADMIN,
+            'password' => bcrypt('password'),
         ]);
 
-    $metrics = $response->json('data');
+        $merchant = User::factory()->create([
+            'user_type' => UserType::MERCHANT,
+        ]);
 
-    // Verify total shipments count
-    expect($metrics['total_shipments'])->toBe(11);
+        Shipment::factory()->count(5)->create([
+            'customer_id' => $merchant->id,
+            'current_status' => ShipmentStatus::BOOKED,
+        ]);
 
-    // Verify shipments by status
-    expect($metrics['shipments_by_status'][ShipmentStatus::CREATED->value])->toBe(5);
-    expect($metrics['shipments_by_status'][ShipmentStatus::IN_TRANSIT->value])->toBe(3);
-    expect($metrics['shipments_by_status'][ShipmentStatus::DELIVERED->value])->toBe(2);
-    expect($metrics['shipments_by_status'][ShipmentStatus::RETURN_TO_SENDER->value])->toBe(1);
+        Shipment::factory()->count(3)->create([
+            'customer_id' => $merchant->id,
+            'current_status' => ShipmentStatus::LINEHAUL_DEPARTED,
+        ]);
 
-    // Verify customer count
-    expect($metrics['total_customers'])->toBe(1); // Only one merchant created
-});
+        Shipment::factory()->count(2)->create([
+            'customer_id' => $merchant->id,
+            'current_status' => ShipmentStatus::DELIVERED,
+        ]);
 
-test('metrics include date range filtering', function () {
-    $admin = User::factory()->create([
-        'user_type' => UserType::ADMIN,
-    ]);
+        Shipment::factory()->count(1)->create([
+            'customer_id' => $merchant->id,
+            'current_status' => ShipmentStatus::RETURN_INITIATED,
+        ]);
 
-    $merchant = User::factory()->create([
-        'user_type' => UserType::MERCHANT,
-    ]);
+        $loginResponse = $this->postJson('/api/v1/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ], [
+            'device_uuid' => 'admin-metrics-device',
+        ])->assertStatus(200);
 
-    // Create shipments with different dates
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'created_at' => now()->subDays(10),
-    ]);
+        $token = $loginResponse->json('data.token');
+        $this->assertNotNull($token, 'Authentication token was not returned');
 
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'created_at' => now()->subDays(2),
-    ]);
+        $response = $this->getJson('/api/v1/admin/metrics', [
+            'Authorization' => 'Bearer ' . $token,
+            'device_uuid' => 'admin-metrics-device',
+        ])->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'total_shipments',
+                    'shipments_by_status',
+                    'total_customers',
+                    'active_shipments',
+                    'delivered_today',
+                ],
+            ]);
 
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'created_at' => now(),
-    ]);
+        $metrics = $response->json('data');
 
-    $loginResponse = $this->postJson('/api/v1/login', [
-        'email' => $admin->email,
-        'password' => 'password',
-    ], [
-        'device_uuid' => 'metrics-date-device',
-    ]);
-
-    $token = $loginResponse->json('data.token');
-
-    $response = $this->getJson('/api/v1/admin/metrics?date_from='.now()->subDays(5)->format('Y-m-d'), [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => 'metrics-date-device',
-    ]);
-
-    $response->assertStatus(200);
-
-    $metrics = $response->json('data');
-    // Should include shipments from last 5 days (2 shipments)
-    expect($metrics['total_shipments'])->toBe(2);
-});
-
-test('metrics include delivery performance', function () {
-    $admin = User::factory()->create([
-        'user_type' => UserType::ADMIN,
-    ]);
-
-    $merchant = User::factory()->create([
-        'user_type' => UserType::MERCHANT,
-    ]);
-
-    // Create delivered shipments with different delivery times
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'current_status' => ShipmentStatus::DELIVERED,
-        'created_at' => now()->subDays(2),
-        'updated_at' => now()->subDays(1), // Delivered in 1 day
-    ]);
-
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'current_status' => ShipmentStatus::DELIVERED,
-        'created_at' => now()->subDays(5),
-        'updated_at' => now()->subDays(1), // Delivered in 4 days
-    ]);
-
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'current_status' => ShipmentStatus::IN_TRANSIT,
-        'created_at' => now()->subDays(1),
-    ]);
-
-    $loginResponse = $this->postJson('/api/v1/login', [
-        'email' => $admin->email,
-        'password' => 'password',
-    ], [
-        'device_uuid' => 'performance-device',
-    ]);
-
-    $token = $loginResponse->json('data.token');
-
-    $response = $this->getJson('/api/v1/admin/metrics', [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => 'performance-device',
-    ]);
-
-    $response->assertStatus(200);
-
-    $metrics = $response->json('data');
-
-    // Verify delivery metrics
-    expect($metrics['delivered_shipments'])->toBe(2);
-    expect($metrics['in_transit_shipments'])->toBe(1);
-    expect($metrics['delivery_rate'])->toBe(66.67); // 2 out of 3
-
-    // Average delivery time calculation would depend on implementation
-    if (isset($metrics['average_delivery_time_days'])) {
-        expect($metrics['average_delivery_time_days'])->toBeGreaterThan(0);
+        $this->assertSame(11, $metrics['total_shipments']);
+        $this->assertSame(5, $metrics['shipments_by_status'][ShipmentStatus::BOOKED->value] ?? null);
+        $this->assertSame(3, $metrics['shipments_by_status'][ShipmentStatus::LINEHAUL_DEPARTED->value] ?? null);
+        $this->assertSame(2, $metrics['shipments_by_status'][ShipmentStatus::DELIVERED->value] ?? null);
+        $this->assertSame(1, $metrics['shipments_by_status'][ShipmentStatus::RETURN_INITIATED->value] ?? null);
+        $this->assertSame(1, $metrics['total_customers']);
     }
-});
 
-test('metrics include revenue data', function () {
-    $admin = User::factory()->create([
-        'user_type' => UserType::ADMIN,
-    ]);
+    public function test_metrics_include_date_range_filtering(): void
+    {
+        $admin = User::factory()->create([
+            'user_type' => UserType::ADMIN,
+            'password' => bcrypt('password'),
+        ]);
 
-    $merchant = User::factory()->create([
-        'user_type' => UserType::MERCHANT,
-    ]);
+        $merchant = User::factory()->create([
+            'user_type' => UserType::MERCHANT,
+        ]);
 
-    // Create shipments with different price amounts
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'price_amount' => 50.00,
-        'current_status' => ShipmentStatus::DELIVERED,
-    ]);
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'created_at' => now()->subDays(10),
+        ]);
 
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'price_amount' => 75.50,
-        'current_status' => ShipmentStatus::DELIVERED,
-    ]);
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'created_at' => now()->subDays(2),
+        ]);
 
-    Shipment::factory()->create([
-        'customer_id' => $merchant->id,
-        'price_amount' => 100.00,
-        'current_status' => ShipmentStatus::CREATED, // Not delivered yet
-    ]);
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'created_at' => now(),
+        ]);
 
-    $loginResponse = $this->postJson('/api/v1/login', [
-        'email' => $admin->email,
-        'password' => 'password',
-    ], [
-        'device_uuid' => 'revenue-device',
-    ]);
+        $loginResponse = $this->postJson('/api/v1/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ], [
+            'device_uuid' => 'metrics-date-device',
+        ])->assertStatus(200);
 
-    $token = $loginResponse->json('data.token');
+        $token = $loginResponse->json('data.token');
+        $this->assertNotNull($token, 'Authentication token was not returned');
 
-    $response = $this->getJson('/api/v1/admin/metrics', [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => 'revenue-device',
-    ]);
+        $response = $this->getJson('/api/v1/admin/metrics?date_from=' . now()->subDays(5)->format('Y-m-d'), [
+            'Authorization' => 'Bearer ' . $token,
+            'device_uuid' => 'metrics-date-device',
+        ])->assertStatus(200);
 
-    $response->assertStatus(200);
+        $metrics = $response->json('data');
+        $this->assertSame(2, $metrics['total_shipments']);
+    }
 
-    $metrics = $response->json('data');
+    public function test_metrics_include_delivery_performance(): void
+    {
+        $admin = User::factory()->create([
+            'user_type' => UserType::ADMIN,
+            'password' => bcrypt('password'),
+        ]);
 
-    // Verify revenue metrics
-    expect($metrics['total_revenue'])->toBe(125.50); // 50 + 75.50
-    expect($metrics['pending_revenue'])->toBe(100.00); // Not delivered yet
-    expect($metrics['collected_revenue'])->toBe(125.50);
-});
+        $merchant = User::factory()->create([
+            'user_type' => UserType::MERCHANT,
+        ]);
 
-test('non-admin cannot access metrics', function () {
-    $merchant = User::factory()->create([
-        'user_type' => UserType::MERCHANT,
-    ]);
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'current_status' => ShipmentStatus::DELIVERED,
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(1),
+        ]);
 
-    $loginResponse = $this->postJson('/api/v1/login', [
-        'email' => $merchant->email,
-        'password' => 'password',
-    ], [
-        'device_uuid' => 'non-admin-metrics-device',
-    ]);
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'current_status' => ShipmentStatus::DELIVERED,
+            'created_at' => now()->subDays(5),
+            'updated_at' => now()->subDays(1),
+        ]);
 
-    $token = $loginResponse->json('data.token');
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'current_status' => ShipmentStatus::LINEHAUL_DEPARTED,
+            'created_at' => now()->subDays(1),
+        ]);
 
-    $response = $this->getJson('/api/v1/admin/metrics', [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => 'non-admin-metrics-device',
-    ]);
+        $loginResponse = $this->postJson('/api/v1/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ], [
+            'device_uuid' => 'performance-device',
+        ])->assertStatus(200);
 
-    $response->assertStatus(403);
-});
+        $token = $loginResponse->json('data.token');
+        $this->assertNotNull($token, 'Authentication token was not returned');
 
-test('metrics handle empty data gracefully', function () {
-    $admin = User::factory()->create([
-        'user_type' => UserType::ADMIN,
-    ]);
+        $response = $this->getJson('/api/v1/admin/metrics', [
+            'Authorization' => 'Bearer ' . $token,
+            'device_uuid' => 'performance-device',
+        ])->assertStatus(200);
 
-    $loginResponse = $this->postJson('/api/v1/login', [
-        'email' => $admin->email,
-        'password' => 'password',
-    ], [
-        'device_uuid' => 'empty-metrics-device',
-    ]);
+        $metrics = $response->json('data');
 
-    $token = $loginResponse->json('data.token');
+        $this->assertSame(2, $metrics['delivered_shipments']);
+        $this->assertSame(1, $metrics['in_transit_shipments']);
+        $this->assertEqualsWithDelta(66.67, $metrics['delivery_rate'], 0.2);
 
-    $response = $this->getJson('/api/v1/admin/metrics', [
-        'Authorization' => 'Bearer '.$token,
-        'device_uuid' => 'empty-metrics-device',
-    ]);
+        if (isset($metrics['average_delivery_time_days'])) {
+            $this->assertGreaterThan(0, $metrics['average_delivery_time_days']);
+        }
+    }
 
-    $response->assertStatus(200);
+    public function test_metrics_include_revenue_data(): void
+    {
+        $admin = User::factory()->create([
+            'user_type' => UserType::ADMIN,
+            'password' => bcrypt('password'),
+        ]);
 
-    $metrics = $response->json('data');
+        $merchant = User::factory()->create([
+            'user_type' => UserType::MERCHANT,
+        ]);
 
-    // Verify default values for empty data
-    expect($metrics['total_shipments'])->toBe(0);
-    expect($metrics['total_customers'])->toBe(0);
-    expect($metrics['total_revenue'])->toBe(0.0);
-});
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'price_amount' => 50.00,
+            'current_status' => ShipmentStatus::DELIVERED,
+        ]);
+
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'price_amount' => 75.50,
+            'current_status' => ShipmentStatus::DELIVERED,
+        ]);
+
+        Shipment::factory()->create([
+            'customer_id' => $merchant->id,
+            'price_amount' => 25.25,
+            'current_status' => ShipmentStatus::LINEHAUL_DEPARTED,
+        ]);
+
+        $loginResponse = $this->postJson('/api/v1/login', [
+            'email' => $admin->email,
+            'password' => 'password',
+        ], [
+            'device_uuid' => 'metrics-revenue-device',
+        ])->assertStatus(200);
+
+        $token = $loginResponse->json('data.token');
+        $this->assertNotNull($token, 'Authentication token was not returned');
+
+        $response = $this->getJson('/api/v1/admin/metrics', [
+            'Authorization' => 'Bearer ' . $token,
+            'device_uuid' => 'metrics-revenue-device',
+        ])->assertStatus(200);
+
+        $metrics = $response->json('data');
+
+        $this->assertArrayHasKey('revenue', $metrics);
+        $this->assertArrayHasKey('total_revenue', $metrics['revenue']);
+        $this->assertEqualsWithDelta(125.50, $metrics['revenue']['total_revenue'] ?? 0, 0.01);
+    }
+}

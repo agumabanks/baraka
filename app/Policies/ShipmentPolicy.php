@@ -30,8 +30,8 @@ class ShipmentPolicy
      */
     public function create(User $user): bool
     {
-        // Only merchants and customers can create shipments
-        return in_array($user->user_type, ['merchant', 'customer']);
+        // Only client accounts can create shipments
+        return $user->isClient();
     }
 
     /**

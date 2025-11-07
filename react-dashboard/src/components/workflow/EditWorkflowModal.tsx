@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
-import type { WorkflowItem } from '../../types/dashboard';
+import UserSelect, { type UserOption } from '../ui/UserSelect';
+import type { WorkflowItem, WorkflowStatus } from '../../types/dashboard';
 
 interface EditWorkflowModalProps {
   isOpen: boolean;
@@ -9,13 +10,14 @@ interface EditWorkflowModalProps {
   onSubmit: (id: string, data: WorkflowFormData) => void;
   item: WorkflowItem | null;
   isLoading?: boolean;
+  assignableUsers?: UserOption[];
 }
 
 export interface WorkflowFormData {
   title: string;
   description: string;
   priority: 'high' | 'medium' | 'low';
-  status: 'pending' | 'in_progress' | 'completed' | 'delayed';
+  status: WorkflowStatus;
   assignedTo?: string;
   dueDate?: string;
   trackingNumber?: string;
@@ -28,6 +30,7 @@ const EditWorkflowModal: React.FC<EditWorkflowModalProps> = ({
   onSubmit,
   item,
   isLoading = false,
+  assignableUsers = [],
 }) => {
   const [formData, setFormData] = useState<WorkflowFormData>({
     title: '',
@@ -47,12 +50,13 @@ const EditWorkflowModal: React.FC<EditWorkflowModalProps> = ({
       setFormData({
         title: item.title || '',
         description: item.description || '',
-        priority: (item.priority as any) || 'medium',
+        priority:
+          (typeof item.priority === 'string' ? item.priority : 'medium') as WorkflowFormData['priority'],
         status: item.status || 'pending',
-        assignedTo: (item as any).assignedTo || '',
-        dueDate: (item as any).dueDate || '',
-        trackingNumber: (item as any).trackingNumber || '',
-        tags: (item as any).tags || [],
+        assignedTo: item.assignedTo ?? '',
+        dueDate: item.dueDate ?? '',
+        trackingNumber: item.trackingNumber ?? '',
+        tags: item.tags ?? [],
       });
     }
   }, [item]);
@@ -143,7 +147,11 @@ const EditWorkflowModal: React.FC<EditWorkflowModalProps> = ({
               <select
                 id="edit-priority"
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    priority: e.target.value as WorkflowFormData['priority'],
+                  })}
                 className="w-full px-4 py-2 border border-mono-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-black focus:border-transparent"
               >
                 <option value="low">Low</option>
@@ -159,11 +167,13 @@ const EditWorkflowModal: React.FC<EditWorkflowModalProps> = ({
               <select
                 id="edit-status"
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as WorkflowStatus })}
                 className="w-full px-4 py-2 border border-mono-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-black focus:border-transparent"
               >
-                <option value="pending">Pending</option>
+                <option value="pending">New</option>
                 <option value="in_progress">In Progress</option>
+                <option value="testing">Testing</option>
+                <option value="awaiting_feedback">Awaiting Feedback</option>
                 <option value="completed">Completed</option>
                 <option value="delayed">Delayed</option>
               </select>
@@ -202,16 +212,12 @@ const EditWorkflowModal: React.FC<EditWorkflowModalProps> = ({
 
           {/* Assigned To */}
           <div>
-            <label htmlFor="edit-assignedTo" className="block text-sm font-medium text-mono-black mb-2">
-              Assign To
-            </label>
-            <input
-              type="text"
-              id="edit-assignedTo"
-              value={formData.assignedTo}
-              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-              className="w-full px-4 py-2 border border-mono-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-black focus:border-transparent"
-              placeholder="User ID or name..."
+            <UserSelect
+              label="Assign To"
+              value={formData.assignedTo ?? ''}
+              onChange={(userId) => setFormData({ ...formData, assignedTo: userId })}
+              options={assignableUsers}
+              placeholder="Select a team member..."
             />
           </div>
 

@@ -10,7 +10,16 @@ class PaymentAccountRepository implements PaymentAccountInterface
 {
     public function all()
     {
-        return MerchantPayment::where('merchant_id', auth()->user()->merchant->id)->orderBy('id', 'desc')->paginate(10);
+        $user = auth()->user();
+        $merchantId = $user?->merchant->id ?? null;
+
+        $query = MerchantPayment::query()->orderByDesc('id');
+
+        if ($merchantId) {
+            $query->where('merchant_id', $merchantId);
+        }
+
+        return $query->paginate(10);
     }
 
     public function get($id) {}

@@ -120,14 +120,16 @@ class SearchService
      */
     protected function searchCustomers(string $query, array $filters, ?User $user): Collection
     {
-        $queryBuilder = User::where('user_type', 'customer');
+        $queryBuilder = User::clients();
 
         // Apply ABAC filtering - customers linked to user's shipments
         if ($user && ! $user->hasRole('hq_admin')) {
-            $queryBuilder->whereHas('shipments', function ($q) use ($user) {
-                $q->where('origin_branch_id', $user->hub_id)
-                    ->orWhere('dest_branch_id', $user->hub_id);
-            })->orWhere('hub_id', $user->hub_id); // Created by user's branch
+            $queryBuilder->where(function ($q) use ($user) {
+                $q->whereHas('shipments', function ($shipmentQuery) use ($user) {
+                    $shipmentQuery->where('origin_branch_id', $user->hub_id)
+                        ->orWhere('dest_branch_id', $user->hub_id);
+                })->orWhere('hub_id', $user->hub_id); // Created by user's branch
+            });
         }
 
         if ($this->driver === 'postgres_fts') {

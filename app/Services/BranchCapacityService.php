@@ -134,7 +134,12 @@ class BranchCapacityService
     private function analyzePeakHours(Collection $dailyWorkload): array
     {
         if ($dailyWorkload->isEmpty()) {
-            return ['peak_hours' => [], 'average_daily_load' => 0];
+            return [
+                'peak_days' => [],
+                'average_daily_load' => 0,
+                'peak_threshold' => 0,
+                'peak_frequency' => 0,
+            ];
         }
 
         $totalShipments = $dailyWorkload->sum('shipment_count');

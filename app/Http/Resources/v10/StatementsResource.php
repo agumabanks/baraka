@@ -14,16 +14,23 @@ class StatementsResource extends JsonResource
      */
     public function toArray($request)
     {
+        $currency = settings()->currency;
+
         return [
             'id' => $this->id,
+            'merchant_id' => $this->merchant_id,
+            'merchant_name' => optional($this->merchant)->business_name,
+            'parcel_id' => $this->parcel_id,
+            'parcel_tracking_id' => optional($this->parcel)->tracking_id,
             'note' => $this->note,
-            'date' => (string) dateFormat($this->date),
-            'amount' => (string) number_format($this->amount, 2),
-            'currency' => (string) settings()->currency,
+            'date' => $this->date ? (string) dateFormat($this->date) : null,
+            'amount' => (float) $this->amount,
+            'amount_formatted' => number_format((float) $this->amount, 2),
+            'currency' => $currency,
             'type' => (int) $this->type,
-            'typeName' => trans('AccountHeads.'.$this->type),
-            'created_at' => $this->created_at->format('d M Y, h:i A'),
-            'updated_at' => $this->updated_at->format('d M Y, h:i A'),
+            'type_name' => trans('AccountHeads.'.$this->type),
+            'created_at' => optional($this->created_at)->format('d M Y, h:i A'),
+            'updated_at' => optional($this->updated_at)->format('d M Y, h:i A'),
         ];
     }
 }

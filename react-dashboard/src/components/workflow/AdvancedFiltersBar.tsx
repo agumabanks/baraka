@@ -90,8 +90,10 @@ const AdvancedFiltersBar: React.FC<AdvancedFiltersBarProps> = React.memo(({
             className="w-full px-3 py-2 text-sm border border-mono-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-mono-black"
           >
             <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
+            <option value="pending">New</option>
             <option value="in_progress">In Progress</option>
+            <option value="testing">Testing</option>
+            <option value="awaiting_feedback">Awaiting Feedback</option>
             <option value="completed">Completed</option>
             <option value="delayed">Delayed</option>
           </select>

@@ -14,6 +14,7 @@
 use App\Http\Controllers\AamarpayController;
 use App\Http\Controllers\Admin\BookingWizardController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\ApiGatewayController;
 use App\Http\Controllers\Backend\AccidentController;
 use App\Http\Controllers\Backend\AccountController;
 use App\Http\Controllers\Backend\AccountHeadsController;
@@ -141,7 +142,7 @@ $serveReactDashboard = static function (array $context = []) {
 };
 
 // installer
-Route::middleware(['XSS', 'IsNotInstalled'])->group(function () {
+Route::middleware(['XSS'])->group(function () {
     Route::get('install', [InstallerController::class, 'index']);
 });
 Route::middleware(['XSS'])->group(function () {
@@ -264,7 +265,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 });
 
 // end installer
-Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDashboard) {
+Route::middleware(['XSS'])->group(function () use ($serveReactDashboard) {
     Auth::routes();
 
     Route::middleware('guest')->group(function () use ($serveReactDashboard) {
@@ -1288,4 +1289,59 @@ Route::middleware(['XSS', 'IsInstalled'])->group(function () use ($serveReactDas
             return $serveReactDashboard();
         })->where('any', '.*')->name('react.spa');
    Route::get('/deliveryMan/parcel/map/{id}/{lat}/{long}/{status}', [MapParcelController::class, 'parcelMap']);
+});
+
+/**
+ * API Gateway Routes
+ */
+Route::middleware(['api'])->prefix('api/gateway')->group(function () {
+    // Core API Gateway endpoints
+    Route::get('/health', [ApiGatewayController::class, 'health'])->name('api.gateway.health');
+    Route::get('/statistics', [ApiGatewayController::class, 'statistics'])->name('api.gateway.statistics');
+    Route::get('/logs', [ApiGatewayController::class, 'logs'])->name('api.gateway.logs');
+    Route::get('/error-logs', [ApiGatewayController::class, 'errorLogs'])->name('api.gateway.error-logs');
+    Route::get('/circuit-breakers', [ApiGatewayController::class, 'circuitBreakers'])->name('api.gateway.circuit-breakers');
+    Route::post('/circuit-breakers/{service}/reset', [ApiGatewayController::class, 'resetCircuitBreaker'])->name('api.gateway.circuit-breaker.reset');
+    Route::get('/routes', [ApiGatewayController::class, 'routes'])->name('api.gateway.routes');
+    Route::get('/rate-limit-rules', [ApiGatewayController::class, 'rateLimitRules'])->name('api.gateway.rate-limit-rules');
+    Route::get('/rate-limit-breaches', [ApiGatewayController::class, 'rateLimitBreaches'])->name('api.gateway.rate-limit-breaches');
+    Route::post('/clear-caches', [ApiGatewayController::class, 'clearCaches'])->name('api.gateway.clear-caches');
+    
+    // Route management endpoints (admin only)
+    Route::middleware(['auth'])->group(function () {
+        Route::post('/routes', [ApiGatewayController::class, 'createRoute'])->name('api.gateway.routes.create');
+        Route::put('/routes/{path}', [ApiGatewayController::class, 'updateRoute'])->name('api.gateway.routes.update');
+        Route::delete('/routes/{path}', [ApiGatewayController::class, 'deleteRoute'])->name('api.gateway.routes.delete');
+    });
+});
+
+/**
+ * API Proxy Routes
+ * These routes act as a proxy to route requests to appropriate backend services
+ */
+Route::middleware(['api'])->group(function () {
+    // Proxy to operational reporting service
+    Route::any('/api/v1/operational/{path?}', [ApiGatewayController::class, 'handleRequest'])
+        ->where('path', '.*')
+        ->name('api.operational.proxy');
+    
+    // Proxy to financial reporting service
+    Route::any('/api/v1/financial/{path?}', [ApiGatewayController::class, 'handleRequest'])
+        ->where('path', '.*')
+        ->name('api.financial.proxy');
+    
+    // Proxy to customer intelligence service
+    Route::any('/api/v1/customer/{path?}', [ApiGatewayController::class, 'handleRequest'])
+        ->where('path', '.*')
+        ->name('api.customer.proxy');
+    
+    // Proxy to real-time dashboard service
+    Route::any('/api/v1/dashboard/{path?}', [ApiGatewayController::class, 'handleRequest'])
+        ->where('path', '.*')
+        ->name('api.dashboard.proxy');
+    
+    // Generic API proxy for future services
+    Route::any('/api/v1/generic/{path?}', [ApiGatewayController::class, 'handleRequest'])
+        ->where('path', '.*')
+        ->name('api.generic.proxy');
 });

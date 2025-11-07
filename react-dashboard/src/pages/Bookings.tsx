@@ -4,6 +4,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { shipmentsApi } from '../services/api';
+import BookingWizardModal from '../components/bookings/BookingWizardModal';
 
 interface BookingRecord {
   id: string;
@@ -94,22 +95,24 @@ const filterOptions: BookingRecord['status'][] = [
 
 const Bookings: React.FC = () => {
   // Fetch shipments and stats from API
-  const { data: shipmentsResp } = useQuery({
+  const shipmentsQuery = useQuery({
     queryKey: ['shipments', { page: 1, per_page: 50 }],
-    queryFn: () => shipmentsApi.getShipments({ page: 1, per_page: 50 }),
+    queryFn: () => shipmentsApi.getShipments({ page: 1, per_page: 50 })
   });
-  const { data: statsResp } = useQuery({
+  const statsQuery = useQuery({
     queryKey: ['shipments', 'stats'],
-    queryFn: () => shipmentsApi.getStatistics(),
+    queryFn: () => shipmentsApi.getStatistics()
   });
+
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   const bookings: BookingRecord[] = useMemo(() => {
-    const rows = mapShipmentsToBookings((shipmentsResp as any)?.data ?? []);
+    const rows = mapShipmentsToBookings((shipmentsQuery.data as any)?.data ?? []);
     return rows;
-  }, [shipmentsResp]);
+  }, [shipmentsQuery.data]);
 
   const pipelineCounts = useMemo(() => {
-    const stats = (statsResp as any)?.data ?? {};
+    const stats = (statsQuery.data as any)?.data ?? {};
     return {
       newRequests: Number(stats.today ?? 0),
       pending: Number(stats.pending ?? 0),
@@ -117,7 +120,7 @@ const Bookings: React.FC = () => {
       delivered: Number(stats.delivered ?? 0),
       outForDelivery: Number(stats.in_transit ?? 0),
     };
-  }, [statsResp]);
+  }, [statsQuery.data]);
 
   const [statusFilter, setStatusFilter] = useState<BookingRecord['status'][]>(['Pending Dispatch', 'In Transit']);
   const [query, setQuery] = useState('');
@@ -169,7 +172,12 @@ const Bookings: React.FC = () => {
               <i className="fas fa-clipboard-list mr-2" aria-hidden="true" />
               Bulk Actions
             </Button>
-            <Button variant="primary" size="sm" className="uppercase tracking-[0.25em]">
+            <Button
+              variant="primary"
+              size="sm"
+              className="uppercase tracking-[0.25em]"
+              onClick={() => setIsWizardOpen(true)}
+            >
               <i className="fas fa-plus mr-2" aria-hidden="true" />
               Create Booking
             </Button>
@@ -364,6 +372,15 @@ const Bookings: React.FC = () => {
           </div>
         </div>
       </section>
+
+      <BookingWizardModal
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        onCompleted={async () => {
+          await shipmentsQuery.refetch();
+          await statsQuery.refetch();
+        }}
+      />
     </div>
   );
 };

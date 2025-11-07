@@ -10,6 +10,8 @@ import type {
   ChartConfig,
   QuickAction,
   StatementData,
+  TeamOverviewEntry,
+  DashboardActivityEntry,
 } from '../types/dashboard';
 
 /**
@@ -357,6 +359,90 @@ export const mockQuickActions: QuickAction[] = [
 ];
 
 /**
+ * Mock Team Overview
+ */
+export const mockTeamOverview: TeamOverviewEntry[] = [
+  {
+    id: 'ops',
+    label: 'Operations',
+    department: { id: 1, title: 'Operations' },
+    hub: { id: 101, name: 'Kampala HQ' },
+    total: 48,
+    active: 42,
+    inactive: 6,
+    active_ratio: 0.875,
+    recent_hires: 3,
+    sample_users: [
+      { id: 1, name: 'Aisha K', status: 1 },
+      { id: 2, name: 'Daniel M', status: 1 },
+      { id: 3, name: 'Brenda T', status: 0 },
+    ],
+  },
+  {
+    id: 'customer-success',
+    label: 'Customer Success',
+    department: { id: 2, title: 'Customer Success' },
+    hub: { id: 102, name: 'Nairobi Support' },
+    total: 26,
+    active: 24,
+    inactive: 2,
+    active_ratio: 0.923,
+    recent_hires: 1,
+    sample_users: [
+      { id: 11, name: 'Chris L', status: 1 },
+      { id: 12, name: 'Zayne P', status: 1 },
+      { id: 13, name: 'Irene W', status: 1 },
+    ],
+  },
+  {
+    id: 'fleet',
+    label: 'Fleet & Dispatch',
+    department: { id: 3, title: 'Fleet' },
+    hub: { id: 103, name: 'Entebbe Dispatch' },
+    total: 64,
+    active: 57,
+    inactive: 7,
+    active_ratio: 0.89,
+    recent_hires: 5,
+    sample_users: [
+      { id: 21, name: 'James O', status: 1 },
+      { id: 22, name: 'Hanifa G', status: 1 },
+      { id: 23, name: 'Peter B', status: 0 },
+    ],
+  },
+];
+
+/**
+ * Mock Activity Timeline
+ */
+export const mockActivityTimeline: DashboardActivityEntry[] = [
+  {
+    id: 'activity-1',
+    action: 'shipment_initiated',
+    details: { tracking: 'BRX12345', customer: 'Nexus Gadgets' },
+    createdAt: new Date().toISOString(),
+    actor: { id: 'user-1', name: 'Jacinta Atwine' },
+    task: { id: 'wf-21', title: 'Schedule pickup', status: 'in_progress' },
+  },
+  {
+    id: 'activity-2',
+    action: 'cod_settlement_requested',
+    details: { amount: 1250000, currency: 'UGX' },
+    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+    actor: { id: 'user-5', name: 'Brian Kintu' },
+    task: { id: 'wf-42', title: 'Settle COD batch', status: 'pending' },
+  },
+  {
+    id: 'activity-3',
+    action: 'incident_resolved',
+    details: { incident: 'INC-7782', severity: 'medium' },
+    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    actor: { id: 'user-7', name: 'Support Bot' },
+    task: { id: 'wf-10', title: 'Delivery exception', status: 'resolved' },
+  },
+];
+
+/**
  * Complete Mock Dashboard Data
  */
 export const mockDashboardData: DashboardData = {
@@ -371,5 +457,7 @@ export const mockDashboardData: DashboardData = {
   statements: mockStatements,
   charts: mockCharts,
   quickActions: mockQuickActions,
+  teamOverview: mockTeamOverview,
+  activityTimeline: mockActivityTimeline,
   loading: false,
 };

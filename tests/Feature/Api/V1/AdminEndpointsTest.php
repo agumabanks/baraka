@@ -59,7 +59,10 @@ class AdminEndpointsTest extends TestCase
                 ],
             ]);
 
-        $this->assertCount(4, $response->json('data.customers')); // 3 + 1 admin
+        $this->assertCount(4, $response->json('data.customers')); // 3 seeded + existing client from setUp
+
+        $customerIds = array_column($response->json('data.customers'), 'id');
+        $this->assertNotContains($this->admin->id, $customerIds);
     }
 
     public function test_show_customer_details_as_admin()
