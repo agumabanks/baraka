@@ -83,6 +83,7 @@ class Kernel extends HttpKernel
         // Accessibility and Audit Middleware
         'audit.logging' => \App\Http\Middleware\AuditLoggingMiddleware::class,
         'accessibility.validation' => \App\Http\Middleware\AccessibilityValidationMiddleware::class,
+        'api.rate_limit' => \App\Http\Middleware\ApiRateLimitMiddleware::class,
 
     ];
 }

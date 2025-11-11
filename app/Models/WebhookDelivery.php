@@ -9,65 +9,65 @@ class WebhookDelivery extends Model
 {
     protected $fillable = [
         'webhook_endpoint_id',
-        'event',
+        'event_type',
         'payload',
-        'response_status',
-        'response_body',
+        'response',
+        'http_status',
         'attempts',
+        'next_retry_at',
         'delivered_at',
         'failed_at',
     ];
 
     protected $casts = [
         'payload' => 'array',
-        'response_body' => 'array',
+        'response' => 'array',
+        'http_status' => 'integer',
+        'attempts' => 'integer',
+        'next_retry_at' => 'datetime',
         'delivered_at' => 'datetime',
         'failed_at' => 'datetime',
     ];
 
-    /**
-     * Get the webhook endpoint that this delivery belongs to.
-     */
     public function webhookEndpoint(): BelongsTo
     {
         return $this->belongsTo(WebhookEndpoint::class);
     }
 
-    /**
-     * Check if delivery was successful.
-     */
-    public function isSuccessful(): bool
+    public function isDelivered(): bool
     {
-        return $this->response_status >= 200 && $this->response_status < 300;
+        return $this->delivered_at !== null;
     }
 
-    /**
-     * Check if delivery failed.
-     */
     public function isFailed(): bool
     {
-        return !is_null($this->failed_at);
+        return $this->failed_at !== null;
     }
 
-    /**
-     * Mark delivery as successful.
-     */
-    public function markAsDelivered(): void
+    public function isPending(): bool
     {
-        $this->update([
-            'delivered_at' => now(),
-            'failed_at' => null,
-        ]);
+        return $this->delivered_at === null && $this->failed_at === null;
     }
 
-    /**
-     * Mark delivery as failed.
-     */
-    public function markAsFailed(): void
+    public function scopeDelivered($query)
     {
-        $this->update([
-            'failed_at' => now(),
-            'attempts' => $this->attempts + 1,
-        ]);
+        return $query->whereNotNull('delivered_at');
+    }
+
+    public function scopeFailed($query)
+    {
+        return $query->whereNotNull('failed_at');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->whereNull('delivered_at')->whereNull('failed_at');
+    }
+
+    public function scopeRetryable($query)
+    {
+        return $query->pending()
+            ->whereNotNull('next_retry_at')
+            ->where('next_retry_at', '<=', now());
     }
 }

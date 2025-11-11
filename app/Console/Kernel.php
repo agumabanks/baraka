@@ -17,6 +17,29 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         // $schedule->command('database:autobackup')->daily();
         $schedule->command('invoice:generate')->daily('13:00');
+        
+        // Disaster Recovery & Backups
+        $schedule->command('backup:database --label=automatic')
+            ->dailyAt('02:00')
+            ->withoutOverlapping()
+            ->onSuccess(function () {
+                \Illuminate\Support\Facades\Log::info('Automatic database backup completed successfully');
+            })
+            ->onFailure(function () {
+                \Illuminate\Support\Facades\Log::error('Automatic database backup failed');
+            });
+        
+        $schedule->command('backup:cleanup')
+            ->dailyAt('03:00')
+            ->withoutOverlapping();
+
+        // Webhook retry queue
+        $schedule->call(function () {
+            $deliveries = \App\Models\WebhookDelivery::retryable()->get();
+            foreach ($deliveries as $delivery) {
+                dispatch(new \App\Jobs\DeliverWebhook($delivery));
+            }
+        })->everyFiveMinutes();
     }
 
     /**

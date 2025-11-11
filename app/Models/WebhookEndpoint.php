@@ -4,55 +4,69 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class WebhookEndpoint extends Model
 {
     protected $fillable = [
-        'user_id',
         'name',
         'url',
-        'secret',
         'events',
-        'is_active',
-        'last_delivery_at',
+        'active',
+        'secret_key',
+        'retry_policy',
+        'last_triggered_at',
+        'failure_count',
     ];
 
     protected $casts = [
         'events' => 'array',
-        'is_active' => 'boolean',
-        'last_delivery_at' => 'datetime',
+        'active' => 'boolean',
+        'retry_policy' => 'array',
+        'last_triggered_at' => 'datetime',
+        'failure_count' => 'integer',
     ];
 
-    /**
-     * Get the user that owns this webhook endpoint.
-     */
-    public function user(): BelongsTo
+    protected static function booted()
     {
-        return $this->belongsTo(User::class);
+        static::creating(function (self $model) {
+            if (!$model->secret_key) {
+                $model->secret_key = Str::random(32);
+            }
+            if (!$model->retry_policy) {
+                $model->retry_policy = [
+                    'max_attempts' => 5,
+                    'backoff_multiplier' => 2,
+                    'initial_delay' => 60,
+                    'max_delay' => 3600,
+                ];
+            }
+        });
     }
 
-    /**
-     * Get the webhook deliveries for this endpoint.
-     */
     public function deliveries(): HasMany
     {
         return $this->hasMany(WebhookDelivery::class);
     }
 
-    /**
-     * Check if this endpoint should receive the given event.
-     */
-    public function shouldReceiveEvent(string $event): bool
+    public function rotateSecret(): string
     {
-        return $this->is_active && in_array($event, $this->events);
+        $this->update(['secret_key' => Str::random(32)]);
+        return $this->secret_key;
     }
 
-    /**
-     * Generate a signature for webhook verification.
-     */
     public function generateSignature(string $payload): string
     {
-        return hash_hmac('sha256', $payload, $this->secret);
+        return 'sha256=' . hash_hmac('sha256', $payload, $this->secret_key);
+    }
+
+    public function isHealthy(): bool
+    {
+        return $this->failure_count < ($this->retry_policy['max_attempts'] ?? 5);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('active', true);
     }
 }
