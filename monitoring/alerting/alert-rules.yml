@@ -1,0 +1,179 @@
+groups:
+  - name: baraka-logistics-alerts
+    interval: 30s
+    rules:
+      # API & Service Availability
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "High error rate detected (>1%)"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+          runbook: "https://wiki.sanaa.co/runbooks/high-error-rate"
+
+      - alert: ServiceDown
+        expr: |
+          up{job=~"laravel-app|api-server"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.instance }} has been unreachable for 2 minutes"
+          runbook: "https://wiki.sanaa.co/runbooks/service-down"
+
+      # Latency & Performance
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.99, http_request_duration_seconds) > 1
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High API latency detected (p99 > 1s)"
+          description: "P99 latency is {{ $value }}s for {{ $labels.endpoint }}"
+          runbook: "https://wiki.sanaa.co/runbooks/high-latency"
+
+      # Database & Queue
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          (mysql_global_status_threads_connected / mysql_global_variables_max_connections) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "Database connection pool 80% utilized"
+          description: "Current connections: {{ $value | humanizePercentage }} of max"
+
+      - alert: QueueBacklogCritical
+        expr: |
+          queue_length > 10000
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Queue backlog critical (>10k jobs)"
+          description: "{{ $labels.queue }} has {{ $value }} pending jobs"
+          runbook: "https://wiki.sanaa.co/runbooks/queue-backlog"
+
+      - alert: WebhookDeliveryFailureRate
+        expr: |
+          (sum(rate(webhook_delivery_failed_total[5m])) / sum(rate(webhook_delivery_attempts_total[5m]))) > 0.05
+        for: 15m
+        labels:
+          severity: warning
+          team: integrations
+        annotations:
+          summary: "Webhook delivery failure rate > 5%"
+          description: "Failed delivery rate: {{ $value | humanizePercentage }}"
+          runbook: "https://wiki.sanaa.co/runbooks/webhook-failures"
+
+      # Capacity & Resources
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Disk space low on {{ $labels.instance }} (<10%)"
+          description: "Available: {{ $value | humanize }}B"
+
+      - alert: MemoryUsageHigh
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Memory usage critical on {{ $labels.instance }} (>90%)"
+          description: "Current usage: {{ $value | humanizePercentage }}"
+
+      - alert: BranchCapacityExceeded
+        expr: |
+          (branch_current_load / branch_capacity) > 0.95
+        for: 10m
+        labels:
+          severity: critical
+          team: operations
+        annotations:
+          summary: "Branch {{ $labels.branch_code }} capacity exceeded (95%+)"
+          description: "Current load: {{ $value | humanizePercentage }} of capacity"
+          runbook: "https://wiki.sanaa.co/runbooks/branch-capacity"
+
+      - alert: HubProcessingDelayHigh
+        expr: |
+          avg(shipment_processing_time_seconds) > 300
+        for: 15m
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Hub processing delay > 5 minutes"
+          description: "Average processing time: {{ $value }}s"
+
+      # Data Integrity & Monitoring
+      - alert: MissingBackup
+        expr: |
+          time() - backup_last_successful_timestamp > 86400
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: "No backup in last 24 hours"
+          description: "Last backup: {{ $value | humanizeDuration }} ago"
+          runbook: "https://wiki.sanaa.co/runbooks/backup-failures"
+
+      - alert: ReplicationLag
+        expr: |
+          mysql_slave_status_seconds_behind_master > 30
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "Database replication lag > 30 seconds"
+          description: "Current lag: {{ $value }}s"
+
+      - alert: ShipmentScanAccuracyLow
+        expr: |
+          scan_accuracy_percentage < 0.95
+        for: 30m
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Scan accuracy below 95% threshold"
+          description: "Current accuracy: {{ $value | humanizePercentage }}"
+
+      - alert: ApiRateLimitExceeded
+        expr: |
+          sum(rate(http_requests_total{status="429"}[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High rate of 429 (Too Many Requests) responses"
+          description: "Rate-limited requests: {{ $value }}/sec"
+
+      # Alerting System
+      - alert: PrometheusEvaluationFailures
+        expr: |
+          increase(prometheus_rule_evaluation_failures_total[5m]) > 0
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Prometheus evaluation failures detected"
+          description: "{{ $value }} evaluation failures in last 5 minutes"

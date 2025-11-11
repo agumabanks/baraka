@@ -1,0 +1,131 @@
+global:
+  resolve_timeout: 5m
+  slack_api_url: "${SLACK_WEBHOOK_URL}"
+  pagerduty_url: "https://events.pagerduty.com/v2/enqueue"
+
+route:
+  # Default receiver
+  receiver: default-receiver
+  
+  # Group by labels
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+
+  # Sub-routes for different teams
+  routes:
+    # Critical platform issues
+    - match:
+        severity: critical
+        team: platform
+      receiver: platform-critical
+      continue: true
+      group_wait: 5s
+      repeat_interval: 1h
+
+    # Database issues
+    - match:
+        severity: critical
+        team: database
+      receiver: database-critical
+      continue: true
+      group_wait: 5s
+      repeat_interval: 1h
+
+    # Operations issues
+    - match:
+        team: operations
+      receiver: operations
+      group_wait: 15s
+      repeat_interval: 4h
+
+    # Infrastructure issues
+    - match:
+        team: infrastructure
+      receiver: infrastructure
+      group_wait: 15s
+
+    # Integration issues
+    - match:
+        team: integrations
+      receiver: integrations
+      group_wait: 30s
+      repeat_interval: 2h
+
+    # Warning severity
+    - match:
+        severity: warning
+      receiver: default-receiver
+      repeat_interval: 6h
+
+receivers:
+  # Default receiver - Slack
+  - name: default-receiver
+    slack_configs:
+      - channel: '#alerts-general'
+        title: '{{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        actions:
+          - type: button
+            text: 'Runbook'
+            url: '{{ (index .Alerts 0).Annotations.runbook }}'
+
+  # Platform critical - page on-call
+  - name: platform-critical
+    slack_configs:
+      - channel: '#platform-critical'
+        title: ':red_circle: CRITICAL: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: 'danger'
+    pagerduty_configs:
+      - service_key: "${PAGERDUTY_SERVICE_KEY_PLATFORM}"
+        description: '{{ .GroupLabels.alertname }}: {{ (index .Alerts 0).Annotations.summary }}'
+
+  # Database critical
+  - name: database-critical
+    slack_configs:
+      - channel: '#database-critical'
+        title: ':red_circle: DATABASE ALERT: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: 'danger'
+    pagerduty_configs:
+      - service_key: "${PAGERDUTY_SERVICE_KEY_DATABASE}"
+        description: '{{ .GroupLabels.alertname }}: {{ (index .Alerts 0).Annotations.summary }}'
+
+  # Operations team
+  - name: operations
+    slack_configs:
+      - channel: '#operations-alerts'
+        title: '{{ if eq .Status "firing" }}:warning:{{ else }}:white_check_mark:{{ end }} {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  # Infrastructure team
+  - name: infrastructure
+    slack_configs:
+      - channel: '#infrastructure-alerts'
+        title: '{{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  # Integrations team
+  - name: integrations
+    slack_configs:
+      - channel: '#integrations-alerts'
+        title: '{{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+inhibit_rules:
+  # Inhibit warnings if critical alert exists
+  - source_match:
+      severity: critical
+    target_match:
+      severity: warning
+    equal: ['alertname', 'dev', 'instance']
+
+  # Inhibit if service is down (suppress component alerts)
+  - source_match:
+      alertname: ServiceDown
+    target_match_re:
+      alertname: 'HighErrorRate|HighLatency'
+    equal: ['instance']
