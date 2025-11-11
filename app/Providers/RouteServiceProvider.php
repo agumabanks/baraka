@@ -44,6 +44,10 @@ class RouteServiceProvider extends ServiceProvider
                     ->group(base_path('routes/api_v1.php'));
             }
 
+            // Readiness improvements routes (webhooks, mobile scanning, EDI)
+            Route::middleware('api')
+                ->group(base_path('routes/api-readiness-improvements.php'));
+
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });

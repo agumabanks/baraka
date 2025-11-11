@@ -6,6 +6,7 @@ use App\Models\WebhookEndpoint;
 use App\Models\WebhookDelivery;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class WebhookService
 {
