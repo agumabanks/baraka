@@ -12,7 +12,7 @@ class DisasterRecoveryService
 {
     private string $backupPath = 'backups';
 
-    public function createBackup(string $label = null): string
+    public function createBackup(?string $label = null): string
     {
         $timestamp = now()->format('Y-m-d_H-i-s');
         $backupName = "backup_{$timestamp}_" . ($label ?? 'manual') . ".sql";
