@@ -133,7 +133,6 @@ return [
             'path' => storage_path('logs/metrics.log'),
             'level' => env('LOG_LEVEL', 'info'),
             'days' => 14,
-            'formatter' => \Monolog\Formatter\JsonFormatter::class,
         ],
 
         'webhooks' => [
