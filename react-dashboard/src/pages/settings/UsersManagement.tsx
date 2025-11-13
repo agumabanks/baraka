@@ -26,6 +26,8 @@ type UserFormState = {
   joining_date: string;
   salary: string;
   address: string;
+  preferred_language: string;
+  primary_branch_id: string;
   image: File | null;
 };
 
@@ -67,6 +69,8 @@ const defaultUserForm: UserFormState = {
   joining_date: '',
   salary: '',
   address: '',
+  preferred_language: 'en',
+  primary_branch_id: '',
   image: null,
 };
 
@@ -76,6 +80,11 @@ const initialFilters: AdminUserFilters = {
 };
 
 const EMPTY_USERS: AdminUser[] = [];
+const LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'fr', label: 'Français' },
+  { value: 'sw', label: 'Kiswahili' },
+];
 
 const UsersManagement: React.FC = () => {
   const queryClient = useQueryClient();
@@ -487,6 +496,8 @@ const UsersManagement: React.FC = () => {
       joining_date: user.joining_date ?? '',
       salary: user.salary != null ? String(user.salary) : '',
       address: user.address ?? '',
+      preferred_language: user.preferred_language ?? 'en',
+      primary_branch_id: user.primary_branch_id ? String(user.primary_branch_id) : '',
       image: null,
     });
   };
@@ -588,6 +599,8 @@ const UsersManagement: React.FC = () => {
       joining_date: formState.joining_date,
       salary: formState.salary ? Number(formState.salary) : undefined,
       address: formState.address.trim(),
+      preferred_language: (formState.preferred_language || 'en') as 'en' | 'fr' | 'sw',
+      primary_branch_id: formState.primary_branch_id ? Number(formState.primary_branch_id) : undefined,
       image: formState.image,
     };
 
@@ -1001,6 +1014,13 @@ const UsersManagement: React.FC = () => {
                       placeholder="+256 700 000000"
                       error={formErrors.mobile}
                     />
+                    <Select
+                      label="Preferred Language"
+                      value={formState.preferred_language}
+                      onChange={(event) => handleFormChange('preferred_language', event.target.value)}
+                      options={LANGUAGE_OPTIONS}
+                      error={formErrors.preferred_language}
+                    />
                     <Input
                       label="National ID"
                       value={formState.nid_number}
@@ -1080,6 +1100,19 @@ const UsersManagement: React.FC = () => {
                         })),
                       ]}
                       error={formErrors.hub_id}
+                    />
+                    <Select
+                      label="Primary Branch"
+                      value={formState.primary_branch_id}
+                      onChange={(event) => handleFormChange('primary_branch_id', event.target.value)}
+                      options={[
+                        { value: '', label: 'Unassigned' },
+                        ...(metaResponse?.branches ?? []).map((branch) => ({
+                          value: String(branch.id),
+                          label: branch.code ? `${branch.name} (${branch.code})` : branch.name,
+                        })),
+                      ]}
+                      error={formErrors.primary_branch_id}
                     />
                     <Select
                       label="Department"

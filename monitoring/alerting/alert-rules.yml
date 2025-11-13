@@ -177,3 +177,178 @@ groups:
         annotations:
           summary: "Prometheus evaluation failures detected"
           description: "{{ $value }} evaluation failures in last 5 minutes"
+
+      # Webhook & EDI Specific Alerts
+      - alert: WebhookLatencySpike
+        expr: |
+          histogram_quantile(0.95, sum(rate(webhook_delivery_latency_bucket[5m])) by (le)) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          team: integrations
+        annotations:
+          summary: "Webhook delivery latency p95 above 50ms"
+          description: "p95 latency is {{ $value | humanizeDuration }} for webhook deliveries"
+          runbook: "https://wiki.sanaa.co/runbooks/webhook-latency"
+
+      - alert: WebhookQueueStalled
+        expr: |
+          increase(webhook_delivery_retry_queue_stalled_total[5m]) > 0
+        labels:
+          severity: critical
+          team: integrations
+        annotations:
+          summary: "Webhook retry queue stalled"
+          description: "Stalled deliveries detected for {{ $labels.endpoint_id }}"
+          runbook: "https://wiki.sanaa.co/runbooks/webhook-retry"
+
+      - alert: EdiTransactionFailureRate
+        expr: |
+          (sum(rate(edi_transaction_failures_total[10m])) / sum(rate(edi_transaction_total[10m]))) > 0.02
+        for: 10m
+        labels:
+          severity: warning
+          team: integrations
+        annotations:
+          summary: "EDI failures exceeded 2% threshold"
+          description: "Failure rate {{ $value | humanizePercentage }} over last 10m"
+          runbook: "https://wiki.sanaa.co/runbooks/edi-failures"
+
+      - alert: EdiAckDelayed
+        expr: |
+          max(edi_ack_latency_seconds) > 120
+        for: 5m
+        labels:
+          severity: warning
+          team: integrations
+        annotations:
+          summary: "EDI acknowledgements delayed >2 minutes"
+          description: "Ack latency is {{ $value | humanizeDuration }}"
+          runbook: "https://wiki.sanaa.co/runbooks/edi-ack"
+
+      # Mobile scanning + device alerts
+      - alert: MobileScanErrorSpike
+        expr: |
+          increase(mobile_scan_errors_total[5m]) > 50
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Mobile scan error spike detected"
+          description: "{{ $value }} errors recorded within 5 minutes"
+          runbook: "https://wiki.sanaa.co/runbooks/mobile-scanning"
+
+      - alert: DeviceAuthenticationFailure
+        expr: |
+          increase(device_auth_failures_total[10m]) > 25
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Device authentication failures at field level"
+          description: "{{ $value }} failures in last 10 minutes"
+
+      - alert: OfflineQueueBacklog
+        expr: |
+          max(mobile_offline_queue_depth) > 500
+        for: 10m
+        labels:
+          severity: warning
+          team: operations
+        annotations:
+          summary: "Offline mobile scan queue backlog (>500)"
+          description: "Current backlog: {{ $value }}"
+
+      # Analytics & Cache tuning
+      - alert: AnalyticsQueryP99High
+        expr: |
+          histogram_quantile(0.99, sum(rate(analytics_query_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Analytics query p99 above 2 seconds"
+          description: "p99 is {{ $value }} seconds"
+          runbook: "https://wiki.sanaa.co/runbooks/analytics-latency"
+
+      - alert: CacheHitRateDropping
+        expr: |
+          (1 - cache_miss_ratio{cache="redis_branch_analytics"}) > 0.3
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Branch analytics cache hit rate below 70%"
+          description: "Hit rate: {{ (1 - $value) | humanizePercentage }}"
+          runbook: "https://wiki.sanaa.co/runbooks/cache-hit-rate"
+
+      - alert: RedisConnectionPoolHigh
+        expr: |
+          redis_connected_clients > redis_config_maxclients * 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Redis connection usage above 85%"
+          description: "Connections: {{ $value }}"
+
+      # Security & compliance
+      - alert: SanctumAuthFailures
+        expr: |
+          increase(sanctum_auth_failures_total[5m]) > 100
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Spike in Sanctum auth failures"
+          description: "{{ $value }} failures detected"
+          runbook: "https://wiki.sanaa.co/runbooks/auth-failures"
+
+      - alert: FirewallBlocksSpike
+        expr: |
+          increase(app_waf_blocked_requests_total[5m]) > 250
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "WAF blocked request spike"
+          description: "{{ $value }} requests blocked in last 5 minutes"
+          runbook: "https://wiki.sanaa.co/runbooks/waf"
+
+      - alert: GdprExportBacklog
+        expr: |
+          gdpr_export_jobs_pending > 25
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "GDPR export backlog exceeded 25 jobs"
+          description: "Pending exports: {{ $value }}"
+
+      # Disaster recovery + backups
+      - alert: BackupReplicationLagHigh
+        expr: |
+          backup_replication_lag_seconds > 600
+        for: 10m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "Backup replication lag > 10 minutes"
+          description: "Lag: {{ $value | humanizeDuration }}"
+          runbook: "https://wiki.sanaa.co/runbooks/backup-replication"
+
+      - alert: DrDrillFailure
+        expr: |
+          increase(dr_drill_failures_total[1d]) > 0
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          summary: "Disaster recovery drill failure detected"
+          description: "{{ $value }} failed DR drill(s) in last 24h"
+          runbook: "https://wiki.sanaa.co/runbooks/dr-drill"

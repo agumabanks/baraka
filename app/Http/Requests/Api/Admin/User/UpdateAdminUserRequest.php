@@ -23,11 +23,13 @@ class UpdateAdminUserRequest extends AdminFormRequest
             'department_id' => ['required', 'exists:departments,id'],
             'role_id' => ['required', 'exists:roles,id'],
             'hub_id' => ['nullable', 'exists:hubs,id'],
+            'primary_branch_id' => ['nullable', 'exists:branches,id'],
             'joining_date' => ['required', 'date'],
             'salary' => ['nullable', 'numeric', 'min:0'],
             'address' => ['required', 'string', 'max:191'],
             'status' => ['required', Rule::in([Status::ACTIVE, Status::INACTIVE])],
             'password' => ['nullable', 'string', 'min:8'],
+            'preferred_language' => ['nullable', 'in:en,fr,sw'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5120'],
         ];
 
@@ -35,6 +37,7 @@ class UpdateAdminUserRequest extends AdminFormRequest
             $rules['designation_id'] = ['sometimes', 'exists:designations,id'];
             $rules['department_id'] = ['sometimes', 'exists:departments,id'];
             $rules['hub_id'] = ['sometimes', 'nullable', 'exists:hubs,id'];
+            $rules['primary_branch_id'] = ['sometimes', 'nullable', 'exists:branches,id'];
             $rules['status'] = ['sometimes', Rule::in([Status::ACTIVE, Status::INACTIVE])];
         }
 

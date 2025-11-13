@@ -38,6 +38,32 @@ class UnifiedBranchesSeeder extends Seeder
             'status' => 1,
         ]);
 
+        // Additional strategic HUB
+        $dubaiHub = \App\Models\UnifiedBranch::create([
+            'name' => 'Dubai International Fulfillment Hub',
+            'code' => 'HUB-DXB-001',
+            'type' => 'HUB',
+            'is_hub' => true,
+            'parent_branch_id' => null,
+            'address' => 'Dubai South Logistics District, Dubai, UAE',
+            'phone' => '+97143121234',
+            'email' => 'hub.dubai@baraka.sanaa.co',
+            'latitude' => 24.9170,
+            'longitude' => 55.0089,
+            'operating_hours' => json_encode([
+                'monday' => ['open' => '08:00', 'close' => '22:00'],
+                'tuesday' => ['open' => '08:00', 'close' => '22:00'],
+                'wednesday' => ['open' => '08:00', 'close' => '22:00'],
+                'thursday' => ['open' => '08:00', 'close' => '22:00'],
+                'friday' => ['open' => '08:00', 'close' => '22:00'],
+                'saturday' => ['open' => '08:00', 'close' => '22:00'],
+                'sunday' => ['open' => '08:00', 'close' => '22:00'],
+            ]),
+            'capabilities' => json_encode(['sorting', 'processing', 'customs', 'international', 'storage']),
+            'metadata' => json_encode(['capacity' => 12000, 'sorting_lines' => 6, 'loading_docks' => 24]),
+            'status' => 1,
+        ]);
+
         // Regional Branches
         $jeddahRegional = \App\Models\UnifiedBranch::create([
             'name' => 'Jeddah Regional Center',
@@ -217,6 +243,183 @@ class UnifiedBranchesSeeder extends Seeder
             'status' => 1,
         ]);
 
-        $this->command->info('Created 8 branches: 1 HUB, 2 REGIONAL, 5 LOCAL');
+        // New regional coverage for Medina and Mecca
+        $medinaRegional = \App\Models\UnifiedBranch::create([
+            'name' => 'Medina Regional Center',
+            'code' => 'REG-MED-001',
+            'type' => 'REGIONAL',
+            'is_hub' => false,
+            'parent_branch_id' => $mainHub->id,
+            'address' => 'Airport Road, Medina, Saudi Arabia',
+            'phone' => '+966148765432',
+            'email' => 'regional.medina@baraka.sanaa.co',
+            'latitude' => 24.5247,
+            'longitude' => 39.5692,
+            'operating_hours' => json_encode([
+                'monday' => ['open' => '08:00', 'close' => '20:30'],
+                'tuesday' => ['open' => '08:00', 'close' => '20:30'],
+                'wednesday' => ['open' => '08:00', 'close' => '20:30'],
+                'thursday' => ['open' => '08:00', 'close' => '20:30'],
+                'friday' => ['open' => '14:00', 'close' => '20:30'],
+                'saturday' => ['open' => '08:00', 'close' => '20:30'],
+                'sunday' => ['open' => '08:00', 'close' => '20:30'],
+            ]),
+            'capabilities' => json_encode(['sorting', 'processing', 'storage', 'delivery']),
+            'metadata' => json_encode(['capacity' => 3500, 'sorting_lines' => 2, 'loading_docks' => 6]),
+            'status' => 1,
+        ]);
+
+        $meccaRegional = \App\Models\UnifiedBranch::create([
+            'name' => 'Mecca Regional Center',
+            'code' => 'REG-MAK-001',
+            'type' => 'REGIONAL',
+            'is_hub' => false,
+            'parent_branch_id' => $mainHub->id,
+            'address' => 'King Abdul Aziz Road, Mecca, Saudi Arabia',
+            'phone' => '+966125678901',
+            'email' => 'regional.mecca@baraka.sanaa.co',
+            'latitude' => 21.3891,
+            'longitude' => 39.8579,
+            'operating_hours' => json_encode([
+                'monday' => ['open' => '08:00', 'close' => '20:30'],
+                'tuesday' => ['open' => '08:00', 'close' => '20:30'],
+                'wednesday' => ['open' => '08:00', 'close' => '20:30'],
+                'thursday' => ['open' => '08:00', 'close' => '20:30'],
+                'friday' => ['open' => '14:00', 'close' => '20:30'],
+                'saturday' => ['open' => '08:00', 'close' => '20:30'],
+                'sunday' => ['open' => '08:00', 'close' => '20:30'],
+            ]),
+            'capabilities' => json_encode(['sorting', 'processing', 'storage', 'delivery']),
+            'metadata' => json_encode(['capacity' => 3800, 'sorting_lines' => 2, 'loading_docks' => 8]),
+            'status' => 1,
+        ]);
+
+        $abuDhabiRegional = \App\Models\UnifiedBranch::create([
+            'name' => 'Abu Dhabi Regional Center',
+            'code' => 'REG-AUH-001',
+            'type' => 'REGIONAL',
+            'is_hub' => false,
+            'parent_branch_id' => $dubaiHub->id,
+            'address' => 'Khalifa Industrial Zone, Abu Dhabi, UAE',
+            'phone' => '+97125551234',
+            'email' => 'regional.abudhabi@baraka.sanaa.co',
+            'latitude' => 24.4279,
+            'longitude' => 54.6200,
+            'operating_hours' => json_encode([
+                'monday' => ['open' => '08:00', 'close' => '20:00'],
+                'tuesday' => ['open' => '08:00', 'close' => '20:00'],
+                'wednesday' => ['open' => '08:00', 'close' => '20:00'],
+                'thursday' => ['open' => '08:00', 'close' => '20:00'],
+                'friday' => ['open' => '08:00', 'close' => '20:00'],
+                'saturday' => ['open' => '08:00', 'close' => '20:00'],
+                'sunday' => ['open' => '08:00', 'close' => '20:00'],
+            ]),
+            'capabilities' => json_encode(['sorting', 'processing', 'pickup', 'delivery']),
+            'metadata' => json_encode(['capacity' => 4200, 'sorting_lines' => 3, 'loading_docks' => 9]),
+            'status' => 1,
+        ]);
+
+        $dubaiRegionalNorth = \App\Models\UnifiedBranch::create([
+            'name' => 'Dubai North Regional Center',
+            'code' => 'REG-DXB-N01',
+            'type' => 'REGIONAL',
+            'is_hub' => false,
+            'parent_branch_id' => $dubaiHub->id,
+            'address' => 'Jebel Ali Free Zone, Dubai, UAE',
+            'phone' => '+97143334455',
+            'email' => 'regional.dubai.north@baraka.sanaa.co',
+            'latitude' => 25.0048,
+            'longitude' => 55.0603,
+            'operating_hours' => json_encode([
+                'monday' => ['open' => '08:00', 'close' => '21:00'],
+                'tuesday' => ['open' => '08:00', 'close' => '21:00'],
+                'wednesday' => ['open' => '08:00', 'close' => '21:00'],
+                'thursday' => ['open' => '08:00', 'close' => '21:00'],
+                'friday' => ['open' => '08:00', 'close' => '18:00'],
+                'saturday' => ['open' => '08:00', 'close' => '21:00'],
+                'sunday' => ['open' => '08:00', 'close' => '21:00'],
+            ]),
+            'capabilities' => json_encode(['sorting', 'processing', 'pickup', 'delivery', 'customs']),
+            'metadata' => json_encode(['capacity' => 4500, 'sorting_lines' => 3, 'loading_docks' => 11]),
+            'status' => 1,
+        ]);
+
+        // Added local branches to complete the 16-branch network
+        \App\Models\UnifiedBranch::create([
+            'name' => 'Medina North Branch',
+            'code' => 'LOC-MED-N01',
+            'type' => 'LOCAL',
+            'is_hub' => false,
+            'parent_branch_id' => $medinaRegional->id,
+            'address' => 'Prince Nayef Road, Medina, Saudi Arabia',
+            'phone' => '+966148700123',
+            'email' => 'branch.medina.north@baraka.sanaa.co',
+            'latitude' => 24.5140,
+            'longitude' => 39.5698,
+            'operating_hours' => json_encode([
+                'monday' => ['open' => '09:00', 'close' => '18:00'],
+                'tuesday' => ['open' => '09:00', 'close' => '18:00'],
+                'wednesday' => ['open' => '09:00', 'close' => '18:00'],
+                'thursday' => ['open' => '09:00', 'close' => '18:00'],
+                'friday' => ['open' => '14:00', 'close' => '18:00'],
+                'saturday' => ['open' => '09:00', 'close' => '18:00'],
+                'sunday' => ['open' => 'closed', 'close' => 'closed'],
+            ]),
+            'capabilities' => json_encode(['pickup', 'delivery', 'dropoff']),
+            'metadata' => json_encode(['capacity' => 450, 'vehicles' => 4]),
+            'status' => 1,
+        ]);
+
+        \App\Models\UnifiedBranch::create([
+            'name' => 'Makkah Central Branch',
+            'code' => 'LOC-MAK-C01',
+            'type' => 'LOCAL',
+            'is_hub' => false,
+            'parent_branch_id' => $meccaRegional->id,
+            'address' => 'Ajyad Street, Mecca, Saudi Arabia',
+            'phone' => '+966125600789',
+            'email' => 'branch.mecca.central@baraka.sanaa.co',
+            'latitude' => 21.4180,
+            'longitude' => 39.8262,
+            'operating_hours' => json_encode([
+                'monday' => ['open' => '09:00', 'close' => '18:00'],
+                'tuesday' => ['open' => '09:00', 'close' => '18:00'],
+                'wednesday' => ['open' => '09:00', 'close' => '18:00'],
+                'thursday' => ['open' => '09:00', 'close' => '18:00'],
+                'friday' => ['open' => '14:00', 'close' => '18:00'],
+                'saturday' => ['open' => '09:00', 'close' => '18:00'],
+                'sunday' => ['open' => 'closed', 'close' => 'closed'],
+            ]),
+            'capabilities' => json_encode(['pickup', 'delivery', 'dropoff']),
+            'metadata' => json_encode(['capacity' => 550, 'vehicles' => 6]),
+            'status' => 1,
+        ]);
+
+        \App\Models\UnifiedBranch::create([
+            'name' => 'Dubai Marina Branch',
+            'code' => 'LOC-DXB-M01',
+            'type' => 'LOCAL',
+            'is_hub' => false,
+            'parent_branch_id' => $dubaiRegionalNorth->id,
+            'address' => 'Dubai Marina Mall, Dubai, UAE',
+            'phone' => '+97144445566',
+            'email' => 'branch.dubai.marina@baraka.sanaa.co',
+            'latitude' => 25.0780,
+            'longitude' => 55.1390,
+            'operating_hours' => json_encode([
+                'monday' => ['open' => '09:00', 'close' => '19:00'],
+                'tuesday' => ['open' => '09:00', 'close' => '19:00'],
+                'wednesday' => ['open' => '09:00', 'close' => '19:00'],
+                'thursday' => ['open' => '09:00', 'close' => '19:00'],
+                'friday' => ['open' => '09:00', 'close' => '19:00'],
+                'saturday' => ['open' => '09:00', 'close' => '19:00'],
+                'sunday' => ['open' => '09:00', 'close' => '19:00'],
+            ]),
+            'capabilities' => json_encode(['pickup', 'delivery', 'dropoff']),
+            'metadata' => json_encode(['capacity' => 700, 'vehicles' => 8]),
+            'status' => 1,
+        ]);
+
+        $this->command->info('Created 16 branches: 2 HUB, 6 REGIONAL, 8 LOCAL');
     }
 }

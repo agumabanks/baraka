@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Admin\User\StoreAdminUserRequest;
 use App\Http\Requests\Api\Admin\User\UpdateAdminUserRequest;
 use App\Http\Resources\Admin\UserResource;
 use App\Http\Resources\PaginationResource;
+use App\Models\Backend\Branch;
 use App\Models\Backend\Department;
 use App\Models\Backend\Designation;
 use App\Models\Backend\Hub;
@@ -36,7 +37,7 @@ class UserApiController extends Controller
 
         $query = User::query()
             ->where('user_type', UserType::ADMIN)
-            ->with(['role', 'hub', 'department', 'designation']);
+            ->with(['role', 'hub', 'department', 'designation', 'primaryBranch']);
 
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
@@ -107,8 +108,12 @@ class UserApiController extends Controller
                 $user->designation_id = $data['designation_id'];
                 $user->department_id = $data['department_id'];
                 $user->hub_id = $data['hub_id'] ?? null;
+                $user->primary_branch_id = $data['primary_branch_id'] ?? null;
                 $user->joining_date = $data['joining_date'];
                 $user->address = $data['address'];
+                if (! empty($data['preferred_language'])) {
+                    $user->preferred_language = $data['preferred_language'];
+                }
                 $user->role_id = $data['role_id'];
                 $user->salary = $data['salary'] ?? 0;
                 $user->status = (int) $data['status'];
@@ -131,7 +136,7 @@ class UserApiController extends Controller
                 return $user;
             });
 
-            $user->load(['role', 'hub', 'department', 'designation']);
+            $user->load(['role', 'hub', 'department', 'designation', 'primaryBranch']);
 
             return (new UserResource($user))->additional([
                 'success' => true,
@@ -149,7 +154,7 @@ class UserApiController extends Controller
 
     public function show($id): JsonResponse
     {
-        $user = User::with(['role', 'hub', 'department', 'designation'])
+        $user = User::with(['role', 'hub', 'department', 'designation', 'primaryBranch'])
             ->where('user_type', UserType::ADMIN)
             ->find($id);
 
@@ -195,11 +200,15 @@ class UserApiController extends Controller
                     $user->designation_id = $data['designation_id'];
                     $user->department_id = $data['department_id'];
                     $user->hub_id = $data['hub_id'] ?? null;
+                    $user->primary_branch_id = $data['primary_branch_id'] ?? null;
                     $user->status = (int) ($data['status'] ?? $user->status);
                 }
 
                 $user->joining_date = $data['joining_date'];
                 $user->address = $data['address'];
+                if (! empty($data['preferred_language'])) {
+                    $user->preferred_language = $data['preferred_language'];
+                }
                 $user->role_id = $data['role_id'];
                 $user->salary = $data['salary'] ?? $user->salary;
 
@@ -224,7 +233,7 @@ class UserApiController extends Controller
                 return $user;
             });
 
-            $user->load(['role', 'hub', 'department', 'designation']);
+            $user->load(['role', 'hub', 'department', 'designation', 'primaryBranch']);
 
             return (new UserResource($user))->additional([
                 'success' => true,
@@ -289,7 +298,7 @@ class UserApiController extends Controller
                 $user->save();
             }
 
-            return $users->load(['role', 'hub', 'department', 'designation']);
+            return $users->load(['role', 'hub', 'department', 'designation', 'primaryBranch']);
         });
 
         $meta = $this->buildMetaPayload();
@@ -357,6 +366,7 @@ class UserApiController extends Controller
         $hubs = Hub::active()->orderBy('name')->get(['id', 'name']);
         $departments = Department::active()->orderBy('title')->get(['id', 'title']);
         $designations = Designation::active()->orderBy('title')->get(['id', 'title']);
+        $branches = Branch::query()->orderBy('name')->get(['id', 'name', 'code', 'type']);
 
         $rolesPayload = $roles->map(static function (Role $role) {
             return [
@@ -385,6 +395,15 @@ class UserApiController extends Controller
             return [
                 'id' => $designation->id,
                 'title' => $designation->title,
+            ];
+        })->values();
+
+        $branchesPayload = $branches->map(static function (Branch $branch) {
+            return [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'code' => $branch->code,
+                'type' => $branch->type,
             ];
         })->values();
 
@@ -550,6 +569,7 @@ class UserApiController extends Controller
             'hubs' => $hubsPayload->toArray(),
             'departments' => $departmentsPayload->toArray(),
             'designations' => $designationsPayload->toArray(),
+            'branches' => $branchesPayload->toArray(),
             'statuses' => [
                 ['value' => StatusEnum::ACTIVE, 'label' => 'Active'],
                 ['value' => StatusEnum::INACTIVE, 'label' => 'Inactive'],

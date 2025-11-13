@@ -12,6 +12,7 @@ use App\Events\AssetMaintenanceAlertEvent;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class AssetManagementService
@@ -271,9 +272,14 @@ class AssetManagementService
      */
     public function getAvailableVehicles(Branch $branch, Carbon $date): Collection
     {
-        return Vehicle::whereHas('asset', function ($query) use ($branch) {
-                $query->where('branch_id', $branch->id)
-                      ->where('status', 'active');
+        $assetsHaveStatusColumn = $this->assetStatusColumnExists();
+
+        return Vehicle::whereHas('asset', function ($query) use ($branch, $assetsHaveStatusColumn) {
+                $query->where('branch_id', $branch->id);
+
+                if ($assetsHaveStatusColumn) {
+                    $query->where('status', 'active');
+                }
             })
             ->whereDoesntHave('asset.maintenances', function ($query) use ($date) {
                 $query->where('start_date', '<=', $date)
@@ -306,15 +312,20 @@ class AssetManagementService
     public function checkMaintenanceAlerts(): array
     {
         $alerts = [];
+        $assetsHaveStatusColumn = $this->assetStatusColumnExists();
 
         // Check upcoming maintenance (next 7 days)
-        $upcomingMaintenance = Maintenance::with(['asset.vehicle'])
+        $upcomingQuery = Maintenance::with(['asset.vehicle'])
             ->where('start_date', '>=', now())
-            ->where('start_date', '<=', now()->addDays(7))
-            ->whereDoesntHave('asset', function ($query) {
+            ->where('start_date', '<=', now()->addDays(7));
+
+        if ($assetsHaveStatusColumn) {
+            $upcomingQuery->whereDoesntHave('asset', function ($query) {
                 $query->where('status', 'maintenance');
-            })
-            ->get();
+            });
+        }
+
+        $upcomingMaintenance = $upcomingQuery->get();
 
         foreach ($upcomingMaintenance as $maintenance) {
             $alerts[] = [
@@ -328,12 +339,16 @@ class AssetManagementService
         }
 
         // Check overdue maintenance
-        $overdueMaintenance = Maintenance::with(['asset.vehicle'])
-            ->where('end_date', '<', now())
-            ->whereHas('asset', function ($query) {
+        $overdueQuery = Maintenance::with(['asset.vehicle'])
+            ->where('end_date', '<', now());
+
+        if ($assetsHaveStatusColumn) {
+            $overdueQuery->whereHas('asset', function ($query) {
                 $query->where('status', 'active');
-            })
-            ->get();
+            });
+        }
+
+        $overdueMaintenance = $overdueQuery->get();
 
         foreach ($overdueMaintenance as $maintenance) {
             $alerts[] = [
@@ -694,5 +709,16 @@ class AssetManagementService
         }
 
         return $recommendations;
+    }
+
+    private function assetStatusColumnExists(): bool
+    {
+        static $hasColumn;
+
+        if ($hasColumn === null) {
+            $hasColumn = Schema::hasColumn('assets', 'status');
+        }
+
+        return $hasColumn;
     }
 }

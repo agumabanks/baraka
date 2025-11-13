@@ -2,151 +2,179 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BranchStatus;
 use App\Models\Backend\Branch;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Psr\Log\LoggerInterface;
 
 class BranchSeeder extends Seeder
 {
-    /**
-     * Idempotent branch seeder - safe for production use
-     * Uses updateOrCreate to avoid duplicates
-     * Configurable via environment variables
-     */
+    protected ?LoggerInterface $logger = null;
+
     public function run(): void
     {
-        $branchConfig = config('seeders.branches', []);
-        
-        if (empty($branchConfig)) {
-            $this->seedDefaultBranches();
-        } else {
-            $this->seedConfiguredBranches($branchConfig);
-        }
+        $definitions = $this->definitions();
+        $this->createOrUpdateBranches($definitions);
 
-        Log::info('Branch seeding completed', [
+        $this->logger()->info('Branch seeding completed', [
             'total_branches' => Branch::count(),
         ]);
     }
 
-    private function seedDefaultBranches(): void
+    /**
+     * Exposes the normalized branch definitions so commands/tests can inspect them.
+     */
+    public function definitions(): array
     {
-        $branches = [
-            // HUB Level
+        $configured = config('seeders.branches', []);
+
+        if (!empty($configured) && is_array($configured)) {
+            return $configured;
+        }
+
+        return $this->defaultBranchDefinitions();
+    }
+
+    private function defaultBranchDefinitions(): array
+    {
+        return [
             [
                 'code' => 'HUB-DUBAI',
                 'name' => 'Dubai Main Hub',
                 'type' => 'HUB',
-                'country' => 'AE',
-                'city' => 'Dubai',
                 'address' => 'Dubai International City',
                 'is_hub' => true,
-                'parent_id' => null,
-                'status' => 'active',
+                'status' => BranchStatus::ACTIVE->value,
             ],
             [
                 'code' => 'HUB-ABU-DHABI',
                 'name' => 'Abu Dhabi Hub',
                 'type' => 'HUB',
-                'country' => 'AE',
-                'city' => 'Abu Dhabi',
                 'address' => 'Abu Dhabi Industrial Zone',
                 'is_hub' => true,
-                'parent_id' => null,
-                'status' => 'active',
+                'status' => BranchStatus::ACTIVE->value,
             ],
-            // REGIONAL Level
             [
                 'code' => 'REG-DUBAI-NORTH',
                 'name' => 'Dubai North Regional',
                 'type' => 'REGIONAL',
-                'country' => 'AE',
-                'city' => 'Dubai',
                 'address' => 'Dubai Silicon Oasis',
                 'is_hub' => false,
-                'parent_id' => null, // Will link to HUB-DUBAI
-                'status' => 'active',
+                'parent_code' => 'HUB-DUBAI',
+                'status' => BranchStatus::ACTIVE->value,
             ],
             [
                 'code' => 'REG-DUBAI-SOUTH',
                 'name' => 'Dubai South Regional',
                 'type' => 'REGIONAL',
-                'country' => 'AE',
-                'city' => 'Dubai',
                 'address' => 'Dubai South Logistics City',
                 'is_hub' => false,
-                'parent_id' => null, // Will link to HUB-DUBAI
-                'status' => 'active',
+                'parent_code' => 'HUB-DUBAI',
+                'status' => BranchStatus::ACTIVE->value,
             ],
-            // LOCAL Level
             [
                 'code' => 'LOC-DUBAI-DIPS',
                 'name' => 'Dubai DIPS Local',
                 'type' => 'LOCAL',
-                'country' => 'AE',
-                'city' => 'Dubai',
                 'address' => 'Dubai Investment Park',
                 'is_hub' => false,
-                'parent_id' => null, // Will link to REG-DUBAI-NORTH
-                'status' => 'active',
+                'parent_code' => 'REG-DUBAI-NORTH',
+                'status' => BranchStatus::ACTIVE->value,
             ],
         ];
-
-        $this->createOrUpdateBranches($branches);
-    }
-
-    private function seedConfiguredBranches(array $branchConfig): void
-    {
-        foreach ($branchConfig as $config) {
-            if (!isset($config['code'], $config['name'])) {
-                Log::warning('Invalid branch config - missing code or name', ['config' => $config]);
-                continue;
-            }
-
-            try {
-                $this->createOrUpdateBranches([$config]);
-            } catch (\Throwable $e) {
-                Log::error('Failed to seed branch', [
-                    'code' => $config['code'],
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
     }
 
     private function createOrUpdateBranches(array $branches): void
     {
-        $hubMap = [];
+        $normalized = [];
 
-        // First pass: create all branches
         foreach ($branches as $branchData) {
+            if (!isset($branchData['code'])) {
+                $this->logger()->warning('Skipping branch without code', ['branch' => $branchData]);
+                continue;
+            }
+
+            $normalized[] = [
+                'attributes' => $this->normalizeBranchAttributes($branchData),
+                'parent_code' => isset($branchData['parent_code'])
+                    ? Str::upper($branchData['parent_code'])
+                    : null,
+            ];
+        }
+
+        $cache = [];
+
+        foreach ($normalized as $entry) {
             $branch = Branch::updateOrCreate(
-                ['code' => $branchData['code']],
-                $branchData
+                ['code' => $entry['attributes']['code']],
+                Arr::except($entry['attributes'], ['parent_code'])
             );
 
-            $hubMap[$branchData['code']] = $branch;
-            
-            Log::info('Branch seeded', [
+            $cache[$branch->code] = $branch;
+
+            $this->logger()->info('Branch seeded', [
                 'code' => $branch->code,
                 'name' => $branch->name,
                 'created' => $branch->wasRecentlyCreated,
             ]);
         }
 
-        // Second pass: link parent relationships if configured
-        foreach ($branches as $branchData) {
-            if (isset($branchData['parent_code'])) {
-                $branch = $hubMap[$branchData['code']];
-                $parent = $hubMap[$branchData['parent_code']] ?? null;
-                
-                if ($parent) {
-                    $branch->update(['parent_id' => $parent->id]);
-                    Log::info('Branch parent linked', [
-                        'child' => $branch->code,
-                        'parent' => $parent->code,
-                    ]);
-                }
+        foreach ($normalized as $entry) {
+            if (!$entry['parent_code']) {
+                continue;
+            }
+
+            $child = $cache[$entry['attributes']['code']] ?? Branch::where('code', $entry['attributes']['code'])->first();
+            $parent = $cache[$entry['parent_code']] ?? Branch::where('code', $entry['parent_code'])->first();
+
+            if ($child && $parent && $child->parent_branch_id !== $parent->id) {
+                $child->update(['parent_branch_id' => $parent->id]);
+                $this->logger()->info('Branch parent linked', [
+                    'child' => $child->code,
+                    'parent' => $parent->code,
+                ]);
             }
         }
+    }
+
+    private function normalizeBranchAttributes(array $branchData): array
+    {
+        $code = Str::upper($branchData['code']);
+        $type = Str::upper($branchData['type'] ?? 'LOCAL');
+        $status = $branchData['status'] ?? BranchStatus::ACTIVE->value;
+
+        $statusEnum = match (true) {
+            $status instanceof BranchStatus => $status,
+            is_int($status) => BranchStatus::fromLegacy($status),
+            default => BranchStatus::fromString((string) $status),
+        };
+
+        return [
+            'code' => $code,
+            'name' => $branchData['name'] ?? $code,
+            'type' => $type,
+            'address' => $branchData['address'] ?? 'Not Provided',
+            'is_hub' => (bool) ($branchData['is_hub'] ?? $type === 'HUB'),
+            'status' => $statusEnum->toLegacy(),
+            'parent_branch_id' => $branchData['parent_branch_id'] ?? null,
+            'latitude' => $branchData['latitude'] ?? null,
+            'longitude' => $branchData['longitude'] ?? null,
+            'operating_hours' => $branchData['operating_hours'] ?? null,
+            'capabilities' => $branchData['capabilities'] ?? null,
+            'metadata' => $branchData['metadata'] ?? null,
+        ];
+    }
+
+    private function logger(): LoggerInterface
+    {
+        if ($this->logger === null) {
+            $channel = config('seeders.logging.log_channel', 'stack');
+            $this->logger = Log::channel($channel);
+        }
+
+        return $this->logger;
     }
 }

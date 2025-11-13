@@ -36,7 +36,6 @@ class BranchWorker extends Model
     ];
 
     protected $casts = [
-        'role' => BranchWorkerRole::class,
         'employment_status' => EmploymentStatus::class,
         'permissions' => 'array',
         'work_schedule' => 'array',
@@ -166,6 +165,32 @@ class BranchWorker extends Model
     }
 
     // Accessors & Mutators
+
+    public function getRoleAttribute(?string $value): ?BranchWorkerRole
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return BranchWorkerRole::fromString($value);
+    }
+
+    public function setRoleAttribute(BranchWorkerRole|string|null $value): void
+    {
+        if ($value instanceof BranchWorkerRole) {
+            $this->attributes['role'] = $value->value;
+
+            return;
+        }
+
+        if ($value === null || $value === '') {
+            $this->attributes['role'] = null;
+
+            return;
+        }
+
+        $this->attributes['role'] = BranchWorkerRole::fromString($value)->value;
+    }
 
     /**
      * Get worker's full name

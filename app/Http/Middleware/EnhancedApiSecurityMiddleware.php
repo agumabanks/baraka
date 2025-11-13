@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Security\SecurityAuditLog;
 use App\Services\Security\RBACService;
-use App\Services\Security\SecurityAuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Exception;
@@ -76,7 +77,8 @@ class EnhancedApiSecurityMiddleware
         
         // Check for oversized payloads
         $maxSize = 10 * 1024 * 1024; // 10MB
-        if ($request->getContentSize() > $maxSize) {
+        $payloadSize = (int) $request->header('Content-Length', strlen($request->getContent() ?? ''));
+        if ($payloadSize > $maxSize) {
             throw new Exception('Request payload too large');
         }
         
@@ -452,7 +454,7 @@ class EnhancedApiSecurityMiddleware
         if ($request->isMethod('POST') || $request->isMethod('PUT') || $request->isMethod('PATCH')) {
             $contentType = $request->header('Content-Type');
             
-            if (!$contentType || !str_contains($contentType, ['application/json', 'application/x-www-form-urlencoded', 'multipart/form-data'])) {
+            if (!$contentType || !Str::contains($contentType, ['application/json', 'application/x-www-form-urlencoded', 'multipart/form-data'])) {
                 throw new Exception('Invalid or missing Content-Type header');
             }
         }

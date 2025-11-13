@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { apiClient } from '../services/api';
+import { apiClient } from '../services/apiClient';
 
 interface Shipment {
   id: string;
@@ -43,7 +43,8 @@ export function ShipmentProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to fetch shipments');
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch shipments');
+      const message = err instanceof Error ? err.message : 'Failed to fetch shipments';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +65,8 @@ export function ShipmentProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to create shipment');
       }
     } catch (err) {
-      setError(err.message || 'Failed to create shipment');
+      const message = err instanceof Error ? err.message : 'Failed to create shipment';
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -86,7 +88,8 @@ export function ShipmentProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to update shipment');
       }
     } catch (err) {
-      setError(err.message || 'Failed to update shipment');
+      const message = err instanceof Error ? err.message : 'Failed to update shipment';
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -106,7 +109,8 @@ export function ShipmentProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to delete shipment');
       }
     } catch (err) {
-      setError(err.message || 'Failed to delete shipment');
+      const message = err instanceof Error ? err.message : 'Failed to delete shipment';
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -126,7 +130,8 @@ export function ShipmentProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to fetch shipment');
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch shipment');
+      const message = err instanceof Error ? err.message : 'Failed to fetch shipment';
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);

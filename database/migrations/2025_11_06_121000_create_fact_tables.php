@@ -12,17 +12,23 @@ return new class extends Migration
             return;
         }
 
+        Schema::dropIfExists('stg_shipments');
+        Schema::dropIfExists('fact_customer_analytics');
+        Schema::dropIfExists('fact_performance_metrics');
+        Schema::dropIfExists('fact_financial_transactions');
+        Schema::dropIfExists('fact_shipments');
+
         // Fact Shipments Table (main operational fact table)
         Schema::create('fact_shipments', function (Blueprint $table) {
             $table->bigIncrements('shipment_key');
-            $table->bigInteger('shipment_id');
+            $table->unsignedBigInteger('shipment_id');
             $table->string('tracking_number', 50);
-            $table->bigInteger('client_key');
-            $table->bigInteger('origin_branch_key');
-            $table->bigInteger('dest_branch_key');
-            $table->bigInteger('carrier_key')->nullable();
-            $table->bigInteger('driver_key')->nullable();
-            $table->bigInteger('customer_key');
+            $table->unsignedBigInteger('client_key');
+            $table->unsignedBigInteger('origin_branch_key');
+            $table->unsignedBigInteger('dest_branch_key');
+            $table->unsignedBigInteger('carrier_key')->nullable();
+            $table->unsignedBigInteger('driver_key')->nullable();
+            $table->unsignedBigInteger('customer_key');
             
             // Status and dates
             $table->string('status', 50)->default('created');
@@ -65,21 +71,21 @@ return new class extends Migration
             $table->decimal('data_quality_score', 3, 2)->nullable();
             $table->json('metadata')->nullable();
             
-            $table->index(['client_key', 'status']);
-            $table->index(['pickup_date_key', 'delivery_date_key']);
-            $table->index(['origin_branch_key', 'dest_branch_key']);
-            $table->index(['performance', 'margin_percentage', 'delivery_attempts']);
-            $table->index(['status', 'current_status']);
+            $table->index(['client_key', 'status'], 'fact_shipments_client_status_idx');
+            $table->index(['pickup_date_key', 'delivery_date_key'], 'fact_shipments_delivery_dates_idx');
+            $table->index(['origin_branch_key', 'dest_branch_key'], 'fact_shipments_branch_idx');
+            $table->index(['margin_percentage', 'delivery_attempts'], 'fact_shipments_margin_attempts_idx');
+            $table->index(['status', 'current_status'], 'fact_shipments_status_idx');
         });
 
         // Fact Financial Transactions
         Schema::create('fact_financial_transactions', function (Blueprint $table) {
             $table->bigIncrements('transaction_key');
             $table->string('transaction_id', 50)->unique();
-            $table->bigInteger('shipment_key')->nullable();
-            $table->bigInteger('client_key')->nullable();
-            $table->bigInteger('customer_key')->nullable();
-            $table->bigInteger('branch_key')->nullable();
+            $table->unsignedBigInteger('shipment_key')->nullable();
+            $table->unsignedBigInteger('client_key')->nullable();
+            $table->unsignedBigInteger('customer_key')->nullable();
+            $table->unsignedBigInteger('branch_key')->nullable();
             
             // Transaction details
             $table->string('transaction_type', 50);
@@ -104,16 +110,16 @@ return new class extends Migration
             $table->string('etl_batch_id', 50)->nullable();
             $table->string('source_system', 50)->nullable();
             
-            $table->index(['client_key', 'transaction_date_key']);
-            $table->index(['account_key', 'transaction_date_key']);
-            $table->index('shipment_key');
-            $table->index(['transaction_type', 'transaction_category']);
+            $table->index(['client_key', 'transaction_date_key'], 'fact_fin_tx_client_date_idx');
+            $table->index(['account_key', 'transaction_date_key'], 'fact_fin_tx_account_date_idx');
+            $table->index('shipment_key', 'fact_fin_tx_shipment_idx');
+            $table->index(['transaction_type', 'transaction_category'], 'fact_fin_tx_type_category_idx');
         });
 
         // Fact Performance Metrics (daily aggregates)
         Schema::create('fact_performance_metrics', function (Blueprint $table) {
             $table->bigIncrements('metric_key');
-            $table->bigInteger('branch_key');
+            $table->unsignedBigInteger('branch_key');
             $table->integer('date_key');
             
             // Volume metrics
@@ -143,17 +149,17 @@ return new class extends Migration
             // Operational efficiency
             $table->decimal('vehicle_utilization_rate', 5, 2)->nullable();
             $table->decimal('driver_utilization_rate', 5, 2)->nullable();
-            $table->integer('total_distance_km', 8, 2)->default(0);
+            $table->unsignedInteger('total_distance_km')->default(0);
             $table->decimal('fuel_consumption_liters', 8, 2)->default(0.00);
             
-            $table->index(['branch_key', 'date_key']);
-            $table->index(['performance', 'on_time_delivery_rate', 'margin_percentage']);
+            $table->index(['branch_key', 'date_key'], 'fact_perf_branch_date_idx');
+            $table->index(['on_time_delivery_rate', 'margin_percentage'], 'fact_perf_rates_idx');
         });
 
         // Fact Customer Analytics
         Schema::create('fact_customer_analytics', function (Blueprint $table) {
             $table->bigIncrements('analytics_key');
-            $table->bigInteger('customer_key');
+            $table->unsignedBigInteger('customer_key');
             $table->integer('date_key');
             
             // Customer behavior metrics
@@ -175,8 +181,8 @@ return new class extends Migration
             $table->decimal('customer_lifetime_value', 12, 2)->default(0.00);
             $table->decimal('churn_probability', 5, 4)->default(0.00);
             
-            $table->index(['customer_key', 'date_key']);
-            $table->index(['total_spend', 'customer_lifetime_value']);
+            $table->index(['customer_key', 'date_key'], 'fact_customer_date_idx');
+            $table->index(['total_spend', 'customer_lifetime_value'], 'fact_customer_value_idx');
         });
 
         // Staging tables for ETL processing
@@ -186,7 +192,7 @@ return new class extends Migration
             $table->timestamp('stg_created_at')->useCurrent();
             
             // Source data fields
-            $table->bigInteger('shipment_id');
+            $table->unsignedBigInteger('shipment_id');
             $table->string('tracking_number', 50);
             $table->json('source_data');
             $table->string('source_system', 50);
@@ -197,8 +203,8 @@ return new class extends Migration
             $table->text('processing_errors')->nullable();
             $table->decimal('data_quality_score', 3, 2)->nullable();
             
-            $table->index('stg_batch_id');
-            $table->index('processing_status');
+            $table->index('stg_batch_id', 'stg_shipments_batch_idx');
+            $table->index('processing_status', 'stg_shipments_status_idx');
         });
 
         // Add foreign key constraints

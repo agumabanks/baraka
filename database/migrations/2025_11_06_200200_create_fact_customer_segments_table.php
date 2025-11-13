@@ -12,9 +12,11 @@ return new class extends Migration
             return;
         }
 
+        Schema::dropIfExists('fact_customer_segments');
+
         Schema::create('fact_customer_segments', function (Blueprint $table) {
-            $table->bigInteger('segment_key')->primary();
-            $table->bigInteger('client_key');
+            $table->bigIncrements('segment_key');
+            $table->unsignedBigInteger('client_key');
             $table->integer('segment_date_key');
             $table->string('primary_segment', 100);
             $table->json('secondary_segments')->nullable();
@@ -37,8 +39,8 @@ return new class extends Migration
             $table->string('model_version', 50);
             
             // Foreign key constraints
-            $table->foreign('client_key')->references('client_key')->on('dimension_clients');
-            $table->foreign('segment_date_key')->references('date_key')->on('dimension_dates');
+            $table->foreign('client_key')->references('client_key')->on('dim_client')->onDelete('cascade');
+            $table->foreign('segment_date_key')->references('date_key')->on('dim_time')->onDelete('cascade');
             
             // Indexes for performance
             $table->index('client_key');

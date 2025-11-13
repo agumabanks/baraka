@@ -22,6 +22,8 @@ export interface BranchManager {
     name: string;
     email: string;
     phone: string | null;
+    preferred_language?: 'en' | 'fr' | 'sw' | null;
+    primary_branch_id?: number | null;
   };
 }
 
@@ -86,12 +88,19 @@ export interface BranchManagerListParams {
 
 export interface BranchManagerFormData {
   branch_id: number | string;
-  user_id: number | string;
+  user_id?: number | string;
   business_name: string;
   cod_charges?: Record<string, unknown>;
   payment_info?: Record<string, unknown>;
   settlement_config?: Record<string, unknown>;
   status: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  address?: string;
+  preferred_language?: 'en' | 'fr' | 'sw';
+  metadata?: Record<string, unknown>;
 }
 
 export interface BranchOption {
@@ -105,4 +114,7 @@ export interface UserOption {
   value: number | string;
   label: string;
   email: string;
+  phone?: string | null;
+  preferred_language?: 'en' | 'fr' | 'sw' | null;
+  primary_branch_id?: number | null;
 }

@@ -8,6 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('promotion_event_logs');
+        Schema::dropIfExists('promotion_ab_tests');
+        Schema::dropIfExists('customer_promotion_preferences');
+        Schema::dropIfExists('promotion_stacking_rules');
+        Schema::dropIfExists('promotion_effectiveness_metrics');
+        Schema::dropIfExists('customer_milestone_history');
+        Schema::dropIfExists('promotion_code_generations');
+        Schema::dropIfExists('customer_promotion_usage');
+
         // Customer promotion usage tracking
         Schema::create('customer_promotion_usage', function (Blueprint $table) {
             $table->id();
@@ -22,9 +31,9 @@ return new class extends Migration
             $table->string('user_agent')->nullable();
             $table->string('source_channel')->nullable(); // 'web', 'api', 'mobile', 'manual'
             
-            $table->index(['customer_id', 'promotional_campaign_id']);
-            $table->index('used_at');
-            $table->index(['source_channel', 'used_at']);
+            $table->index(['customer_id', 'promotional_campaign_id'], 'customer_promo_usage_customer_campaign_idx');
+            $table->index('used_at', 'customer_promo_usage_used_at_idx');
+            $table->index(['source_channel', 'used_at'], 'customer_promo_usage_source_idx');
         });
 
         // Promotion code generation tracking
@@ -39,8 +48,8 @@ return new class extends Migration
             $table->timestamp('generated_at');
             $table->foreignId('generated_by')->nullable()->constrained('users')->onDelete('set null');
             
-            $table->index(['batch_id', 'generated_at']);
-            $table->index('generated_code');
+            $table->index(['batch_id', 'generated_at'], 'promo_code_batch_idx');
+            $table->index('generated_code', 'promo_code_generated_code_idx');
         });
 
         // Milestone achievements history
@@ -58,9 +67,9 @@ return new class extends Migration
             $table->string('reward_status', 20)->default('pending'); // 'pending', 'sent', 'claimed', 'expired'
             $table->json('notification_sent')->nullable();
             
-            $table->index(['customer_id', 'milestone_type']);
-            $table->index(['milestone_category', 'achieved']);
-            $table->index('achieved_at');
+            $table->index(['customer_id', 'milestone_type'], 'milestone_history_customer_idx');
+            $table->index(['milestone_category', 'achieved'], 'milestone_history_category_idx');
+            $table->index('achieved_at', 'milestone_history_achieved_idx');
         });
 
         // Promotion effectiveness tracking
@@ -78,8 +87,8 @@ return new class extends Migration
             $table->decimal('total_revenue_impact', 10, 2)->default(0);
             $table->json('segment_breakdown')->nullable(); // Breakdown by customer segment
             
-            $table->index(['promotional_campaign_id', 'metric_type', 'period_start']);
-            $table->index(['time_period', 'period_start']);
+            $table->index(['promotional_campaign_id', 'metric_type', 'period_start'], 'promo_effectiveness_campaign_idx');
+            $table->index(['time_period', 'period_start'], 'promo_effectiveness_period_idx');
         });
 
         // Anti-stacking rules configuration
@@ -99,8 +108,8 @@ return new class extends Migration
             $table->timestamp('effective_to')->nullable();
             $table->timestamps();
             
-            $table->index(['is_active', 'effective_from', 'effective_to']);
-            $table->index('rule_type');
+            $table->index(['is_active', 'effective_from', 'effective_to'], 'promo_stack_rules_active_idx');
+            $table->index('rule_type', 'promo_stack_rules_type_idx');
         });
 
         // Customer promotion preferences
@@ -117,7 +126,7 @@ return new class extends Migration
             $table->timestamp('last_updated');
             
             $table->unique('customer_id');
-            $table->index('last_updated');
+            $table->index('last_updated', 'customer_promo_pref_updated_idx');
         });
 
         // Promotion A/B testing framework
@@ -136,8 +145,8 @@ return new class extends Migration
             $table->json('results')->nullable();
             $table->timestamp('completed_at')->nullable();
             
-            $table->index(['status', 'start_date']);
-            $table->index('test_type');
+            $table->index(['status', 'start_date'], 'promo_ab_status_idx');
+            $table->index('test_type', 'promo_ab_type_idx');
         });
 
         // Promotion event logs
@@ -152,9 +161,9 @@ return new class extends Migration
             $table->string('user_agent')->nullable();
             $table->timestamp('event_timestamp');
             
-            $table->index(['event_type', 'event_timestamp']);
-            $table->index(['promotional_campaign_id', 'event_timestamp']);
-            $table->index(['customer_id', 'event_timestamp']);
+            $table->index(['event_type', 'event_timestamp'], 'promo_event_type_idx');
+            $table->index(['promotional_campaign_id', 'event_timestamp'], 'promo_event_campaign_idx');
+            $table->index(['customer_id', 'event_timestamp'], 'promo_event_customer_idx');
         });
     }
 

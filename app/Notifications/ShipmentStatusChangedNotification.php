@@ -31,11 +31,12 @@ class ShipmentStatusChangedNotification extends Notification implements ShouldQu
     public function toMail($notifiable): MailMessage
     {
         $s = $this->shipment;
+        $statusLabel = optional($s->current_status)->value ?? 'Unknown';
 
         return (new MailMessage)
-            ->subject('Shipment #'.$s->id.' status updated to '.$s->current_status->value)
+            ->subject('Shipment #'.$s->id.' status updated to '.$statusLabel)
             ->greeting('Hello '.$notifiable->name.',')
-            ->line('Your shipment status has changed to: '.$s->current_status->value)
+            ->line('Your shipment status has changed to: '.$statusLabel)
             ->line('Origin: '.($s->originBranch->name ?? '—').' | Destination: '.($s->destBranch->name ?? '—'))
             ->action('View in Portal', route('portal.index'))
             ->line('Thank you for choosing us.');

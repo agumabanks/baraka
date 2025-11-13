@@ -57,9 +57,10 @@ interface TranslationProgress {
 interface UsageStats {
   total_requests: number;
   cache_hit_count: number;
+  cache_miss_count: number;
   cache_hit_rate: number;
   most_translated_keys: string[];
-  const least_translated_keys: string[];
+  least_translated_keys: string[];
   cache_memory_usage: number;
 }
 
@@ -75,11 +76,13 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
   const [currentLanguage, setCurrentLanguage] = useState<string>(DEFAULT_LOCALE);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
   
   const [cache, setCache] = useState<Record<string, TranslationResponse>>({});
   const [usageStats, setUsageStats] = useState<UsageStats>({
     total_requests: 0,
     cache_hit_count: 0,
+    cache_miss_count: 0,
     cache_hit_rate: 0,
     most_translated_keys: [],
     least_translated_keys: [],
@@ -105,6 +108,7 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
       if (cache[cacheKey]) {
         setTranslations(cache[cacheKey]);
         setLastUpdated(Date.now());
+        updateUsageStats('cache_hit', locale);
         return;
       }
       
@@ -136,111 +140,114 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
       
       // Fallback to empty translations
       setTranslations({});
+      updateUsageStats('cache_miss', locale);
     } finally {
       setIsLoading(false);
     }
-  }, []);
-
-  /**
-   * Translate a key with optional replacements
-   */
-  const translate = useCallback((
-    key: string, 
-    replacements: Record<string, string> = {}
-  ): string): string => {
-    const translation = translations[key] || key;
-    
-    // Handle replacements
-    let translatedText = translation;
-    Object.entries(replacements).forEach(([placeholder, value]) => {
-      translatedText = translatedText.replace(`:${placeholder}`, value);
-    });
-    
-    return translatedText;
-  }, [translations, currentLanguage]);
-
-  /**
-   * Get all translations for the current or specified language
-   */
-  const getTranslations = useCallback((locale: string = undefined): TranslationResponse => {
-    const targetLanguage = locale ?? currentLanguage;
-    return translations[targetLanguage] || {};
-  }, [translations, currentLanguage]);
-
-  /**
-   * Get supported languages
-   */
-  const getSupportedLanguages = useCallback((): string[] => {
-    return SUPPORTED_LANGUAGES;
-  }, []);
-
-  /**
-   * Switch language
-   */
-  const switchLanguage = useCallback(
-    async languageCode: string, 
-    rememberChoice: boolean = false
-  ): Promise<void> => {
-    try {
-      // Validate language code
-      if (!SUPPORTED_LANGUAGES.includes(languageCode)) {
-        throw new Error(`Unsupported language: ${languageCode}. Supported languages: ${SUPPORTED_LANGUAGES.join(', ')}`);
-      }
-      
-      // Call language switch endpoint
-      try {
-        const response = await apiClient.post('/v1/languages/set-default', {
-          language_code: languageCode,
-          remember_choice: rememberChoice,
-        });
-        
-        if (response.data.success) {
-          const newLanguage = response.data.data.current_language;
-          
-          // Update state
-          setCurrentLanguage(newLanguage);
-          
-          // Clear current cache and load new translations
-          clearCache(newLanguage);
-          await loadTranslations(newLanguage);
-          
-          // Update session storage
-          localStorage.setItem('locale', newLanguage);
-          
-          console.log(`Language switched to: ${newLanguage}`);
-          toast.success(`Language switched to ${
-            SUPPORTED_LANGUAGES.find(lang => lang === newLanguage)?.toUpperCase() ?? newLanguage.toUpperCase()
-          }`);
-        } else {
-          throw new Error(response.data.message || 'Failed to set default language');
-        }
-        
-      } catch (error) {
-      console.error('Language switch failed:', error);
-      setError(error.message || 'Failed to switch language');
-      throw error;
-    } catch (error) {
-      setError(error.message || 'Language switch failed');
-    }
   };
+
+  /**
+   * Get completion status string based on percentage
+   */
+  const getStatusCodeForPercentage = useCallback((percentage: number): 'complete' | 'good' | 'partial' | 'incomplete' => {
+    if (percentage === 100) return 'complete';
+    if (percentage >= 80) return 'good';
+    if (percentage >= 60) return 'partial';
+    return 'incomplete';
+  }, []);
+
+  /**
+   * Get critical missing keys that should be prioritized
+   */
+  const getCriticalMissingKeys = useCallback((locale: string): string[] => {
+    const missingKeys = getMissingKeys(locale);
+    const criticalKeys = [
+      'auth.failed', 'auth.password', 'dashboard.title', 'common.save',
+      'messages.success', 'settings.title', // Essential for basic operation
+    ];
+    
+    return missingKeys.filter(key => criticalKeys.includes(key));
+  }, [getMissingKeys]);
+
+  /**
+   * Update usage statistics
+   */
+  const updateUsageStats = useCallback((type: 'load' | 'update' | 'cache_hit' | 'cache_miss', locale?: string): void => {
+    const localeCode = locale ?? currentLanguage;
+    
+    if (type === 'load') {
+      setUsageStats(prev => ({
+        total_requests: prev.total_requests + 1,
+        cache_miss_count: prev.cache_miss_count + 1,
+        cache_hit_count: prev.cache_hit_count,
+        cache_hit_rate: prev.total_requests > 0 
+          ? Math.round((prev.cache_hit_count / (prev.total_requests + 1)) * 100) 
+          : 0,
+        most_translated_keys: [],
+        least_translated_keys: [],
+        cache_memory_usage: 0,
+      }));
+      return;
+    }
+    
+    if (type === 'cache_hit') {
+      setUsageStats(prev => ({
+        total_requests: prev.total_requests + 1,
+        cache_hit_count: prev.cache_hit_count + 1,
+        cache_miss_count: prev.cache_miss_count,
+        cache_hit_rate: prev.total_requests > 0 
+          ? Math.round((prev.cache_hit_count / (prev.total_requests + 1)) * 100) 
+          : 0,
+        most_translated_keys: [],
+        least_translated_keys: [],
+        cache_memory_usage: 0,
+      }));
+    }
+    
+    if (type === 'cache_miss') {
+      setUsageStats(prev => ({
+        total_requests: prev.total_requests + 1,
+        cache_miss_count: prev.cache_miss_count + 1,
+        cache_hit_count: prev.cache_hit_count,
+        cache_hit_rate: prev.total_requests > 0 
+          ? Math.round((prev.cache_hit_count / (prev.total_requests + 1)) * 100) 
+          : 0,
+        most_translated_keys: [],
+        least_translated_keys: [],
+        cache_memory_usage: 0,
+      }));
+    }
+    
+    if (type === 'update') {
+      // Update most/least translated keys list
+      const translations = getTranslations(localeCode) || {};
+      const keys = Object.keys(translations);
+      
+      setUsageStats(prev => ({
+        ...prev,
+        most_translated_keys: keys.slice(0, 5),
+        least_translated_keys: keys.slice(-5),
+      }));
+    }
+  }, [currentLanguage, getTranslations]);
 
   /**
    * Get translation completion progress
    */
   const getTranslationProgress = useCallback((locale: string = undefined): TranslationProgress => {
     const targetLanguage = locale ?? currentLanguage;
+    const translatedCount = Object.keys(getTranslations(targetLanguage)).length;
+    const percentage = Math.round((translatedCount / 222) * 100);
     
     return {
       total_keys: 222, // From seeder
-      translated_count: Object.keys(getTranslations(targetLanguage)).length,
-      percentage: Math.round((Object.keys(getTranslations(targetLanguage).length / 222) * 100),
-      missing_count: 222 - Object.keys(getTranslations(targetLanguage)).length,
-      completion_status: this.getStatusCodeForPercentage(
-        Math.ceil((Object.keys(getTranslations(targetLanguage).length) / 222) * 100)
-      ),
-      critical_missing: this.getCriticalMissingKeys(targetLanguage),
+      translated_count: translatedCount,
+      percentage: percentage,
+      missing_count: 222 - translatedCount,
+      completion_status: getStatusCodeForPercentage(percentage),
+      critical_missing: getCriticalMissingKeys(targetLanguage),
     };
-  }, [translations, currentLanguage]);
+  }, [translations, currentLanguage, getTranslations, getStatusCodeForPercentage, getCriticalMissingKeys]);
 
   /**
    * Check if a key is translated in the current language
@@ -269,84 +276,126 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
   }, [translations, currentLanguage]);
 
   /**
-   * Get completion status string based on percentage
+   * Get all translations for the current or specified language
    */
-  privategetStatusCodeForPercentage = (percentage: number): 'complete' | 'good' | 'partial' | 'incomplete' => {
-    if (percentage === 100) return 'complete';
-    if (percentage >= 80) return 'good';
-    if (\languageCode >= 60) return 'partial';
-    return 'incomplete';
-  },
+  const getTranslations = useCallback((locale: string = undefined): TranslationResponse => {
+    const targetLanguage = locale ?? currentLanguage;
+    return translations[targetLanguage] || {};
+  }, [translations, currentLanguage]);
 
   /**
-   * Get critical missing keys that should be prioritized
+   * Get supported languages
    */
-  private getCriticalMissingKeys = (locale: string): string[] => {
-    const missingKeys = getMissingKeys(locale);
-    const criticalKeys = [
-      'auth.failed', 'auth.password', 'dashboard.title', 'common.save',
-      'messages.success', 'settings.title', // Essential for basic operation
-    ];
-    
-    return missingKeys.filter(key => criticalKeys.includes(key));
-  },
+  const getSupportedLanguages = useCallback((): string[] => {
+    return [...SUPPORTED_LANGUAGES];
+  }, []);
 
   /**
-   * Update usage statistics
+   * Get current language
    */
-  private updateUsageStats = (type: 'load' | 'update' | 'cache_hit' | 'cache_miss', locale?: string): void => {
-    const localeCode = locale ?? currentLanguage;
-    const cacheKey = `${TRANSLATION_CACHE_PREFIX}${localeCode}`;
+  const getCurrentLanguage = useCallback((): string => {
+    return currentLanguage;
+  }, [currentLanguage]);
+
+  /**
+   * Reload translations
+   */
+  const reloadTranslations = useCallback(async (): Promise<TranslationResponse> => {
+    await loadTranslations(currentLanguage);
+    return translations;
+  }, [loadTranslations, currentLanguage, translations]);
+
+  /**
+   * Validate key format
+   */
+  const validateKeyFormat = useCallback((key: string): KeyValidationResult => {
+    const issues: string[] = [];
     
-    if (type === 'load') {
-      setUsageStats(prev => ({
-        total_requests: prev.total_requests + 1,
-        cache_miss_count: prev.cache_miss_count + 1,
-        cache_hit_count: prev.cache_hit_count,
-        cache_hit_rate: prev.total_requests > 0 
-          ? Math.round((prev.cache_hit_count / prev.total_requests + 1) * 100) 
-          : 0,
-        cache_hit_rate: prev.total_requests > 0 
-          ? Math.round((prev.cache_hit_count / (prev.total_requests + 1) * 100) 
-          : 0,
-      }));
-      return;
+    if (!key || typeof key !== 'string') {
+      issues.push('Key must be a non-empty string');
     }
     
-    if (type === 'cache_hit') {
-      setUsageStats(prev => ({
-        total_requests: prev.total_requests + 1,
-        cache_hit_count: prev.cache_hit_count + 1,
-        cache_miss_count: prev.cache_miss_count,
-        cache_hit_rate: prev.total_requests > 0 
-          ? Math.round((cache_hit_count / (prev.total_requests + 1) * 100) 
-          : 0,
-      }));
+    if (!key.includes('.')) {
+      issues.push('Key should follow namespace.key format (e.g., dashboard.title)');
     }
     
-    if (type === 'cache_miss') {
-      setUsageStats(prev => ({
-        total_requests: +1,
-        cache_miss_count: prev.cache_miss_count + 1,
-        cache_hit_count: prev.cache_miss_count,
-        cache_hit_rate: prev.total_requests > 0 
-          ? Math.round((cache_hit_count / (prev.total_requests + 1) * 100) 
-          : 0,
-      }));
+    if (key.startsWith('.') || key.endsWith('.')) {
+      issues.push('Key cannot start or end with a dot');
     }
     
-    if (type === 'update') {
-      // Update most/least translated keys list
-      const translations = getTranslations(localeCode) || {};
-      const keys = Object.keys(translations);
-      
-      setUsageStats(prev => ({
-        ...prev,
-        most_translated: keys.slice(0, 5),
-        least_translated: keys.slice(-5),
-      }));
-    }
-  };
+    return {
+      isValid: issues.length === 0,
+      issues
+    };
+  }, []);
+
+  /**
+   * Check if locale is fully translated
+   */
+  const isFullyTranslated = useCallback((locale: string = undefined): boolean => {
+    const targetLanguage = locale ?? currentLanguage;
+    const progress = getTranslationProgress(targetLanguage);
+    return progress.percentage === 100;
+  }, [getTranslationProgress, currentLanguage]);
+
+  /**
+   * Check if key needs translation
+   */
+  const needsTranslation = useCallback((key: string, locale: string = undefined): boolean => {
+    return !isKeyTranslated(key, locale);
+  }, [isKeyTranslated]);
+
+  /**
+   * Switch language
+   */
+  const switchLanguage = useCallback(
+    async (languageCode: string, rememberChoice: boolean = false): Promise<void> => {
+      try {
+        // Validate language code
+        if (!SUPPORTED_LANGUAGES.includes(languageCode)) {
+          throw new Error(`Unsupported language: ${languageCode}. Supported languages: ${SUPPORTED_LANGUAGES.join(', ')}`);
+        }
+        
+        // Call language switch endpoint
+        try {
+          const response = await apiClient.post('/v1/languages/set-default', {
+            language_code: languageCode,
+            remember_choice: rememberChoice,
+          });
+          
+          if (response.data.success) {
+            const newLanguage = response.data.data.current_language;
+            
+            // Update state
+            setCurrentLanguage(newLanguage);
+            
+            // Clear current cache and load new translations
+            clearCache(newLanguage);
+            await loadTranslations(newLanguage);
+            
+            // Update session storage
+            localStorage.setItem('locale', newLanguage);
+            
+            console.log(`Language switched to: ${newLanguage}`);
+            toast.success(`Language switched to ${
+              SUPPORTED_LANGUAGES.find(lang => lang === newLanguage)?.toUpperCase() ?? newLanguage.toUpperCase()
+            }`);
+          } else {
+            throw new Error(response.data.message || 'Failed to set default language');
+          }
+          
+        } catch (error) {
+          console.error('Language switch failed:', error);
+          setError(error.message || 'Failed to switch language');
+          throw error;
+        }
+      } catch (error) {
+        setError(error.message || 'Language switch failed');
+        throw error;
+      }
+    },
+    [loadTranslations, clearCache]
+  );
 
   /**
    * Clear cache for a specific language or all languages
@@ -374,7 +423,7 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
       });
     }
     
-    console.log(`Cleared translation cache${locale ? ' for ' + locale + ' : ' : 'all languages'}');
+    console.log(`Cleared translation cache${locale ? ' for ' + locale + ' : ' : 'all languages'}`);
   });
 
   /**
@@ -398,9 +447,8 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
           [cacheKey]: translationsData,
         }));
         
-        console.log(`Warmed cache for ${locale}: `);
-        
-        console.log(`Cache size for ${locale}: `);
+        console.log(`Warmed cache for ${locale}`);
+        console.log(`Cache size for ${locale}: ${Object.keys(translationsData).length} translations`);
       }
       
     } catch (error) {
@@ -414,7 +462,7 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
    */
   const getAllKeys = useCallback(() => {
     const allKeys = SUPPORTED_LANGUAGES.reduce((acc, lang) => {
-      const langTranslations = getTranslations(lang) || [];
+      const langTranslations = getTranslations(lang) || {};
       const langKeys = Object.keys(langTranslations).sort();
       return [...acc, ...langKeys];
     }, []);
@@ -426,12 +474,36 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
    * Check if required translation key exists
    */
   const hasRequiredTranslations = useCallback(
-    (keys: string[], locale: string = undefined
-  ): boolean => {
-      targetLocale = locale ?? currentLanguage;
+    (keys: string[], locale: string = undefined): boolean => {
+      const targetLocale = locale ?? currentLanguage;
       const missingKeys = getMissingKeys(targetLocale);
       return keys.every(key => !missingKeys.includes(key));
+    }, [getMissingKeys, currentLanguage]);
+
+  /**
+   * Translate a key with optional replacements
+   */
+  const translate = useCallback((
+    key: string, 
+    replacements: Record<string, string> = {}
+  ): string => {
+    const translation = translations[key] || key;
+    
+    // Handle replacements
+    let translatedText = translation;
+    Object.entries(replacements).forEach(([placeholder, value]) => {
+      translatedText = translatedText.replace(`:${placeholder}`, value);
+    });
+    
+    return translatedText;
   }, [translations, currentLanguage]);
+
+  /**
+   * Get usage statistics
+   */
+  const getUsageStats = useCallback((): UsageStats => {
+    return usageStats;
+  }, [usageStats]);
 
   const value: DbTranslationsHookReturn = {
     translate,
@@ -453,5 +525,19 @@ export function DbTranslationsProvider({ children }: { children: ReactNode }) {
     isFullyTranslated,
   };
 
-  return value;
+  return (
+    <DbTranslationsContext.Provider value={value}>
+      {children}
+    </DbTranslationsContext.Provider>
+  );
 }
+
+export function useDbTranslations(): DbTranslationsHookReturn {
+  const context = useContext(DbTranslationsContext);
+  if (context === undefined) {
+    throw new Error('useDbTranslations must be used within a DbTranslationsProvider');
+  }
+  return context;
+}
+
+export default useDbTranslations;

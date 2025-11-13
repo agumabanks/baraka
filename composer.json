@@ -50,6 +50,7 @@
         "pestphp/pest": "^3.8",
         "pestphp/pest-plugin-laravel": "^3.2",
         "phpunit/phpunit": "^11.0",
+        "predis/predis": "^2.2",
         "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {
@@ -59,7 +60,8 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Http/Helper/Helper.php"
+            "app/Http/Helper/Helper.php",
+            "app/Helpers/TranslationHelper.php"
         ]
     },
     "autoload-dev": {

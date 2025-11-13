@@ -12,6 +12,12 @@ class CreateReportVersionControlTables extends Migration
             return;
         }
 
+        Schema::dropIfExists('report_sharing');
+        Schema::dropIfExists('report_execution_history');
+        Schema::dropIfExists('report_tags');
+        Schema::dropIfExists('report_definitions_version');
+        Schema::dropIfExists('report_definitions');
+
         // Main report definitions table
         Schema::create('report_definitions', function (Blueprint $table) {
             $table->id();
@@ -105,7 +111,7 @@ class CreateReportVersionControlTables extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            $table->unique(['report_id', 'shared_with_type', 'shared_with_identifier', 'permission']);
+            $table->unique(['report_id', 'shared_with_type', 'shared_with_identifier', 'permission'], 'report_sharing_acl_unique');
             $table->index('report_id');
             $table->index(['shared_with_type', 'shared_with_identifier']);
             $table->index('permission');

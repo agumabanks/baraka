@@ -27,7 +27,7 @@ return new class extends Migration
                 $table->string('status')->default('success'); // 'success', 'failure', 'warning', 'blocked'
                 $table->text('description')->nullable();
                 $table->json('metadata')->nullable(); // Additional context
-                $table->timestamp('created_at')->useCurrent();
+                $table->timestamps();
                 
                 $table->index('event_type');
                 $table->index('event_category');

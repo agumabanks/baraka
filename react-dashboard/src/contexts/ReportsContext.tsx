@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { apiClient } from '../services/api';
+import { apiClient } from '../services/apiClient';
 
 interface Report {
   id: string;
@@ -43,7 +43,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to fetch reports');
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch reports');
+      const message = err instanceof Error ? err.message : 'Failed to fetch reports';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +65,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to generate report');
       }
     } catch (err) {
-      setError(err.message || 'Failed to generate report');
+      const message = err instanceof Error ? err.message : 'Failed to generate report';
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -84,7 +86,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to fetch report');
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch report');
+      const message = err instanceof Error ? err.message : 'Failed to fetch report';
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -104,7 +107,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         throw new Error(response.data.message || 'Failed to delete report');
       }
     } catch (err) {
-      setError(err.message || 'Failed to delete report');
+      const message = err instanceof Error ? err.message : 'Failed to delete report';
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);
@@ -123,7 +127,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
       
       return response.data;
     } catch (err) {
-      setError(err.message || 'Failed to export report');
+      const message = err instanceof Error ? err.message : 'Failed to export report';
+      setError(message);
       throw err;
     } finally {
       setIsLoading(false);

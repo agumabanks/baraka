@@ -12,7 +12,7 @@ return new class extends Migration
             Schema::create('edi_providers', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
-                $table->enum('type', ['airline', 'broker', 'mock']);
+                $table->string('type', 50);
                 $table->json('config')->nullable();
                 $table->timestamps();
             });

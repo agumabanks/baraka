@@ -408,7 +408,7 @@ private function getAdminDashboardData($fromTo)
                 'id' => 'support_center',
                 'title' => 'Support Center',
                 'icon' => 'fas fa-headset',
-                'url' => route('support.index', [], false),
+                'url' => '/support',
                 'badge' => $openTickets > 0 ? [
                     'count' => $openTickets,
                     'variant' => 'warning',

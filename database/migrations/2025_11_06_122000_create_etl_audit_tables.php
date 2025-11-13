@@ -12,6 +12,16 @@ return new class extends Migration
             return;
         }
 
+        Schema::dropIfExists('etl_report_version_history');
+        Schema::dropIfExists('etl_report_definitions');
+        Schema::dropIfExists('etl_pipeline_configs');
+        Schema::dropIfExists('etl_anomaly_detection');
+        Schema::dropIfExists('etl_data_quality_violations');
+        Schema::dropIfExists('etl_data_quality_rules');
+        Schema::dropIfExists('etl_data_lineage');
+        Schema::dropIfExists('etl_audit_log');
+        Schema::dropIfExists('etl_batches');
+
         // ETL Batch tracking table
         Schema::create('etl_batches', function (Blueprint $table) {
             $table->string('batch_id', 50)->primary();
@@ -36,7 +46,7 @@ return new class extends Migration
         Schema::create('etl_audit_log', function (Blueprint $table) {
             $table->bigIncrements('audit_id');
             $table->string('table_name', 100);
-            $table->bigInteger('record_id');
+            $table->unsignedBigInteger('record_id');
             $table->enum('operation', ['INSERT', 'UPDATE', 'DELETE']);
             $table->enum('change_type', ['MANUAL', 'ETL_BATCH', 'API_IMPORT', 'SYSTEM_UPDATE']);
             
@@ -48,7 +58,7 @@ return new class extends Migration
             // Context
             $table->string('batch_id', 50)->nullable();
             $table->string('source_system', 50)->nullable();
-            $table->bigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             
@@ -68,9 +78,9 @@ return new class extends Migration
         Schema::create('etl_data_lineage', function (Blueprint $table) {
             $table->bigIncrements('lineage_id');
             $table->string('source_table', 100);
-            $table->bigInteger('source_record_id');
+            $table->unsignedBigInteger('source_record_id');
             $table->string('target_table', 100);
-            $table->bigInteger('target_record_id');
+            $table->unsignedBigInteger('target_record_id');
             $table->json('transformation_rules')->nullable();
             $table->string('batch_id', 50);
             $table->timestamp('created_at')->useCurrent();
@@ -101,16 +111,16 @@ return new class extends Migration
         // Data quality violations tracking
         Schema::create('etl_data_quality_violations', function (Blueprint $table) {
             $table->bigIncrements('violation_id');
-            $table->bigInteger('rule_id');
+            $table->unsignedBigInteger('rule_id');
             $table->string('table_name', 100);
-            $table->bigInteger('record_id');
+            $table->unsignedBigInteger('record_id');
             $table->string('violation_type', 50);
             $table->text('violation_description');
             $table->text('violation_details')->nullable(); // JSON with field names, values, etc.
             $table->string('severity', 20);
             $table->enum('status', ['OPEN', 'RESOLVED', 'IGNORED', 'ESCALATED'])->default('OPEN');
             $table->string('batch_id', 50);
-            $table->bigInteger('resolved_by')->nullable();
+            $table->unsignedBigInteger('resolved_by')->nullable();
             $table->text('resolution_notes')->nullable();
             $table->timestamp('resolved_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
@@ -125,7 +135,7 @@ return new class extends Migration
         Schema::create('etl_anomaly_detection', function (Blueprint $table) {
             $table->bigIncrements('anomaly_id');
             $table->string('table_name', 100);
-            $table->bigInteger('record_id')->nullable();
+            $table->unsignedBigInteger('record_id')->nullable();
             $table->string('anomaly_type', 50); // STATISTICAL, BUSINESS_RULE, PATTERN
             $table->string('anomaly_category', 100);
             $table->text('description');
@@ -136,7 +146,7 @@ return new class extends Migration
             $table->string('batch_id', 50);
             $table->enum('status', ['DETECTED', 'INVESTIGATED', 'CONFIRMED', 'FALSE_POSITIVE'])->default('DETECTED');
             $table->text('investigation_notes')->nullable();
-            $table->bigInteger('investigated_by')->nullable();
+            $table->unsignedBigInteger('investigated_by')->nullable();
             $table->timestamp('investigated_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
             
@@ -176,8 +186,8 @@ return new class extends Migration
             $table->json('visualization_config')->nullable(); // Chart types, colors, etc.
             $table->string('version', 20)->default('1.0.0');
             $table->string('status', 20)->default('DRAFT'); // DRAFT, ACTIVE, DEPRECATED
-            $table->bigInteger('created_by');
-            $table->bigInteger('approved_by')->nullable();
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
@@ -190,13 +200,13 @@ return new class extends Migration
         // Report version history
         Schema::create('etl_report_version_history', function (Blueprint $table) {
             $table->bigIncrements('version_id');
-            $table->bigInteger('report_id');
+            $table->unsignedBigInteger('report_id');
             $table->string('version', 20);
             $table->json('sql_query'); // Snapshot of query at this version
             $table->json('parameters')->nullable();
             $table->json('change_log')->nullable(); // What changed in this version
             $table->text('change_reason')->nullable();
-            $table->bigInteger('version_created_by');
+            $table->unsignedBigInteger('version_created_by');
             $table->timestamp('version_created_at')->useCurrent();
             
             $table->index('report_id');

@@ -408,3 +408,47 @@ export interface LoadingStates {
   workflow: boolean;
   statements: boolean;
 }
+
+export interface BranchOpsAlert {
+  id: string;
+  label: string;
+  count: number;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+}
+
+export interface BranchOpsSnapshot {
+  coverage_rate: number;
+  active_branches: number;
+  total_branches: number;
+  hub_count: number;
+  needs_attention: number;
+  alerts: BranchOpsAlert[];
+  top_branches: Array<{
+    id: string;
+    name: string;
+    status_label: string;
+    live_shipments: number;
+    active_workers: number;
+  }>;
+  overview?: Record<string, unknown>;
+}
+
+export interface ShipmentMixEntry {
+  mode: string;
+  label: string;
+  count: number;
+  active: number;
+  percentage?: number;
+}
+
+export interface ShipmentMixTrendEntry {
+  date: string;
+  groupage: number;
+  individual: number;
+}
+
+export interface ShipmentMix {
+  window: { from: string; to: string };
+  distribution: ShipmentMixEntry[];
+  trend: ShipmentMixTrendEntry[];
+}

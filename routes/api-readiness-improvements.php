@@ -1,38 +1,59 @@
 <?php
 
-use App\Http\Controllers\Api\V1\MobileScanningController;
+use App\Http\Controllers\Api\V1\EnhancedMobileScanningController;
 use App\Http\Controllers\Admin\EnhancedEdiController;
 use Illuminate\Support\Facades\Route;
 
 /**
  * Readiness Improvements Routes
  * 
- * Mobile Scanning APIs, EDI Integration, and Webhook Management
+ * Enhanced Mobile Scanning APIs, EDI Integration, and Webhook Management
  * with proper rate limiting and security middleware
  */
 
 Route::prefix('v1')->middleware(['api', 'api.rate_limit'])->group(function () {
     
-    // Mobile Scanning APIs (high rate limit - 500/hour)
+    // Enhanced Mobile Scanning APIs (high rate limit - 500/hour)
     Route::prefix('mobile')->group(function () {
-        Route::post('/scan', [MobileScanningController::class, 'scan'])
+        Route::post('/scan', [EnhancedMobileScanningController::class, 'scan'])
             ->name('api.mobile.scan')
             ->middleware(['auth:sanctum']);
         
-        Route::post('/bulk-scan', [MobileScanningController::class, 'bulkScan'])
+        Route::post('/bulk-scan', [EnhancedMobileScanningController::class, 'bulkScan'])
             ->name('api.mobile.bulk-scan')
             ->middleware(['auth:sanctum']);
         
-        Route::get('/shipment/{tracking}', [MobileScanningController::class, 'getShipmentDetails'])
+        Route::post('/enhanced-offline-sync', [EnhancedMobileScanningController::class, 'enhancedOfflineSync'])
+            ->name('api.mobile.enhanced-offline-sync')
+            ->middleware(['auth:sanctum']);
+        
+        Route::get('/device-info', [EnhancedMobileScanningController::class, 'getDeviceInfo'])
+            ->name('api.mobile.device-info')
+            ->middleware(['auth:sanctum']);
+        
+        Route::get('/shipment/{tracking}', [EnhancedMobileScanningController::class, 'getShipmentDetails'])
             ->name('api.mobile.shipment-details')
             ->middleware(['auth:sanctum']);
         
-        Route::get('/offline-sync-queue', [MobileScanningController::class, 'getOfflineSyncQueue'])
+        Route::get('/offline-sync-queue', [EnhancedMobileScanningController::class, 'getOfflineSyncQueue'])
             ->name('api.mobile.offline-queue')
             ->middleware(['auth:sanctum']);
         
-        Route::post('/confirm-sync', [MobileScanningController::class, 'confirmSync'])
+        Route::post('/confirm-sync', [EnhancedMobileScanningController::class, 'confirmSync'])
             ->name('api.mobile.confirm-sync')
+            ->middleware(['auth:sanctum']);
+    });
+
+    // Device Registration & Management
+    Route::prefix('devices')->group(function () {
+        Route::post('/register', [EnhancedMobileScanningController::class, 'registerDevice'])
+            ->name('api.devices.register');
+        
+        Route::post('/authenticate', [EnhancedMobileScanningController::class, 'authenticateDevice'])
+            ->name('api.devices.authenticate');
+        
+        Route::post('/deactivate', [EnhancedMobileScanningController::class, 'deactivateDevice'])
+            ->name('api.devices.deactivate')
             ->middleware(['auth:sanctum']);
     });
 

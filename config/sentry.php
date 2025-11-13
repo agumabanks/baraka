@@ -1,9 +1,6 @@
 <?php
 
 return [
-    // The integration with Laravel is enabled by default. You can
-    // disable the integration by setting 'enable' to false.
-    'enable' => env('SENTRY_ENABLED', true),
 
     // The DSN tells the SDK where to send the events. If this value
     // is absent, the SDK will try to read it from the SENTRY_LARAVEL_DSN
@@ -24,9 +21,6 @@ return [
 
     // Release version
     'release' => env('SENTRY_RELEASE', env('APP_VERSION')),
-
-    // Error filtering
-    'before_send' => null,
 
     // List of exceptions to ignore
     'ignore_exceptions' => [

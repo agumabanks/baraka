@@ -86,9 +86,15 @@ class UserRepository implements UserInterface
             if ($request->hub_id && ! blank($request->hub_id)) {
                 $user->hub_id = $request->hub_id ? $request->hub_id : null;
             }
+            if ($request->primary_branch_id && ! blank($request->primary_branch_id)) {
+                $user->primary_branch_id = $request->primary_branch_id;
+            }
             $user->image_id = $this->file('', $request->image);
             $user->joining_date = $request->joining_date;
             $user->address = $request->address;
+            if ($request->filled('preferred_language')) {
+                $user->preferred_language = $request->preferred_language;
+            }
             $user->role_id = $request->role_id;
             $user->salary = $request->salary !== '' ? $request->salary : 0;
             if ($request->hub_id) {
@@ -123,11 +129,15 @@ class UserRepository implements UserInterface
                 $user->designation_id = $request->designation_id;
                 $user->department_id = $request->department_id;
                 $user->status = $request->status;
+                $user->primary_branch_id = $request->primary_branch_id ? $request->primary_branch_id : null;
             }
             $user->joining_date = $request->joining_date;
             $user->address = $request->address;
             if ($request->password != null) {
                 $user->password = Hash::make($request->password);
+            }
+            if ($request->filled('preferred_language')) {
+                $user->preferred_language = $request->preferred_language;
             }
             if (isset($request->image) && $request->image != null) {
                 $user->image_id = $this->file($user->image_id, $request->image);

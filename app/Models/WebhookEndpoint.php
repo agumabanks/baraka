@@ -13,6 +13,7 @@ class WebhookEndpoint extends Model
         'name',
         'url',
         'events',
+        'description',
         'is_active',
         'active',
         'secret',

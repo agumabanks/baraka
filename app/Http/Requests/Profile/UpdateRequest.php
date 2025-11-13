@@ -27,6 +27,7 @@ class UpdateRequest extends FormRequest
             'name' => ['required'],
             'address' => ['required'],
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5098',
+            'preferred_language' => ['nullable', 'in:en,fr,sw'],
         ];
     }
 }

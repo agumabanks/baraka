@@ -8,7 +8,7 @@ import Sidebar from './components/layout/Sidebar'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
 import Dashboard from './pages/Dashboard'
-import Home from './pages/Home'
+import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Bookings from './pages/Bookings'
@@ -54,6 +54,7 @@ import GlobalSearchPage from './pages/search/GlobalSearch'
 import SystemLogsPage from './pages/logs/SystemLogs'
 import GeneralSettingsPage from './pages/settings/GeneralSettings'
 import ToastViewport from './components/ui/ToastViewport'
+import EnhancedAnalyticsPage from './pages/analytics/EnhancedAnalyticsPage'
 
 // TODO: These components need to be created for full navigation
 // Operations Components
@@ -116,7 +117,7 @@ import { mockFooterData } from './data/mockFooterData'
 import type { Language, Notification } from './types/header'
 import type { NavigationConfig } from './types/navigation'
 import type { RouteMeta as NavigationRouteMeta } from './lib/navigation'
-import { navigationApi } from './services/api'
+import { navigationApi, authApi } from './services/api'
 import api from './services/api'
 import { setLocale } from './lib/i18n'
 import {
@@ -125,6 +126,9 @@ import {
   resolveDashboardNavigatePath,
   getCanonicalFromAlias,
 } from './lib/spaNavigation'
+import { AdminWebhookConsole } from './pages/integrations/AdminWebhookConsole'
+import { EDITransactionDashboard } from './pages/integrations/EDITransactionDashboard'
+import { BranchOperationsPanel } from './pages/operations/BranchOperationsPanel'
 
 // App Content Component (needs to be inside Router for useLocation)
 function AppContent() {
@@ -133,7 +137,7 @@ function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const queryClient = useQueryClient()
 
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
 
   const { data: navigationResponse } = useQuery<{ success: boolean; data: NavigationConfig }>({
     queryKey: ['navigation', 'admin'],
@@ -179,22 +183,32 @@ function AppContent() {
   const [activeLanguage, setActiveLanguage] = useState<Language>(mockCurrentLanguage)
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      setLocale(activeLanguage.code)
-      api.defaults.headers.common['Accept-Language'] = activeLanguage.code
-      return
+    const resolvedLanguageCode = (() => {
+      const userLocale = user?.preferred_language
+      if (userLocale && languageOptions.some((language) => language.code === userLocale)) {
+        return userLocale
+      }
+
+      if (typeof window !== 'undefined') {
+        const storedLocale = window.localStorage.getItem('dashboard_locale')
+        if (storedLocale && languageOptions.some((language) => language.code === storedLocale)) {
+          return storedLocale
+        }
+      }
+
+      return mockCurrentLanguage.code
+    })()
+
+    const nextLanguage = languageOptions.find((language) => language.code === resolvedLanguageCode) ?? languageOptions[0] ?? mockCurrentLanguage
+
+    setActiveLanguage(nextLanguage)
+    setLocale(nextLanguage.code)
+    api.defaults.headers.common['Accept-Language'] = nextLanguage.code
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('dashboard_locale', nextLanguage.code)
     }
-
-    const storedLocale = window.localStorage.getItem('dashboard_locale')
-    const resolved = storedLocale
-      ? languageOptions.find((language) => language.code === storedLocale)
-      : null
-
-    const initial = resolved ?? mockCurrentLanguage
-    setActiveLanguage(initial)
-    setLocale(initial.code)
-    api.defaults.headers.common['Accept-Language'] = initial.code
-  }, [languageOptions])
+  }, [user, languageOptions])
 
   const handleNavigate = useCallback((path: string) => {
     // Backend returns absolute paths like '/branches', '/merchants', etc.
@@ -224,19 +238,32 @@ function AppContent() {
     setSidebarOpen(false)
   }
 
-  const handleLanguageChange = useCallback((language: Language) => {
-    setActiveLanguage(language)
-    setLocale(language.code)
-    api.defaults.headers.common['Accept-Language'] = language.code
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('dashboard_locale', language.code)
+  const handleLanguageChange = useCallback(async (language: Language) => {
+    const languageCode = language.code
+
+    try {
+      const response = await authApi.updatePreferences({ preferred_language: languageCode })
+
+      setActiveLanguage(language)
+      setLocale(languageCode)
+      api.defaults.headers.common['Accept-Language'] = languageCode
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('dashboard_locale', languageCode)
+      }
+
+      if (response?.data?.user) {
+        updateUser(response.data.user)
+      } else {
+        updateUser({ preferred_language: languageCode as 'en' | 'fr' | 'sw' })
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['navigation', 'admin'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'data'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'charts'] })
+    } catch (error) {
+      console.error('Failed to update language preference', error)
     }
-    queryClient.invalidateQueries({ queryKey: ['navigation', 'admin'] })
-    queryClient.invalidateQueries({ queryKey: ['dashboard', 'data'] })
-    queryClient.invalidateQueries({ queryKey: ['dashboard', 'charts'] })
-    queryClient.invalidateQueries({ queryKey: ['dashboard', 'kpis'] })
-    queryClient.invalidateQueries({ queryKey: ['dashboard', 'workflow-queue'] })
-  }, [queryClient])
+  }, [queryClient, updateUser])
 
   const handleNotificationClick = (notification: Notification) => {
     console.log('Notification clicked:', notification.title)
@@ -343,7 +370,8 @@ function AppContent() {
           <Routes>
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
+            <Route path="analytics" element={<EnhancedAnalyticsPage />} />
+            <Route path="analytics/optimized" element={<EnhancedAnalyticsPage />} />
             <Route path="reports" element={<div className="p-6"><h1 className="text-2xl font-bold">Reports</h1></div>} />
             <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1></div>} />
             <Route path="support/:id" element={<SupportDetail />} />
@@ -381,9 +409,10 @@ function AppContent() {
             <Route path="compliance/customs/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Customs Declarations</h1><p>Coming soon...</p></div>} />
             <Route path="compliance/fraud/*" element={<div className="p-6"><h1 className="text-2xl font-bold">Fraud Detection</h1><p>Coming soon...</p></div>} />
             
-            {/* Integration Routes - TODO: Implement these components */}
+            {/* Integration Routes */}
             <Route path="integrations/api-keys" element={<div className="p-6"><h1 className="text-2xl font-bold">API Keys</h1><p>Coming soon...</p></div>} />
-            <Route path="integrations/webhooks" element={<div className="p-6"><h1 className="text-2xl font-bold">Webhooks</h1><p>Coming soon...</p></div>} />
+            <Route path="integrations/webhooks" element={<AdminWebhookConsole />} />
+            <Route path="integrations/edi" element={<EDITransactionDashboard />} />
             <Route path="integrations/monitoring" element={<div className="p-6"><h1 className="text-2xl font-bold">Integration Monitoring</h1><p>Coming soon...</p></div>} />
             
             {/* Asset Routes - TODO: Implement these components */}
@@ -406,6 +435,7 @@ function AppContent() {
             <Route path="routes/optimize" element={<div className="p-6"><h1 className="text-2xl font-bold">Route Optimizer</h1><p>Coming soon...</p></div>} />
             <Route path="routes/stops" element={<div className="p-6"><h1 className="text-2xl font-bold">Stops</h1><p>Coming soon...</p></div>} />
             <Route path="scans" element={<ScansPage />} />
+            <Route path="operations/branches" element={<BranchOperationsPanel />} />
             
             {/* Delivery Workers - TODO: Implement this component */}
             <Route path="deliveryman" element={<div className="p-6"><h1 className="text-2xl font-bold">Delivery Workers</h1><p>Coming soon...</p></div>} />
@@ -438,6 +468,23 @@ function AppContent() {
               switch (routePath) {
                 case 'bookings':
                   element = <Bookings />
+                  break
+                case 'integrations/webhooks':
+                case 'webhook-management':
+                  element = <AdminWebhookConsole />
+                  break
+                case 'integrations/edi':
+                case 'edi-management':
+                  element = <EDITransactionDashboard />
+                  break
+                case 'analytics':
+                case 'analytics/optimized':
+                case 'analytics/real-time':
+                  element = <EnhancedAnalyticsPage />
+                  break
+                case 'operations/branches':
+                case 'branch-operations':
+                  element = <BranchOperationsPanel />
                   break
                 case 'tracking':
                   element = <LiveTracking />
@@ -537,9 +584,6 @@ function AppContent() {
                   break
                 case 'scans':
                   element = <ScansPage />
-                  break
-                case 'workflow':
-                  element = <WorkflowBoard />
                   break
                 case 'finance/invoices':
                   element = <InvoicesPage />
@@ -646,8 +690,8 @@ function App() {
         <Router basename={routerBase}>
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/landing" element={<Home />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/landing" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 

@@ -12,6 +12,14 @@ return new class extends Migration
             return;
         }
 
+        // Reset dimension tables to ensure consistent schema when re-running migration
+        Schema::dropIfExists('dim_driver');
+        Schema::dropIfExists('dim_carrier');
+        Schema::dropIfExists('dim_customer');
+        Schema::dropIfExists('dim_branch');
+        Schema::dropIfExists('dim_client');
+        Schema::dropIfExists('dim_time');
+
         // Time Dimension Table
         Schema::create('dim_time', function (Blueprint $table) {
             $table->integer('date_key')->primary();
@@ -76,12 +84,12 @@ return new class extends Migration
         // Branch Dimension Table
         Schema::create('dim_branch', function (Blueprint $table) {
             $table->bigIncrements('branch_key');
-            $table->bigInteger('branch_id');
+            $table->unsignedBigInteger('branch_id');
             $table->string('branch_code', 20)->unique();
             $table->string('branch_name', 200);
             $table->enum('branch_type', ['HUB', 'REGIONAL', 'LOCAL'])->default('LOCAL');
             $table->boolean('is_hub')->default(false);
-            $table->bigInteger('parent_branch_key')->nullable();
+            $table->unsignedBigInteger('parent_branch_key')->nullable();
             
             // Location details
             $table->text('address')->nullable();
@@ -192,7 +200,7 @@ return new class extends Migration
         // Driver Dimension Table
         Schema::create('dim_driver', function (Blueprint $table) {
             $table->bigIncrements('driver_key');
-            $table->bigInteger('driver_id');
+            $table->unsignedBigInteger('driver_id');
             $table->string('employee_id', 20)->nullable();
             $table->string('first_name', 100)->nullable();
             $table->string('last_name', 100)->nullable();
@@ -207,7 +215,7 @@ return new class extends Migration
             $table->integer('accident_count')->default(0);
             
             // Route information
-            $table->bigInteger('primary_branch_key')->nullable();
+            $table->unsignedBigInteger('primary_branch_key')->nullable();
             $table->json('service_areas')->nullable();
             
             // Employment details
@@ -220,11 +228,17 @@ return new class extends Migration
 
         // Add foreign key constraints
         Schema::table('dim_branch', function (Blueprint $table) {
-            $table->foreign('parent_branch_key')->references('branch_key')->on('dim_branch')->nullOnDelete();
+            $table->foreign('parent_branch_key')
+                ->references('branch_key')
+                ->on('dim_branch')
+                ->nullOnDelete();
         });
 
         Schema::table('dim_driver', function (Blueprint $table) {
-            $table->foreign('primary_branch_key')->references('branch_key')->on('dim_branch')->nullOnDelete();
+            $table->foreign('primary_branch_key')
+                ->references('branch_key')
+                ->on('dim_branch')
+                ->nullOnDelete();
         });
     }
 

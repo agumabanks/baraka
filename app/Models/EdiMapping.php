@@ -7,12 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class EdiMapping extends Model
 {
     protected $fillable = [
-        'edi_type',
-        'sender_code',
-        'transformations',
+        'document_type',
+        'version',
+        'field_map',
+        'description',
+        'active',
     ];
 
     protected $casts = [
-        'transformations' => 'array',
+        'field_map' => 'array',
+        'active' => 'boolean',
     ];
 }

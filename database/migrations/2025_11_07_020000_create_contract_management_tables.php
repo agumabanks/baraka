@@ -129,11 +129,24 @@ return new class extends Migration
 
         // Additional indexes for performance
         Schema::table('contracts', function (Blueprint $table) {
-            $table->index(['status', 'end_date']);
-            $table->index(['customer_id', 'status']);
-            $table->index(['contract_type', 'status']);
-            $table->index(['current_volume', 'volume_commitment']);
-            $table->index('original_contract_id')->nullable();
+            if (!Schema::hasColumn('contracts', 'original_contract_id')) {
+                $table->foreignId('original_contract_id')
+                    ->nullable()
+                    ->constrained('contracts')
+                    ->nullOnDelete();
+            }
+
+            if (Schema::hasColumn('contracts', 'status') && Schema::hasColumn('contracts', 'end_date')) {
+                $table->index(['status', 'end_date']);
+            }
+
+            if (Schema::hasColumn('contracts', 'customer_id') && Schema::hasColumn('contracts', 'status')) {
+                $table->index(['customer_id', 'status']);
+            }
+
+            if (Schema::hasColumn('contracts', 'current_volume') && Schema::hasColumn('contracts', 'volume_commitment')) {
+                $table->index(['current_volume', 'volume_commitment']);
+            }
         });
 
         // Customer milestones table enhancement (if not exists)
@@ -166,11 +179,22 @@ return new class extends Migration
         
         // Remove indexes from contracts table
         Schema::table('contracts', function (Blueprint $table) {
-            $table->dropIndex(['status', 'end_date']);
-            $table->dropIndex(['customer_id', 'status']);
-            $table->dropIndex(['contract_type', 'status']);
-            $table->dropIndex(['current_volume', 'volume_commitment']);
-            $table->dropIndex(['original_contract_id']);
+            if (Schema::hasColumn('contracts', 'status') && Schema::hasColumn('contracts', 'end_date')) {
+                $table->dropIndex('contracts_status_end_date_index');
+            }
+
+            if (Schema::hasColumn('contracts', 'customer_id') && Schema::hasColumn('contracts', 'status')) {
+                $table->dropIndex('contracts_customer_id_status_index');
+            }
+
+            if (Schema::hasColumn('contracts', 'current_volume') && Schema::hasColumn('contracts', 'volume_commitment')) {
+                $table->dropIndex('contracts_current_volume_volume_commitment_index');
+            }
+
+            if (Schema::hasColumn('contracts', 'original_contract_id')) {
+                $table->dropForeign(['original_contract_id']);
+                $table->dropColumn('original_contract_id');
+            }
         });
     }
 };

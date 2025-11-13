@@ -1,7 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { toast } from 'react-hot-toast';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
 const API_TIMEOUT = 30000;
 const MAX_RETRIES = 3;
 
@@ -110,9 +109,11 @@ class ApiClientService {
 
   private async refreshAuthToken(): Promise<string> {
     try {
-      const response = await this.instance.post('/v1/tokens/refresh', {}, {
-        skipErrorHandling: true,
-      });
+      const response = await this.instance.post(
+        '/v1/tokens/refresh',
+        {},
+        { skipErrorHandling: true } as ApiRequestConfig
+      );
 
       if (response.data.success) {
         const newToken = response.data.data.token;

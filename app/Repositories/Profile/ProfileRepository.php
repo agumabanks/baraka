@@ -20,6 +20,9 @@ class ProfileRepository implements ProfileInterface
             $user = User::find($id);
             $user->name = $request->name;
             $user->address = $request->address;
+            if ($request->filled('preferred_language')) {
+                $user->preferred_language = $request->preferred_language;
+            }
             if ($request->image != null) {
                 $user->image_id = $this->file($user->image_id, $request->image);
             }

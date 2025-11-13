@@ -20,10 +20,12 @@ class StoreAdminUserRequest extends AdminFormRequest
             'department_id' => ['required', 'exists:departments,id'],
             'role_id' => ['required', 'exists:roles,id'],
             'hub_id' => ['nullable', 'exists:hubs,id'],
+            'primary_branch_id' => ['nullable', 'exists:branches,id'],
             'joining_date' => ['required', 'date'],
             'salary' => ['nullable', 'numeric', 'min:0'],
             'address' => ['required', 'string', 'max:191'],
             'status' => ['required', Rule::in([Status::ACTIVE, Status::INACTIVE])],
+            'preferred_language' => ['nullable', 'in:en,fr,sw'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:5120'],
         ];
     }

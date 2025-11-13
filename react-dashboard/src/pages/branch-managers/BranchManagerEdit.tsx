@@ -4,7 +4,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import { branchManagersApi } from '../../services/api';
-import type { BranchManagerFormData } from '../../types/branchManagers';
+import type { BranchManagerFormData, BranchOption } from '../../types/branchManagers';
+
+const LANGUAGE_OPTIONS: Array<{ value: 'en' | 'fr' | 'sw'; label: string }> = [
+  { value: 'en', label: 'English' },
+  { value: 'fr', label: 'Français' },
+  { value: 'sw', label: 'Kiswahili' },
+];
 
 const BranchManagerEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +22,7 @@ const BranchManagerEdit: React.FC = () => {
     user_id: '',
     business_name: '',
     status: 'active',
+    preferred_language: 'en',
   });
 
   const { data: managerData, isLoading: loadingManager } = useQuery({
@@ -37,6 +44,7 @@ const BranchManagerEdit: React.FC = () => {
         user_id: manager.user_id,
         business_name: manager.business_name,
         status: manager.status,
+        preferred_language: (manager.user?.preferred_language as 'en' | 'fr' | 'sw' | undefined) ?? 'en',
       });
     }
   }, [managerData]);
@@ -54,15 +62,31 @@ const BranchManagerEdit: React.FC = () => {
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.branch_id || !formData.user_id || !formData.business_name) {
-      alert('Please fill in all required fields');
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!formData.branch_id || !formData.business_name.trim()) {
+      alert('Please select a branch and provide the business name.');
       return;
     }
 
-    updateMutation.mutate(formData);
+    if (!formData.user_id) {
+      alert('Missing manager user reference.');
+      return;
+    }
+
+    const payload: BranchManagerFormData = {
+      branch_id: Number(formData.branch_id),
+      user_id: Number(formData.user_id),
+      business_name: formData.business_name.trim(),
+      status: formData.status,
+    };
+
+    if (formData.preferred_language) {
+      payload.preferred_language = formData.preferred_language as 'en' | 'fr' | 'sw';
+    }
+
+    updateMutation.mutate(payload);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -74,7 +98,7 @@ const BranchManagerEdit: React.FC = () => {
     return <LoadingSpinner message="Loading form data" />;
   }
 
-  const availableBranches = availableBranchesData?.data?.branches || [];
+  const availableBranches: BranchOption[] = availableBranchesData?.data?.branches || [];
   const manager = managerData?.data?.manager;
 
   return (
@@ -115,7 +139,9 @@ const BranchManagerEdit: React.FC = () => {
                     {manager.branch.name} ({manager.branch.code})
                   </option>
                 )}
-                {availableBranches.filter((b: any) => b.value !== manager?.branch_id).map((branch: any) => (
+                {availableBranches
+                  .filter((branch) => branch.value !== manager?.branch_id)
+                  .map((branch) => (
                   <option key={branch.value} value={branch.value}>
                     {branch.label} ({branch.code})
                   </option>
@@ -123,20 +149,55 @@ const BranchManagerEdit: React.FC = () => {
               </select>
             </div>
 
-            {/* User ID */}
+            {/* Manager Account Summary */}
+            <div className="rounded-2xl border border-mono-gray-200 bg-mono-gray-50 p-5 text-sm text-mono-gray-700">
+              <div className="font-semibold text-mono-gray-900">Manager Account</div>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.3em] text-mono-gray-500">Name</div>
+                  <div>{manager?.user?.name ?? '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-[0.3em] text-mono-gray-500">Email</div>
+                  <div>{manager?.user?.email ?? '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-[0.3em] text-mono-gray-500">Phone</div>
+                  <div>{manager?.user?.phone ?? '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-[0.3em] text-mono-gray-500">Primary Branch ID</div>
+                  <div>{manager?.user?.primary_branch_id ?? '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-[0.3em] text-mono-gray-500">Preferred Language</div>
+                  <div className="flex items-center gap-2">
+                    <span>{manager?.user?.preferred_language?.toUpperCase() ?? '—'}</span>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-xs text-mono-gray-500">
+                Manager accounts are managed centrally. To reassign this manager to a different user, unassign them first and create a new manager record.
+              </p>
+            </div>
+
+            {/* Preferred Language */}
             <div>
               <label className="block text-sm font-medium text-mono-black mb-2">
-                User ID <span className="text-red-600">*</span>
+                Preferred Language
               </label>
-              <input
-                type="number"
-                name="user_id"
-                value={formData.user_id}
+              <select
+                name="preferred_language"
+                value={formData.preferred_language}
                 onChange={handleChange}
-                required
                 className="w-full rounded-lg border border-mono-gray-300 px-4 py-2 text-sm focus:border-mono-black focus:outline-none"
-                placeholder="Enter user ID"
-              />
+              >
+                {LANGUAGE_OPTIONS.map((language) => (
+                  <option key={language.value} value={language.value}>
+                    {language.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Business Name */}

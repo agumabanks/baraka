@@ -31,6 +31,14 @@ return [
                     'permission_check' => null,
                 ],
                 [
+                    'key' => 'advanced-analytics',
+                    'label' => 'Real-time Analytics',
+                    'icon' => 'fa fa-chart-line',
+                    'url' => '/analytics',
+                    'active_patterns' => ['analytics.*'],
+                    'permission_check' => null,
+                ],
+                [
                     'key' => 'live-tracking',
                     'label_trans_key' => 'menus.live_tracking',
                     'icon' => 'fa fa-map-marker-alt',

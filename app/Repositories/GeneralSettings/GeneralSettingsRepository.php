@@ -211,6 +211,12 @@ class GeneralSettingsRepository implements GeneralSettingsInterface
                 'auto_logout_minutes' => 60,
                 'data_retention_days' => 365,
             ],
+            'website' => [
+                'hero_title' => 'Deliver with confidence',
+                'hero_subtitle' => 'Baraka routes, tracks, and reconciles every parcel in real time.',
+                'hero_cta_label' => 'Book a pickup',
+                'footer_note' => 'Baraka ERP v1.0 • Crafted in Kampala',
+            ],
         ];
     }
 

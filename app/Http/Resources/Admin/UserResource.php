@@ -16,6 +16,14 @@ class UserResource extends JsonResource
         $role = $this->whenLoaded('role');
         $hub = $this->whenLoaded('hub');
         $department = $this->whenLoaded('department');
+        $primaryBranch = $this->whenLoaded('primaryBranch');
+        $primaryBranchData = $primaryBranch ? [
+            'id' => $primaryBranch->id,
+            'name' => $primaryBranch->name,
+            'code' => $primaryBranch->code,
+            'type' => $primaryBranch->type,
+        ] : null;
+
         $designation = $this->whenLoaded('designation');
 
         $permissions = is_array($this->permissions) ? array_values($this->permissions) : [];
@@ -70,6 +78,9 @@ class UserResource extends JsonResource
             'status' => (int) $this->status,
             'status_label' => (int) $this->status === Status::ACTIVE ? 'active' : 'inactive',
             'avatar' => $this->image,
+            'preferred_language' => $this->preferred_language,
+            'primary_branch_id' => $primaryBranchData['id'] ?? null,
+            'primary_branch' => $primaryBranchData,
             'role' => $roleData,
             'role_label' => $roleData['name'] ?? null,
             'hub' => $hubData,

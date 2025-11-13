@@ -80,7 +80,6 @@ class Shipment extends Model
     protected $casts = [
         'price_amount' => 'decimal:2',
         'status' => 'string',
-        'current_status' => ShipmentStatus::class,
         'assigned_at' => 'datetime',
         'expected_delivery_date' => 'datetime',
         'delivered_at' => 'datetime',
@@ -109,6 +108,43 @@ class Shipment extends Model
         'processed_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
+
+    public function getCurrentStatusAttribute(?string $value): ?ShipmentStatus
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        return ShipmentStatus::fromString($value);
+    }
+
+    public function setCurrentStatusAttribute(ShipmentStatus|string|null $value): void
+    {
+        if ($value instanceof ShipmentStatus) {
+            $this->attributes['current_status'] = $value->value;
+
+            return;
+        }
+
+        if (blank($value)) {
+            $this->attributes['current_status'] = null;
+
+            return;
+        }
+
+        $normalized = ShipmentStatus::fromString((string) $value);
+
+        if (! $normalized instanceof ShipmentStatus) {
+            Log::warning('Attempted to set unknown shipment current_status', [
+                'shipment_id' => $this->id,
+                'provided_status' => $value,
+            ]);
+
+            return;
+        }
+
+        $this->attributes['current_status'] = $normalized->value;
+    }
 
     protected static function boot()
     {
@@ -420,31 +456,6 @@ class Shipment extends Model
             ShipmentStatus::EXCEPTION => '<span class="badge badge-danger">Exception</span>',
             default => '<span class="badge badge-light">Unknown</span>',
         };
-    }
-
-    public function setCurrentStatusAttribute($value): void
-    {
-        if ($value === null) {
-            $this->attributes['current_status'] = null;
-            return;
-        }
-
-        $status = match (true) {
-            $value instanceof ShipmentStatus => $value,
-            is_string($value) => ShipmentStatus::fromString($value),
-            default => null,
-        };
-
-        if (! $status instanceof ShipmentStatus) {
-            Log::warning('Attempted to set unknown shipment current_status', [
-                'shipment_id' => $this->id,
-                'provided_status' => $value,
-            ]);
-
-            return;
-        }
-
-        $this->attributes['current_status'] = $status->value;
     }
 
     public function setStatusAttribute($value): void

@@ -24,6 +24,8 @@ export interface BranchWorker {
     name: string;
     email: string;
     phone: string | null;
+    preferred_language?: 'en' | 'fr' | 'sw' | null;
+    primary_branch_id?: number | null;
   };
 }
 
@@ -82,13 +84,22 @@ export interface BranchWorkerListParams {
 
 export interface BranchWorkerFormData {
   branch_id: number | string;
-  user_id: number | string;
+  user_id?: number | string;
   role: string;
   permissions?: string[];
   work_schedule?: Record<string, unknown>;
   hourly_rate?: number;
   notes?: string;
   status: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  address?: string;
+  preferred_language?: 'en' | 'fr' | 'sw';
+  employment_status?: string;
+  contact_phone?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface BranchOption {
@@ -102,4 +113,7 @@ export interface UserOption {
   value: number | string;
   label: string;
   email: string;
+  phone?: string | null;
+  preferred_language?: 'en' | 'fr' | 'sw' | null;
+  primary_branch_id?: number | null;
 }

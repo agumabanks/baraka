@@ -3,12 +3,15 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Database optimization for Dynamic Pricing System
  * 
  * This migration adds proper indexes to optimize quote calculations,
  * customer lookups, and competitor pricing queries.
+ * 
+ * Safe migration that handles existing indexes and missing tables gracefully.
  */
 return new class extends Migration
 {
@@ -17,105 +20,64 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Quotation table optimizations
-        Schema::table('quotations', function (Blueprint $table) {
-            $table->index(['customer_id', 'status'], 'idx_quotation_customer_status');
-            $table->index(['origin_branch_id', 'destination_country'], 'idx_quotation_route');
-            $table->index(['service_type', 'created_at'], 'idx_quotation_service_date');
-            $table->index(['valid_until', 'status'], 'idx_quotation_validity');
-            $table->index(['customer_id', 'created_at'], 'idx_quotation_customer_date');
-        });
+        $this->safeAddIndexes('quotations', [
+            ['columns' => ['customer_id', 'status'], 'name' => 'idx_quotation_customer_status_v2'],
+            ['columns' => ['origin_branch_id', 'destination_country'], 'name' => 'idx_quotation_route_v2'],
+            ['columns' => ['service_type', 'created_at'], 'name' => 'idx_quotation_service_date_v2'],
+            ['columns' => ['valid_until', 'status'], 'name' => 'idx_quotation_validity_v2'],
+            ['columns' => ['customer_id', 'created_at'], 'name' => 'idx_quotation_customer_date_v2'],
+            ['columns' => ['customer_id', 'service_type', 'created_at'], 'name' => 'idx_quotation_customer_service_date_v2'],
+            ['columns' => ['customer_id', 'created_at', 'total_amount', 'service_type'], 'name' => 'idx_quotation_customer_history_v2'],
+        ]);
 
-        // RateCard table optimizations
-        Schema::table('rate_cards', function (Blueprint $table) {
-            $table->index(['origin_country', 'dest_country', 'is_active'], 'idx_ratecard_route_active');
-            $table->index(['is_active', 'created_at'], 'idx_ratecard_active_date');
-        });
+        $this->safeAddIndexes('rate_cards', [
+            ['columns' => ['origin_country', 'dest_country', 'is_active'], 'name' => 'idx_ratecard_route_active_v2'],
+            ['columns' => ['is_active', 'created_at'], 'name' => 'idx_ratecard_active_date_v2'],
+        ]);
 
-        // PricingRule table optimizations
-        Schema::table('pricing_rules', function (Blueprint $table) {
-            $table->index(['rule_type', 'active', 'priority'], 'idx_pricingrule_type_active_priority');
-            $table->index(['active', 'effective_from', 'effective_to'], 'idx_pricingrule_validity');
-        });
+        $this->safeAddIndexes('pricing_rules', [
+            ['columns' => ['rule_type', 'active', 'priority'], 'name' => 'idx_pricingrule_type_active_priority_v2'],
+            ['columns' => ['active', 'effective_from', 'effective_to'], 'name' => 'idx_pricingrule_validity_v2'],
+        ]);
 
-        // CompetitorPrice table optimizations
-        Schema::table('competitor_prices', function (Blueprint $table) {
-            $table->index(['origin_country', 'destination_country', 'service_level'], 'idx_competitor_route_service');
-            $table->index(['carrier_name', 'collected_at'], 'idx_competitor_carrier_date');
-            $table->index(['source_type', 'collected_at'], 'idx_competitor_source_date');
-        });
+        $this->safeAddIndexes('competitor_prices', [
+            ['columns' => ['origin_country', 'destination_country', 'service_level'], 'name' => 'idx_competitor_route_service_v2'],
+            ['columns' => ['carrier_name', 'collected_at'], 'name' => 'idx_competitor_carrier_date_v2'],
+            ['columns' => ['source_type', 'collected_at'], 'name' => 'idx_competitor_source_date_v2'],
+            ['columns' => ['origin_country', 'destination_country', 'service_level', 'collected_at'], 'name' => 'idx_competitor_benchmarking_v2'],
+        ]);
 
-        // FuelIndex table optimizations
-        Schema::table('fuel_indices', function (Blueprint $table) {
-            $table->index(['source', 'region', 'effective_date'], 'idx_fuel_source_region_date');
-            $table->index(['effective_date'], 'idx_fuel_effective_date');
-        });
+        $this->safeAddIndexes('fuel_indices', [
+            ['columns' => ['source', 'region', 'effective_date'], 'name' => 'idx_fuel_source_region_date_v2'],
+            ['columns' => ['effective_date'], 'name' => 'idx_fuel_effective_date_v2'],
+            ['columns' => ['source', 'effective_date'], 'name' => 'idx_fuel_surcharge_calc_v2'],
+        ]);
 
-        // ServiceLevelDefinition table optimizations
-        Schema::table('service_level_definitions', function (Blueprint $table) {
-            $table->index(['code'], 'idx_servicelevel_code');
-        });
+        $this->safeAddIndexes('service_level_definitions', [
+            ['columns' => ['code'], 'name' => 'idx_servicelevel_code_v2'],
+        ]);
 
-        // SurchargeRule table optimizations
-        Schema::table('surcharge_rules', function (Blueprint $table) {
-            $table->index(['code', 'active'], 'idx_surcharge_code_active');
-            $table->index(['active_from', 'active_to'], 'idx_surcharge_validity');
-        });
+        $this->safeAddIndexes('surcharge_rules', [
+            ['columns' => ['code', 'active'], 'name' => 'idx_surcharge_code_active_v2'],
+            ['columns' => ['active_from', 'active_to'], 'name' => 'idx_surcharge_validity_v2'],
+        ]);
 
-        // Zone table optimizations
-        Schema::table('zones', function (Blueprint $table) {
-            $table->index(['code'], 'idx_zone_code');
-        });
+        $this->safeAddIndexes('zones', [
+            ['columns' => ['code'], 'name' => 'idx_zone_code_v2'],
+        ]);
 
-        // Customers table optimizations for pricing
-        Schema::table('customers', function (Blueprint $table) {
-            $table->index(['customer_type', 'status'], 'idx_customer_type_status');
-            $table->index(['total_shipments', 'total_spent'], 'idx_customer_volume_value');
-            $table->index(['priority_level', 'customer_since'], 'idx_customer_priority_since');
-        });
+        $this->safeAddIndexes('customers', [
+            ['columns' => ['customer_type', 'status'], 'name' => 'idx_customer_type_status_v2'],
+            ['columns' => ['total_shipments', 'total_spent'], 'name' => 'idx_customer_volume_value_v2'],
+            ['columns' => ['priority_level', 'customer_since'], 'name' => 'idx_customer_priority_since_v2'],
+        ]);
 
-        // Shipments table optimizations
-        Schema::table('shipments', function (Blueprint $table) {
-            $table->index(['customer_id', 'service_level', 'current_status'], 'idx_shipment_customer_service_status');
-            $table->index(['origin_branch_id', 'dest_branch_id', 'current_status'], 'idx_shipment_route_status');
-            $table->index(['service_level', 'created_at'], 'idx_shipment_service_date');
-        });
-
-        // Create composite index for frequently joined queries
-        Schema::table('quotations', function (Blueprint $table) {
-            $table->index(['customer_id', 'service_type', 'created_at'], 'idx_quotation_customer_service_date');
-        });
-
-        // Create partial indexes for specific conditions
-        Schema::table('pricing_rules', function (Blueprint $table) {
-            $table->index(['rule_type', 'active'])
-                  ->where('active', true);
-        });
-
-        Schema::table('rate_cards', function (Blueprint $table) {
-            $table->index(['origin_country', 'dest_country'])
-                  ->where('is_active', true);
-        });
-
-        // Create covering index for quote history queries
-        Schema::table('quotations', function (Blueprint $table) {
-            $table->index(['customer_id', 'created_at', 'total_amount', 'service_type'], 'idx_quotation_customer_history');
-        });
-
-        // Create index for competitor pricing benchmarking
-        Schema::table('competitor_prices', function (Blueprint $table) {
-            $table->index(['origin_country', 'destination_country', 'service_level', 'collected_at'], 'idx_competitor_benchmarking');
-        });
-
-        // Create index for fuel surcharge calculations
-        Schema::table('fuel_indices', function (Blueprint $table) {
-            $table->index(['source', 'effective_date'], 'idx_fuel_surcharge_calc');
-        });
-
-        // Create index for dimensional weight calculations
-        Schema::table('shipments', function (Blueprint $table) {
-            $table->index(['service_level', 'created_at'], 'idx_shipment_dimensional_calc');
-        });
+        $this->safeAddIndexes('shipments', [
+            ['columns' => ['customer_id', 'service_level', 'current_status'], 'name' => 'idx_shipment_customer_service_status_v2'],
+            ['columns' => ['origin_branch_id', 'dest_branch_id', 'current_status'], 'name' => 'idx_shipment_route_status_v2'],
+            ['columns' => ['service_level', 'created_at'], 'name' => 'idx_shipment_service_date_v2'],
+            ['columns' => ['service_level', 'created_at'], 'name' => 'idx_shipment_dimensional_calc_v2'],
+        ]);
     }
 
     /**
@@ -123,89 +85,125 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop indexes in reverse order
-        Schema::table('shipments', function (Blueprint $table) {
-            $table->dropIndex('idx_shipment_dimensional_calc');
-        });
+        // Drop indexes safely - ignore if they don't exist
+        $this->safeDropIndexes('quotations', [
+            'idx_quotation_customer_status_v2',
+            'idx_quotation_route_v2',
+            'idx_quotation_service_date_v2',
+            'idx_quotation_validity_v2',
+            'idx_quotation_customer_date_v2',
+            'idx_quotation_customer_service_date_v2',
+            'idx_quotation_customer_history_v2',
+        ]);
 
-        Schema::table('fuel_indices', function (Blueprint $table) {
-            $table->dropIndex('idx_fuel_surcharge_calc');
-        });
+        $this->safeDropIndexes('rate_cards', [
+            'idx_ratecard_route_active_v2',
+            'idx_ratecard_active_date_v2',
+        ]);
 
-        Schema::table('competitor_prices', function (Blueprint $table) {
-            $table->dropIndex('idx_competitor_benchmarking');
-        });
+        $this->safeDropIndexes('pricing_rules', [
+            'idx_pricingrule_type_active_priority_v2',
+            'idx_pricingrule_validity_v2',
+        ]);
 
-        Schema::table('quotations', function (Blueprint $table) {
-            $table->dropIndex('idx_quotation_customer_history');
-        });
+        $this->safeDropIndexes('competitor_prices', [
+            'idx_competitor_route_service_v2',
+            'idx_competitor_carrier_date_v2',
+            'idx_competitor_source_date_v2',
+            'idx_competitor_benchmarking_v2',
+        ]);
 
-        Schema::table('rate_cards', function (Blueprint $table) {
-            $table->dropIndex(['origin_country', 'dest_country'])
-                  ->where('is_active', true);
-        });
+        $this->safeDropIndexes('fuel_indices', [
+            'idx_fuel_source_region_date_v2',
+            'idx_fuel_effective_date_v2',
+            'idx_fuel_surcharge_calc_v2',
+        ]);
 
-        Schema::table('pricing_rules', function (Blueprint $table) {
-            $table->dropIndex(['rule_type', 'active'])
-                  ->where('active', true);
-        });
+        $this->safeDropIndexes('service_level_definitions', [
+            'idx_servicelevel_code_v2',
+        ]);
 
-        Schema::table('quotations', function (Blueprint $table) {
-            $table->dropIndex('idx_quotation_customer_service_date');
-        });
+        $this->safeDropIndexes('surcharge_rules', [
+            'idx_surcharge_code_active_v2',
+            'idx_surcharge_validity_v2',
+        ]);
 
-        Schema::table('shipments', function (Blueprint $table) {
-            $table->dropIndex('idx_shipment_service_date');
-            $table->dropIndex('idx_shipment_route_status');
-            $table->dropIndex('idx_shipment_customer_service_status');
-        });
+        $this->safeDropIndexes('zones', [
+            'idx_zone_code_v2',
+        ]);
 
-        Schema::table('customers', function (Blueprint $table) {
-            $table->dropIndex('idx_customer_priority_since');
-            $table->dropIndex('idx_customer_volume_value');
-            $table->dropIndex('idx_customer_type_status');
-        });
+        $this->safeDropIndexes('customers', [
+            'idx_customer_type_status_v2',
+            'idx_customer_volume_value_v2',
+            'idx_customer_priority_since_v2',
+        ]);
 
-        Schema::table('zones', function (Blueprint $table) {
-            $table->dropIndex('idx_zone_code');
-        });
+        $this->safeDropIndexes('shipments', [
+            'idx_shipment_customer_service_status_v2',
+            'idx_shipment_route_status_v2',
+            'idx_shipment_service_date_v2',
+            'idx_shipment_dimensional_calc_v2',
+        ]);
+    }
 
-        Schema::table('surcharge_rules', function (Blueprint $table) {
-            $table->dropIndex('idx_surcharge_validity');
-            $table->dropIndex('idx_surcharge_code_active');
-        });
+    /**
+     * Safely add indexes to a table if it exists and indexes don't already exist
+     */
+    private function safeAddIndexes(string $table, array $indexes): void
+    {
+        // Check if table exists
+        if (!Schema::hasTable($table)) {
+            echo "Skipping index creation for non-existent table: {$table}\n";
+            return;
+        }
 
-        Schema::table('service_level_definitions', function (Blueprint $table) {
-            $table->dropIndex('idx_servicelevel_code');
-        });
+        try {
+            $existingIndexes = DB::connection()->getDoctrineSchemaManager()->listTableIndexes($table);
+        } catch (\Exception $e) {
+            echo "Could not check existing indexes for {$table}: " . $e->getMessage() . "\n";
+            $existingIndexes = [];
+        }
 
-        Schema::table('fuel_indices', function (Blueprint $table) {
-            $table->dropIndex('idx_fuel_effective_date');
-            $table->dropIndex('idx_fuel_source_region_date');
-        });
+        foreach ($indexes as $index) {
+            $indexName = $index['name'];
+            $columns = $index['columns'];
+            
+            if (isset($existingIndexes[$indexName])) {
+                echo "Index {$indexName} already exists on {$table}, skipping...\n";
+                continue;
+            }
 
-        Schema::table('competitor_prices', function (Blueprint $table) {
-            $table->dropIndex('idx_competitor_source_date');
-            $table->dropIndex('idx_competitor_carrier_date');
-            $table->dropIndex('idx_competitor_route_service');
-        });
+            try {
+                Schema::table($table, function (Blueprint $table) use ($columns, $indexName) {
+                    $table->index($columns, $indexName);
+                });
+                echo "Created index {$indexName} on {$table}\n";
+            } catch (\Exception $e) {
+                echo "Failed to create index {$indexName} on {$table}: " . $e->getMessage() . "\n";
+            }
+        }
+    }
 
-        Schema::table('pricing_rules', function (Blueprint $table) {
-            $table->dropIndex('idx_pricingrule_validity');
-            $table->dropIndex('idx_pricingrule_type_active_priority');
-        });
+    /**
+     * Safely drop indexes from a table
+     */
+    private function safeDropIndexes(string $table, array $indexNames): void
+    {
+        // Check if table exists
+        if (!Schema::hasTable($table)) {
+            echo "Skipping index deletion for non-existent table: {$table}\n";
+            return;
+        }
 
-        Schema::table('rate_cards', function (Blueprint $table) {
-            $table->dropIndex('idx_ratecard_active_date');
-            $table->dropIndex('idx_ratecard_route_active');
-        });
-
-        Schema::table('quotations', function (Blueprint $table) {
-            $table->dropIndex('idx_quotation_customer_date');
-            $table->dropIndex('idx_quotation_validity');
-            $table->dropIndex('idx_quotation_service_date');
-            $table->dropIndex('idx_quotation_route');
-            $table->dropIndex('idx_quotation_customer_status');
-        });
+        foreach ($indexNames as $indexName) {
+            try {
+                Schema::table($table, function (Blueprint $table) use ($indexName) {
+                    $table->dropIndex($indexName);
+                });
+                echo "Dropped index {$indexName} from {$table}\n";
+            } catch (\Exception $e) {
+                echo "Failed to drop index {$indexName} from {$table}: " . $e->getMessage() . "\n";
+            }
+        }
     }
 };

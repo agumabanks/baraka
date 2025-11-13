@@ -93,6 +93,12 @@ class GeneralSettingsUpdateRequest extends FormRequest
             'preferences.system.allow_self_service' => ['nullable', 'boolean'],
             'preferences.system.auto_logout_minutes' => ['nullable', 'integer', 'min:5', 'max:1440'],
             'preferences.system.data_retention_days' => ['nullable', 'integer', 'min:30', 'max:1825'],
+
+            'preferences.website' => ['nullable', 'array'],
+            'preferences.website.hero_title' => ['nullable', 'string', 'max:255'],
+            'preferences.website.hero_subtitle' => ['nullable', 'string', 'max:500'],
+            'preferences.website.hero_cta_label' => ['nullable', 'string', 'max:120'],
+            'preferences.website.footer_note' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

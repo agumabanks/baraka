@@ -1,1 +1,0 @@
-<a class="btn btn-secondary" href="{{ route($route) }}"><i class="fa fa-arrow-left me-2"></i>{{ __('levels.back') }}</a>

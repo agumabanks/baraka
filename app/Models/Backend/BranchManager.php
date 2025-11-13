@@ -19,6 +19,8 @@ class BranchManager extends Model
         'user_id',
         'business_name',
         'current_balance',
+        'commission_rate',
+        'opening_balance',
         'cod_charges',
         'payment_info',
         'settlement_config',

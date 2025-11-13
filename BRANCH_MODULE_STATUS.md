@@ -430,11 +430,21 @@ GET /api/v1/tracking?tracking_number={number}
 **Workaround**: Existing database works fine
 **Resolution**: Requires migration file cleanup
 
-### 2. Branch Seeder ⚠️
-**Status**: Requires manual execution with --force flag
-**Impact**: New branches need manual seeding in production
-**Workaround**: Use API to create branches
-**Resolution**: Environment-aware seeding
+### 2. Branch Seeder ✅
+**Status**: Automated via `php artisan seed:branches`
+**Impact**: Production-safe, idempotent branch hierarchy creation
+**How-To**:
+```bash
+# Preview changes
+php artisan seed:branches --dry-run
+
+# Execute with confirmation bypass
+php artisan seed:branches --force
+
+# Supply custom config JSON
+php artisan seed:branches --config=/path/to/branches.json --force
+```
+**Notes**: Safe-mode enforces confirmation in production and can trigger a pre-seed database backup.
 
 ### 3. Real-time Notifications ⚠️
 **Status**: Basic implementation exists

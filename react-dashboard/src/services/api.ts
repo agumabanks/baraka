@@ -82,6 +82,46 @@ import type {
   AdminUsersBulkAssignPayload,
   AdminUsersBulkAssignResult,
 } from '../types/settings';
+import type {
+  WebhookEndpoint,
+  WebhookDelivery,
+  WebhookDeliveryFilters,
+  WebhookEndpointForm,
+  WebhookTestPayload,
+  WebhookTestResult,
+  WebhookMetrics,
+  WebhookHealthStatus,
+  PaginatedWebhookDeliveries,
+} from '../types/webhook';
+import type {
+  EDiTransaction,
+  EDITransactionFilters,
+  EDITransactionSummary,
+  EDIAcknowledgment,
+  EDIBatchSubmission,
+  EDITradingPartner,
+  EDIDocumentType,
+  EDISubmissionHistory,
+  EDIPerformanceMetrics,
+  PaginatedEdiTransactions,
+  EDIFilterOptions,
+} from '../types/edi';
+import type {
+  BranchSeedOperation,
+  BranchSeedSimulation,
+  BranchSeedParameters,
+  BranchManagement,
+  BranchPerformanceMetrics,
+  BranchCapacityMetrics,
+  BranchAnalytics,
+  BranchMaintenanceWindow,
+  BranchAlert,
+  BranchConfiguration,
+  BranchOperationsFilters,
+  BranchOperationsSummary,
+  PaginatedBranchOperations,
+} from '../types/branch-operations';
+import type { BranchPortalOverview } from '../types/branchPortal';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -110,7 +150,6 @@ export const redirectToLogin = () => {
 };
 
 const DEFAULT_DEV_API_BASE = 'http://localhost:8000/api';
-const DEFAULT_PROD_API_BASE = 'https://baraka.sanaa.ug/api';
 
 const sanitizeBaseUrl = (url: string): string => url.replace(/\/$/, '');
 
@@ -122,16 +161,16 @@ const resolveApiBaseUrl = (): string => {
   }
 
   if (typeof window !== 'undefined') {
-    const { hostname } = window.location;
+    const { hostname, origin } = window.location;
 
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
       return DEFAULT_DEV_API_BASE;
     }
 
-    return DEFAULT_PROD_API_BASE;
+    return `${origin.replace(/\/$/, '')}/api`;
   }
 
-  return import.meta.env.PROD ? DEFAULT_PROD_API_BASE : DEFAULT_DEV_API_BASE;
+  return import.meta.env.PROD ? '/api' : DEFAULT_DEV_API_BASE;
 };
 
 const API_BASE_URL = resolveApiBaseUrl();
@@ -150,7 +189,7 @@ const resolveSanctumUrl = (): string => {
     if (typeof window !== 'undefined') {
       return `${window.location.origin.replace(/\/$/, '')}/sanctum/csrf-cookie`;
     }
-    return `${DEFAULT_PROD_API_BASE.replace(/\/$/, '')}/sanctum/csrf-cookie`;
+    return '/sanctum/csrf-cookie';
   }
 };
 
@@ -259,6 +298,11 @@ export const authApi = {
 
   getUser: async () => {
     const response = await api.get('/auth/user');
+    return response.data;
+  },
+
+  updatePreferences: async (payload: { preferred_language: string }) => {
+    const response = await api.patch('/auth/preferences', payload);
     return response.data;
   },
 };
@@ -392,7 +436,7 @@ export const branchManagersApi = {
     const response = await api.delete(`/admin/branch-managers/${managerId}`);
     return response.data;
   },
-  getAvailableBranches: async (): Promise<ApiResponse<{ branches: BranchOption[] }>> => {
+  getAvailableBranches: async (): Promise<ApiResponse<{ branches: BranchOption[]; users: UserOption[] }>> => {
     const response = await api.get('/admin/branch-managers/create');
     return response.data;
   },
@@ -431,7 +475,7 @@ export const branchWorkersApi = {
     const response = await api.delete(`/admin/branch-workers/${workerId}`);
     return response.data;
   },
-  getAvailableResources: async (): Promise<ApiResponse<{ branches: BranchOption[]; users: UserOption[] }>> => {
+  getAvailableResources: async (): Promise<ApiResponse<{ branches: BranchOption[]; users: UserOption[]; roles: Array<{ value: string; label: string }> }>> => {
     const response = await api.get('/admin/branch-workers/create');
     return response.data;
   },
@@ -519,6 +563,9 @@ const buildUserFormData = (payload: AdminUserPayload, isUpdate = false): FormDat
   if (payload.hub_id !== undefined && payload.hub_id !== null) {
     formData.append('hub_id', String(payload.hub_id));
   }
+  if (payload.primary_branch_id !== undefined && payload.primary_branch_id !== null) {
+    formData.append('primary_branch_id', String(payload.primary_branch_id));
+  }
   formData.append('joining_date', payload.joining_date);
   if (typeof payload.salary === 'number') {
     formData.append('salary', String(payload.salary));
@@ -527,6 +574,9 @@ const buildUserFormData = (payload: AdminUserPayload, isUpdate = false): FormDat
   formData.append('status', String(payload.status));
   if (payload.image instanceof File) {
     formData.append('image', payload.image);
+  }
+  if (payload.preferred_language) {
+    formData.append('preferred_language', payload.preferred_language);
   }
   if (isUpdate) {
     formData.append('_method', 'PUT');
@@ -1069,6 +1119,209 @@ export const supportApi = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+};
+
+// Webhook Management API functions
+export const webhookApi = {
+  getEndpoints: async (): Promise<ApiResponse<WebhookEndpoint[]>> => {
+    const response = await api.get<ApiResponse<WebhookEndpoint[]>>('/v1/admin/webhooks');
+    return response.data;
+  },
+  getEndpoint: async (endpointId: string): Promise<ApiResponse<WebhookEndpoint>> => {
+    const response = await api.get<ApiResponse<WebhookEndpoint>>(`/v1/admin/webhooks/${endpointId}`);
+    return response.data;
+  },
+  createEndpoint: async (payload: WebhookEndpointForm): Promise<ApiResponse<WebhookEndpoint>> => {
+    const response = await api.post<ApiResponse<WebhookEndpoint>>('/v1/admin/webhooks', payload);
+    return response.data;
+  },
+  updateEndpoint: async (endpointId: string, payload: Partial<WebhookEndpointForm>): Promise<ApiResponse<WebhookEndpoint>> => {
+    const response = await api.put<ApiResponse<WebhookEndpoint>>(`/v1/admin/webhooks/${endpointId}`, payload);
+    return response.data;
+  },
+  deleteEndpoint: async (endpointId: string): Promise<ApiResponse<unknown>> => {
+    const response = await api.delete(`/v1/admin/webhooks/${endpointId}`);
+    return response.data;
+  },
+  rotateSecret: async (endpointId: string): Promise<ApiResponse<{ secret: string }>> => {
+    const response = await api.post<ApiResponse<{ secret: string }>>(`/v1/admin/webhooks/${endpointId}/rotate-secret`);
+    return response.data;
+  },
+  testEndpoint: async (endpointId: string, payload?: WebhookTestPayload): Promise<ApiResponse<WebhookTestResult>> => {
+    const defaultPayload: WebhookTestPayload = payload ?? {
+      event_type: 'webhook.test',
+      payload: {
+        ping: true,
+        timestamp: new Date().toISOString(),
+      },
+    };
+    const response = await api.post<ApiResponse<WebhookTestResult>>(`/v1/admin/webhooks/${endpointId}/test`, defaultPayload);
+    return response.data;
+  },
+  getDeliveries: async (endpointId?: string, params?: WebhookDeliveryFilters): Promise<PaginatedWebhookDeliveries> => {
+    const path = endpointId
+      ? `/v1/admin/webhooks/${endpointId}/deliveries`
+      : '/v1/admin/webhooks/deliveries';
+    const response = await api.get<PaginatedWebhookDeliveries>(path, { params });
+    return response.data;
+  },
+  retryDelivery: async (deliveryId: string): Promise<ApiResponse<unknown>> => {
+    const response = await api.post<ApiResponse<unknown>>(`/v1/admin/webhooks/deliveries/${deliveryId}/retry`);
+    return response.data;
+  },
+  getHealthStatus: async (): Promise<ApiResponse<WebhookHealthStatus>> => {
+    const response = await api.get<ApiResponse<WebhookHealthStatus>>('/v1/admin/webhooks/health/status');
+    return response.data;
+  },
+  getMetrics: async (): Promise<ApiResponse<WebhookMetrics>> => {
+    const response = await api.get<ApiResponse<WebhookMetrics>>('/v1/admin/webhooks/metrics');
+    return response.data;
+  },
+};
+
+// EDI Management API functions
+export const ediApi = {
+  getTransactions: async (params?: EDITransactionFilters): Promise<ApiResponse<PaginatedEdiTransactions>> => {
+    const response = await api.get<ApiResponse<PaginatedEdiTransactions>>('/v1/admin/edi/transactions', { params });
+    return response.data;
+  },
+  getTransaction: async (transactionId: string): Promise<ApiResponse<EDiTransaction>> => {
+    const response = await api.get<ApiResponse<EDiTransaction>>(`/v1/edi/transactions/${transactionId}`);
+    return response.data;
+  },
+  submitTransaction: async (
+    documentType: string,
+    payload: Record<string, unknown>,
+    tradingPartner?: string,
+  ): Promise<ApiResponse<EDiTransaction>> => {
+    const response = await api.post<ApiResponse<EDiTransaction>>(`/v1/edi/${documentType}`, {
+      payload,
+      trading_partner: tradingPartner,
+    });
+    return response.data;
+  },
+  getAcknowledgment: async (transactionId: string): Promise<ApiResponse<EDIAcknowledgment>> => {
+    const response = await api.get<ApiResponse<EDIAcknowledgment>>(`/v1/edi/transactions/${transactionId}/ack`);
+    return response.data;
+  },
+  getFilterOptions: async (): Promise<ApiResponse<EDIFilterOptions>> => {
+    const response = await api.get<ApiResponse<EDIFilterOptions>>('/v1/admin/edi/filters');
+    return response.data;
+  },
+  getSubmissionHistory: async (): Promise<ApiResponse<EDISubmissionHistory[]>> => {
+    const response = await api.get<ApiResponse<EDISubmissionHistory[]>>('/v1/admin/edi/submission-history');
+    return response.data;
+  },
+  getTradingPartners: async (): Promise<ApiResponse<EDITradingPartner[]>> => {
+    const response = await api.get<ApiResponse<EDITradingPartner[]>>('/v1/admin/edi/trading-partners');
+    return response.data;
+  },
+  getDocumentTypes: async (): Promise<ApiResponse<EDIDocumentType[]>> => {
+    const response = await api.get<ApiResponse<EDIDocumentType[]>>('/v1/admin/edi/document-types');
+    return response.data;
+  },
+  getPerformanceMetrics: async (): Promise<ApiResponse<EDIPerformanceMetrics>> => {
+    const response = await api.get<ApiResponse<EDIPerformanceMetrics>>('/v1/admin/edi/metrics');
+    return response.data;
+  },
+  submitBatch: async (file: File, metadata: Record<string, unknown>): Promise<ApiResponse<EDIBatchSubmission>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    Object.entries(metadata).forEach(([key, value]) => {
+      formData.append(key, String(value));
+    });
+    const response = await api.post<ApiResponse<EDIBatchSubmission>>('/v1/admin/edi/submit-batch', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+};
+
+// Branch Operations API functions
+export const branchPortalApi = {
+  getOverview: async (): Promise<ApiResponse<BranchPortalOverview>> => {
+    const response = await api.get<ApiResponse<BranchPortalOverview>>('/v1/admin/branch-portal/overview');
+    return response.data;
+  },
+};
+
+export const branchOperationsApi = {
+  getBranches: async (params?: BranchOperationsFilters): Promise<ApiResponse<PaginatedBranchOperations>> => {
+    const response = await api.get<ApiResponse<PaginatedBranchOperations>>('/v1/admin/branches/operations', { params });
+    return response.data;
+  },
+  getBranchDetail: async (branchId: string): Promise<ApiResponse<BranchManagement>> => {
+    const response = await api.get<ApiResponse<BranchManagement>>(`/v1/admin/branches/operations/${branchId}`);
+    return response.data;
+  },
+  updateBranch: async (branchId: string, payload: Partial<BranchManagement>): Promise<ApiResponse<BranchManagement>> => {
+    const response = await api.put<ApiResponse<BranchManagement>>(`/v1/admin/branches/operations/${branchId}`, payload);
+    return response.data;
+  },
+  getBranchPerformance: async (branchId: string): Promise<ApiResponse<BranchPerformanceMetrics>> => {
+    const response = await api.get<ApiResponse<BranchPerformanceMetrics>>(`/v1/admin/branches/operations/${branchId}/performance`);
+    return response.data;
+  },
+  getBranchCapacity: async (branchId: string): Promise<ApiResponse<BranchCapacityMetrics>> => {
+    const response = await api.get<ApiResponse<BranchCapacityMetrics>>(`/v1/admin/branches/operations/${branchId}/capacity`);
+    return response.data;
+  },
+  getAnalytics: async (): Promise<ApiResponse<BranchAnalytics>> => {
+    const response = await api.get<ApiResponse<BranchAnalytics>>('/v1/admin/branches/operations/analytics');
+    return response.data;
+  },
+  getMaintenanceWindows: async (): Promise<ApiResponse<BranchMaintenanceWindow[]>> => {
+    const response = await api.get<ApiResponse<BranchMaintenanceWindow[]>>('/v1/admin/branches/operations/maintenance');
+    return response.data;
+  },
+  createMaintenanceWindow: async (payload: Omit<BranchMaintenanceWindow, 'id' | 'created_at'>): Promise<ApiResponse<BranchMaintenanceWindow>> => {
+    const response = await api.post<ApiResponse<BranchMaintenanceWindow>>('/v1/admin/branches/operations/maintenance', payload);
+    return response.data;
+  },
+  getAlerts: async (branchId?: string): Promise<ApiResponse<BranchAlert[]>> => {
+    const url = branchId ? `/v1/admin/branches/operations/${branchId}/alerts` : '/v1/admin/branches/operations/alerts';
+    const response = await api.get<ApiResponse<BranchAlert[]>>(url);
+    return response.data;
+  },
+  resolveAlert: async (alertId: string): Promise<ApiResponse<unknown>> => {
+    const response = await api.post<ApiResponse<unknown>>(`/v1/admin/branches/operations/alerts/${alertId}/resolve`);
+    return response.data;
+  },
+  // Branch Seeding Operations
+  startSeedOperation: async (payload: BranchSeedParameters): Promise<ApiResponse<BranchSeedOperation>> => {
+    const response = await api.post<ApiResponse<BranchSeedOperation>>('/v1/admin/branches/operations/seed/start', payload);
+    return response.data;
+  },
+  dryRunSeed: async (payload: BranchSeedParameters): Promise<ApiResponse<BranchSeedSimulation>> => {
+    const response = await api.post<ApiResponse<BranchSeedSimulation>>('/v1/admin/branches/operations/seed/dry-run', payload);
+    return response.data;
+  },
+  forceSeedExecute: async (payload: BranchSeedParameters): Promise<ApiResponse<BranchSeedOperation>> => {
+    const response = await api.post<ApiResponse<BranchSeedOperation>>('/v1/admin/branches/operations/seed/force-execute', payload);
+    return response.data;
+  },
+  getSeedOperation: async (operationId: string): Promise<ApiResponse<BranchSeedOperation>> => {
+    const response = await api.get<ApiResponse<BranchSeedOperation>>(`/v1/admin/branches/operations/seed/${operationId}`);
+    return response.data;
+  },
+  cancelSeedOperation: async (operationId: string): Promise<ApiResponse<unknown>> => {
+    const response = await api.post<ApiResponse<unknown>>(`/v1/admin/branches/operations/seed/${operationId}/cancel`);
+    return response.data;
+  },
+  getSeedOperations: async (): Promise<ApiResponse<BranchSeedOperation[]>> => {
+    const response = await api.get<ApiResponse<BranchSeedOperation[]>>('/v1/admin/branches/operations/seed/operations');
+    return response.data;
+  },
+  getBranchConfiguration: async (branchId: string): Promise<ApiResponse<BranchConfiguration>> => {
+    const response = await api.get<ApiResponse<BranchConfiguration>>(`/v1/admin/branches/operations/${branchId}/configuration`);
+    return response.data;
+  },
+  updateBranchConfiguration: async (branchId: string, payload: BranchConfiguration['settings']): Promise<ApiResponse<BranchConfiguration>> => {
+    const response = await api.put<ApiResponse<BranchConfiguration>>(`/v1/admin/branches/operations/${branchId}/configuration`, { settings: payload });
     return response.data;
   },
 };

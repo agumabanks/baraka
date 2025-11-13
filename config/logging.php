@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -133,13 +134,14 @@ return [
             'path' => storage_path('logs/metrics.log'),
             'level' => env('LOG_LEVEL', 'info'),
             'days' => 14,
+            'formatter' => JsonFormatter::class,
         ],
 
         'webhooks' => [
-            'driver' => 'daily',
+            'driver' => 'single',
             'path' => storage_path('logs/webhooks.log'),
             'level' => env('LOG_LEVEL', 'info'),
-            'days' => 30,
+            'formatter' => JsonFormatter::class,
         ],
 
         'performance' => [
@@ -147,6 +149,15 @@ return [
             'path' => storage_path('logs/performance.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 7,
+            'formatter' => JsonFormatter::class,
+        ],
+
+        'seeding' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/seeding.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 14,
+            'formatter' => JsonFormatter::class,
         ],
     ],
 

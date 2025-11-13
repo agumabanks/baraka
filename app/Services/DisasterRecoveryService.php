@@ -17,15 +17,33 @@ class DisasterRecoveryService
         $timestamp = now()->format('Y-m-d_H-i-s');
         $backupName = "backup_{$timestamp}_" . ($label ?? 'manual') . ".sql";
         $backupPath = "{$this->backupPath}/{$backupName}";
+        $storagePath = storage_path("app/{$this->backupPath}");
+
+        if (!is_dir($storagePath)) {
+            Storage::disk('local')->makeDirectory($this->backupPath);
+        }
 
         try {
+            $mysqlConfig = config('database.connections.mysql');
+
+            if (!$mysqlConfig) {
+                throw new \RuntimeException('MySQL connection is not configured.');
+            }
+
+            $password = $mysqlConfig['password'] ?? '';
+            $passwordArg = $password !== '' ? sprintf('-p%s', escapeshellarg($password)) : '';
+
+            if (!shell_exec('command -v mysqldump')) {
+                throw new \RuntimeException('mysqldump binary is not available on the server.');
+            }
+
             // For MySQL
             $command = sprintf(
-                'mysqldump -h%s -u%s -p%s %s > %s',
-                escapeshellarg(config('database.connections.mysql.host')),
-                escapeshellarg(config('database.connections.mysql.username')),
-                escapeshellarg(config('database.connections.mysql.password')),
-                escapeshellarg(config('database.connections.mysql.database')),
+                'mysqldump -h%s -u%s %s %s > %s',
+                escapeshellarg($mysqlConfig['host'] ?? '127.0.0.1'),
+                escapeshellarg($mysqlConfig['username'] ?? 'root'),
+                $passwordArg,
+                escapeshellarg($mysqlConfig['database'] ?? ''),
                 escapeshellarg(storage_path("app/{$backupPath}"))
             );
 

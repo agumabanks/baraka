@@ -12,10 +12,12 @@ return new class extends Migration
             return;
         }
 
+        Schema::dropIfExists('fact_customer_sentiment');
+
         Schema::create('fact_customer_sentiment', function (Blueprint $table) {
-            $table->bigInteger('sentiment_key')->primary();
-            $table->bigInteger('client_key');
-            $table->bigInteger('ticket_key')->nullable();
+            $table->bigIncrements('sentiment_key');
+            $table->unsignedBigInteger('client_key');
+            $table->unsignedBigInteger('ticket_key')->nullable();
             $table->integer('sentiment_date_key');
             $table->integer('nps_score');
             $table->decimal('sentiment_score', 8, 4);
@@ -34,8 +36,8 @@ return new class extends Migration
             $table->json('analysis_metadata')->nullable();
             
             // Foreign key constraints
-            $table->foreign('client_key')->references('client_key')->on('dimension_clients');
-            $table->foreign('sentiment_date_key')->references('date_key')->on('dimension_dates');
+            $table->foreign('client_key')->references('client_key')->on('dim_client')->onDelete('cascade');
+            $table->foreign('sentiment_date_key')->references('date_key')->on('dim_time')->onDelete('cascade');
             
             // Indexes for performance
             $table->index('client_key');

@@ -86,12 +86,10 @@ const BranchPortal: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              asChild
               className="uppercase tracking-[0.25em]"
+              onClick={() => window.open(overview.links.shipments, '_blank', 'noopener')}
             >
-              <a href={overview.links.shipments} target="_blank" rel="noopener noreferrer">
-                View All
-              </a>
+              View All
             </Button>
           </div>
           <div className="overflow-x-auto">
@@ -142,23 +140,29 @@ const BranchPortal: React.FC = () => {
             Access the tools branch teams use every day.
           </p>
           <div className="space-y-3">
-            <Button asChild variant="primary" className="w-full justify-between">
-              <a href={overview.links.booking_wizard} target="_blank" rel="noopener noreferrer">
-                Launch Booking POS
-                <i className="fas fa-external-link-alt ml-2 text-xs" aria-hidden="true" />
-              </a>
+            <Button
+              variant="primary"
+              className="w-full justify-between"
+              onClick={() => window.open(overview.links.booking_wizard, '_blank', 'noopener')}
+            >
+              <span>Launch Booking POS</span>
+              <i className="fas fa-external-link-alt ml-2 text-xs" aria-hidden="true" />
             </Button>
-            <Button asChild variant="secondary" className="w-full justify-between">
-              <a href={overview.links.shipments} target="_blank" rel="noopener noreferrer">
-                Manage Shipments
-                <i className="fas fa-arrow-right ml-2 text-xs" aria-hidden="true" />
-              </a>
+            <Button
+              variant="secondary"
+              className="w-full justify-between"
+              onClick={() => window.open(overview.links.shipments, '_blank', 'noopener')}
+            >
+              <span>Manage Shipments</span>
+              <i className="fas fa-arrow-right ml-2 text-xs" aria-hidden="true" />
             </Button>
-            <Button asChild variant="ghost" className="w-full justify-between">
-              <a href={overview.links.branch_profile} target="_blank" rel="noopener noreferrer">
-                View Branch Profile
-                <i className="fas fa-arrow-right ml-2 text-xs" aria-hidden="true" />
-              </a>
+            <Button
+              variant="ghost"
+              className="w-full justify-between"
+              onClick={() => window.open(overview.links.branch_profile, '_blank', 'noopener')}
+            >
+              <span>View Branch Profile</span>
+              <i className="fas fa-arrow-right ml-2 text-xs" aria-hidden="true" />
             </Button>
           </div>
         </Card>

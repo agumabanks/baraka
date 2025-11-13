@@ -12,9 +12,11 @@ return new class extends Migration
             return;
         }
 
+        Schema::dropIfExists('fact_customer_churn_metrics');
+
         Schema::create('fact_customer_churn_metrics', function (Blueprint $table) {
-            $table->bigInteger('churn_key')->primary();
-            $table->bigInteger('client_key');
+            $table->bigIncrements('churn_key');
+            $table->unsignedBigInteger('client_key');
             $table->integer('churn_date_key');
             $table->decimal('churn_probability', 8, 4);
             $table->decimal('risk_score', 8, 4);
@@ -33,8 +35,8 @@ return new class extends Migration
             $table->decimal('confidence_level', 8, 4);
             
             // Foreign key constraints
-            $table->foreign('client_key')->references('client_key')->on('dimension_clients');
-            $table->foreign('churn_date_key')->references('date_key')->on('dimension_dates');
+            $table->foreign('client_key')->references('client_key')->on('dim_client')->onDelete('cascade');
+            $table->foreign('churn_date_key')->references('date_key')->on('dim_time')->onDelete('cascade');
             
             // Indexes for performance
             $table->index('client_key');

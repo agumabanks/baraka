@@ -12,6 +12,23 @@ Authorization: Bearer {api_token}
 
 ## Webhook Management Endpoints
 
+### Admin Webhook Management (Requires `auth:admin`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/admin/webhooks` | Paginated list of all webhook endpoints |
+| POST | `/api/v1/admin/webhooks` | Create endpoint (url, events, active flag) |
+| GET | `/api/v1/admin/webhooks/{endpoint}` | Show endpoint metadata + retry policy |
+| PUT | `/api/v1/admin/webhooks/{endpoint}` | Update url/events/active |
+| DELETE | `/api/v1/admin/webhooks/{endpoint}` | Remove endpoint |
+| POST | `/api/v1/admin/webhooks/{endpoint}/rotate-secret` | Generate new HMAC secret |
+| GET | `/api/v1/admin/webhooks/{endpoint}/deliveries` | Delivery history & statuses |
+| POST | `/api/v1/admin/webhooks/deliveries/{delivery}/retry` | Force retry of failed delivery |
+| POST | `/api/v1/admin/webhooks/{endpoint}/test` | Queue `webhook.test` event |
+| GET | `/api/v1/admin/webhooks/health/status` | Aggregated health stats |
+
+All responses include `secret_key`, `retry_policy`, and `failure_count` fields so you can rotate keys and monitor unhealthy endpoints without touching the database manually.
+
 ### 1. List Webhooks
 **GET** `/api/v1/webhooks`
 
@@ -397,6 +414,67 @@ Webhook endpoints are rate-limited:
   - `X-RateLimit-Limit`: Request limit
   - `X-RateLimit-Remaining`: Remaining requests
   - `Retry-After`: Seconds to wait before retry
+
+---
+
+## EDI Transactions API
+
+The EDI API accepts common document types (850 Purchase Order, 856 Advance Ship Notice, 997 Functional Acknowledgement) and returns a normalized payload plus an optional 997 acknowledgement.
+
+### Submit 850 or 856
+**POST** `/api/v1/edi/{documentType}`  
+Headers: `Authorization: Bearer {api_token}`, `Content-Type: application/json`
+
+```json
+{
+  "payload": {
+    "purchase_order": {
+      "number": "PO-10045",
+      "buyer": { "name": "Acme" },
+      "items": [
+        { "sku": "ABC123", "qty": 10 }
+      ]
+    }
+  }
+}
+```
+
+**Response** `202 Accepted`
+```json
+{
+  "success": true,
+  "transaction_id": 42,
+  "document_type": "850",
+  "status": "received",
+  "acknowledgement": {
+    "document_type": "997",
+    "acknowledgement_status": "AC",
+    "control_number": "000532",
+    "original_document_number": "PO-10045"
+  }
+}
+```
+
+### Submit 997 (Acknowledgement)
+**POST** `/api/v1/edi/997`
+
+```json
+{
+  "payload": {
+    "acknowledgement": {
+      "document_number": "PO-10045",
+      "status": "AC"
+    }
+  }
+}
+```
+
+### Retrieve Transactions / ACK
+- `GET /api/v1/edi/transactions/{id}` – View normalized payload & status  
+- `GET /api/v1/edi/transactions/{id}/ack` – Retrieve generated 997 payload  
+- Admin list: `GET /api/v1/admin/edi/transactions?document_type=850&status=received`
+
+All transactions persist to `edi_transactions`, capturing raw payload, normalized payload, ack payload, and correlation IDs for troubleshooting.
 
 ---
 

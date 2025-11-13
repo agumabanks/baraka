@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -45,37 +46,34 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
         if ($this->isHttpException($e)) {
+            $status = $e->getStatusCode();
 
-            if ($e->getStatusCode() == 401) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage() ?: (Response::$statusTexts[$status] ?? 'Http Error'),
+                ], $status);
+            }
 
-                return response()->view('errors.401');
-            } elseif ($e->getStatusCode() == 404) {
-
-                return response()->view('errors.404');
-
-            } elseif ($e->getStatusCode() == 403) {
-
-                return response()->view('errors.403');
-
-            } elseif ($e->getStatusCode() == 405) {
-
-                return response()->view('errors.405');
-
-            } elseif ($e->getStatusCode() == 419) {
-
-                return response()->view('errors.419');
-
-            } elseif ($e->getStatusCode() == 429) {
-
-                return response()->view('errors.429');
-
-            } elseif ($e->getStatusCode() == 500) {
-
-                return response()->view('errors.500');
-
+            if ($status == 401) {
+                return response()->view('errors.401', [], 401);
+            } elseif ($status == 404) {
+                return response()->view('errors.404', [], 404);
+            } elseif ($status == 403) {
+                return response()->view('errors.403', [], 403);
+            } elseif ($status == 405) {
+                return response()->view('errors.405', [], 405);
+            } elseif ($status == 419) {
+                return response()->view('errors.419', [], 419);
+            } elseif ($status == 429) {
+                return response()->view('errors.429', [], 429);
+            } elseif ($status == 500) {
+                return response()->view('errors.500', [], 500);
             }
         } else {
             return parent::render($request, $e);
         }
+
+        return response()->view('errors.500', [], 500);
     }
 }

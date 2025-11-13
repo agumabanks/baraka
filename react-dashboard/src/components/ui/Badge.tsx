@@ -5,7 +5,7 @@ import React from 'react';
  */
 interface BadgeProps {
   /** Visual variant of the badge */
-  variant?: 'solid' | 'outline' | 'ghost' | 'warning' | 'error' | 'info' | 'success' | 'default';
+  variant?: 'solid' | 'outline' | 'ghost' | 'warning' | 'error' | 'info' | 'success' | 'default' | 'destructive';
   /** Size variant of the badge */
   size?: 'sm' | 'md' | 'lg';
   /** Badge content */
@@ -26,6 +26,7 @@ const Badge: React.FC<BadgeProps> = ({ variant = 'solid', size = 'md', children,
     info: 'bg-sky-500/20 text-sky-700 border border-sky-600/50',
     success: 'bg-emerald-500/20 text-emerald-700 border border-emerald-600/50',
     default: 'bg-mono-gray-200 text-mono-gray-900',
+    destructive: 'bg-rose-500/20 text-rose-700 border border-rose-600/50',
   };
 
   const sizeClasses = {
@@ -39,4 +40,5 @@ const Badge: React.FC<BadgeProps> = ({ variant = 'solid', size = 'md', children,
   return <span className={classes}>{children}</span>;
 };
 
+export { Badge };
 export default Badge;

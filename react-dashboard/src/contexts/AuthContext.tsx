@@ -19,6 +19,14 @@ interface User {
   roles?: UserRole[];
   permissions?: string[];
   project_ids?: Array<number | string>;
+  preferred_language?: 'en' | 'fr' | 'sw';
+  primary_branch_id?: number | null;
+  primary_branch?: {
+    id: number;
+    name: string;
+    code?: string | null;
+    type?: string | null;
+  } | null;
 }
 
 interface AuthContextType {
@@ -29,6 +37,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string, password_confirmation: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  updateUser: (payload: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,10 +58,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.success) {
         const { user: userData, token } = response.data;
+        const resolvedLocale = (userData?.preferred_language as User['preferred_language']) ?? 'en';
 
         // Store token and user data
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('dashboard_locale', resolvedLocale);
 
         setUser(userData);
       } else {
@@ -70,10 +81,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.success) {
         const { user: userData, token } = response.data;
+        const resolvedLocale = (userData?.preferred_language as User['preferred_language']) ?? 'en';
 
         // Store token and user data
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('dashboard_locale', resolvedLocale);
 
         setUser(userData);
       } else {
@@ -94,6 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Always clear local storage and state
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
+      localStorage.removeItem('dashboard_locale');
       setUser(null);
       redirectToLogin();
     }
@@ -121,12 +135,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(serverUser);
           try {
             localStorage.setItem('user', JSON.stringify(serverUser));
+            if (serverUser.preferred_language) {
+              localStorage.setItem('dashboard_locale', serverUser.preferred_language);
+            }
           } catch (storageError) {
             console.warn('Unable to persist user cache snapshot', storageError);
           }
         } else if (storedUser) {
           // Fallback to stored user if API shape differs
-          setUser(JSON.parse(storedUser));
+          const cachedUser = JSON.parse(storedUser) as User;
+          setUser(cachedUser);
+          try {
+            if (cachedUser.preferred_language) {
+              localStorage.setItem('dashboard_locale', cachedUser.preferred_language);
+            }
+          } catch (storageError) {
+            console.warn('Unable to persist cached user locale', storageError);
+          }
         } else {
           // Invalid token or missing user data
           localStorage.removeItem('auth_token');
@@ -157,6 +182,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth();
   }, []);
 
+  const updateUser = (payload: Partial<User>) => {
+    setUser((previous) => {
+      if (!previous) {
+        return previous;
+      }
+
+      const updated = { ...previous, ...payload };
+
+      try {
+        localStorage.setItem('user', JSON.stringify(updated));
+        if (updated.preferred_language) {
+          localStorage.setItem('dashboard_locale', updated.preferred_language);
+        }
+      } catch (error) {
+        console.warn('Unable to cache updated user payload', error);
+      }
+
+      return updated;
+    });
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated,
@@ -165,6 +211,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     checkAuth,
+    updateUser,
   };
 
   return (

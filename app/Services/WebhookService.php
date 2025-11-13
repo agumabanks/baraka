@@ -2,14 +2,16 @@
 
 namespace App\Services;
 
-use App\Models\WebhookEndpoint;
 use App\Models\WebhookDelivery;
+use App\Models\WebhookEndpoint;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Psr\Log\LoggerInterface;
 
 class WebhookService
 {
+    private ?LoggerInterface $logger = null;
+
     public function dispatch(string $eventType, array $payload): void
     {
         $endpoints = WebhookEndpoint::active()
@@ -22,7 +24,7 @@ class WebhookService
 
         foreach ($endpoints as $endpoint) {
             if (!$endpoint->isHealthy()) {
-                Log::warning('Webhook endpoint is unhealthy, skipping', [
+                $this->logger()->warning('Webhook endpoint is unhealthy, skipping', [
                     'endpoint_id' => $endpoint->id,
                     'failures' => $endpoint->failure_count,
                 ]);
@@ -43,7 +45,15 @@ class WebhookService
             'next_retry_at' => now(),
         ]);
 
-        dispatch(new \App\Jobs\DeliverWebhook($delivery));
+        if (!app()->environment('testing')) {
+            dispatch(new \App\Jobs\DeliverWebhook($delivery));
+        }
+
+        $this->logger()->info('Webhook delivery queued', [
+            'delivery_id' => $delivery->id,
+            'endpoint_id' => $endpoint->id,
+            'event_type' => $eventType,
+        ]);
 
         return $delivery;
     }
@@ -73,7 +83,7 @@ class WebhookService
             if ($response->successful()) {
                 $delivery->update(['delivered_at' => now()]);
                 $endpoint->update(['failure_count' => 0]);
-                Log::info('Webhook delivered successfully', [
+                $this->logger()->info('Webhook delivered successfully', [
                     'delivery_id' => $delivery->id,
                     'endpoint_id' => $endpoint->id,
                 ]);
@@ -83,7 +93,7 @@ class WebhookService
             $this->scheduleRetry($delivery, $endpoint);
             return false;
         } catch (\Throwable $e) {
-            Log::error('Webhook delivery failed', [
+            $this->logger()->error('Webhook delivery failed', [
                 'delivery_id' => $delivery->id,
                 'error' => $e->getMessage(),
             ]);
@@ -98,11 +108,11 @@ class WebhookService
         $retryPolicy = $endpoint->retry_policy;
         $maxAttempts = $retryPolicy['max_attempts'] ?? 5;
         $attempts = $delivery->attempts + 1;
+        $endpoint->increment('failure_count');
 
         if ($attempts >= $maxAttempts) {
             $delivery->update(['failed_at' => now()]);
-            $endpoint->update(['failure_count' => $endpoint->failure_count + 1]);
-            Log::error('Webhook delivery permanently failed', [
+            $this->logger()->error('Webhook delivery permanently failed', [
                 'delivery_id' => $delivery->id,
                 'endpoint_id' => $endpoint->id,
                 'attempts' => $attempts,
@@ -117,5 +127,14 @@ class WebhookService
         $delay = min($initialDelay * ($backoffMultiplier ** ($attempts - 1)), $maxDelay);
 
         $delivery->update(['next_retry_at' => now()->addSeconds($delay)]);
+    }
+
+    private function logger(): LoggerInterface
+    {
+        if ($this->logger === null) {
+            $this->logger = Log::channel('webhooks');
+        }
+
+        return $this->logger;
     }
 }

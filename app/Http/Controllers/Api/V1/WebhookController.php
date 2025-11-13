@@ -21,13 +21,24 @@ class WebhookController extends Controller
             'url' => 'required|url',
             'events' => 'required|array',
             'name' => 'nullable|string|max:255',
+            'user_id' => 'nullable|exists:users,id',
         ]);
+
+        $userId = $request->user()?->id ?? $validated['user_id'] ?? null;
+
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User context is required to register a webhook.',
+            ], 422);
+        }
 
         $endpoint = WebhookEndpoint::create([
             'name' => $validated['name'] ?? 'Webhook ' . now()->format('Y-m-d H:i'),
             'url' => $validated['url'],
             'events' => $validated['events'],
             'active' => true,
+            'user_id' => $userId,
         ]);
 
         return response()->json([

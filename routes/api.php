@@ -15,7 +15,11 @@ use App\Http\Controllers\Api\Admin\RoleApiController;
 use App\Http\Controllers\Api\V1\UnifiedPricingController;
 use App\Http\Controllers\Api\V1\SystemHealthController;
 use App\Http\Controllers\Api\V1\WebhookController;
+use App\Http\Controllers\Api\V1\WebhookManagementController;
 use App\Http\Controllers\Api\V1\IntegrationController;
+use App\Http\Controllers\Api\V1\EdiController;
+use App\Http\Controllers\Api\V1\BranchOperationsController;
+use App\Http\Controllers\Api\V1\EnhancedMobileScanningController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V10\ShipmentsApiController;
 use App\Http\Controllers\Api\V10\BranchNetworkController;
@@ -36,6 +40,7 @@ use App\Http\Controllers\Api\V10\GeneralSettingCotroller;
 use App\Http\Controllers\Api\V10\SupportController as V10SupportController;
 use App\Http\Controllers\Api\V10\ReportController as V10ReportController;
 use App\Http\Controllers\Api\V10\Analytics\OperationalAnalyticsController;
+use App\Http\Controllers\Api\V10\OptimizedAnalyticsController;
 use App\Http\Controllers\Api\V10\ParcelController as V10ParcelController;
 use App\Http\Controllers\Backend\OperationsControlCenterController;
 use App\Http\Controllers\Backend\UnifiedShipmentController;
@@ -146,6 +151,28 @@ Route::prefix('v1')->group(function () {
         Route::post('/pricing/quote/compare', [UnifiedPricingController::class, 'compareQuotes']);
         Route::post('/pricing/quote/optimize', [UnifiedPricingController::class, 'optimizePricing']);
     });
+
+    Route::prefix('edi')->middleware(['auth:api'])->group(function () {
+        Route::post('{documentType}', [EdiController::class, 'submit'])->name('api.v1.edi.submit');
+        Route::get('transactions/{transaction}', [EdiController::class, 'show'])->name('api.v1.edi.show');
+        Route::get('transactions/{transaction}/ack', [EdiController::class, 'acknowledgement'])->name('api.v1.edi.ack');
+        Route::get('transactions/{transaction}/acknowledgement', [EdiController::class, 'acknowledgement'])->name('api.v1.edi.acknowledgement');
+    });
+
+    Route::prefix('devices')->middleware(['mobile.errors'])->group(function () {
+        Route::post('/register', [EnhancedMobileScanningController::class, 'registerDevice']);
+        Route::post('/authenticate', [EnhancedMobileScanningController::class, 'authenticateDevice']);
+        Route::post('/deactivate', [EnhancedMobileScanningController::class, 'deactivateDevice']);
+    });
+
+    Route::prefix('mobile')->middleware(['mobile.errors'])->group(function () {
+        Route::post('/scan', [EnhancedMobileScanningController::class, 'scan']);
+        Route::post('/bulk-scan', [EnhancedMobileScanningController::class, 'bulkScan']);
+        Route::post('/enhanced-offline-sync', [EnhancedMobileScanningController::class, 'enhancedOfflineSync']);
+        Route::get('/device-info', [EnhancedMobileScanningController::class, 'getDeviceInfo']);
+        Route::get('/offline-queue', [EnhancedMobileScanningController::class, 'getOfflineSyncQueue']);
+        Route::post('/confirm-sync', [EnhancedMobileScanningController::class, 'confirmSync']);
+    });
 });
 
 // ================================
@@ -196,6 +223,24 @@ Route::prefix('v1/webhooks')->group(function () {
         ->middleware(['api-security-validation']);
 });
 
+Route::prefix('v1/admin/webhooks')
+    ->middleware(['auth:sanctum', 'role:admin'])
+    ->group(function () {
+        Route::get('/', [WebhookManagementController::class, 'index']);
+        Route::post('/', [WebhookManagementController::class, 'store']);
+        Route::get('deliveries', [WebhookManagementController::class, 'allDeliveries']);
+        Route::get('metrics', [WebhookManagementController::class, 'metrics']);
+        Route::get('{endpoint}', [WebhookManagementController::class, 'show']);
+        Route::put('{endpoint}', [WebhookManagementController::class, 'update']);
+        Route::delete('{endpoint}', [WebhookManagementController::class, 'destroy']);
+        Route::post('{endpoint}/rotate-secret', [WebhookManagementController::class, 'rotateSecret']);
+        Route::get('{endpoint}/deliveries', [WebhookManagementController::class, 'deliveries']);
+        Route::post('deliveries/{delivery}/retry', [WebhookManagementController::class, 'retryDelivery']);
+        Route::post('{endpoint}/test', [WebhookManagementController::class, 'testWebhook']);
+        Route::get('health/status', [WebhookManagementController::class, 'health']);
+        Route::get('metrics', [WebhookManagementController::class, 'metrics']);
+    });
+
 // ================================
 // TESTING & DEVELOPMENT ENDPOINTS
 // ================================
@@ -217,6 +262,40 @@ Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(fun
     Route::get('/rate-limits', [SystemHealthController::class, 'getRateLimitStatus']);
     Route::post('/rate-limits/reset', [SystemHealthController::class, 'resetRateLimits']);
     Route::put('/rate-limits/configure', [SystemHealthController::class, 'configureRateLimits']);
+
+    Route::prefix('edi')->group(function () {
+        Route::get('/transactions', [EdiController::class, 'list'])->name('api.v1.admin.edi.transactions');
+        Route::get('/filters', [EdiController::class, 'filters']);
+        Route::get('/metrics', [EdiController::class, 'metrics']);
+        Route::get('/submission-history', [EdiController::class, 'submissionHistory']);
+        Route::get('/trading-partners', [EdiController::class, 'tradingPartners']);
+        Route::get('/document-types', [EdiController::class, 'documentTypes']);
+        Route::post('/submit-batch', [EdiController::class, 'submitBatch']);
+    });
+
+    Route::prefix('branches/operations')->group(function () {
+        Route::get('/', [BranchOperationsController::class, 'index']);
+        Route::get('/analytics', [BranchOperationsController::class, 'analytics']);
+        Route::get('/maintenance', [BranchOperationsController::class, 'maintenanceWindows']);
+        Route::post('/maintenance', [BranchOperationsController::class, 'createMaintenanceWindow']);
+        Route::get('/alerts', [BranchOperationsController::class, 'alerts']);
+        Route::post('/alerts/{alert}/resolve', [BranchOperationsController::class, 'resolveAlert']);
+
+        Route::post('/seed/start', [BranchOperationsController::class, 'startSeedOperation']);
+        Route::post('/seed/dry-run', [BranchOperationsController::class, 'dryRunSeed']);
+        Route::post('/seed/force-execute', [BranchOperationsController::class, 'forceSeedExecute']);
+        Route::get('/seed/operations', [BranchOperationsController::class, 'seedOperations']);
+        Route::get('/seed/{operation}', [BranchOperationsController::class, 'seedOperation']);
+        Route::post('/seed/{operation}/cancel', [BranchOperationsController::class, 'cancelSeedOperation']);
+
+        Route::get('/{branch}', [BranchOperationsController::class, 'show'])->whereNumber('branch');
+        Route::put('/{branch}', [BranchOperationsController::class, 'update'])->whereNumber('branch');
+        Route::get('/{branch}/performance', [BranchOperationsController::class, 'performance'])->whereNumber('branch');
+        Route::get('/{branch}/capacity', [BranchOperationsController::class, 'capacity'])->whereNumber('branch');
+        Route::get('/{branch}/alerts', [BranchOperationsController::class, 'alertsForBranch'])->whereNumber('branch');
+        Route::get('/{branch}/configuration', [BranchOperationsController::class, 'configuration'])->whereNumber('branch');
+        Route::put('/{branch}/configuration', [BranchOperationsController::class, 'updateConfiguration'])->whereNumber('branch');
+    });
 });
 
 // ================================
@@ -231,6 +310,7 @@ Route::prefix('auth')
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
             Route::get('/user', [AuthController::class, 'user'])->name('api.auth.user');
+            Route::patch('/preferences', [AuthController::class, 'updatePreferences'])->name('api.auth.preferences');
         });
     });
 
@@ -393,6 +473,30 @@ Route::prefix('v10')
             Route::get('/driver-performance', [OperationalAnalyticsController::class, 'driverPerformance']);
             Route::get('/container-utilization', [OperationalAnalyticsController::class, 'containerUtilization']);
             Route::get('/transit-times', [OperationalAnalyticsController::class, 'transitTimeAnalysis']);
+        });
+
+        // Optimized analytics & capacity services
+        Route::prefix('analytics/optimized')->middleware(['role:admin'])->group(function () {
+            Route::get('/branches', [OptimizedAnalyticsController::class, 'listAvailableBranches']);
+            Route::get('/branch/performance', [OptimizedAnalyticsController::class, 'getBranchPerformanceAnalytics']);
+            Route::post('/branch/batch', [OptimizedAnalyticsController::class, 'getBatchBranchAnalytics']);
+            Route::get('/capacity/{branch}', [OptimizedAnalyticsController::class, 'getCapacityAnalysis'])->whereNumber('branch');
+            Route::post('/precompute', [OptimizedAnalyticsController::class, 'precomputeAnalytics']);
+            Route::delete('/cache', [OptimizedAnalyticsController::class, 'clearAnalyticsCache']);
+            Route::get('/snapshot/{branch}/{date}', [OptimizedAnalyticsController::class, 'getMaterializedSnapshot'])->whereNumber('branch');
+        });
+
+        // Real-time analytics endpoints
+        Route::prefix('realtime')->middleware(['role:admin'])->group(function () {
+            Route::get('/branch/{branch}/analytics', [OptimizedAnalyticsController::class, 'getRealTimeAnalytics'])->whereNumber('branch');
+        });
+
+        // Performance monitoring endpoints
+        Route::prefix('performance')->middleware(['role:admin'])->group(function () {
+            Route::get('/analytics', [OptimizedAnalyticsController::class, 'getPerformanceAnalytics']);
+            Route::get('/realtime', [OptimizedAnalyticsController::class, 'getRealTimePerformance']);
+            Route::get('/recommendations', [OptimizedAnalyticsController::class, 'getOptimizationRecommendations']);
+            Route::get('/health', [OptimizedAnalyticsController::class, 'getSystemHealth']);
         });
 
         // Unified shipment workflows

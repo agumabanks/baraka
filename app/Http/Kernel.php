@@ -84,6 +84,9 @@ class Kernel extends HttpKernel
         'audit.logging' => \App\Http\Middleware\AuditLoggingMiddleware::class,
         'accessibility.validation' => \App\Http\Middleware\AccessibilityValidationMiddleware::class,
         'api.rate_limit' => \App\Http\Middleware\ApiRateLimitMiddleware::class,
+        'advanced-rate-limit' => \App\Http\Middleware\AdvancedRateLimitMiddleware::class,
+        'api-security-validation' => \App\Http\Middleware\EnhancedApiSecurityMiddleware::class,
+        'mobile.errors' => \App\Http\Middleware\MobileScanningErrorHandler::class,
 
     ];
 }

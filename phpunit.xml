@@ -8,8 +8,7 @@
          executionOrder="random"
          failOnWarning="true"
          failOnRisky="true"
-         failOnEmptyTestSuite="true"
-         verbose="true">
+         failOnEmptyTestSuite="true">
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">./tests/Unit</directory>
@@ -46,6 +45,7 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
+        <env name="REDIS_CLIENT" value="predis"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>

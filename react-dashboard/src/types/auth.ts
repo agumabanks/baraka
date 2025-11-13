@@ -17,6 +17,15 @@ export interface User {
     name: string;
     permissions: string[];
   };
+
+  preferred_language?: 'en' | 'fr' | 'sw';
+  primary_branch_id?: number | null;
+  primary_branch?: {
+    id: number;
+    name: string;
+    code?: string | null;
+    type?: string | null;
+  } | null;
   
   branch?: {
     id: number;

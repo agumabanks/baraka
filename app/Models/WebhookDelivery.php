@@ -9,6 +9,7 @@ class WebhookDelivery extends Model
 {
     protected $fillable = [
         'webhook_endpoint_id',
+        'event',
         'event_type',
         'payload',
         'response',
@@ -22,6 +23,7 @@ class WebhookDelivery extends Model
     protected $casts = [
         'payload' => 'array',
         'response' => 'array',
+        'response_body' => 'array',
         'http_status' => 'integer',
         'attempts' => 'integer',
         'next_retry_at' => 'datetime',
@@ -32,6 +34,28 @@ class WebhookDelivery extends Model
     public function webhookEndpoint(): BelongsTo
     {
         return $this->belongsTo(WebhookEndpoint::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $delivery): void {
+            $delivery->syncEventAttributes();
+        });
+
+        static::updating(function (self $delivery): void {
+            $delivery->syncEventAttributes();
+        });
+    }
+
+    private function syncEventAttributes(): void
+    {
+        if (empty($this->event) && !empty($this->event_type)) {
+            $this->event = $this->event_type;
+        }
+
+        if (empty($this->event_type) && !empty($this->event)) {
+            $this->event_type = $this->event;
+        }
     }
 
     public function isDelivered(): bool

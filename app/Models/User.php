@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\Status;
 use App\Enums\UserType;
 use App\Models\Backend\Account;
+use App\Models\Backend\Branch;
 use App\Models\Backend\BranchWorker;
 use App\Models\Backend\DeliveryMan;
 use App\Models\Backend\Department;
@@ -74,6 +75,8 @@ class User extends Authenticatable
         'phone_e164',
         'mobile',
         'address',
+        'preferred_language',
+        'primary_branch_id',
 
     ];
 
@@ -107,7 +110,15 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'permissions' => 'array',
         'notification_prefs' => 'array',
+        'primary_branch_id' => 'integer',
     ];
+
+    public const SUPPORTED_LANGUAGES = ['en', 'fr', 'sw'];
+
+    public function primaryBranch()
+    {
+        return $this->belongsTo(Branch::class, 'primary_branch_id');
+    }
 
     public function getUserTypeLabelAttribute(): ?string
     {
@@ -198,6 +209,30 @@ class User extends Authenticatable
         }
 
         $this->attributes['user_type'] = $normalized;
+    }
+
+    public function setPreferredLanguageAttribute(?string $value): void
+    {
+        $language = $value ? strtolower(trim($value)) : null;
+
+        if ($language && in_array($language, self::SUPPORTED_LANGUAGES, true)) {
+            $this->attributes['preferred_language'] = $language;
+
+            return;
+        }
+
+        $this->attributes['preferred_language'] = 'en';
+    }
+
+    public function getPreferredLanguageAttribute(?string $value): string
+    {
+        $resolved = $value ? strtolower($value) : null;
+
+        if ($resolved && in_array($resolved, self::SUPPORTED_LANGUAGES, true)) {
+            return $resolved;
+        }
+
+        return 'en';
     }
 
     // Get single row in Hub table.

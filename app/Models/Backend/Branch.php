@@ -32,8 +32,6 @@ class Branch extends Model
         'is_hub',
         'parent_branch_id',
         'address',
-        'country',
-        'city',
         'phone',
         'email',
         'time_zone',

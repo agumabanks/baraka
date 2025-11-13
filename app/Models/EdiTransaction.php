@@ -3,36 +3,35 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EdiTransaction extends Model
 {
     protected $fillable = [
-        'edi_type',
-        'sender_code',
-        'receiver_code',
-        'reference',
-        'raw_document',
-        'processed_data',
+        'provider_id',
+        'document_type',
+        'direction',
+        'document_number',
         'status',
-        'error_message',
+        'external_reference',
+        'correlation_id',
+        'payload',
+        'normalized_payload',
+        'ack_payload',
+        'acknowledged_at',
+        'processed_at',
     ];
 
     protected $casts = [
-        'processed_data' => 'array',
+        'payload' => 'array',
+        'normalized_payload' => 'array',
+        'ack_payload' => 'array',
+        'acknowledged_at' => 'datetime',
+        'processed_at' => 'datetime',
     ];
 
-    public function scopePending($query)
+    public function provider(): BelongsTo
     {
-        return $query->where('status', 'received');
-    }
-
-    public function scopeProcessed($query)
-    {
-        return $query->where('status', 'processed');
-    }
-
-    public function scopeFailed($query)
-    {
-        return $query->where('status', 'failed');
+        return $this->belongsTo(EdiProvider::class, 'provider_id');
     }
 }

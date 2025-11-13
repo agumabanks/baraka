@@ -8,6 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('event_streams');
+
         Schema::create('event_streams', function (Blueprint $table) {
             $table->id();
             $table->string('event_type');
@@ -21,7 +23,6 @@ return new class extends Migration
 
             $table->index(['aggregate_type', 'aggregate_id', 'timestamp']);
             $table->index('event_type');
-            $table->index(['metadata->branch_id']);
             $table->index('timestamp');
         });
     }

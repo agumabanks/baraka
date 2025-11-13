@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Enums\BranchWorkerRole;
 use App\Enums\EmploymentStatus;
 use App\Enums\Status;
+use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\Backend\BranchWorker;
 use App\Models\Backend\Branch;
@@ -90,7 +91,7 @@ class BranchWorkerApiController extends Controller
 
         $users = User::whereDoesntHave('branchWorker')
             ->where('status', Status::ACTIVE)
-            ->select('id', 'name', 'email', 'mobile', 'phone', 'phone_e164')
+            ->select('id', 'name', 'email', 'mobile', 'phone', 'phone_e164', 'preferred_language', 'primary_branch_id')
             ->orderBy('name')
             ->get()
             ->map(fn (User $user) => [
@@ -98,6 +99,8 @@ class BranchWorkerApiController extends Controller
                 'label' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->mobile ?? $user->phone ?? $user->phone_e164,
+                'preferred_language' => $user->preferred_language,
+                'primary_branch_id' => $user->primary_branch_id,
             ]);
 
         $roles = collect(BranchWorkerRole::cases())
@@ -152,7 +155,10 @@ class BranchWorkerApiController extends Controller
                 'work_schedule' => $request->input('work_schedule'),
                 'notes' => $request->input('notes'),
                 'metadata' => $request->input('metadata'),
-                'status' => Status::ACTIVE,
+                'status' => match (strtolower((string) $request->input('status', 'active'))) {
+                    'inactive', 'suspended' => Status::INACTIVE,
+                    default => Status::ACTIVE,
+                },
                 'assigned_at' => now(),
             ]);
 
@@ -346,6 +352,7 @@ class BranchWorkerApiController extends Controller
             'work_schedule' => ['nullable', 'array'],
             'notes' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
+            'preferred_language' => ['nullable', 'string', Rule::in(User::SUPPORTED_LANGUAGES)],
         ];
     }
 
@@ -371,23 +378,44 @@ class BranchWorkerApiController extends Controller
                 $user->password = Hash::make($request->password);
             }
 
-            if (! empty($updates) || $request->filled('password')) {
+            if ($request->filled('preferred_language')) {
+                $user->preferred_language = $request->preferred_language;
+            }
+
+            if ($request->filled('branch_id')) {
+                $user->primary_branch_id = (int) $request->branch_id;
+            }
+
+            if (! $user->user_type) {
+                $user->user_type = UserType::DELIVERYMAN;
+            }
+
+            if ($user->status === null) {
+                $user->status = Status::ACTIVE;
+            }
+
+            if ($user->isDirty()) {
                 $user->save();
             }
 
             return $user;
         }
 
-        return User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'mobile' => $request->phone,
-            'password' => Hash::make($request->password),
-            'address' => $request->input('address'),
-            'status' => Status::ACTIVE,
-            'role_id' => $request->input('role_id', 4),
-        ]);
+        $user = new User();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->phone = $request->phone;
+        $user->mobile = $request->phone;
+        $user->password = Hash::make($request->password);
+        $user->address = $request->input('address');
+        $user->status = Status::ACTIVE;
+        $user->role_id = $request->input('role_id', 4);
+        $user->user_type = UserType::DELIVERYMAN;
+        $user->preferred_language = $request->input('preferred_language', 'en');
+        $user->primary_branch_id = (int) $request->branch_id;
+        $user->save();
+
+        return $user;
     }
 
     /**

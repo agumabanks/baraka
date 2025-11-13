@@ -36,4 +36,5 @@ const Card: React.FC<CardProps> = ({ children, className = '', header, footer })
   );
 };
 
+export { Card };
 export default Card;

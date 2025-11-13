@@ -1,0 +1,39 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    basicAuth: false
+    isDefault: true
+    jsonData:
+      timeInterval: "5s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+    version: 1
+
+  - name: Baraka Database
+    type: mysql
+    access: proxy
+    orgId: 1
+    url: mysql:3306
+    database: baraka_logistics
+    user: grafana
+    secureJsonData:
+      password: "${GRAFANA_DB_PASSWORD}"
+    isDefault: false
+    version: 1
+    editable: true
+
+  - name: Redis
+    type: redis-datasource
+    access: proxy
+    orgId: 1
+    url: redis:6379
+    database: 0
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true

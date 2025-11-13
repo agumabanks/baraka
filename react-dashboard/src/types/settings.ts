@@ -100,6 +100,7 @@ export interface AdminUser {
   status: number;
   status_label: ActiveState;
   avatar: string | null;
+  preferred_language?: 'en' | 'fr' | 'sw';
   role: {
     id: number;
     name: string;
@@ -121,6 +122,13 @@ export interface AdminUser {
   } | null;
   team: AdminUserTeam | null;
   team_label?: string | null;
+  primary_branch_id?: number | null;
+  primary_branch?: {
+    id: number;
+    name: string;
+    code?: string | null;
+    type?: string | null;
+  } | null;
   permissions: string[];
   created_at: string | null;
   updated_at: string | null;
@@ -157,6 +165,12 @@ export interface AdminUserMeta {
   designations: Array<{
     id: number;
     title: string;
+  }>;
+  branches: Array<{
+    id: number;
+    name: string;
+    code?: string | null;
+    type?: string | null;
   }>;
   statuses: Array<{
     value: number;
@@ -210,6 +224,8 @@ export interface AdminUserPayload {
   salary?: number | null;
   address: string;
   status: number;
+  preferred_language?: 'en' | 'fr' | 'sw';
+  primary_branch_id?: number | null;
   image?: File | null;
 }
 

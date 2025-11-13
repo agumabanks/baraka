@@ -2,102 +2,127 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Backend\Branch;
+use App\Services\DisasterRecoveryService;
 use Database\Seeders\BranchSeeder;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class SeedBranches extends Command
 {
-    protected $signature = 'seed:branches {--force : Run without confirmation} {--dry-run : Show what would be seeded} {--config= : Load from config file}';
-    protected $description = 'Idempotently seed branches (safe for production)';
+    protected $signature = 'seed:branches
+                            {--dry-run : Preview the branches that would be created without writing to the database}
+                            {--force : Bypass safe-mode confirmation}
+                            {--config= : Path to a JSON file with branch definitions}
+                            {--no-backup : Skip the automatic database backup before seeding}';
 
-    public function handle(): int
+    protected $description = 'Idempotent seeding of the branch hierarchy for production environments';
+
+    public function handle(DisasterRecoveryService $disasterRecoveryService): int
     {
+        if ($configPath = $this->option('config')) {
+            try {
+                $this->loadCustomConfig($configPath);
+            } catch (\Throwable $e) {
+                $this->error($e->getMessage());
+                return self::INVALID;
+            }
+        }
+
         if ($this->option('dry-run')) {
             return $this->dryRun();
         }
 
-        if (!$this->option('force')) {
-            $this->warn('⚠️  This command will create/update branch records.');
-            $existingCount = \App\Models\Backend\Branch::count();
-            
-            if ($existingCount > 0) {
-                $this->info("Found {$existingCount} existing branches.");
-                $this->info('Seeder will update existing branches if code matches.');
-            }
-
-            if (!$this->confirm('Continue with branch seeding?')) {
-                $this->info('Seeding cancelled.');
-                return 0;
+        if ($this->requiresConfirmation() && !$this->option('force')) {
+            if (!$this->confirm('Safe mode is enabled. Proceed with branch seeding?', false)) {
+                $this->info('Branch seeding aborted.');
+                return self::SUCCESS;
             }
         }
 
-        return $this->seed();
-    }
-
-    private function seed(): int
-    {
-        try {
-            $this->info('Starting branch seeding...');
-            $startTime = microtime(true);
-
-            DB::transaction(function () {
-                $this->call(BranchSeeder::class);
-            });
-
-            $duration = round(microtime(true) - $startTime, 2);
-            $totalBranches = \App\Models\Backend\Branch::count();
-
-            $this->info("✅ Branch seeding completed in {$duration}s");
-            $this->info("📊 Total branches in system: {$totalBranches}");
-
-            Log::info('Branch seeding command completed', [
-                'total_branches' => $totalBranches,
-                'duration_seconds' => $duration,
-            ]);
-
-            return 0;
-        } catch (\Throwable $e) {
-            $this->error("❌ Seeding failed: {$e->getMessage()}");
-            
-            Log::error('Branch seeding failed', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-
-            return 1;
+        if ($this->shouldBackup() && !$this->option('no-backup')) {
+            $name = $disasterRecoveryService->createBackup('pre-branch-seed');
+            $this->info("Database backup created: {$name}");
         }
+
+        $transactional = config('seeders.safe_mode.transaction', true);
+        $runner = function (): void {
+            app(BranchSeeder::class)->run();
+        };
+
+        $transactional ? DB::transaction($runner) : $runner();
+
+        $this->info('Branch seeding complete.');
+        $this->displayStats();
+
+        return self::SUCCESS;
     }
 
     private function dryRun(): int
     {
-        $this->info('🔍 DRY RUN MODE - No changes will be made');
-        $this->info('');
+        $definitions = app(BranchSeeder::class)->definitions();
 
-        // Show what would be created
-        $this->line('Branch Configuration:');
-        $this->line('┌─ Branches to seed/update:');
+        $this->line('DRY RUN MODE');
+        $this->info('DRY RUN: No database changes will be made.');
 
-        $branches = [
-            'HUB-DUBAI' => 'Dubai Main Hub',
-            'HUB-ABU-DHABI' => 'Abu Dhabi Hub',
-            'REG-DUBAI-NORTH' => 'Dubai North Regional',
-            'REG-DUBAI-SOUTH' => 'Dubai South Regional',
-            'LOC-DUBAI-DIPS' => 'Dubai DIPS Local',
-        ];
+        $rows = collect($definitions)->map(function (array $branch) {
+            return [
+                'Code' => Str::upper($branch['code'] ?? ''),
+                'Name' => $branch['name'] ?? 'N/A',
+                'Type' => Str::upper($branch['type'] ?? 'LOCAL'),
+                'Parent' => $branch['parent_code'] ?? '—',
+                'Status' => Str::upper($branch['status'] ?? 'ACTIVE'),
+            ];
+        })->all();
 
-        foreach ($branches as $code => $name) {
-            $existing = \App\Models\Backend\Branch::where('code', $code)->exists();
-            $status = $existing ? '✏️  UPDATE' : '✨ CREATE';
-            $this->line("├─ [{$status}] {$code} - {$name}");
+        $this->table(['Code', 'Name', 'Type', 'Parent', 'Status'], $rows);
+
+        $this->line(sprintf(
+            'Existing branches in database: %d',
+            Branch::count()
+        ));
+
+        return self::SUCCESS;
+    }
+
+    private function loadCustomConfig(string $path): void
+    {
+        if (!File::exists($path)) {
+            throw new \InvalidArgumentException("Config file {$path} was not found.");
         }
 
-        $this->line('└─ End');
-        $this->info('');
-        $this->info('Run with --force flag to apply changes.');
+        $contents = File::get($path);
+        $decoded = json_decode($contents, true);
 
-        return 0;
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            throw new \InvalidArgumentException("Config file {$path} does not contain valid JSON.");
+        }
+
+        Config::set('seeders.branches', $decoded);
+    }
+
+    private function requiresConfirmation(): bool
+    {
+        return (bool) config('seeders.safe_mode.enabled', true)
+            && (bool) config('seeders.safe_mode.confirmation_required', false);
+    }
+
+    private function shouldBackup(): bool
+    {
+        return (bool) config('seeders.safe_mode.backup_before_seed', false);
+    }
+
+    private function displayStats(): void
+    {
+        $this->line(sprintf(
+            'Current branch count: %d (Hubs: %d, Regional: %d, Local: %d)',
+            Branch::count(),
+            Branch::where('type', 'HUB')->count(),
+            Branch::where('type', 'REGIONAL')->count(),
+            Branch::where('type', 'LOCAL')->count()
+        ));
     }
 }
