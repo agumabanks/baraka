@@ -125,6 +125,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   const resolvedPath = extractPath(item.path) ?? extractPath(item.url);
   const spaPath = resolvedPath ? resolveDashboardNavigatePath(resolvedPath) : undefined;
   const normalisedTargetPath = spaPath ? extractPath(spaPath) : resolvedPath;
+  const isExternalLink = Boolean(item.external);
+  const externalTarget = isExternalLink ? (item.path || item.url) : undefined;
 
   const defaultChildPath = useMemo(() => {
     if (!hasChildren) {
@@ -141,33 +143,39 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   }, [hasChildren, visibleChildren]);
 
   const handleClick = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
-    // Don't prevent default for external links - let them navigate normally
-    if ((item as any).external) {
-      return; // Allow default browser navigation
-    }
-    
-    e.preventDefault();
-    
     if (hasChildren) {
+      e.preventDefault();
       const willExpand = !isExpanded;
       setIsExpanded(willExpand);
 
       if (willExpand && defaultChildPath && onClick) {
         onClick(defaultChildPath);
       }
-    } else if (onClick && (spaPath || item.path)) {
+      return;
+    }
+
+    if (isExternalLink && externalTarget) {
+      return; // allow default browser navigation to proceed
+    }
+
+    e.preventDefault();
+
+    if (onClick && (spaPath || item.path)) {
       onClick(spaPath ?? item.path);
     } else if (item.url) {
       window.location.href = item.url;
     }
-  }, [hasChildren, spaPath, item.path, item.url, onClick, item, isExpanded, defaultChildPath]);
+  }, [hasChildren, spaPath, item.path, item.url, onClick, isExpanded, defaultChildPath, isExternalLink, externalTarget]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
+      if (isExternalLink && externalTarget) {
+        return;
+      }
       e.preventDefault();
       handleClick(e);
     }
-  }, [handleClick]);
+  }, [handleClick, isExternalLink, externalTarget]);
 
   // Base classes for nav link
   const baseClasses = 'flex items-center gap-3.5 font-medium rounded-2xl relative transition-all duration-200 justify-start group cursor-pointer';
@@ -204,7 +212,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   return (
     <li className={`nav-item ${isSubmenu ? 'mt-0.5' : 'mt-1'}`}>
       <a
-        href={(item as any).external ? (resolvedPath || item.url) : (spaPath || resolvedPath || item.url || '#')}
+        href={(item as any).external ? (externalTarget || resolvedPath || item.url) : (spaPath || resolvedPath || item.url || '#')}
         className={linkClasses}
         onClick={handleClick}
         onKeyDown={handleKeyDown}

@@ -40,6 +40,8 @@ use App\Http\Controllers\Api\V10\GeneralSettingCotroller;
 use App\Http\Controllers\Api\V10\SupportController as V10SupportController;
 use App\Http\Controllers\Api\V10\ReportController as V10ReportController;
 use App\Http\Controllers\Api\V10\Analytics\OperationalAnalyticsController;
+use App\Http\Controllers\Api\V10\Analytics\StreamingAnalyticsController;
+use App\Http\Controllers\Api\V10\Analytics\HealthAlertController;
 use App\Http\Controllers\Api\V10\OptimizedAnalyticsController;
 use App\Http\Controllers\Api\V10\ParcelController as V10ParcelController;
 use App\Http\Controllers\Backend\OperationsControlCenterController;
@@ -475,8 +477,28 @@ Route::prefix('v10')
             Route::get('/transit-times', [OperationalAnalyticsController::class, 'transitTimeAnalysis']);
         });
 
+        // Streaming analytics & configs (used by SPA dashboards)
+        Route::prefix('analytics/streaming')->group(function () {
+            Route::get('/metrics', [StreamingAnalyticsController::class, 'metrics']);
+            Route::get('/status', [StreamingAnalyticsController::class, 'status']);
+            Route::get('/websocket-config', [StreamingAnalyticsController::class, 'websocketConfig']);
+            Route::get('/sse-config', [StreamingAnalyticsController::class, 'sseConfig']);
+        });
+
+        // Analytics performance + health mirror routes
+        Route::prefix('analytics/performance')->group(function () {
+            Route::get('/metrics', [OptimizedAnalyticsController::class, 'getPerformanceAnalytics']);
+            Route::get('/recommendations', [OptimizedAnalyticsController::class, 'getOptimizationRecommendations']);
+        });
+
+        Route::prefix('analytics/health')->group(function () {
+            Route::get('/', [OptimizedAnalyticsController::class, 'getSystemHealth']);
+            Route::get('/alerts', [HealthAlertController::class, 'index']);
+            Route::post('/alerts/{alertId}/acknowledge', [HealthAlertController::class, 'acknowledge'])->whereNumber('alertId');
+        });
+
         // Optimized analytics & capacity services
-        Route::prefix('analytics/optimized')->middleware(['role:admin'])->group(function () {
+        Route::prefix('analytics/optimized')->middleware(['permission:dashboard_read|branch_analytics|report_analytics|system_read'])->group(function () {
             Route::get('/branches', [OptimizedAnalyticsController::class, 'listAvailableBranches']);
             Route::get('/branch/performance', [OptimizedAnalyticsController::class, 'getBranchPerformanceAnalytics']);
             Route::post('/branch/batch', [OptimizedAnalyticsController::class, 'getBatchBranchAnalytics']);
@@ -487,12 +509,16 @@ Route::prefix('v10')
         });
 
         // Real-time analytics endpoints
-        Route::prefix('realtime')->middleware(['role:admin'])->group(function () {
+        Route::prefix('realtime')->middleware(['permission:dashboard_read|branch_analytics|report_analytics|system_read'])->group(function () {
             Route::get('/branch/{branch}/analytics', [OptimizedAnalyticsController::class, 'getRealTimeAnalytics'])->whereNumber('branch');
+            Route::get('/metrics', [StreamingAnalyticsController::class, 'metrics']);
+            Route::get('/status', [StreamingAnalyticsController::class, 'status']);
+            Route::get('/websocket-config', [StreamingAnalyticsController::class, 'websocketConfig']);
+            Route::get('/sse-config', [StreamingAnalyticsController::class, 'sseConfig']);
         });
 
         // Performance monitoring endpoints
-        Route::prefix('performance')->middleware(['role:admin'])->group(function () {
+        Route::prefix('performance')->middleware(['permission:dashboard_read|branch_analytics|report_analytics|system_read'])->group(function () {
             Route::get('/analytics', [OptimizedAnalyticsController::class, 'getPerformanceAnalytics']);
             Route::get('/realtime', [OptimizedAnalyticsController::class, 'getRealTimePerformance']);
             Route::get('/recommendations', [OptimizedAnalyticsController::class, 'getOptimizationRecommendations']);

@@ -40,6 +40,27 @@ class Handler extends ExceptionHandler
 
     public function report(Throwable $e)
     {
+        try {
+            $logPath = storage_path('logs/exception-debug.log');
+            $context = [
+                'timestamp' => now()->toDateTimeString(),
+                'type' => get_class($e),
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'url' => request()->fullUrl() ?? null,
+            ];
+
+            file_put_contents(
+                $logPath,
+                json_encode($context, JSON_UNESCAPED_SLASHES) . PHP_EOL,
+                FILE_APPEND
+            );
+        } catch (Throwable $loggingError) {
+            // Swallow any logging errors to avoid interfering with normal reporting.
+        }
+
         parent::report($e);
     }
 

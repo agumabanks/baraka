@@ -8,7 +8,8 @@ class LocalizationController extends Controller
 {
     public function setLocalization($language)
     {
-        $allowed = ['en', 'fr', 'sw'];
+        $allowed = config('translations.supported', ['en']);
+
         if (! in_array($language, $allowed, true)) {
             $language = config('app.locale', 'en');
         }

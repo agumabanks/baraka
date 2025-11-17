@@ -1,0 +1,647 @@
+/**
+ * Settings Form UX Enhancements - Styles
+ * Enhanced visual feedback and interactive elements
+ */
+
+/* ==========================================================================
+   General Enhancements
+   ========================================================================== */
+
+.settings-form-enhanced .form-control:focus {
+    border-color: var(--primary-color, #0d6efd);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.settings-form-enhanced .form-select:focus {
+    border-color: var(--primary-color, #0d6efd);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Changed field styling */
+.changed-field {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.field-changed {
+    position: relative;
+}
+
+.field-changed::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(45deg, #ffc107, #ff9800);
+    border-radius: 0 3px 3px 0;
+    opacity: 0;
+    animation: slideInIndicator 0.3s ease forwards;
+}
+
+@keyframes slideInIndicator {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ==========================================================================
+   Save Button State Management
+   ========================================================================== */
+
+.save-button-state-initial .btn {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.save-button-state-changed .btn {
+    animation: pulseSaveButton 2s infinite;
+}
+
+.save-button-state-saving .btn {
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+@keyframes pulseSaveButton {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.save-indicator {
+    animation: blinkIndicator 1.5s infinite;
+}
+
+@keyframes blinkIndicator {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0.3;
+    }
+}
+
+/* ==========================================================================
+   Live Preview Enhancements
+   ========================================================================== */
+
+/* Image Previews */
+.image-preview {
+    transition: all 0.3s ease;
+}
+
+.image-preview .preview-content img {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.image-preview .preview-content img:hover {
+    transform: scale(1.02);
+    border-color: var(--primary-color, #0d6efd);
+}
+
+.image-preview .preview-placeholder {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.image-preview .preview-placeholder:hover {
+    border-color: var(--primary-color, #0d6efd);
+    background: rgba(13, 110, 253, 0.05);
+}
+
+/* Color Previews */
+.color-preview {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #dee2e6;
+}
+
+.color-preview-content {
+    text-align: center;
+}
+
+.color-swatch-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.color-swatch-preview:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.color-info {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+/* Hero Section Preview */
+.hero-preview-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6 !important;
+    transition: all 0.3s ease;
+}
+
+.hero-preview-container:hover {
+    border-color: var(--primary-color, #0d6efd) !important;
+    box-shadow: 0 8px 25px rgba(13, 110, 253, 0.15);
+}
+
+.hero-preview-content {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-preview-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Validation Enhancements
+   ========================================================================== */
+
+/* Field Validation States */
+.form-control.is-valid {
+    border-color: #198754;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.8-.8 3 3 .8-.8L7.9 8l-5.6-5.27z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6 1.4 1.4M7.2 7.4l-1.4 1.4'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Field Error Messages */
+.field-error-message {
+    animation: slideDownError 0.3s ease;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    margin-top: 4px;
+}
+
+@keyframes slideDownError {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Validation Summary */
+.validation-summary {
+    animation: slideInSummary 0.4s ease;
+    border: 2px solid #dc3545;
+    background: #f8d7da;
+}
+
+.validation-summary ul {
+    padding-left: 1.5rem;
+}
+
+.validation-summary li {
+    margin-bottom: 4px;
+    color: #721c24;
+}
+
+@keyframes slideInSummary {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ==========================================================================
+   Progress Indicators
+   ========================================================================== */
+
+/* File Upload Progress */
+.upload-progress {
+    animation: slideInProgress 0.3s ease;
+}
+
+@keyframes slideInProgress {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.upload-progress .progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.upload-progress .progress-bar {
+    background: linear-gradient(45deg, var(--primary-color, #0d6efd), #6f42c1);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+/* Form Submission Progress */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+/* Toast Notifications */
+.toast-notification {
+    animation: slideInToast 0.3s ease, slideOutToast 0.3s ease 4.7s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: none;
+    font-weight: 500;
+}
+
+@keyframes slideInToast {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 0.9;
+    }
+}
+
+@keyframes slideOutToast {
+    from {
+        transform: translateX(0);
+        opacity: 0.9;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* ==========================================================================
+   Interactive Features
+   ========================================================================== */
+
+/* Confirmation Dialogs */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 12px 12px 0 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Unsaved Changes Indicator */
+#unsavedChangesIndicator {
+    animation: slideInAlert 0.4s ease;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideInAlert {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Auto-save Status */
+.auto-save-indicator {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(40, 167, 69, 0.9);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    animation: slideInAutoSave 0.3s ease, slideOutAutoSave 0.3s ease 4.7s;
+    z-index: 9999;
+}
+
+@keyframes slideInAutoSave {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 0.9;
+    }
+}
+
+@keyframes slideOutAutoSave {
+    from {
+        transform: translateX(0);
+        opacity: 0.9;
+    }
+    to {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+}
+
+/* ==========================================================================
+   Responsive Enhancements
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .hero-preview-container {
+        margin: 0 -15px;
+        border-radius: 0;
+    }
+    
+    .hero-preview-content {
+        padding: 40px 20px !important;
+    }
+    
+    .hero-preview-title {
+        font-size: 2rem !important;
+    }
+    
+    .hero-preview-subtitle {
+        font-size: 1.1rem !important;
+    }
+    
+    #unsavedChangesIndicator {
+        top: 10px !important;
+        right: 10px !important;
+        left: 10px !important;
+        min-width: auto !important;
+    }
+    
+    .color-swatch-preview {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .image-preview .preview-content img {
+        max-width: 250px !important;
+        max-height: 150px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-preview-title {
+        font-size: 1.75rem !important;
+    }
+    
+    .hero-preview-content {
+        padding: 30px 15px !important;
+    }
+    
+    .color-preview {
+        padding: 12px;
+    }
+    
+    .upload-progress {
+        font-size: 0.875rem;
+    }
+}
+
+/* ==========================================================================
+   Accessibility Enhancements
+   ========================================================================== */
+
+/* Focus Indicators */
+.changed-field:focus-within {
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    border-color: var(--primary-color, #0d6efd);
+}
+
+/* Screen Reader Only Content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .changed-field {
+        border: 2px solid #ffc107;
+    }
+    
+    .field-changed::before {
+        background: #ffc107;
+    }
+    
+    .color-swatch-preview {
+        border: 3px solid #000;
+    }
+    
+    .hero-preview-container {
+        border: 3px solid #000 !important;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .hero-preview-content::before {
+        display: none;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .hero-preview-container {
+        background: #2d3748;
+        border-color: #4a5568 !important;
+    }
+    
+    .color-preview {
+        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .validation-summary {
+        background: #2d3748;
+        border-color: #e53e3e;
+        color: #fed7d7;
+    }
+    
+    .field-error-message {
+        background: #2d3748;
+        border-color: #e53e3e;
+        color: #fed7d7;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .hero-preview-container,
+    .color-preview,
+    .image-preview,
+    #unsavedChangesIndicator,
+    .toast-notification,
+    .auto-save-indicator,
+    .upload-progress {
+        display: none !important;
+    }
+    
+    .field-changed::before {
+        display: none;
+    }
+    
+    .changed-field {
+        border: 1px solid #000;
+    }
+}
+
+/* ==========================================================================
+   Custom Properties for Dynamic Theming
+   ========================================================================== */
+
+:root {
+    --settings-primary: #007AFF;
+    --settings-success: #34C759;
+    --settings-warning: #FF9500;
+    --settings-danger: #FF3B30;
+    --settings-info: #5AC8FA;
+    --settings-light: #F9FAFB;
+    --settings-dark: #111827;
+    
+    --settings-transition: all 0.3s ease;
+    --settings-border-radius: 0.375rem;
+    --settings-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --settings-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    
+    --settings-spacing-xs: 0.25rem;
+    --settings-spacing-sm: 0.5rem;
+    --settings-spacing-md: 1rem;
+    --settings-spacing-lg: 1.5rem;
+    --settings-spacing-xl: 3rem;
+}
+
+/* Utility Classes */
+.settings-fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.settings-bounce-in {
+    animation: bounceIn 0.5s ease;
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.settings-shake {
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-2px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(2px);
+    }
+}

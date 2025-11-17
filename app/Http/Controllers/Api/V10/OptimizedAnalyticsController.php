@@ -199,6 +199,8 @@ class OptimizedAnalyticsController extends Controller
         try {
             $hours = $request->query('hours', 24);
             $analytics = $this->performanceService->getPerformanceAnalytics($hours);
+
+            $analytics = $this->appendDashboardMetrics($analytics);
             
             return response()->json([
                 'success' => true,
@@ -547,5 +549,39 @@ class OptimizedAnalyticsController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function appendDashboardMetrics(array $analytics): array
+    {
+        $averageExecution = (float) ($analytics['avg_execution_time'] ?? 0);
+        $avgMemoryMb = (float) ($analytics['avg_memory_usage'] ?? 0);
+        $cacheHitRate = (float) ($analytics['cache_hit_rate'] ?? 0);
+
+        $analytics['loadTime'] = round($averageExecution, 2);
+        $analytics['renderTime'] = round(
+            collect($analytics['performance_trend'] ?? [])->first()['avg_execution_time'] ?? $averageExecution,
+            2
+        );
+        $analytics['dataSize'] = (int) round($avgMemoryMb * 1024 * 1024);
+        $analytics['cacheHitRate'] = round($cacheHitRate, 2);
+        $analytics['errorRate'] = round($this->deriveErrorRate($analytics), 2);
+
+        return $analytics;
+    }
+
+    private function deriveErrorRate(array $analytics): float
+    {
+        $operations = (int) ($analytics['total_operations'] ?? 0);
+        $bottlenecks = collect($analytics['bottlenecks'] ?? []);
+
+        if ($operations <= 0 || $bottlenecks->isEmpty()) {
+            return $operations > 0 ? 0.5 : 0;
+        }
+
+        $impact = $bottlenecks->sum(function ($item) {
+            return (float) ($item['impact_score'] ?? 0);
+        });
+
+        return min(10.0, max(0, $impact / max(1, $operations)));
     }
 }

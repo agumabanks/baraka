@@ -14,9 +14,10 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
-
         if (! $request->expectsJson()) {
-            return route('login');
+            // Redirect unauthenticated web requests to the SPA login route.
+            // The React dashboard owns the /login path and will handle auth there.
+            return '/login';
         }
     }
 }

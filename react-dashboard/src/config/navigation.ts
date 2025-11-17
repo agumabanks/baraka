@@ -287,6 +287,14 @@ export const navigationConfig: NavigationConfig = {
       visible: true,
       items: [
         {
+          id: 'general-settings',
+          label: 'General Settings',
+          icon: 'Settings',
+          path: '/settings',
+          visible: true,
+          external: true,
+        },
+        {
           id: 'user-role',
           label: 'Users & Roles',
           icon: 'Shield',
