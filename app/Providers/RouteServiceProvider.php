@@ -38,11 +38,26 @@ class RouteServiceProvider extends ServiceProvider
                 ->middleware('api')
                 ->group(base_path('routes/api.php'));
 
-            if (config('app.feature_mobile_api')) {
-                Route::prefix('api/v1')
-                    ->middleware('api')
-                    ->group(base_path('routes/api_v1.php'));
-            }
+            // Always enable V1 API routes for production readiness
+            Route::prefix('api/v1')
+                ->middleware('api')
+                ->group(base_path('routes/api_v1.php'));
+
+            // Load additional V1 route files
+            Route::middleware('api')
+                ->group(base_path('routes/api/v1/auth.php'));
+            Route::middleware('api')
+                ->group(base_path('routes/api/v1/shipments.php'));
+            Route::middleware('api')
+                ->group(base_path('routes/api/v1/users.php'));
+            Route::middleware('api')
+                ->group(base_path('routes/api/v1/branches.php'));
+            Route::middleware('api')
+                ->group(base_path('routes/api/v1/files.php'));
+            Route::middleware('api')
+                ->group(base_path('routes/api/v1/reports.php'));
+            Route::middleware('api')
+                ->group(base_path('routes/api/v1/system.php'));
 
             // Readiness improvements routes (webhooks, mobile scanning, EDI)
             Route::middleware('api')

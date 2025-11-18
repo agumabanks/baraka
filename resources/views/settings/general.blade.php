@@ -26,6 +26,74 @@
 @endsection
 
 @section('content')
+    @php
+        $controlCards = [
+            [
+                'label' => 'Landing Page Controls',
+                'description' => 'Hero content, CTA labels, and promo announcements',
+                'icon' => 'bi bi-window',
+                'swatch' => 'linear-gradient(135deg,#161616,#383838)',
+                'status' => data_get($preferenceMatrix, 'landing.hero_headline', 'Live hero'),
+                'meta' => [
+                    'CTA' => data_get($preferenceMatrix, 'landing.hero_cta'),
+                    'Theme' => data_get($preferenceMatrix, 'landing.use_dark_theme', true) ? 'Dark' : 'Light',
+                ],
+                'route' => route('settings.website'),
+                'secondary_route' => url('/'),
+                'tags' => 'landing page hero marketing announcement website'
+            ],
+            [
+                'label' => 'Shipping & Logistics',
+                'description' => 'Service levels, carriers and customs requirements',
+                'icon' => 'bi bi-box-seam',
+                'swatch' => 'linear-gradient(135deg,#101010,#2b2b2b)',
+                'status' => data_get($preferenceMatrix, 'shipping.default_sla_hours', 48) . 'h SLA',
+                'meta' => [
+                    'Carrier' => data_get($preferenceMatrix, 'shipping.preferred_carrier'),
+                    'Customs' => data_get($preferenceMatrix, 'shipping.customs_documents', true) ? 'Docs required' : 'Docs optional',
+                ],
+                'route' => route('settings.operations'),
+                'secondary_route' => route('settings.operations') . '#shipping',
+                'tags' => 'shipping logistics delivery customs carrier sla'
+            ],
+            [
+                'label' => 'Branding & Identity',
+                'description' => 'Logos, palette, typography and UI tone',
+                'icon' => 'bi bi-palette2',
+                'swatch' => 'linear-gradient(135deg,#1c1c1c,#343434)',
+                'status' => config('branding.company_name', 'Default brand'),
+                'meta' => [
+                    'Primary' => config('branding.primary_color', '#0d6efd'),
+                    'Secondary' => config('branding.secondary_color', '#6c757d'),
+                ],
+                'route' => route('settings.branding'),
+                'secondary_route' => null,
+                'tags' => 'branding color typography logo identity'
+            ],
+            [
+                'label' => 'Branch Management',
+                'description' => 'Regions, approvals and staffing guards',
+                'icon' => 'bi bi-diagram-3',
+                'swatch' => 'linear-gradient(135deg,#131313,#2e2e2e)',
+                'status' => count((array) data_get($preferenceMatrix, 'branch_management.regions_active', [])) . ' regions live',
+                'meta' => [
+                    'Cadence' => ucfirst(data_get($preferenceMatrix, 'branch_management.review_cadence', 'weekly')),
+                    'Managers' => data_get($preferenceMatrix, 'branch_management.require_branch_manager', true) ? 'Required' : 'Optional',
+                ],
+                'route' => route('settings.operations'),
+                'secondary_route' => route('settings.operations') . '#branches',
+                'tags' => 'branch management regions hubs approvals staffing'
+            ],
+        ];
+
+        $systemPulse = [
+            ['label' => 'Environment', 'value' => strtoupper(config('app.env')), 'icon' => 'bi bi-hdd-stack'],
+            ['label' => 'Timezone', 'value' => config('app.timezone'), 'icon' => 'bi bi-clock'],
+            ['label' => 'Locale', 'value' => strtoupper(config('app.locale')), 'icon' => 'bi bi-translate'],
+            ['label' => 'Release lane', 'value' => data_get($preferenceMatrix, 'system.maintenance_mode', false) ? 'Maintenance' : 'Live', 'icon' => 'bi bi-activity'],
+        ];
+    @endphp
+
     <form id="generalSettingsForm" method="POST" action="{{ route('settings.general.update') }}" class="ajax-form settings-form-enhanced">
         @csrf
 
@@ -174,4 +242,92 @@
             </div>
         </div>
     </form>
+
+    <div class="premium-card mt-5">
+        <div class="premium-card-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-command text-primary"></i>
+                <div>
+                    <h3 class="premium-card-title mb-1">Preference Board</h3>
+                    <p class="premium-card-subtitle mb-0">macOS-style overview of Baraka’s landing page, shipping, branding, and branch controls.</p>
+                </div>
+            </div>
+        </div>
+        <div class="premium-card-body">
+            <div class="preferences-search mb-4">
+                <i class="bi bi-search"></i>
+                <input type="search" placeholder="Filter control board – e.g. “branch approvals”" data-control-search>
+            </div>
+
+            <div class="control-center-grid">
+                @foreach($controlCards as $card)
+                    <div class="control-center-card" data-control-card data-tags="{{ $card['tags'] }}">
+                        <div class="card-headline">
+                            <div class="icon" style="background: {{ $card['swatch'] }}">
+                                <i class="{{ $card['icon'] }}"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-1">{{ $card['label'] }}</h4>
+                                <p class="mb-0">{{ $card['description'] }}</p>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="preference-chip">{{ $card['status'] }}</span>
+                            @foreach($card['meta'] as $metaLabel => $metaValue)
+                                <span class="preference-chip">{{ $metaLabel }}: {{ $metaValue }}</span>
+                            @endforeach
+                        </div>
+                        <div class="control-actions">
+                            <a href="{{ $card['route'] }}" class="btn btn-dark btn-sm text-white">
+                                Manage
+                            </a>
+                            @if($card['secondary_route'])
+                                <a href="{{ $card['secondary_route'] }}" class="btn btn-outline-light btn-sm" target="_blank">
+                                    Preview
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="mt-4">
+                <h5 class="fw-semibold text-uppercase text-muted mb-3" style="letter-spacing: .2em;">System Pulse</h5>
+                <div class="control-center-grid">
+                    @foreach($systemPulse as $pulse)
+                        <div class="control-center-card">
+                            <div class="card-headline">
+                                <div class="icon" style="background: linear-gradient(135deg,#0d0d0d,#2e2e2e);">
+                                    <i class="{{ $pulse['icon'] }}"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">{{ $pulse['label'] }}</h4>
+                                    <p class="mb-0">{{ $pulse['value'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.querySelector('[data-control-search]');
+            const cards = document.querySelectorAll('[data-control-card]');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    const query = searchInput.value.toLowerCase();
+                    cards.forEach(card => {
+                        const tags = (card.dataset.tags || '').toLowerCase();
+                        card.classList.toggle('is-hidden', query && !tags.includes(query));
+                    });
+                });
+            }
+        });
+    </script>
+@endpush

@@ -199,6 +199,8 @@ const SANCTUM_URL = resolveSanctumUrl();
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -265,11 +267,30 @@ api.interceptors.response.use(
   }
 );
 
+const extractXsrfToken = (): string | null => {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  const match = document.cookie
+    .split('; ')
+    .find((cookie) => cookie.startsWith('XSRF-TOKEN='));
+
+  return match ? decodeURIComponent(match.split('=')[1]) : null;
+};
+
 // Get CSRF token from Laravel Sanctum
 export const getCsrfToken = async (): Promise<void> => {
   await axios.get(SANCTUM_URL, {
     withCredentials: true,
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
   });
+
+  const xsrfToken = extractXsrfToken();
+  if (xsrfToken) {
+    api.defaults.headers.common['X-XSRF-TOKEN'] = xsrfToken;
+  }
 };
 
 // Auth API functions

@@ -57,6 +57,9 @@ class SettingsController extends Controller
             $locales[$code] = $localeLabels[$code] ?? strtoupper($code);
         }
 
+        $preferenceStore = $this->generalSettings->all();
+        $preferenceMatrix = $preferenceStore->details ?? [];
+
         $settings = [
             'app_name' => config('app.name', 'Baraka Sanaa'),
             'app_url' => config('app.url'),
@@ -67,7 +70,11 @@ class SettingsController extends Controller
             'app_environment' => config('app.env'),
         ];
 
-        return view('settings.general', compact('settings', 'locales'));
+        return view('settings.general', [
+            'settings' => $settings,
+            'locales' => $locales,
+            'preferenceMatrix' => $preferenceMatrix,
+        ]);
     }
 
     /**

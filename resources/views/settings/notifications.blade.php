@@ -11,7 +11,7 @@
         <div>
             <h1 class="page-title">
                 <i class="fas fa-bell me-2 text-primary"></i>
-                Notifications
+                   Notifications
             </h1>
             <p class="text-muted mb-0">Channels and delivery configuration</p>
         </div>

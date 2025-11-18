@@ -217,6 +217,28 @@ class GeneralSettingsRepository implements GeneralSettingsInterface
                 'hero_cta_label' => 'Book a pickup',
                 'footer_note' => 'Baraka ERP v1.0 • Crafted in Kampala',
             ],
+            'shipping' => [
+                'global_freight' => true,
+                'default_sla_hours' => 48,
+                'preferred_carrier' => 'Baraka Freight',
+                'auto_rate_shop' => true,
+                'customs_documents' => true,
+                'returns_desk' => false,
+            ],
+            'branch_management' => [
+                'regions_active' => ['Central', 'Eastern', 'Western', 'Northern'],
+                'auto_assign_regions' => true,
+                'require_branch_manager' => true,
+                'review_cadence' => 'weekly',
+                'max_branch_limit' => 12,
+            ],
+            'landing' => [
+                'status' => 'live',
+                'hero_headline' => 'Intelligent logistics OS for Africa',
+                'hero_cta' => 'Customize landing',
+                'announcement' => 'New automation framework deployed',
+                'use_dark_theme' => true,
+            ],
         ];
     }
 
