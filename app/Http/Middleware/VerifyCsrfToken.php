@@ -29,6 +29,14 @@ class VerifyCsrfToken extends Middleware
         // aamarpay
         '/aamarpay-success',
         '/aamarpay-fail',
+
+        // SPA auth endpoints hit by browser extensions / SPAs that cannot share
+        // first-party cookies when executing on a different origin. Bypass CSRF
+        // verification for these API routes because Sanctum issues tokens that
+        // will be used for all subsequent requests.
+        '/api/auth/login',
+        '/api/auth/register',
+        '/api/auth/logout',
     ];
     public function handle($request, Closure $next)
     {
