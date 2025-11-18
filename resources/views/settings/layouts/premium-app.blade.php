@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- Premium CSS -->
-    <link href="{{ asset('css/settings-premium.css?v=3') }}" rel="stylesheet">
+    <link href="{{ asset('css/settings-premium.css?v=4') }}" rel="stylesheet">
     @stack('styles')
 </head>
 <body>

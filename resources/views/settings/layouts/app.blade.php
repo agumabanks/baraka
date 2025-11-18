@@ -17,9 +17,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- Premium Settings CSS (fixed header + sidebar layout) -->
-    <link href="{{ asset('css/settings-premium.css?v=3') }}" rel="stylesheet">
+    <link href="{{ asset('css/settings-premium.css?v=4') }}" rel="stylesheet">
     <!-- Settings UX Enhancements (form polish, micro-interactions) -->
-    <link href="{{ asset('css/settings-ux-enhancements.css') }}?v=3" rel="stylesheet">
+    <link href="{{ asset('css/settings-ux-enhancements.css') }}?v=4" rel="stylesheet">
     @stack('styles')
 </head>
 <body class="theme-mono">

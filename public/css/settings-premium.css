@@ -1,6 +1,6 @@
 /**
- * Premium Settings Module - Apple-Inspired Design with Complete Layout System
- * Refined UI/UX following Steve Jobs' exacting standards
+ * Premium Settings Module - Monochrome Design with Complete Layout System
+ * Refined UI/UX following strict black & white palette requirements
  */
 
 /* ==========================================================================
@@ -9,28 +9,28 @@
 
 /* Default theme: Apple-Inspired Design */
 :root {
-    /* Apple-inspired Color Palette */
-    --primary-color: #007AFF;
-    --primary-color-dark: #0056CC;
-    --secondary-color: #8E8E93;
-    --success-color: #34C759;
-    --danger-color: #FF3B30;
-    --warning-color: #FF9500;
-    --info-color: #5AC8FA;
+    /* Monochrome Color Palette */
+    --primary-color: #000000;
+    --primary-color-dark: #1a1a1a;
+    --secondary-color: #4d4d4d;
+    --success-color: #262626;
+    --danger-color: #404040;
+    --warning-color: #595959;
+    --info-color: #737373;
     
     /* Neutral Colors */
-    --color-white: #FFFFFF;
+    --color-white: #ffffff;
     --color-black: #000000;
-    --color-gray-50: #F9FAFB;
-    --color-gray-100: #F3F4F6;
-    --color-gray-200: #E5E7EB;
-    --color-gray-300: #D1D5DB;
-    --color-gray-400: #9CA3AF;
-    --color-gray-500: #6B7280;
-    --color-gray-600: #4B5563;
-    --color-gray-700: #374151;
-    --color-gray-800: #1F2937;
-    --color-gray-900: #111827;
+    --color-gray-50: #f7f7f7;
+    --color-gray-100: #f0f0f0;
+    --color-gray-200: #d9d9d9;
+    --color-gray-300: #bfbfbf;
+    --color-gray-400: #a6a6a6;
+    --color-gray-500: #8c8c8c;
+    --color-gray-600: #737373;
+    --color-gray-700: #595959;
+    --color-gray-800: #404040;
+    --color-gray-900: #1a1a1a;
     
     /* Semantic Colors */
     --background-primary: var(--color-white);
@@ -91,6 +91,40 @@
     --content-max-width: 1200px;
 }
 
+/* Monochrome / Noir theme override used on the dedicated settings layout */
+body.theme-mono {
+    /* Override semantic tokens so every component inherits the darker palette */
+    --background-primary: rgba(15, 23, 42, 0.82);
+    --background-secondary: #050a17;
+    --background-tertiary: rgba(15, 23, 42, 0.65);
+    --text-primary: #f8fafc;
+    --text-secondary: rgba(226, 232, 240, 0.8);
+    --text-tertiary: rgba(148, 163, 184, 0.85);
+    --border-color: rgba(148, 163, 184, 0.25);
+    --border-color-hover: rgba(148, 163, 184, 0.45);
+
+    color: var(--text-primary);
+    background-color: #010409;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.35), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(45, 212, 191, 0.25), transparent 45%),
+        radial-gradient(circle at 0% 80%, rgba(59, 130, 246, 0.18), transparent 50%),
+        linear-gradient(135deg, #020617 0%, #030712 35%, #0b1120 70%, #111827 100%);
+    min-height: 100vh;
+    position: relative;
+    isolation: isolate;
+}
+
+body.theme-mono::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 15% 15%, rgba(255, 255, 255, 0.08), transparent 40%);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: -1;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
     :root {
@@ -128,6 +162,10 @@ body {
     padding-left: var(--sidebar-width);
 }
 
+body.theme-mono {
+    background: transparent;
+}
+
 @media (max-width: 768px) {
     body {
         padding-left: 0;
@@ -151,6 +189,12 @@ body {
     box-shadow: var(--shadow-lg);
     /* Remove original header background since we're setting it here */
     background-clip: padding-box;
+}
+
+body.theme-mono .premium-header {
+    background: linear-gradient(120deg, rgba(15, 23, 42, 0.95) 0%, rgba(37, 99, 235, 0.9) 60%, rgba(14, 165, 233, 0.85) 100%);
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 25px 60px rgba(2, 6, 23, 0.65);
 }
 
 @media (max-width: 768px) {
@@ -177,6 +221,12 @@ body {
     transition: transform var(--transition-base);
     /* Remove original sidebar background since we're setting it here */
     background-clip: padding-box;
+}
+
+body.theme-mono .premium-sidebar {
+    background: rgba(2, 6, 23, 0.85);
+    border-right-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 20px 45px rgba(2, 6, 23, 0.75);
 }
 
 @media (max-width: 768px) {
@@ -223,6 +273,11 @@ body {
     background: radial-gradient(circle at top left, var(--color-gray-50) 0, var(--background-secondary) 40%, var(--background-primary) 100%);
     padding: var(--spacing-6);
     transition: margin-left var(--transition-base);
+}
+
+body.theme-mono .premium-main {
+    background: transparent;
+    backdrop-filter: blur(12px);
 }
 
 @media (max-width: 768px) {
@@ -289,6 +344,10 @@ body {
     overflow: hidden;
 }
 
+body.theme-mono .premium-nav-link {
+    color: rgba(226, 232, 240, 0.7);
+}
+
 .premium-nav-link::before {
     content: '';
     position: absolute;
@@ -311,10 +370,19 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
+body.theme-mono .premium-nav-link:hover {
+    background-color: rgba(15, 23, 42, 0.75);
+    box-shadow: 0 12px 20px rgba(2, 6, 23, 0.55);
+}
+
 .premium-nav-link.active {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
     color: var(--color-white);
     box-shadow: var(--shadow-lg);
+}
+
+body.theme-mono .premium-nav-link.active {
+    box-shadow: 0 15px 35px rgba(14, 165, 233, 0.45);
 }
 
 .premium-nav-icon {
@@ -337,6 +405,12 @@ body {
     transition: all var(--transition-base);
 }
 
+body.theme-mono .premium-card {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.18);
+    box-shadow: 0 25px 55px rgba(2, 6, 23, 0.65);
+}
+
 .premium-card:hover {
     box-shadow: var(--shadow-lg);
     transform: translateY(-2px);
@@ -349,6 +423,11 @@ body {
     position: relative;
 }
 
+body.theme-mono .premium-card-header {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.75) 100%);
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
 .premium-card-header::before {
     content: '';
     position: absolute;
@@ -357,6 +436,10 @@ body {
     right: 0;
     height: 4px;
     background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+}
+
+body.theme-mono .premium-card-header::before {
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0.8), rgba(14, 165, 233, 0.9));
 }
 
 .premium-card-title {
@@ -398,6 +481,19 @@ body {
     font-size: var(--font-size-base);
     line-height: 1.5;
     transition: all var(--transition-fast);
+}
+
+body.theme-mono .premium-form-input,
+body.theme-mono .form-control,
+body.theme-mono .form-select {
+    background: rgba(2, 6, 23, 0.85);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: var(--text-primary);
+}
+
+body.theme-mono .premium-form-input::placeholder,
+body.theme-mono .form-control::placeholder {
+    color: rgba(148, 163, 184, 0.8);
 }
 
 .premium-form-input:focus {
@@ -488,6 +584,12 @@ body {
     border: 1px solid var(--border-color);
 }
 
+body.theme-mono .premium-tabs {
+    background: rgba(2, 6, 23, 0.65);
+    border-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 20px 40px rgba(2, 6, 23, 0.55);
+}
+
 .premium-tab-nav {
     display: flex;
     gap: var(--spacing-1);
@@ -507,10 +609,18 @@ body {
     position: relative;
 }
 
+body.theme-mono .premium-tab-btn {
+    color: rgba(226, 232, 240, 0.7);
+}
+
 .premium-tab-btn.active {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
     color: var(--color-white);
     box-shadow: var(--shadow-md);
+}
+
+body.theme-mono .premium-tab-btn.active {
+    box-shadow: 0 10px 30px rgba(14, 165, 233, 0.45);
 }
 
 .premium-tab-btn:hover:not(.active) {
@@ -526,6 +636,13 @@ body {
     border: 1px solid var(--border-color);
     padding: var(--spacing-4) var(--spacing-6);
     margin-bottom: var(--spacing-8);
+}
+
+body.theme-mono .premium-breadcrumb,
+body.theme-mono .premium-page-header {
+    background: rgba(2, 6, 23, 0.7);
+    border-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 20px 45px rgba(2, 6, 23, 0.6);
 }
 
 .premium-breadcrumb a {
