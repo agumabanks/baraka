@@ -1,0 +1,120 @@
+# ====================================================================
+# MYSQL PRODUCTION CONFIGURATION
+# Baraka Branch Management Portal - Enterprise MySQL Setup
+# Generated: 2025-11-18T01:34:50Z
+# ====================================================================
+
+[mysqld]
+# Basic Configuration
+bind-address = 0.0.0.0
+port = 3306
+user = mysql
+default-storage-engine = InnoDB
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+# InnoDB Configuration - Production Optimized
+innodb-buffer-pool-size = 2G
+innodb-log-file-size = 512M
+innodb-log-buffer-size = 32M
+innodb-flush-log-at-trx-commit = 2
+innodb-lock-wait-timeout = 50
+innodb-file-per-table = 1
+innodb-open-files = 500
+innodb-io-capacity = 2000
+innodb-io-capacity-max = 4000
+innodb-read-io-threads = 8
+innodb-write-io-threads = 8
+innodb-buffer-pool-instances = 8
+
+# Connection Configuration
+max-connections = 2000
+max-connect-errors = 1000000
+connect-timeout = 60
+wait-timeout = 28800
+interactive-timeout = 28800
+
+# Query Cache Configuration
+query-cache-type = 1
+query-cache-size = 512M
+query-cache-limit = 2M
+query-cache-min-res-unit = 4k
+
+# Temporary Tables Configuration
+tmp-table-size = 256M
+max-heap-table-size = 256M
+
+# MyISAM Configuration
+myisam-recover-options = BACKUP,FORCE
+key-buffer-size = 256M
+
+# Logging Configuration
+log-error = /var/log/mysql/error.log
+slow-query-log = 1
+slow-query-log-file = /var/log/mysql/slow-query.log
+long-query-time = 2
+log-queries-not-using-indexes = 1
+
+# Binary Logging
+log-bin = mysql-bin
+binlog-format = ROW
+expire-logs-days = 7
+max-binlog-size = 100M
+
+# Replication Configuration (for future use)
+server-id = 1
+read-only = 0
+binlog-do-db = baraka_production
+
+# Security Configuration
+local-infile = 0
+skip-show-database
+skip-name-resolve
+
+# Performance Schema
+performance-schema = ON
+performance-schema-max-table-instances = 500
+performance-schema-max-table-size = 100000
+
+# Timeout Settings
+net-read-timeout = 30
+net-write-timeout = 30
+net-buffer-length = 16384
+max-allowed-packet = 64M
+
+# Sort and Join Buffers
+sort-buffer-size = 8M
+join-buffer-size = 8M
+read-buffer-size = 2M
+read-rnd-buffer-size = 8M
+
+# Thread Configuration
+thread-cache-size = 50
+table-open-cache = 4000
+table-definition-cache = 2000
+
+# File Configuration
+open-files-limit = 65535
+max-prepared-stmt-count = 100000
+
+# Timezone
+default-time-zone = '+00:00'
+
+# SQL Mode
+sql-mode = STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+
+[mysql]
+default-character-set = utf8mb4
+
+[client]
+default-character-set = utf8mb4
+port = 3306
+socket = /var/run/mysqld/mysqld.sock
+
+[mysqldump]
+default-character-set = utf8mb4
+max-allowed-packet = 64M
+single-transaction
+routines
+triggers
+events

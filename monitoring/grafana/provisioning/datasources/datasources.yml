@@ -1,0 +1,55 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+      manageAlerts: true
+      alertManagerUid: "alertmanager"
+      
+  - name: Baraka Database
+    type: mysql
+    access: proxy
+    url: mysql:3306
+    database: baraka_production
+    user: baraka_prod_user
+    secureJsonData:
+      password: "SUPER_SECURE_PRODUCTION_PASSWORD_2025!"
+    isDefault: false
+    editable: true
+
+  - name: Redis
+    type: redis-datasource
+    access: proxy
+    url: redis:6379
+    uid: "redis"
+    jsonData:
+      client: "standalone"
+      poolSize: 5
+      timeout: 10
+      pingInterval: 0
+      pipelineWindow: 0
+      allowPubSub: true
+      username: ""
+      password: "REDIS_PRODUCTION_PASSWORD_2025"
+
+alerting:
+  enabled: true
+  orgId: 1
+  concurrency: 1
+  defaultChannel: ""
+  
+  notificationChannels:
+    - uid: slack-notifications
+      name: "Slack Notifications"
+      type: slack
+      url: "${SLACK_WEBHOOK_URL}"
+      skipResolve: false
+      sendReminders: true

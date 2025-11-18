@@ -1,0 +1,734 @@
+# ====================================================================
+# PROMETHEUS ALERTING RULES
+# Baraka Branch Management Portal - Enterprise Monitoring
+# Generated: 2025-11-18T00:55:57Z
+# ====================================================================
+
+groups:
+  # ====================================================================
+  # APPLICATION HEALTH ALERTS
+  # ====================================================================
+  
+  - name: application_health
+    rules:
+      - alert: ApplicationDown
+        expr: up{job="baraka-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: baraka-app
+        annotations:
+          summary: "Baraka Application is down"
+          description: "Baraka application has been down for more than 1 minute."
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/application-down"
+          
+      - alert: HighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{job="baraka-app",status=~"5.."}[5m]) / 
+            rate(http_requests_total{job="baraka-app"}[5m])
+          ) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: baraka-app
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }}% for Baraka application"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/high-error-rate"
+          
+      - alert: VeryHighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{job="baraka-app",status=~"5.."}[5m]) / 
+            rate(http_requests_total{job="baraka-app"}[5m])
+          ) * 100 > 20
+        for: 2m
+        labels:
+          severity: critical
+          service: baraka-app
+        annotations:
+          summary: "Very high error rate detected"
+          description: "Critical error rate is {{ $value }}% for Baraka application"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/critical-error-rate"
+
+  # ====================================================================
+  # DATABASE ALERTS
+  # ====================================================================
+  
+  - name: database_health
+    rules:
+      - alert: DatabaseDown
+        expr: up{job="mysql"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: mysql
+        annotations:
+          summary: "MySQL database is down"
+          description: "MySQL database has been down for more than 30 seconds"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/database-down"
+          
+      - alert: DatabaseConnectionsHigh
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: mysql
+        annotations:
+          summary: "High database connections"
+          description: "MySQL connections usage is {{ $value }}%"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/high-db-connections"
+          
+      - alert: DatabaseConnectionsVeryHigh
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: mysql
+        annotations:
+          summary: "Very high database connections"
+          description: "MySQL connections usage is {{ $value }}% - approaching limit"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/critical-db-connections"
+          
+      - alert: DatabaseSlowQueries
+        expr: rate(mysql_global_status_slow_queries[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: mysql
+        annotations:
+          summary: "High number of slow queries"
+          description: "MySQL slow queries rate is {{ $value }} per second"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/slow-queries"
+
+  # ====================================================================
+  # REDIS CACHE ALERTS
+  # ====================================================================
+  
+  - name: redis_health
+    rules:
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis cache has been down for more than 30 seconds"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/redis-down"
+          
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory usage is {{ $value }}%"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/redis-memory"
+          
+      - alert: RedisVeryHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis memory usage is very high"
+          description: "Redis memory usage is {{ $value }}% - approaching limit"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/redis-memory-critical"
+          
+      - alert: RedisHighEvictionRate
+        expr: rate(redis_evicted_keys_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High Redis key eviction rate"
+          description: "Redis is evicting {{ $value }} keys per second"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/redis-evictions"
+
+  # ====================================================================
+  # INFRASTRUCTURE ALERTS
+  # ====================================================================
+  
+  - name: infrastructure_health
+    rules:
+      - alert: HighCpuUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/high-cpu"
+          
+      - alert: VeryHighCpuUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Very high CPU usage"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/critical-cpu"
+          
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/high-memory"
+          
+      - alert: VeryHighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Very high memory usage"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/critical-memory"
+          
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is {{ $value }}% free on {{ $labels.instance }}"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/low-disk-space"
+          
+      - alert: DiskSpaceVeryLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 5
+        for: 2m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Very low disk space"
+          description: "Disk space is {{ $value }}% free on {{ $labels.instance }}"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/critical-disk-space"
+
+  # ====================================================================
+  # QUEUE ALERTS
+  # ====================================================================
+  
+  - name: queue_health
+    rules:
+      - alert: QueueLengthHigh
+        expr: redis_connected_clients > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: queue
+        annotations:
+          summary: "High queue length"
+          description: "Queue has {{ $value }} pending jobs"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/high-queue-length"
+          
+      - alert: QueueProcessingStalled
+        expr: rate(laravel_queue_jobs_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: queue
+        annotations:
+          summary: "Queue processing stalled"
+          description: "No jobs are being processed from the queue"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/queue-stalled"
+          
+      - alert: QueueFailureRateHigh
+        expr: |
+          (
+            rate(laravel_queue_jobs_failed_total[5m]) / 
+            rate(laravel_queue_jobs_total[5m])
+          ) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: queue
+        annotations:
+          summary: "High queue failure rate"
+          description: "Queue failure rate is {{ $value }}%"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/queue-failures"
+
+  # ====================================================================
+  # SECURITY ALERTS
+  # ====================================================================
+  
+  - name: security_health
+    rules:
+      - alert: FailedLoginAttempts
+        expr: rate(security_failed_login_attempts_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "High failed login attempts"
+          description: "{{ $value }} failed login attempts per second detected"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/failed-logins"
+          
+      - alert: SecurityBreachAttempt
+        expr: rate(security_breach_attempts_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: security
+        annotations:
+          summary: "Security breach attempts detected"
+          description: "{{ $value }} security breach attempts per second"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/security-breach"
+          
+      - alert: CertificateExpiry
+        expr: ssl_certificate_expiry_seconds < 2592000
+        for: 24h
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate expires in {{ $value | humanizeDuration }}"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/certificate-expiry"
+
+  # ====================================================================
+  # BUSINESS LOGIC ALERTS
+  # ====================================================================
+  
+  - name: business_logic
+    rules:
+      - alert: ShipmentProcessingDelays
+        expr: avg(shipment_processing_time_minutes) > 60
+        for: 15m
+        labels:
+          severity: warning
+          service: logistics
+        annotations:
+          summary: "Shipment processing delays detected"
+          description: "Average shipment processing time is {{ $value }} minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/shipment-delays"
+          
+      - alert: BranchPerformanceDegradation
+        expr: branch_completion_rate < 90
+        for: 30m
+        labels:
+          severity: warning
+          service: logistics
+        annotations:
+          summary: "Branch performance degradation"
+          description: "Branch {{ $labels.branch }} completion rate is {{ $value }}%"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/branch-performance"
+          
+      - alert: HighRejectionRate
+        expr: shipment_rejection_rate > 5
+        for: 15m
+        labels:
+          severity: warning
+          service: logistics
+        annotations:
+          summary: "High shipment rejection rate"
+          description: "Shipment rejection rate is {{ $value }}%"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/high-rejection-rate"
+
+  # ====================================================================
+  # PERFORMANCE ALERTS
+  # ====================================================================
+  
+  - name: performance_health
+    rules:
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: performance
+        annotations:
+          summary: "High response time"
+          description: "95th percentile response time is {{ $value }} seconds"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/high-response-time"
+          
+      - alert: VeryHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: performance
+        annotations:
+          summary: "Very high response time"
+          description: "95th percentile response time is {{ $value }} seconds"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/critical-response-time"
+          
+      - alert: DatabaseQuerySlow
+        expr: avg(mysql_global_status_questions) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database query rate is high"
+          description: "Database query rate is {{ $value }} queries per second"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/database-load"
+
+  # ====================================================================
+  # CAPACITY PLANNING ALERTS
+  # ====================================================================
+  
+  - name: capacity_planning
+    rules:
+      - alert: ResourceUtilizationTrend
+        expr: predict_linear(node_cpu_usage_percent[1h], 24*7*3600) > 95
+        for: 30m
+        labels:
+          severity: warning
+          service: capacity
+        annotations:
+          summary: "Resource utilization trend"
+          description: "CPU usage projected to reach {{ $value }}% in 7 days"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/capacity-planning"
+          
+      - alert: StorageGrowthTrend
+        expr: predict_linear(node_disk_usage_percent[1h], 7*24*3600) > 90
+        for: 30m
+        labels:
+          severity: warning
+          service: capacity
+        annotations:
+          summary: "Storage growth trend"
+          description: "Disk usage projected to reach {{ $value }}% in 7 days"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/storage-growth"
+          
+      - alert: UserGrowthTrend
+        expr: predict_linear(active_users_total[1h], 30*24*3600) > 10000
+        for: 1h
+        labels:
+          severity: warning
+          service: capacity
+        annotations:
+          summary: "User growth trend"
+          description: "Active users projected to reach {{ $value }} in 30 days"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/user-growth"
+
+  # ====================================================================
+  # SECURITY & COMPLIANCE ALERTS
+  # ====================================================================
+  
+  - name: security_compliance
+    rules:
+      - alert: ExcessiveLoginFailures
+        expr: increase(auth_failed_logins_total[5m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Spike in failed logins"
+          description: "Detected {{ $value }} failed login attempts in the last 5 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/login-failures"
+          
+      - alert: SuspiciousAdminPrivilegeChanges
+        expr: increase(admin_privilege_change_total{action="granted"}[10m]) > 5
+        for: 10m
+        labels:
+          severity: critical
+          service: security
+        annotations:
+          summary: "Unusual number of admin privilege grants"
+          description: "{{ $value }} admin privilege grants detected in 10 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/admin-activity"
+          
+      - alert: ApiRateLimitFlood
+        expr: increase(api_rate_limit_triggered_total[1m]) > 100
+        for: 2m
+        labels:
+          severity: warning
+          service: api-gateway
+        annotations:
+          summary: "API rate limit flood detected"
+          description: "Rate limits triggered {{ $value }} times in the last minute"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/rate-limit-flood"
+          
+      - alert: WafBlockedRequestsSpike
+        expr: increase(waf_blocked_requests_total[5m]) > 500
+        for: 5m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "WAF blocked request spike"
+          description: "WAF blocked {{ $value }} requests in 5 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/waf-spike"
+          
+      - alert: JwtValidationFailures
+        expr: increase(jwt_validation_failed_total[5m]) > 25
+        for: 5m
+        labels:
+          severity: critical
+          service: security
+        annotations:
+          summary: "JWT validation failures detected"
+          description: "{{ $value }} JWT tokens failed validation in 5 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/jwt-failures"
+          
+      - alert: CspViolationsSpike
+        expr: increase(csp_violations_total[10m]) > 20
+        for: 10m
+        labels:
+          severity: warning
+          service: web
+        annotations:
+          summary: "CSP violations spike"
+          description: "{{ $value }} CSP violations detected in 10 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/csp-violations"
+          
+      - alert: AuditLogIngestionFailed
+        expr: rate(audit_log_ingest_errors_total[5m]) > 0
+        for: 10m
+        labels:
+          severity: critical
+          service: compliance
+        annotations:
+          summary: "Audit log ingestion failures occurring"
+          description: "Audit log pipeline is reporting ingestion errors"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/audit-pipeline"
+
+  # ====================================================================
+  # BACKUP & DISASTER RECOVERY ALERTS
+  # ====================================================================
+  
+  - name: backup_disaster_recovery
+    rules:
+      - alert: BackupJobFailed
+        expr: increase(backup_job_failed_total[1h]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: backup
+        annotations:
+          summary: "Backup job failure detected"
+          description: "At least one backup job failed within the last hour"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/backup-failure"
+          
+      - alert: BackupAgeExceeded
+        expr: time() - backup_last_success_timestamp > 86400
+        for: 30m
+        labels:
+          severity: critical
+          service: backup
+        annotations:
+          summary: "Backups older than 24 hours"
+          description: "Last successful backup occurred more than 24 hours ago"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/backup-age"
+          
+      - alert: BackupWindowDurationHigh
+        expr: histogram_quantile(0.9, rate(backup_duration_seconds_bucket[1h])) > 5400
+        for: 30m
+        labels:
+          severity: warning
+          service: backup
+        annotations:
+          summary: "Backup window exceeding target"
+          description: "Backup duration p90 is {{ $value }} seconds"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/backup-window"
+          
+      - alert: RestoreTestOverdue
+        expr: time() - restore_last_test_timestamp > 1209600
+        for: 1h
+        labels:
+          severity: warning
+          service: disaster-recovery
+        annotations:
+          summary: "Restore test overdue"
+          description: "Last successful restore test older than 14 days"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/restore-test"
+          
+      - alert: RpoViolation
+        expr: time() - point_in_time_last_recovery_timestamp > 3600
+        for: 30m
+        labels:
+          severity: critical
+          service: disaster-recovery
+        annotations:
+          summary: "RPO target breached"
+          description: "Point-in-time recovery older than 60 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/rpo-violation"
+
+  # ====================================================================
+  # ASYNC PROCESSING (QUEUES & JOBS)
+  # ====================================================================
+  
+  - name: async_processing
+    rules:
+      - alert: QueueDepthHigh
+        expr: laravel_jobs_pending{queue="default"} > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: queues
+        annotations:
+          summary: "Default queue depth is high"
+          description: "Pending jobs on default queue exceed {{ $value }}"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/queue-depth"
+          
+      - alert: QueueProcessingLag
+        expr: rate(laravel_jobs_pushed_total[5m]) - rate(laravel_jobs_processed_total[5m]) > 50
+        for: 5m
+        labels:
+          severity: critical
+          service: queues
+        annotations:
+          summary: "Queue processing cannot keep up"
+          description: "Jobs incoming exceed processed by {{ $value }} per second"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/queue-lag"
+          
+      - alert: FailedJobsSpike
+        expr: increase(laravel_failed_jobs_total[5m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: queues
+        annotations:
+          summary: "Failed jobs spike detected"
+          description: "{{ $value }} jobs failed in the last 5 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/failed-jobs"
+          
+      - alert: WorkerRestartsFrequent
+        expr: increase(queue_worker_restarts_total[10m]) > 3
+        for: 10m
+        labels:
+          severity: warning
+          service: queues
+        annotations:
+          summary: "Queue workers restarting frequently"
+          description: "{{ $value }} queue worker restarts recorded in 10 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/worker-restarts"
+          
+      - alert: SchedulerMissedRun
+        expr: time() - scheduler_last_success_timestamp > 900
+        for: 10m
+        labels:
+          severity: critical
+          service: scheduler
+        annotations:
+          summary: "Laravel scheduler may be stuck"
+          description: "No successful scheduler run recorded for over 15 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/scheduler"
+          
+      - alert: JobStuckCritical
+        expr: max_over_time(horizon_job_runtime_seconds{queue="critical"}[5m]) > 300
+        for: 5m
+        labels:
+          severity: critical
+          service: queues
+        annotations:
+          summary: "Critical queue job running too long"
+          description: "At least one critical job exceeded 5 minutes runtime"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/job-stuck"
+          
+      - alert: HorizonQueueLatency
+        expr: horizon_queue_wait_seconds{queue="high"} > 60
+        for: 5m
+        labels:
+          severity: warning
+          service: queues
+        annotations:
+          summary: "High queue latency detected"
+          description: "Horizon reports {{ $value }} seconds wait time on high queue"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/queue-latency"
+
+  # ====================================================================
+  # FRONTEND, API & BUSINESS KPI ALERTS
+  # ====================================================================
+  
+  - name: frontend_api_business
+    rules:
+      - alert: ApiLatencySlaBreach
+        expr: histogram_quantile(0.99, rate(api_latency_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "API latency SLA breached"
+          description: "P99 API latency is {{ $value }} seconds"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/api-latency"
+          
+      - alert: ApiAvailabilityDrop
+        expr: avg_over_time(api_availability_percent[10m]) < 99.5
+        for: 10m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "API availability degraded"
+          description: "API availability averaged {{ $value }}% over last 10 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/api-availability"
+          
+      - alert: FrontendErrorSpike
+        expr: increase(frontend_error_events_total[5m]) > 200
+        for: 5m
+        labels:
+          severity: warning
+          service: frontend
+        annotations:
+          summary: "Frontend error spike detected"
+          description: "{{ $value }} browser errors captured in 5 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/frontend-errors"
+          
+      - alert: PwaSyncFailures
+        expr: increase(pwa_sync_failures_total[10m]) > 15
+        for: 10m
+        labels:
+          severity: warning
+          service: frontend
+        annotations:
+          summary: "PWA sync failures detected"
+          description: "{{ $value }} offline sync failures recorded in 10 minutes"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/pwa-sync"
+          
+      - alert: CdnCacheMissHigh
+        expr: (100 - avg(cdn_cache_hit_ratio_percent{provider="cloudfront"})) > 15
+        for: 15m
+        labels:
+          severity: warning
+          service: cdn
+        annotations:
+          summary: "CDN cache miss rate high"
+          description: "CDN cache misses exceed 15% ({{ $value }}%)"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/cdn-cache"
+          
+      - alert: PaymentGatewayErrors
+        expr: increase(payment_gateway_errors_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+          service: payments
+        annotations:
+          summary: "Payment gateway errors detected"
+          description: "{{ $value }} errors recorded in payment gateway integration"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/payment-gateway"
+          
+      - alert: ShipmentCreationDrop
+        expr: increase(shipments_created_total[15m]) < 10
+        for: 15m
+        labels:
+          severity: warning
+          service: logistics
+        annotations:
+          summary: "Shipment creation volume dropped"
+          description: "Shipments created in 15 minutes below target ({{ $value }})"
+          runbook_url: "https://docs.baraka.sanaa.co/runbooks/shipment-volume"

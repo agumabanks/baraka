@@ -470,37 +470,7 @@ php artisan translations:check
 echo "✅ Translation system deployed successfully!"
 ```
 
-## 10. 📱 Mobile App Integration
-
-### Flutter Example
-```dart
-class TranslationService {
-  static Future<Map<String, String>> loadTranslations(String locale) async {
-    final response = await http.get(
-      Uri.parse('${ApiConfig.baseUrl}/api/v1/translations/$locale')
-    );
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return Map<String, String>.from(data['translations']);
-    }
-    
-    return {};
-  }
-  
-  static String translate(String key, Map<String, String> replacements) {
-    String translation = _translations[key] ?? key;
-    
-    replacements.forEach((placeholder, value) {
-      translation = translation.replaceAll(':$placeholder', value);
-    });
-    
-    return translation;
-  }
-}
-```
-
-## 11. 🔍 Testing Integration
+## 10. 🔍 Testing Integration
 
 ### Feature Tests
 ```php
@@ -534,7 +504,7 @@ class TranslationIntegrationTest extends TestCase
 }
 ```
 
-## 12. 📈 Performance Optimizations
+## 11. 📈 Performance Optimizations
 
 ### Lazy Loading
 ```php

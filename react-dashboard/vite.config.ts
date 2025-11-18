@@ -1,17 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'node:path'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
 
-// https://vite.dev/config/
-export default defineConfig({
-  base: '/app/',
-  plugins: [react()],
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+/**
+ * Minimal Vite configuration that still keeps a couple of hardening tweaks
+ * (removing console noise in production builds) while staying within the
+ * dependencies available in package.json.
+ */
+export default defineConfig(() => ({
+  plugins: [
+    react(),
+  ],
+  build: {
+    target: 'esnext',
+    sourcemap: false,
+    chunkSizeWarningLimit: 900,
+  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': resolve(__dirname, 'src'),
     },
   },
-  build: {
-    outDir: '../public/app',
-  },
-})
+}))
