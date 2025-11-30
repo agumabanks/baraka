@@ -158,7 +158,7 @@ const MerchantDetail: React.FC = () => {
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Recent Parcels</p>
               <h2 className="text-xl font-semibold text-mono-black">Latest fulfilment</h2>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/parcels')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/admin/dashboard/parcels')}>
               Open Parcel Console
             </Button>
           </header>

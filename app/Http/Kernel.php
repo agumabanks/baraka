@@ -41,6 +41,9 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\LanguageManager::class,
+            \App\Http\Middleware\Security\TrackSessionActivity::class, // Track all session activity
+            \App\Http\Middleware\Security\CheckAccountLockout::class,
+            \App\Http\Middleware\Security\CheckPasswordExpiry::class,
         ],
 
         'api' => [
@@ -86,7 +89,18 @@ class Kernel extends HttpKernel
         'api.rate_limit' => \App\Http\Middleware\ApiRateLimitMiddleware::class,
         'advanced-rate-limit' => \App\Http\Middleware\AdvancedRateLimitMiddleware::class,
         'api-security-validation' => \App\Http\Middleware\EnhancedApiSecurityMiddleware::class,
+        'api.simple' => \App\Http\Middleware\SimpleApiMiddleware::class,
+        'api.gateway' => \App\Http\Middleware\ApiGatewayMiddleware::class,
         'mobile.errors' => \App\Http\Middleware\MobileScanningErrorHandler::class,
+        'branch.context' => \App\Http\Middleware\BranchContext::class,
+        'api.key' => \App\Http\Middleware\ApiKeyAuthentication::class,
+        'branch.locale' => \App\Http\Middleware\BranchLocale::class,
+        'branch.isolation' => \App\Http\Middleware\EnforceBranchIsolation::class,
+        
+        // Account Security Middleware
+        'account.lockout' => \App\Http\Middleware\Security\CheckAccountLockout::class,
+        'session.activity' => \App\Http\Middleware\Security\TrackSessionActivity::class,
+        'password.expiry' => \App\Http\Middleware\Security\CheckPasswordExpiry::class,
 
     ];
 }

@@ -18,6 +18,11 @@ class Kernel extends ConsoleKernel
         // $schedule->command('database:autobackup')->daily();
         $schedule->command('invoice:generate')->daily('13:00');
         
+        // Mark overdue invoices daily
+        $schedule->command('invoices:mark-overdue')
+            ->dailyAt('01:00')
+            ->withoutOverlapping();
+
         // Disaster Recovery & Backups
         $schedule->command('backup:database --label=automatic')
             ->dailyAt('02:00')
@@ -40,6 +45,22 @@ class Kernel extends ConsoleKernel
                 dispatch(new \App\Jobs\DeliverWebhook($delivery));
             }
         })->everyFiveMinutes();
+
+        // Auto-lock consolidations that reached cutoff time
+        $schedule->command('consolidations:auto-lock')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping()
+            ->onSuccess(function () {
+                \Illuminate\Support\Facades\Log::info('Auto-lock consolidations completed');
+            });
+
+        $schedule->command('handoff:sla-monitor')
+            ->everyTenMinutes()
+            ->withoutOverlapping();
+
+        $schedule->command('shipment:sla-monitor')
+            ->everyTenMinutes()
+            ->withoutOverlapping();
     }
 
     /**

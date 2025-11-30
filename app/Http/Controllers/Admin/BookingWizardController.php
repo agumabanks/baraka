@@ -109,8 +109,8 @@ class BookingWizardController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:users,id',
-            'origin_branch_id' => 'required|exists:hubs,id',
-            'dest_branch_id' => 'required|exists:hubs,id|different:origin_branch_id',
+            'origin_branch_id' => 'required|exists:branches,id',
+            'dest_branch_id' => 'required|exists:branches,id|different:origin_branch_id',
             'service_level' => 'required|in:STANDARD,EXPRESS,ECONOMY',
             'incoterm' => 'required|in:DAP,DDP',
             'declared_value' => 'nullable|numeric|min:0',

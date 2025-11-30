@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shipment;
+use Illuminate\Http\Request;
 use App\Traits\ApiReturnFormatTrait;
 
 /**
@@ -76,7 +77,9 @@ class TrackingController extends Controller
     public function show($token)
     {
         $shipment = Shipment::where('public_token', $token)
-            ->with(['parcels', 'scanEvents', 'originBranch', 'destBranch'])
+            ->with(['scanEvents', 'originBranch', 'destBranch', 'trackerEvents' => function ($q) {
+                $q->orderByDesc('recorded_at')->limit(25);
+            }])
             ->first();
 
         if (! $shipment) {
@@ -84,24 +87,77 @@ class TrackingController extends Controller
         }
 
         return $this->responseWithSuccess('Tracking information retrieved', [
-            'shipment' => [
-                'id' => $shipment->id,
-                'tracking_number' => $shipment->tracking_number,
-                'current_status' => $shipment->current_status,
-                'origin_branch' => $shipment->originBranch?->name,
-                'dest_branch' => $shipment->destBranch?->name,
-                'total_weight' => $shipment->total_weight,
-                'total_parcels' => $shipment->total_parcels,
-                'last_scan' => $shipment->last_scan,
-                'scan_events' => $shipment->scanEvents->map(function ($event) {
-                    return [
-                        'type' => $event->type,
-                        'occurred_at' => $event->occurred_at,
-                        'location' => $event->location,
-                    ];
-                }),
-                'created_at' => $shipment->created_at,
-            ],
+            'shipment' => $this->buildPayload($shipment),
         ]);
+    }
+
+    public function publicShow(Request $request, $token)
+    {
+        if (! $request->hasValidSignature()) {
+            abort(403);
+        }
+
+        $shipment = Shipment::where('public_token', $token)
+            ->with(['originBranch', 'destBranch', 'trackerEvents' => function ($q) {
+                $q->orderByDesc('recorded_at')->limit(10);
+            }])
+            ->firstOrFail();
+
+        $branchId = (int) $request->get('branch');
+        if ($branchId && ! in_array($branchId, [$shipment->origin_branch_id, $shipment->dest_branch_id], true)) {
+            abort(403, 'Branch mismatch');
+        }
+
+        return $this->responseWithSuccess('Tracking information retrieved', [
+            'shipment' => $this->buildPayload($shipment),
+        ]);
+    }
+
+    private function buildPayload(Shipment $shipment): array
+    {
+        $hasParcels = \Illuminate\Support\Facades\Schema::hasTable('parcels')
+            && \Illuminate\Support\Facades\Schema::hasColumn('parcels', 'shipment_id');
+
+        if ($hasParcels) {
+            $shipment->loadMissing('parcels');
+            $totalWeight = $shipment->parcels->sum('weight_kg');
+            $totalParcels = $shipment->parcels->count();
+        } else {
+            $totalWeight = null;
+            $totalParcels = null;
+        }
+
+        return [
+            'id' => $shipment->id,
+            'tracking_number' => $shipment->tracking_number,
+            'current_status' => $shipment->current_status,
+            'origin_branch' => $shipment->originBranch?->name,
+            'dest_branch' => $shipment->destBranch?->name,
+            'total_weight' => $totalWeight,
+            'total_parcels' => $totalParcels,
+            'last_scan' => $shipment->last_scan,
+            'scan_events' => $shipment->scanEvents->map(function ($event) {
+                return [
+                    'type' => $event->type,
+                    'occurred_at' => $event->occurred_at,
+                    'location' => $event->location,
+                ];
+            }),
+            'tracker_events' => $shipment->trackerEvents?->map(function ($event) {
+                return [
+                    'tracker_id' => $event->tracker_id,
+                    'temperature_c' => $event->temperature_c,
+                    'battery_percent' => $event->battery_percent,
+                    'latitude' => $event->latitude,
+                    'longitude' => $event->longitude,
+                    'recorded_at' => $event->recorded_at,
+                ];
+            }) ?? [],
+            'created_at' => $shipment->created_at,
+            'public_link' => url()->signedRoute('public.track', [
+                'token' => $shipment->public_token,
+                'branch' => $shipment->origin_branch_id,
+            ]),
+        ];
     }
 }

@@ -89,7 +89,7 @@ const SupportForm: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['support', 'tickets'] });
       window.alert('Support ticket created successfully.');
-      navigate('/dashboard/support');
+      navigate('/admin/dashboard/support');
     },
     onError: (error: Error) => {
       console.error('Failed to create support ticket', error);
@@ -107,7 +107,7 @@ const SupportForm: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['support', 'tickets'] });
       queryClient.invalidateQueries({ queryKey: ['support', 'ticket', id] });
       window.alert('Support ticket updated successfully.');
-      navigate(`/dashboard/support/${id}`);
+      navigate(`/admin/dashboard/support/${id}`);
     },
     onError: (error: Error) => {
       console.error('Failed to update support ticket', error);
@@ -173,7 +173,7 @@ const SupportForm: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/dashboard/support')}
+            onClick={() => navigate('/admin/dashboard/support')}
             className="uppercase tracking-[0.2em]"
           >
             ← Back
@@ -269,7 +269,7 @@ const SupportForm: React.FC = () => {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => navigate('/dashboard/support')}
+              onClick={() => navigate('/admin/dashboard/support')}
               disabled={isSaving}
             >
               Cancel

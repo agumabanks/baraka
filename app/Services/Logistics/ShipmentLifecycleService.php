@@ -114,13 +114,15 @@ class ShipmentLifecycleService
             $shipment->fill($updates);
             $shipment->save();
 
+            $scanEvent = $context['scan_event'] ?? null;
+
             $transition = ShipmentTransition::create([
                 'shipment_id' => $shipment->id,
                 'from_status' => $current?->value,
                 'to_status' => $target->value,
-                'trigger' => $context['trigger'] ?? ($context['scan_event'] ? 'scan_event' : 'manual'),
-                'source_type' => $this->resolveSourceType($context['source'] ?? $context['scan_event'] ?? null),
-                'source_id' => $this->resolveSourceId($context['source'] ?? $context['scan_event'] ?? null),
+                'trigger' => $context['trigger'] ?? ($scanEvent ? 'scan_event' : 'manual'),
+                'source_type' => $this->resolveSourceType($context['source'] ?? $scanEvent ?? null),
+                'source_id' => $this->resolveSourceId($context['source'] ?? $scanEvent ?? null),
                 'performed_by' => $performedById,
                 'context' => $this->sanitizeContext($context),
             ]);

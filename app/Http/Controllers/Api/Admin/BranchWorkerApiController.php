@@ -26,6 +26,28 @@ class BranchWorkerApiController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorizeManage();
+
+        $roleValues = array_map(fn (BranchWorkerRole $role) => $role->value, BranchWorkerRole::cases());
+        $employmentValues = array_map(fn (EmploymentStatus $status) => $status->value, EmploymentStatus::cases());
+
+        $validator = Validator::make($request->all(), [
+            'branch_id' => ['sometimes', 'integer', 'exists:branches,id'],
+            'role' => ['sometimes', 'string', Rule::in($roleValues)],
+            'employment_status' => ['sometimes', 'string', Rule::in($employmentValues)],
+            'status' => ['sometimes', 'string', 'in:active,inactive,suspended,1,0,true,false'],
+            'search' => ['sometimes', 'string', 'max:120'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:200'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         $query = BranchWorker::with(['user', 'branch']);
 
         if ($request->filled('branch_id')) {
@@ -33,15 +55,15 @@ class BranchWorkerApiController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->byRole($request->string('role')->value());
+            $query->byRole($request->input('role'));
         }
 
         if ($request->filled('employment_status')) {
-            $query->withEmploymentStatus($request->string('employment_status')->value());
+            $query->withEmploymentStatus($request->input('employment_status'));
         }
 
         if ($request->filled('status')) {
-            $status = strtolower($request->string('status')->value());
+            $status = strtolower((string) $request->input('status'));
             $legacy = match ($status) {
                 'active', '1', 'true' => Status::ACTIVE,
                 default => Status::INACTIVE,
@@ -78,6 +100,8 @@ class BranchWorkerApiController extends Controller
      */
     public function formMeta(): JsonResponse
     {
+        $this->authorizeManage();
+
         $branches = Branch::query()
             ->select(['id', 'name', 'code', 'type'])
             ->orderBy('name')
@@ -124,6 +148,8 @@ class BranchWorkerApiController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorizeManage();
+
         $validator = Validator::make($request->all(), $this->validationRules(null, $request->filled('user_id')));
 
         if ($validator->fails()) {
@@ -186,6 +212,8 @@ class BranchWorkerApiController extends Controller
      */
     public function show($id): JsonResponse
     {
+        $this->authorizeManage();
+
         $worker = BranchWorker::with(['user', 'branch'])->find($id);
 
         if (!$worker) {
@@ -207,6 +235,8 @@ class BranchWorkerApiController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        $this->authorizeManage();
+
         $worker = BranchWorker::with('user')->find($id);
 
         if (!$worker) {
@@ -291,6 +321,8 @@ class BranchWorkerApiController extends Controller
      */
     public function destroy($id): JsonResponse
     {
+        $this->authorizeManage();
+
         $worker = BranchWorker::find($id);
 
         if (!$worker) {
@@ -312,10 +344,10 @@ class BranchWorkerApiController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Branch worker deactivated successfully'
-            ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Branch worker deactivated successfully'
+        ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -474,6 +506,8 @@ class BranchWorkerApiController extends Controller
      */
     public function assignShipment(Request $request, BranchWorker $worker): JsonResponse
     {
+        $this->authorizeManage();
+
         $data = $request->validate([
             'shipment_id' => ['required', 'integer', 'exists:shipments,id'],
         ]);
@@ -498,6 +532,8 @@ class BranchWorkerApiController extends Controller
      */
     public function unassign(BranchWorker $worker): JsonResponse
     {
+        $this->authorizeManage();
+
         $updated = Shipment::where('assigned_worker_id', $worker->id)
             ->update([
                 'assigned_worker_id' => null,
@@ -509,5 +545,23 @@ class BranchWorkerApiController extends Controller
             'message' => 'Worker unassigned from shipments',
             'data' => ['shipments_updated' => $updated],
         ]);
+    }
+
+    /**
+     * Centralized authorization for workforce management.
+     */
+    private function authorizeManage(): void
+    {
+        $user = request()->user();
+
+        if (! $user) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        if ($user->hasRole(['admin', 'operations_admin']) || $user->hasPermission('branch_manage') || $user->hasPermission('workforce_manage')) {
+            return;
+        }
+
+        abort(403, 'This action is unauthorized.');
     }
 }

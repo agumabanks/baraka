@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shipment;
+use App\Models\Backend\Branch;
 use App\Models\ScanEvent;
 use App\Models\Bag;
 use App\Models\Route;
@@ -30,21 +31,19 @@ class ShipmentController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorize('viewAny', Shipment::class);
-
-        $query = Shipment::with(['originBranch', 'destBranch', 'customer', 'currentScanEvent']);
+        $query = Shipment::with(['originBranch', 'destBranch', 'customer']);
 
         // Enhanced filters
         if ($q = trim((string) $request->input('q'))) {
             $query->where(function ($sq) use ($q) {
                 $sq->where('id', $q)
-                    ->orWhere('tracking', 'like', "%$q%")
-                    ->orWhere('reference_number', 'like', "%$q%");
+                    ->orWhere('tracking_number', 'like', "%$q%")
+                    ->orWhere('waybill_number', 'like', "%$q%");
             });
         }
 
         if ($status = $request->input('status')) {
-            $query->where('current_status', $status);
+            $query->where('status', $status);
         }
 
         if ($priority = $request->input('priority')) {
@@ -85,10 +84,32 @@ class ShipmentController extends Controller
 
         $shipments = $query->latest()->paginate(25)->withQueryString();
 
-        return view('backend.admin.shipments.index', compact('shipments'));
+        // Get stats
+        $stats = [
+            'total' => Shipment::count(),
+            'delivered' => Shipment::where('status', 'delivered')->count(),
+            'in_transit' => Shipment::where('status', 'in_transit')->count(),
+            'pending' => Shipment::whereIn('status', ['created', 'processing'])->count(),
+        ];
+
+        // Statuses for filter
+        $statuses = [
+            'created' => 'Created',
+            'picked_up' => 'Picked Up',
+            'processing' => 'Processing',
+            'in_transit' => 'In Transit',
+            'out_for_delivery' => 'Out for Delivery',
+            'delivered' => 'Delivered',
+            'cancelled' => 'Cancelled',
+            'returned' => 'Returned',
+        ];
+
+        $branches = Branch::select('id', 'name')->orderBy('name')->get();
+
+        return view('admin.shipments.index', compact('shipments', 'stats', 'statuses', 'branches'));
     }
 
-    public function show(Shipment $shipment)
+    public function show(Request $request, Shipment $shipment)
     {
         $this->authorize('view', $shipment);
 
@@ -99,19 +120,28 @@ class ShipmentController extends Controller
             'scanEvents' => function ($query) {
                 $query->latest();
             },
-            'bags',
             'podProofs',
             'assignedDriver'
         ]);
 
-        return view('backend.admin.shipments.show', compact('shipment'));
+        // Return JSON for AJAX/modal requests
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'shipment' => $shipment,
+                'html' => view('admin.shipments._show_modal', compact('shipment'))->render(),
+            ]);
+        }
+
+        return view('admin.shipments.show', compact('shipment'));
     }
 
     public function create()
     {
         $this->authorize('create', Shipment::class);
 
-        return view('backend.admin.shipments.create');
+        // Redirect to the Shipment POS system for a better booking experience
+        return redirect()->route('admin.pos.index');
     }
 
     public function store(Request $request)
@@ -150,7 +180,14 @@ class ShipmentController extends Controller
     {
         $this->authorize('update', $shipment);
 
-        return view('backend.admin.shipments.edit', compact('shipment'));
+        $branches = Branch::select('id', 'name', 'code')->orderBy('name')->get();
+        $customers = \App\Models\User::where('role_id', '!=', 1)
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->limit(100)
+            ->get();
+
+        return view('admin.shipments.edit', compact('shipment', 'branches', 'customers'));
     }
 
     public function update(Request $request, Shipment $shipment)
@@ -322,7 +359,7 @@ class ShipmentController extends Controller
 
         $exceptions = $query->latest()->paginate(25);
 
-        return view('backend.admin.shipments.exceptions', compact('exceptions'));
+        return view('admin.shipments.exceptions', compact('exceptions'));
     }
 
     public function resolveException(Request $request, Shipment $shipment): JsonResponse
@@ -349,7 +386,7 @@ class ShipmentController extends Controller
 
         $podProofs = $shipment->podProofs()->latest()->get();
 
-        return view('backend.admin.shipments.pod-verification', compact('shipment', 'podProofs'));
+        return view('admin.shipments.pod-verification', compact('shipment', 'podProofs'));
     }
 
     public function verifyPod(Request $request, Shipment $shipment): JsonResponse
@@ -377,7 +414,7 @@ class ShipmentController extends Controller
 
         $scanEvents = $shipment->scanEvents()->with('user')->latest()->paginate(50);
 
-        return view('backend.admin.shipments.scan-events', compact('shipment', 'scanEvents'));
+        return view('admin.shipments.scan-events', compact('shipment', 'scanEvents'));
     }
 
     public function addScanEvent(Request $request, Shipment $shipment): JsonResponse
@@ -410,7 +447,7 @@ class ShipmentController extends Controller
 
         $bags = $shipment->bags()->with('route')->latest()->get();
 
-        return view('backend.admin.shipments.bags', compact('shipment', 'bags'));
+        return view('admin.shipments.bags', compact('shipment', 'bags'));
     }
 
     public function assignToBag(Request $request, Shipment $shipment): JsonResponse
@@ -446,7 +483,7 @@ class ShipmentController extends Controller
 
         $manifests = $query->latest()->paginate(25);
 
-        return view('backend.admin.shipments.manifests', compact('manifests'));
+        return view('admin.shipments.manifests', compact('manifests'));
     }
 
     public function export(Request $request)

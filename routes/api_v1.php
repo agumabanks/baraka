@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\QuotesController;
 use App\Http\Controllers\Api\V1\ShipmentEventController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TrackingController;
+use App\Http\Controllers\Api\V1\TrackerController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,11 @@ use Illuminate\Support\Facades\Route;
 
 // Public routes for tracking
 Route::get('tracking/{token}', [TrackingController::class, 'show'])->name('tracking.show');
+Route::post('tracking/hooks', [TrackerController::class, 'ingest'])->name('tracking.hooks.ingest');
+
+// Mobile Money Payment Callbacks (public webhooks)
+Route::post('payments/mobile/{provider}/callback', [\App\Http\Controllers\Api\V1\MobilePaymentController::class, 'callback'])
+    ->name('mobile-payments.callback');
 
 // Authenticated client routes (api guard with device binding)
 Route::middleware(['auth:api', 'bind_device'])->group(function () {
@@ -67,6 +73,13 @@ Route::middleware(['auth:api', 'bind_device'])->group(function () {
     Route::middleware('idempotency')->group(function () {
         Route::post('tasks/{task}/pod', [PodController::class, 'store']);
         Route::post('pod/{pod}/verify', [PodController::class, 'verify']);
+    });
+
+    // Mobile Money Payments
+    Route::prefix('payments/mobile')->name('mobile-payments.')->group(function () {
+        Route::get('providers', [\App\Http\Controllers\Api\V1\MobilePaymentController::class, 'getProviders'])->name('providers');
+        Route::post('initiate', [\App\Http\Controllers\Api\V1\MobilePaymentController::class, 'initiatePayment'])->name('initiate');
+        Route::get('status/{transactionId}', [\App\Http\Controllers\Api\V1\MobilePaymentController::class, 'checkStatus'])->name('status');
     });
 });
 

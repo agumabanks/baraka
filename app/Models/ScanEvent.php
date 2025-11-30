@@ -31,6 +31,26 @@ class ScanEvent extends Model
         'geojson',
         'note',
         'payload',
+        // Enhanced GPS fields
+        'latitude',
+        'longitude',
+        'gps_accuracy',
+        // POD fields
+        'photo_path',
+        'signature_path',
+        'recipient_name',
+        'recipient_id_type',
+        'recipient_id_number',
+        // Validation fields
+        'is_validated',
+        'validation_errors',
+        'distance_from_expected',
+        // Geofencing
+        'geofence_id',
+        'is_within_geofence',
+        // Device info
+        'device_id',
+        'device_info',
     ];
 
     protected $casts = [
@@ -39,6 +59,15 @@ class ScanEvent extends Model
         'occurred_at' => 'datetime',
         'geojson' => 'array',
         'payload' => 'array',
+        // Enhanced casts
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
+        'gps_accuracy' => 'decimal:2',
+        'is_validated' => 'boolean',
+        'validation_errors' => 'array',
+        'distance_from_expected' => 'decimal:2',
+        'is_within_geofence' => 'boolean',
+        'device_info' => 'array',
     ];
 
     /**

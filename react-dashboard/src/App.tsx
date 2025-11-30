@@ -219,14 +219,17 @@ function AppContent() {
     // Strip leading slash to clean up
     let cleanPath = path.startsWith('/') ? path.slice(1) : path;
     
-    // Remove 'dashboard' prefix if present in the path
+    // Remove 'dashboard' or 'admin/dashboard' prefix if present in the path
     if (cleanPath === 'dashboard' || cleanPath.startsWith('dashboard/')) {
       cleanPath = cleanPath.replace(/^dashboard\/?/, '');
+    }
+    if (cleanPath === 'admin/dashboard' || cleanPath.startsWith('admin/dashboard/')) {
+      cleanPath = cleanPath.replace(/^admin\/dashboard\/?/, '');
     }
     
     // Build absolute path from root to prevent path concatenation
     // This ensures navigation works correctly no matter what page we're on
-    const absolutePath = cleanPath ? `/dashboard/${cleanPath}` : '/dashboard';
+    const absolutePath = cleanPath ? `/admin/dashboard/${cleanPath}` : '/admin/dashboard';
     
     console.log('[Navigation] Navigating to absolute path:', absolutePath);
     
@@ -305,12 +308,12 @@ function AppContent() {
   const breadcrumbs = useMemo(() => {
     const crumbs = [] as { label: string; href?: string; active?: boolean }[]
 
-    if (location.pathname === '/dashboard' || !routeMeta) {
-      crumbs.push({ label: 'Dashboard', href: '/dashboard', active: true })
+    if (location.pathname === '/admin/dashboard' || !routeMeta) {
+      crumbs.push({ label: 'Dashboard', href: '/admin/dashboard', active: true })
       return crumbs
     }
 
-    crumbs.push({ label: 'Dashboard', href: '/dashboard', active: false })
+    crumbs.push({ label: 'Dashboard', href: '/admin/dashboard', active: false })
 
     const activeHref = resolveDashboardNavigatePath(routeMeta.path)
 
@@ -670,6 +673,18 @@ function AppContent() {
   )
 }
 
+// Redirect component that preserves sub-paths when redirecting /dashboard/* to /admin/dashboard/*
+function DashboardRedirect() {
+  const location = useLocation()
+  const pathname = location.pathname
+  
+  // Extract the sub-path after /dashboard/
+  const subPath = pathname.replace(/^\/dashboard\/?/, '')
+  const targetPath = subPath ? `/admin/dashboard/${subPath}` : '/admin/dashboard'
+  
+  return <Navigate to={targetPath + location.search + location.hash} replace />
+}
+
 function App() {
   const configuredBase = (import.meta.env.BASE_URL ?? '/').replace(/\/$/, '')
 
@@ -697,14 +712,16 @@ function App() {
 
             {/* Protected Dashboard */}
             <Route
-              path="/dashboard/*"
+              path="/admin/dashboard/*"
               element={(
                 <ProtectedRoute>
                   <AppContent />
                 </ProtectedRoute>
               )}
             />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* Redirect /dashboard/* to /admin/dashboard/* preserving sub-paths */}
+            <Route path="/dashboard/*" element={<DashboardRedirect />} />
+            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>
         </Router>
       </AuthProvider>

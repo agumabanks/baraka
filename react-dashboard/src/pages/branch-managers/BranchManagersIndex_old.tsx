@@ -93,7 +93,7 @@ const BranchManagersIndex: React.FC = () => {
               variant="primary" 
               size="sm" 
               className="uppercase tracking-[0.25em]"
-              onClick={() => navigate('/dashboard/branch-managers/create')}
+              onClick={() => navigate('/admin/dashboard/branch-managers/create')}
             >
               <i className="fas fa-plus mr-2" aria-hidden="true" />
               Add Manager
@@ -127,7 +127,7 @@ const BranchManagersIndex: React.FC = () => {
                 <Button 
                   variant="primary" 
                   size="sm"
-                  onClick={() => navigate('/dashboard/branch-managers/create')}
+                  onClick={() => navigate('/admin/dashboard/branch-managers/create')}
                 >
                   <i className="fas fa-plus mr-2" aria-hidden="true" />
                   Add First Manager
@@ -201,14 +201,14 @@ const BranchManagersIndex: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/dashboard/branch-managers/${manager.id}`)}
+                            onClick={() => navigate(`/admin/dashboard/branch-managers/${manager.id}`)}
                           >
                             <i className="fas fa-eye" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/dashboard/branch-managers/${manager.id}/edit`)}
+                            onClick={() => navigate(`/admin/dashboard/branch-managers/${manager.id}/edit`)}
                           >
                             <i className="fas fa-edit" aria-hidden="true" />
                           </Button>

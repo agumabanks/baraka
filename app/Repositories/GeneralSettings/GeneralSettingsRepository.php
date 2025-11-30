@@ -12,10 +12,17 @@ use Illuminate\Support\Str;
 class GeneralSettingsRepository implements GeneralSettingsInterface
 {
     protected bool $supportsDetailsColumn;
+    protected bool $supportsPrefixColumn;
 
     public function __construct()
     {
-        $this->supportsDetailsColumn = Schema::hasColumn('general_settings', 'details');
+        try {
+            $this->supportsDetailsColumn = Schema::hasColumn('general_settings', 'details');
+            $this->supportsPrefixColumn = Schema::hasColumn('general_settings', 'prefix');
+        } catch (\Throwable $e) {
+            $this->supportsDetailsColumn = false;
+            $this->supportsPrefixColumn = false;
+        }
     }
 
     public function all()
@@ -23,13 +30,17 @@ class GeneralSettingsRepository implements GeneralSettingsInterface
         $row = GeneralSettings::query()->first();
 
         if (! $row) {
-            $row = GeneralSettings::create([
+            $payload = [
                 'name' => config('app.name', 'Baraka Sanaa'),
                 'phone' => null,
                 'tracking_id' => null,
                 'details' => $this->defaultPreferences(),
-                'prefix' => null,
-            ]);
+            ];
+            if ($this->supportsPrefixColumn) {
+                $payload['prefix'] = null;
+            }
+
+            $row = GeneralSettings::create($payload);
 
             $row->currency = $row->currency ?? 'UGX';
             $row->copyright = $row->copyright ?? sprintf('© %s', now()->year);
@@ -67,13 +78,16 @@ class GeneralSettingsRepository implements GeneralSettingsInterface
         $row = GeneralSettings::query()->first();
 
         if (! $row) {
-            $row = GeneralSettings::create([
+            $payload = [
                 'name' => $request->name,
                 'phone' => $request->phone,
                 'tracking_id' => null,
                 'details' => null,
-                'prefix' => null,
-            ]);
+            ];
+            if ($this->supportsPrefixColumn) {
+                $payload['prefix'] = null;
+            }
+            $row = GeneralSettings::create($payload);
         }
         $row->name = $request->name;
         $row->phone = $request->phone;
@@ -119,6 +133,7 @@ class GeneralSettingsRepository implements GeneralSettingsInterface
         $row->save();
 
         Cache::forget('settings');
+        Cache::forget('system:settings');
 
         if (! $this->supportsDetailsColumn) {
             $fresh = $row->fresh();
@@ -168,6 +183,9 @@ class GeneralSettingsRepository implements GeneralSettingsInterface
                 'timezone' => 'Africa/Nairobi',
                 'country' => 'Uganda',
             ],
+            'localization' => [
+                'default_locale' => config('app.locale', 'en'),
+            ],
             'branding' => [
                 'theme' => 'light',
                 'sidebar_density' => 'comfortable',
@@ -186,6 +204,7 @@ class GeneralSettingsRepository implements GeneralSettingsInterface
                 'enforce_cod_settlement_workflow' => true,
                 'enable_invoice_emails' => true,
                 'default_tax_rate' => 0,
+                'default_currency' => 'USD',
                 'rounding_mode' => 'nearest',
             ],
             'notifications' => [

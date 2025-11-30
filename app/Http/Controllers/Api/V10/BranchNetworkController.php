@@ -15,6 +15,7 @@ use App\Services\BranchCapacityService;
 use App\Services\BranchHierarchyService;
 use App\Services\BranchPerformanceService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,6 +33,8 @@ class BranchNetworkController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorizeNetworkAccess();
+
         $perPage = min(max((int) $request->input('per_page', 15), 1), 100);
         $since24Hours = Carbon::now()->subDay();
 
@@ -152,6 +155,8 @@ class BranchNetworkController extends Controller
      */
     public function show(Branch $branch): JsonResponse
     {
+        $this->authorizeNetworkAccess();
+
         $branch->load([
             'parent:id,name,code',
             'children:id,name,code,parent_branch_id',
@@ -172,9 +177,13 @@ class BranchNetworkController extends Controller
 
         $analytics = $this->analyticsService->getBranchPerformanceAnalytics($branch);
         $capacity = $this->capacityService->getCapacityAnalysis($branch);
-        $snapshot = $this->performanceService
-            ->generateSnapshot($branch, 'daily', now(), false)
-            ->toArray();
+        $snapshot = Cache::remember(
+            "branch_snapshot_daily_{$branch->id}",
+            300,
+            fn () => $this->performanceService
+                ->generateSnapshot($branch, 'daily', now(), false)
+                ->toArray()
+        );
 
         return response()->json([
             'success' => true,
@@ -212,6 +221,8 @@ class BranchNetworkController extends Controller
      */
     public function hierarchy(): JsonResponse
     {
+        $this->authorizeNetworkAccess();
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -465,6 +476,27 @@ class BranchNetworkController extends Controller
         return $user->mobile
             ?? $user->phone_e164
             ?? null;
+    }
+
+    /**
+     * Guard access to branch network endpoints.
+     */
+    private function authorizeNetworkAccess(): void
+    {
+        $user = request()->user();
+
+        if (! $user) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        if ($user->hasRole(['admin', 'operations_admin']) ||
+            $user->hasPermission('branch_manage') ||
+            $user->hasPermission('branch_read') ||
+            $user->hasPermission('branch_analytics')) {
+            return;
+        }
+
+        abort(403, 'This action is unauthorized.');
     }
 
     private function fallbackBranchDirectory(): array

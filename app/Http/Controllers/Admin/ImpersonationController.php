@@ -43,7 +43,12 @@ class ImpersonationController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('portal.index')->with('success', 'You are now impersonating '.$user->name);
+        // Redirect to appropriate dashboard based on user role
+        if ($user->hasRole(['branch_manager', 'branch_worker'])) {
+            return redirect('/branch/dashboard')->with('success', 'You are now impersonating '.$user->name);
+        }
+
+        return redirect('/dashboard')->with('success', 'You are now impersonating '.$user->name);
     }
 
     public function stop(Request $request)
@@ -67,7 +72,7 @@ class ImpersonationController extends Controller
         if ($admin) {
             Auth::login($admin);
 
-            return redirect()->route('admin.customers.index')->with('success', 'Impersonation ended.');
+            return redirect()->route('admin.users.index')->with('success', 'Impersonation ended.');
         }
 
         Auth::logout();

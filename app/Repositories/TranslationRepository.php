@@ -5,7 +5,7 @@ namespace App\Repositories;
 use App\Models\Translation;
 use Illuminate\Support\Collection;
 
-class TranslationRepository
+class TranslationRepository implements TranslationRepositoryInterface
 {
     protected Translation $model;
 

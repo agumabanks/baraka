@@ -86,4 +86,117 @@ class Translation extends Model
             ['value' => $value, 'description' => $description]
         );
     }
+
+    /**
+     * Get all unique translation keys.
+     */
+    public static function getAllKeys(): array
+    {
+        return static::distinct()->pluck('key')->sort()->values()->toArray();
+    }
+
+    /**
+     * Get translations for all languages grouped by key.
+     */
+    public static function getMultiLanguageTranslations(array $languageCodes, ?string $search = null)
+    {
+        $keys = static::distinct('key');
+        
+        if ($search) {
+            $keys = $keys->where(function ($query) use ($search) {
+                $query->where('key', 'like', "%{$search}%")
+                      ->orWhere('value', 'like', "%{$search}%");
+            });
+        }
+        
+        $keys = $keys->pluck('key')->unique();
+        
+        $translations = [];
+        foreach ($keys as $key) {
+            $translations[$key] = [];
+            foreach ($languageCodes as $lang) {
+                $translation = static::forLanguage($lang)->forKey($key)->first();
+                $translations[$key][$lang] = $translation ? $translation->value : null;
+            }
+        }
+        
+        return $translations;
+    }
+
+    /**
+     * Get completion statistics for each language.
+     */
+    public static function getCompletionStats(array $languageCodes): array
+    {
+        $totalKeys = static::distinct()->count('key');
+        $stats = [];
+        
+        foreach ($languageCodes as $lang) {
+            $translatedCount = static::forLanguage($lang)
+                ->whereNotNull('value')
+                ->where('value', '!=', '')
+                ->distinct('key')
+                ->count('key');
+            
+            $stats[$lang] = [
+                'translated' => $translatedCount,
+                'total' => $totalKeys,
+                'percentage' => $totalKeys > 0 ? round(($translatedCount / $totalKeys) * 100, 1) : 0,
+            ];
+        }
+        
+        return $stats;
+    }
+
+    /**
+     * Scope to filter by completion status.
+     */
+    public function scopeByCompletionStatus($query, string $status, array $languageCodes)
+    {
+        $keys = static::distinct()->pluck('key');
+        
+        $filteredKeys = $keys->filter(function ($key) use ($status, $languageCodes) {
+            $translationCount = 0;
+            foreach ($languageCodes as $lang) {
+                $translation = static::forLanguage($lang)->forKey($key)->first();
+                if ($translation && !empty($translation->value)) {
+                    $translationCount++;
+                }
+            }
+            
+            return match ($status) {
+                'complete' => $translationCount === count($languageCodes),
+                'incomplete' => $translationCount > 0 && $translationCount < count($languageCodes),
+                'empty' => $translationCount === 0,
+                default => true,
+            };
+        });
+        
+        return $query->whereIn('key', $filteredKeys);
+    }
+
+    /**
+     * Bulk create/update translations.
+     */
+    public static function bulkUpdateTranslations(array $translations): int
+    {
+        $count = 0;
+        foreach ($translations as $key => $languages) {
+            foreach ($languages as $lang => $value) {
+                if (!empty($value)) {
+                    static::updateOrCreateTranslation($key, $lang, $value);
+                    $count++;
+                }
+            }
+        }
+        return $count;
+    }
+
+    /**
+     * Delete a translation key across all languages.
+     */
+    public static function deleteKey(string $key): int
+    {
+        return static::where('key', $key)->delete();
+    }
 }

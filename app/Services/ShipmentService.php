@@ -7,13 +7,17 @@ use App\Models\ScanEvent;
 use App\Models\Bag;
 use App\Models\Route;
 use App\Models\PodProof;
+use App\Enums\ShipmentStatus;
 use App\Models\Backend\Branch;
 use App\Models\Backend\BranchWorker;
 use App\Models\User;
+use App\Support\SystemSettings;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class ShipmentService
 {
@@ -27,34 +31,77 @@ class ShipmentService
 
         DB::beginTransaction();
         try {
+            // Generate tracking number if not provided
+            $trackingNumber = $data['tracking_number'] ?? $this->generateTrackingNumber();
+            $initialStatus = ShipmentStatus::BOOKED;
+            $canCreateParcels = Schema::hasTable('parcels') && Schema::hasColumn('parcels', 'shipment_id');
+
+            $hasBarcode = Schema::hasColumn('shipments', 'barcode');
+            $hasQr = Schema::hasColumn('shipments', 'qr_code');
+
             $shipment = Shipment::create([
+                'tracking_number' => $trackingNumber,
+                'waybill_number' => $data['waybill_number'] ?? null,
                 'customer_id' => $data['customer_id'],
+                'client_id' => $data['client_id'] ?? null,
                 'origin_branch_id' => $data['origin_branch_id'],
                 'dest_branch_id' => $data['dest_branch_id'],
-                'service_type' => $data['service_type'],
-                'weight' => $data['weight'],
-                'dimensions' => $data['dimensions'] ?? null,
-                'description' => $data['description'] ?? null,
-                'value' => $data['value'] ?? null,
-                'cod_amount' => $data['cod_amount'] ?? null,
-                'priority' => $data['priority'] ?? 'normal',
+                'service_level' => $data['service_level'] ?? 'standard',
+                'incoterms' => $data['incoterms'] ?? null,
+                'payer_type' => $data['payer_type'] ?? 'sender',
+                'special_instructions' => $data['special_instructions'] ?? null,
+                'declared_value' => $data['declared_value'] ?? 0,
+                'insurance_amount' => $data['insurance_amount'] ?? 0,
+                'customs_value' => $data['customs_value'] ?? 0,
+                'currency' => $data['currency'] ?? 'USD',
+                'price_amount' => $data['price_amount'] ?? 0,
+                'priority' => $data['priority'] ?? 0,
                 'created_by' => $createdBy->id,
-                'current_status' => 'pending',
+                'status' => strtolower($initialStatus->value),
+                'current_status' => $initialStatus->value,
+                'booked_at' => now(),
+                'expected_delivery_date' => $data['expected_delivery_date'] ?? null,
                 'metadata' => $this->prepareShipmentMetadata($data),
+                'barcode' => $hasBarcode ? $trackingNumber : null,
+                'qr_code' => $hasQr ? url('/track/'.$trackingNumber) : null,
             ]);
 
-            // Create initial scan event
-            $this->createInitialScanEvent($shipment, $createdBy);
+            // Create parcels when schema supports shipment-linked parcels
+            if ($canCreateParcels) {
+                if (!empty($data['parcels'])) {
+                    foreach ($data['parcels'] as $parcelData) {
+                        $this->addParcel($shipment, $parcelData);
+                    }
+                } else {
+                    // Create default single parcel if none provided but weight/dims exist
+                    $this->addParcel($shipment, [
+                        'weight_kg' => $data['weight'] ?? 1,
+                        'length_cm' => $data['length'] ?? 10,
+                        'width_cm' => $data['width'] ?? 10,
+                        'height_cm' => $data['height'] ?? 10,
+                        'description' => $data['description'] ?? 'Standard Parcel'
+                    ]);
+                }
+            }
 
-            // Update customer statistics
-            $shipment->customer->updateStatistics();
+            // Calculate totals (weight, volume)
+            if ($canCreateParcels) {
+                $shipment->calculateTotals();
+            }
+
+            // Create initial event
+            $this->logEvent($shipment, 'CREATED', 'Shipment created', $createdBy);
+
+            // Update customer statistics if applicable
+            if ($shipment->customer) {
+                // $shipment->customer->updateStatistics();
+            }
 
             DB::commit();
 
             Log::info('Shipment created successfully', [
                 'shipment_id' => $shipment->id,
-                'created_by' => $createdBy->id,
-                'customer_id' => $shipment->customer_id
+                'tracking_number' => $shipment->tracking_number
             ]);
 
             return $shipment;
@@ -67,6 +114,76 @@ class ShipmentService
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Calculate shipping rates
+     */
+    public function calculateRates(array $data): array
+    {
+        // Placeholder for rate calculation logic
+        // In a real implementation, this would query RateCards based on zones and weight
+        
+        $weight = $data['weight_kg'] ?? 1;
+        $serviceLevel = $data['service_level'] ?? 'standard';
+        
+        $baseRate = 10.00;
+        $perKgRate = 2.00;
+        
+        if ($serviceLevel === 'express') {
+            $baseRate = 20.00;
+            $perKgRate = 4.00;
+        }
+
+        $total = $baseRate + ($weight * $perKgRate);
+
+        return [
+            'amount' => $total,
+            'currency' => 'USD',
+            'breakdown' => [
+                'base_charge' => $baseRate,
+                'weight_charge' => $weight * $perKgRate,
+                'tax' => 0,
+            ]
+        ];
+    }
+
+    public function addParcel(Shipment $shipment, array $parcelData)
+    {
+        $parcel = $shipment->parcels()->create([
+            'weight_kg' => $parcelData['weight_kg'],
+            'length_cm' => $parcelData['length_cm'],
+            'width_cm' => $parcelData['width_cm'],
+            'height_cm' => $parcelData['height_cm'],
+            'description' => $parcelData['description'] ?? null,
+            'barcode' => $this->generateParcelBarcode($shipment),
+        ]);
+
+        return $parcel;
+    }
+
+    public function logEvent(Shipment $shipment, string $eventCode, string $description, ?User $user = null, ?string $location = null)
+    {
+        return \App\Models\ShipmentEvent::create([
+            'shipment_id' => $shipment->id,
+            'event_code' => $eventCode,
+            'description' => $description,
+            'location' => $location ?? $shipment->originBranch->name ?? 'Unknown',
+            'occurred_at' => now(),
+            'user_id' => $user ? $user->id : null,
+        ]);
+    }
+
+    protected function generateTrackingNumber()
+    {
+        // Use database-backed tracking prefix with safe fallback
+        $prefix = SystemSettings::trackingPrefix() ?: 'TRK';
+        return $prefix . '-' . strtoupper(Str::random(10));
+    }
+
+    protected function generateParcelBarcode(Shipment $shipment)
+    {
+        return $shipment->tracking_number . '-' . ($shipment->parcels()->count() + 1);
     }
 
     /**
@@ -496,7 +613,13 @@ class ShipmentService
 
         // Validate customer can place order
         $customer = \App\Models\Customer::find($data['customer_id']);
-        if (!$customer || !$customer->canPlaceOrder($data['cod_amount'] ?? 0)) {
+        $userCustomer = \App\Models\User::find($data['customer_id']);
+
+        if ($customer) {
+            if (! $customer->canPlaceOrder($data['cod_amount'] ?? 0)) {
+                throw new \Exception('Customer cannot place this order');
+            }
+        } elseif (! $userCustomer) {
             throw new \Exception('Customer cannot place this order');
         }
     }

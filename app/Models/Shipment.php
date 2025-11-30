@@ -7,7 +7,9 @@ use App\Enums\ShipmentStatus;
 use App\Events\ShipmentStatusChanged;
 use App\Models\Backend\Branch;
 use App\Models\Backend\Client as BackendClient;
+use App\Models\TrackerEvent;
 use App\Models\ShipmentTransition;
+use App\Observers\ShipmentInvoiceObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Backend\BranchWorker;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -24,18 +28,25 @@ class Shipment extends Model
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
-  
         'client_id',
         'customer_id',
         'origin_branch_id',
         'dest_branch_id',
         'assigned_worker_id',
         'tracking_number',
+        'waybill_number', // New
         'status',
-        'service_level',
-        'incoterm',
-        'price_amount',
+        'service_level', // New
+        'incoterms', // New
+        'payer_type', // New
+        'special_instructions', // New
+        'declared_value', // New
+        'insurance_amount', // New
+        'customs_value', // New
         'currency',
+        'price_amount',
+        'chargeable_weight_kg', // New
+        'volume_cbm', // New
         'current_status',
         'created_by',
         'assigned_at',
@@ -75,10 +86,26 @@ class Shipment extends Model
         'current_location_type',
         'current_location_id',
         'last_scan_event_id',
+        'is_consolidation',
+        'consolidation_id',
+        'consolidation_type',
+        'held_at',
+        'held_by',
+        'hold_reason',
+        'rerouted_from_branch_id',
+        'rerouted_at',
+        'rerouted_by',
+        'barcode',
+        'qr_code',
     ];
 
     protected $casts = [
         'price_amount' => 'decimal:2',
+        'declared_value' => 'decimal:2',
+        'insurance_amount' => 'decimal:2',
+        'customs_value' => 'decimal:2',
+        'chargeable_weight_kg' => 'decimal:2',
+        'volume_cbm' => 'decimal:4',
         'status' => 'string',
         'assigned_at' => 'datetime',
         'expected_delivery_date' => 'datetime',
@@ -107,7 +134,47 @@ class Shipment extends Model
         'priority' => 'integer',
         'processed_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'held_at' => 'datetime',
+        'rerouted_at' => 'datetime',
     ];
+
+    // ... (existing methods)
+
+    // Relationships
+    public function parcels(): HasMany
+    {
+        return $this->hasMany(Parcel::class);
+    }
+
+    public function shipmentEvents(): HasMany
+    {
+        return $this->hasMany(ShipmentEvent::class);
+    }
+
+    public function consolidation(): BelongsTo
+    {
+        return $this->belongsTo(Consolidation::class);
+    }
+
+    // Business Logic
+    public function calculateTotals()
+    {
+        $this->load('parcels');
+        
+        $totalWeight = $this->parcels->sum('weight_kg');
+        $totalVolume = $this->parcels->sum('volume_cbm');
+        
+        // Volumetric weight calculation (Standard: 1 CBM = 167 kg)
+        $volumetricWeight = $totalVolume * 167;
+        
+        $this->chargeable_weight_kg = max($totalWeight, $volumetricWeight);
+        $this->volume_cbm = $totalVolume;
+        $this->weight = $totalWeight; // Update legacy weight column if needed
+        
+        $this->save();
+        
+        return $this;
+    }
 
     public function getCurrentStatusAttribute(?string $value): ?ShipmentStatus
     {
@@ -149,10 +216,19 @@ class Shipment extends Model
     protected static function boot()
     {
         parent::boot();
+        static::observe(ShipmentInvoiceObserver::class);
 
         static::creating(function ($shipment) {
             if (! $shipment->public_token) {
                 $shipment->public_token = \Illuminate\Support\Facades\Crypt::encryptString($shipment->id ?? uniqid());
+            }
+
+            if (Schema::hasColumn('shipments', 'barcode') && empty($shipment->barcode)) {
+                $shipment->barcode = 'BC'.strtoupper(Str::random(12));
+            }
+
+            if (Schema::hasColumn('shipments', 'qr_code') && empty($shipment->qr_code)) {
+                $shipment->qr_code = 'QR'.strtoupper(Str::random(10));
             }
         });
     }
@@ -204,11 +280,6 @@ class Shipment extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function parcels(): HasMany
-    {
-        return $this->hasMany(Parcel::class);
-    }
-
     public function scanEvents(): HasMany
     {
         return $this->hasMany(ScanEvent::class);
@@ -224,6 +295,11 @@ class Shipment extends Model
         return $this->hasMany(ShipmentTransition::class);
     }
 
+    public function handoffs(): HasMany
+    {
+        return $this->hasMany(BranchHandoff::class);
+    }
+
     public function bags(): HasMany
     {
         return $this->hasMany(Bag::class);
@@ -232,6 +308,11 @@ class Shipment extends Model
     public function routes(): HasMany
     {
         return $this->hasMany(Route::class);
+    }
+
+    public function trackerEvents(): HasMany
+    {
+        return $this->hasMany(TrackerEvent::class);
     }
 
     public function chargeLines(): HasMany

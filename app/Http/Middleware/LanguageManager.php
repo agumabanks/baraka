@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use App\Support\SystemSettings;
 
 class LanguageManager
 {
@@ -17,7 +18,7 @@ class LanguageManager
     public function handle(Request $request, Closure $next)
     {
         $allowed = translation_supported_languages();
-        $default = config('app.locale', 'en');
+        $default = SystemSettings::defaultLocale();
         $locale = $default;
 
         $user = $request->user();

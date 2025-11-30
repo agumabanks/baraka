@@ -63,10 +63,19 @@ return new class extends Migration
 
         // Populate contact phone from related user accounts when available.
         if ($driver !== 'sqlite' && Schema::hasTable('users')) {
+            $phoneColumns = ['u.mobile'];
+            if (Schema::hasColumn('users', 'phone')) {
+                $phoneColumns[] = 'u.phone';
+            }
+            if (Schema::hasColumn('users', 'phone_e164')) {
+                $phoneColumns[] = 'u.phone_e164';
+            }
+            $coalesce = implode(', ', $phoneColumns);
+
             DB::statement(<<<SQL
                 UPDATE branch_workers bw
                 JOIN users u ON u.id = bw.user_id
-                SET bw.contact_phone = COALESCE(bw.contact_phone, u.mobile, u.phone, u.phone_e164)
+                SET bw.contact_phone = COALESCE(bw.contact_phone, {$coalesce})
                 WHERE bw.contact_phone IS NULL
             SQL);
         }

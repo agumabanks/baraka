@@ -40,7 +40,7 @@ const BranchWorkerEdit: React.FC = () => {
     mutationFn: (data: BranchWorkerFormData) => branchWorkersApi.updateWorker(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branch-worker', id] });
-      navigate(`/dashboard/branch-workers/${id}`);
+      navigate(`/admin/dashboard/branch-workers/${id}`);
     },
   });
 
@@ -87,7 +87,7 @@ const BranchWorkerEdit: React.FC = () => {
               <Button type="submit" variant="primary" disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? 'Updating...' : 'Update Worker'}
               </Button>
-              <Button type="button" variant="secondary" onClick={() => navigate(`/dashboard/branch-workers/${id}`)}>
+              <Button type="button" variant="secondary" onClick={() => navigate(`/admin/dashboard/branch-workers/${id}`)}>
                 Cancel
               </Button>
             </div>

@@ -9,6 +9,9 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Security\LockoutManager;
+use App\Events\Account\UserLoggedIn;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -30,6 +33,15 @@ class LoginController extends Controller
     {
         // Use Laravel's built-in remember_token instead of storing credentials in cookies
         $this->validateLogin($request);
+
+        // Check if account is locked via LockoutManager
+        $lockoutManager = app(LockoutManager::class);
+        $user = User::where('email', $request->email)->first();
+        
+        if ($user && $lockoutManager->isLocked($user)) {
+            $info = $lockoutManager->getLockoutInfo($user);
+            return back()->withErrors(['email' => $info['message']]);
+        }
 
         // If the class is using the ThrottlesLogins trait, we can automatically throttle
         // the login attempts for this application. We'll key this by the username and
@@ -69,6 +81,14 @@ class LoginController extends Controller
         // user surpasses their maximum number of attempts they will get locked out.
         $this->incrementLoginAttempts($request);
 
+        // Record failed attempt via LockoutManager
+        if ($user) {
+            $lockoutManager->recordFailedAttempt($user->email, $request->ip());
+            if ($lockoutManager->shouldLock($user->email)) {
+                $lockoutManager->lock($user);
+            }
+        }
+
         return $this->sendFailedLoginResponse($request);
     }
 
@@ -90,6 +110,28 @@ class LoginController extends Controller
     }
 
     /**
+    * Post-auth redirect hook to route users by role/permission.
+    */
+    protected function authenticated(Request $request, $user)
+    {
+        // Fire login event
+        event(new UserLoggedIn($user));
+
+        // Reset failed attempts
+        app(LockoutManager::class)->resetFailedAttempts($user);
+
+        if (method_exists($user, 'hasPermission') && $user->hasPermission(['branch_manage', 'branch_read'])) {
+            return redirect()->route('branch.dashboard');
+        }
+
+        if (method_exists($user, 'hasRole') && $user->hasRole(['branch_manager', 'branch_ops_manager', 'operations_admin'])) {
+            return redirect()->route('branch.dashboard');
+        }
+
+        return redirect()->intended(RouteServiceProvider::HOME);
+    }
+
+    /**
      * Determine where to redirect users after login.
      */
     protected function redirectTo()
@@ -99,11 +141,20 @@ class LoginController extends Controller
             return RouteServiceProvider::HOME;
         }
 
+        // Branch operators/managers land on branch control center
+        if (method_exists($user, 'hasRole') && $user->hasRole(['branch_manager', 'branch_ops_manager', 'operations_admin'])) {
+            return route('branch.dashboard');
+        }
+
         // Staff/admin to admin dashboard
         if (method_exists($user, 'hasRole') && $user->hasRole([
-            'hq_admin', 'admin', 'super-admin', 'branch_ops_manager', 'branch_attendant', 'support', 'finance', 'driver',
+            'hq_admin', 'admin', 'super-admin', 'branch_attendant', 'support', 'finance', 'driver',
         ])) {
             return RouteServiceProvider::HOME;
+        }
+
+        if (method_exists($user, 'hasPermission') && $user->hasPermission(['branch_read', 'branch_manage'])) {
+            return route('branch.dashboard');
         }
 
         // Non-staff (clients/merchants/customers) to client portal

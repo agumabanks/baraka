@@ -93,7 +93,7 @@ const BranchWorkersIndex: React.FC = () => {
               variant="primary" 
               size="sm" 
               className="uppercase tracking-[0.25em]"
-              onClick={() => navigate('/dashboard/branch-workers/create')}
+              onClick={() => navigate('/admin/dashboard/branch-workers/create')}
             >
               <i className="fas fa-plus mr-2" aria-hidden="true" />
               Add Worker
@@ -125,7 +125,7 @@ const BranchWorkersIndex: React.FC = () => {
                 <Button 
                   variant="primary" 
                   size="sm"
-                  onClick={() => navigate('/dashboard/branch-workers/create')}
+                  onClick={() => navigate('/admin/dashboard/branch-workers/create')}
                 >
                   <i className="fas fa-plus mr-2" aria-hidden="true" />
                   Add First Worker
@@ -195,14 +195,14 @@ const BranchWorkersIndex: React.FC = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/dashboard/branch-workers/${worker.id}`)}
+                            onClick={() => navigate(`/admin/dashboard/branch-workers/${worker.id}`)}
                           >
                             <i className="fas fa-eye" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/dashboard/branch-workers/${worker.id}/edit`)}
+                            onClick={() => navigate(`/admin/dashboard/branch-workers/${worker.id}/edit`)}
                           >
                             <i className="fas fa-edit" aria-hidden="true" />
                           </Button>

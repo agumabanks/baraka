@@ -53,4 +53,28 @@ return [
         'industry_type' => env('PAYTM_INDUSTRY_TYPE'),
     ],
 
+    'google_maps' => [
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
+        'default_lat' => env('GOOGLE_MAPS_DEFAULT_LAT', 0.3476),
+        'default_lng' => env('GOOGLE_MAPS_DEFAULT_LNG', 32.5825),
+    ],
+
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_AUTH_TOKEN'),
+        'phone' => env('TWILIO_PHONE_NUMBER'),
+        'whatsapp' => env('TWILIO_WHATSAPP_NUMBER'),
+    ],
+
+    'firebase' => [
+        'server_key' => env('FIREBASE_SERVER_KEY'),
+        'sender_id' => env('FIREBASE_SENDER_ID'),
+    ],
+
+    'africas_talking' => [
+        'username' => env('AFRICAS_TALKING_USERNAME'),
+        'api_key' => env('AFRICAS_TALKING_API_KEY'),
+        'sender_id' => env('AFRICAS_TALKING_SENDER_ID', 'BARAKA'),
+    ],
+
 ];

@@ -4,65 +4,59 @@ namespace App\Enums;
 
 enum ScanType: string
 {
-    case BOOKING_CONFIRMED = 'BOOKING_CONFIRMED';
-    case PICKUP_CONFIRMED = 'PICKUP_CONFIRMED';
-    case PICKUP_COMPLETED = 'PICKUP_COMPLETED';
-    case ORIGIN_ARRIVAL = 'ORIGIN_ARRIVAL';
-    case BAGGED = 'BAGGED';
-    case LINEHAUL_DEPARTED = 'LINEHAUL_DEPARTED';
-    case LINEHAUL_ARRIVED = 'LINEHAUL_ARRIVED';
-    case DESTINATION_ARRIVAL = 'DESTINATION_ARRIVAL';
-    case CUSTOMS_HOLD = 'CUSTOMS_HOLD';
-    case CUSTOMS_CLEARED = 'CUSTOMS_CLEARED';
-    case OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY';
-    case DELIVERY_CONFIRMED = 'DELIVERY_CONFIRMED';
-    case RETURN_INITIATED = 'RETURN_INITIATED';
-    case RETURN_RECEIVED = 'RETURN_RECEIVED';
-    case RETURN_COMPLETED = 'RETURN_COMPLETED';
-    case EXCEPTION = 'EXCEPTION';
+    case BAG_IN = 'bag_in';
+    case BAG_OUT = 'bag_out';
+    case LOAD = 'load';
+    case UNLOAD = 'unload';
+    case ROUTE = 'route';
+    case DELIVERY = 'delivery';
+    case RETURN = 'return';
+    case PICKUP = 'pickup';
+    case TRANSFER = 'transfer';
+    case SORT = 'sort';
+    case DAMAGE = 'damage';
+    case EXCEPTION = 'exception';
 
-    public static function fromString(string $value): ?self
+    public function label(): string
     {
-        $normalized = strtoupper(trim($value));
-
-        return self::tryFrom($normalized) ?? self::fromLegacy($normalized);
+        return match ($this) {
+            self::BAG_IN => 'Bag In',
+            self::BAG_OUT => 'Bag Out',
+            self::LOAD => 'Load',
+            self::UNLOAD => 'Unload',
+            self::ROUTE => 'Route',
+            self::DELIVERY => 'Delivery',
+            self::RETURN => 'Return',
+            self::PICKUP => 'Pickup',
+            self::TRANSFER => 'Transfer',
+            self::SORT => 'Sort',
+            self::DAMAGE => 'Damage Report',
+            self::EXCEPTION => 'Exception',
+        };
     }
 
-    private static function fromLegacy(string $value): ?self
+    public function requiresNote(): bool
     {
-        return match ($value) {
-            'ARRIVE' => self::ORIGIN_ARRIVAL,
-            'SORT' => self::BAGGED,
-            'LOAD' => self::BAGGED,
-            'DEPART' => self::LINEHAUL_DEPARTED,
-            'IN_TRANSIT' => self::LINEHAUL_DEPARTED,
-            'ARRIVE_DEST' => self::DESTINATION_ARRIVAL,
-            'DELIVERED' => self::DELIVERY_CONFIRMED,
-            'RETURN_TO_SENDER' => self::RETURN_INITIATED,
-            'DAMAGED' => self::EXCEPTION,
+        return match ($this) {
+            self::DAMAGE, self::EXCEPTION, self::RETURN => true,
+            default => false,
+        };
+    }
+
+    public function statusTransition(): ?ShipmentStatus
+    {
+        return match ($this) {
+            self::PICKUP => ShipmentStatus::PICKED_UP,
+            self::LOAD => ShipmentStatus::IN_TRANSIT,
+            self::DELIVERY => ShipmentStatus::DELIVERED,
+            self::RETURN => ShipmentStatus::RETURNED,
+            self::EXCEPTION => ShipmentStatus::EXCEPTION,
             default => null,
         };
     }
 
-    public function resultingStatus(): ?ShipmentStatus
+    public static function getAllTypes(): array
     {
-        return match ($this) {
-            self::BOOKING_CONFIRMED => ShipmentStatus::BOOKED,
-            self::PICKUP_CONFIRMED => ShipmentStatus::PICKUP_SCHEDULED,
-            self::PICKUP_COMPLETED => ShipmentStatus::PICKED_UP,
-            self::ORIGIN_ARRIVAL => ShipmentStatus::AT_ORIGIN_HUB,
-            self::BAGGED => ShipmentStatus::BAGGED,
-            self::LINEHAUL_DEPARTED => ShipmentStatus::LINEHAUL_DEPARTED,
-            self::LINEHAUL_ARRIVED => ShipmentStatus::LINEHAUL_ARRIVED,
-            self::DESTINATION_ARRIVAL => ShipmentStatus::AT_DESTINATION_HUB,
-            self::CUSTOMS_HOLD => ShipmentStatus::CUSTOMS_HOLD,
-            self::CUSTOMS_CLEARED => ShipmentStatus::CUSTOMS_CLEARED,
-            self::OUT_FOR_DELIVERY => ShipmentStatus::OUT_FOR_DELIVERY,
-            self::DELIVERY_CONFIRMED => ShipmentStatus::DELIVERED,
-            self::RETURN_INITIATED => ShipmentStatus::RETURN_INITIATED,
-            self::RETURN_RECEIVED => ShipmentStatus::RETURN_IN_TRANSIT,
-            self::RETURN_COMPLETED => ShipmentStatus::RETURNED,
-            self::EXCEPTION => ShipmentStatus::EXCEPTION,
-        };
+        return array_map(fn($case) => $case->value, self::cases());
     }
 }

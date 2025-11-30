@@ -256,7 +256,7 @@ class DashboardController extends Controller
         $t_shop = MerchantShops::where('merchant_id', Auth::user()->merchant->id)->count();
         $ts_vat = Parcel::where('merchant_id', Auth::user()->merchant->id)->whereIn('status', [ParcelStatus::DELIVERED, ParcelStatus::PARTIAL_DELIVERED])->whereBetween('updated_at', [$from, $to])->sum('vat_amount');
         $t_parcel = Parcel::where('merchant_id', Auth::user()->merchant->id)->whereBetween('created_at', [$from, $to])->count();
-        $t_delivered = Parcel::where('status', ParcelStatus::DELIVERED)->where('merchant_id', Auth::user()->merchant->id)->whereBetween('deliverd_date', [$from, $to])->count();
+        $t_delivered = Parcel::where('status', ParcelStatus::DELIVERED)->where('merchant_id', Auth::user()->merchant->id)->whereBetween('delivered_date', [$from, $to])->count();
         $t_return = Parcel::where('status', ParcelStatus::RETURN_RECEIVED_BY_MERCHANT)->where('merchant_id', Auth::user()->merchant->id)->whereBetween('updated_at', [$from, $to])->count();
         $t_parcel_bank = Parcel::where('merchant_id', Auth::user()->merchant->id)->where('parcel_bank', 'on')->whereBetween('updated_at', [$from, $to])->count();
         $t_sale = Parcel::where('merchant_id', Auth::user()->merchant->id)->whereBetween('updated_at', [$from, $to])->where('status', ParcelStatus::DELIVERED)->orwhere('status', ParcelStatus::PARTIAL_DELIVERED)->sum('cash_collection');

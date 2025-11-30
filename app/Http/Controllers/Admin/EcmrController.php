@@ -35,8 +35,8 @@ class EcmrController extends Controller
         $data = $request->validate([
             'cmr_number' => 'required|string',
             'road_carrier' => 'required|string',
-            'origin_branch_id' => 'required|exists:hubs,id',
-            'destination_branch_id' => 'required|exists:hubs,id',
+            'origin_branch_id' => 'required|exists:branches,id',
+            'destination_branch_id' => 'required|exists:branches,id',
             'status' => 'required|in:draft,issued,delivered',
         ]);
         $ec = Ecmr::create($data);

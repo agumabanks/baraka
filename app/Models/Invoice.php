@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use App\Enums\InvoiceStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use App\Models\Concerns\BranchScoped;
 
 class Invoice extends Model
 {
-    use LogsActivity;
+    use LogsActivity, BranchScoped;
 
     protected $fillable = [
+        'invoice_id',
         'invoice_number',
         'shipment_id',
+        'merchant_id',
         'customer_id',
+        'branch_id',
         'subtotal',
         'tax_amount',
         'total_amount',
@@ -24,14 +29,21 @@ class Invoice extends Model
         'due_date',
         'paid_at',
         'notes',
+        'metadata',
     ];
 
     protected $casts = [
+        'status' => InvoiceStatus::class,
         'subtotal' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'due_date' => 'datetime',
         'paid_at' => 'datetime',
+        'metadata' => 'array',
+    ];
+
+    protected $appends = [
+        'balance_due',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -58,15 +70,25 @@ class Invoice extends Model
     }
 
     // Scopes
-    public function scopeByStatus($query, string $status)
+    public function scopeByStatus($query, InvoiceStatus|string $status)
     {
-        return $query->where('status', $status);
+        $statusValue = $status instanceof InvoiceStatus ? $status->value : InvoiceStatus::fromString($status)?->value ?? $status;
+        return $query->where('status', $statusValue);
     }
 
     public function scopeOverdue($query)
     {
         return $query->where('due_date', '<', now())
-            ->where('status', '!=', 'PAID');
+            ->where('status', '!=', InvoiceStatus::PAID->value);
+    }
+
+    public function scopePayable($query)
+    {
+        return $query->whereIn('status', [
+            InvoiceStatus::PENDING->value,
+            InvoiceStatus::SENT->value,
+            InvoiceStatus::OVERDUE->value,
+        ]);
     }
 
     public function scopeByCustomer($query, int $customerId)
@@ -78,9 +100,26 @@ class Invoice extends Model
     public function markAsPaid(): void
     {
         $this->update([
-            'status' => 'PAID',
+            'status' => InvoiceStatus::PAID,
             'paid_at' => now(),
         ]);
+    }
+
+    public function markAsOverdue(): void
+    {
+        if ($this->due_date && $this->due_date->isPast() && $this->status !== InvoiceStatus::PAID) {
+            $this->update(['status' => InvoiceStatus::OVERDUE]);
+        }
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return $this->status instanceof InvoiceStatus ? $this->status->label() : 'Unknown';
+    }
+
+    public function getStatusBadgeColorAttribute(): string
+    {
+        return $this->status instanceof InvoiceStatus ? $this->status->badgeColor() : 'secondary';
     }
 
     public function calculateTotals(): void
@@ -94,5 +133,16 @@ class Invoice extends Model
             'tax_amount' => $taxAmount,
             'total_amount' => $totalAmount,
         ]);
+    }
+
+    public function getBalanceDueAttribute(): float
+    {
+        $paid = $this->payments()->sum('amount');
+        return (float) max(0, ($this->total_amount ?? 0) - $paid);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(\App\Models\Payment::class, 'invoice_id');
     }
 }

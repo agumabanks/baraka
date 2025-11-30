@@ -517,7 +517,7 @@ const Branches: React.FC = () => {
                 <BranchCard
                   key={branch.id}
                   branch={branch}
-                  onOpen={(id) => navigate(`/dashboard/branches/${id}`)}
+                  onOpen={(id) => navigate(`/admin/dashboard/branches/${id}`)}
                   onEdit={handleEditBranch}
                   onToggleStatus={handleToggleBranchStatus}
                   disableActions={isFormSubmitting}

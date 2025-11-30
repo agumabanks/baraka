@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Shipment;
 use App\Models\User;
+use App\Services\BranchContext;
 
 class ShipmentPolicy
 {
@@ -12,17 +13,17 @@ class ShipmentPolicy
      */
     public function view(User $user, Shipment $shipment): bool
     {
-        // Users can view their own shipments
-        if ($shipment->customer_id === $user->id) {
+        if ($this->isAdmin($user)) {
             return true;
         }
 
-        // Admins can view all shipments
-        if ($user->hasRole('admin')) {
+        $branchId = BranchContext::currentId() ?? $user->primary_branch_id;
+
+        if ($branchId && ($shipment->origin_branch_id === $branchId || $shipment->dest_branch_id === $branchId)) {
             return true;
         }
 
-        return false;
+        return $shipment->customer_id === $user->id;
     }
 
     /**
@@ -30,7 +31,15 @@ class ShipmentPolicy
      */
     public function create(User $user): bool
     {
-        // Only client accounts can create shipments
+        if ($this->isAdmin($user)) {
+            return true;
+        }
+
+        // Branch users can create within their active branch
+        if ($user->primary_branch_id || BranchContext::currentId()) {
+            return true;
+        }
+
         return $user->isClient();
     }
 
@@ -39,14 +48,13 @@ class ShipmentPolicy
      */
     public function cancel(User $user, Shipment $shipment): bool
     {
+        if ($this->isAdmin($user)) {
+            return true;
+        }
+
         // Users can cancel their own shipments if not yet processed
         if ($shipment->customer_id === $user->id) {
             return in_array($shipment->current_status, ['created', 'handed_over']);
-        }
-
-        // Admins can cancel any shipment
-        if ($user->hasRole('admin')) {
-            return true;
         }
 
         return false;
@@ -57,7 +65,17 @@ class ShipmentPolicy
      */
     public function updateStatus(User $user, Shipment $shipment): bool
     {
-        // Only admins can update shipment status
-        return $user->hasRole('admin');
+        if ($this->isAdmin($user) || $user->hasPermission('branch_manage')) {
+            return true;
+        }
+
+        $branchId = BranchContext::currentId() ?? $user->primary_branch_id;
+
+        return $branchId && ($shipment->origin_branch_id === $branchId || $shipment->dest_branch_id === $branchId);
+    }
+
+    protected function isAdmin(User $user): bool
+    {
+        return $user->hasRole(['admin', 'super-admin', 'operations_admin']);
     }
 }

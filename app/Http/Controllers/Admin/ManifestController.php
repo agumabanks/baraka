@@ -37,8 +37,8 @@ class ManifestController extends Controller
             'mode' => 'required|in:air,road',
             'departure_at' => 'required|date',
             'arrival_at' => 'nullable|date|after_or_equal:departure_at',
-            'origin_branch_id' => 'required|exists:hubs,id',
-            'destination_branch_id' => 'nullable|exists:hubs,id',
+            'origin_branch_id' => 'required|exists:branches,id',
+            'destination_branch_id' => 'nullable|exists:branches,id',
             'status' => 'required|in:open,closed,departed,arrived',
         ]);
         $m = Manifest::create($data);

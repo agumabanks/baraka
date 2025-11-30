@@ -12,7 +12,14 @@ class Hub extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['name', 'phone', 'address'];
+    protected $fillable = [
+        'name',
+        'phone',
+        'address',
+        'branch_code',
+        'branch_type',
+        'parent_hub_id',
+    ];
 
     // Get all row. Descending order using scope.
     public function scopeOrderByDesc($query, $data)

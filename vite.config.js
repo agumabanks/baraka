@@ -8,6 +8,12 @@ export default defineConfig({
             input: [
                 'resources/sass/app.scss',
                 'resources/js/app.js',
+                'resources/css/branch.css',
+                'resources/js/branch.js',
+                'resources/css/settings.css',
+                'resources/js/settings.js',
+                'resources/css/admin.css',
+                'resources/js/admin.js',
             ],
             refresh: true,
         }),

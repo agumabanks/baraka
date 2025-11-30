@@ -16,6 +16,11 @@ class TranslationServiceProvider extends ServiceProvider
         $this->app->singleton('translation.loader', function ($app) {
             return new DatabaseTranslationLoader(new Filesystem(), $app['path.lang']);
         });
+
+        $this->app->bind(
+            \App\Repositories\TranslationRepositoryInterface::class,
+            \App\Repositories\TranslationRepository::class
+        );
     }
 
     /**

@@ -5,14 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\BranchScoped;
 
 class Payment extends Model
 {
-    use HasFactory;
+    use HasFactory, BranchScoped;
 
     protected $fillable = [
         'shipment_id',
+        'shipment_id',
         'client_id',
+        'branch_id',
         'amount',
         'payment_method',
         'status',
@@ -36,6 +39,12 @@ class Payment extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function invoice(): BelongsTo
+    {
+        // Link via shipment_id since payments table has no invoice_id column.
+        return $this->belongsTo(Invoice::class, 'shipment_id', 'shipment_id');
     }
 
     protected static function booted(): void

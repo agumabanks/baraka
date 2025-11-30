@@ -20,6 +20,19 @@ class EventServiceProvider extends ServiceProvider
         ],
         \App\Events\ShipmentStatusChanged::class => [
             \App\Listeners\SendShipmentStatusNotification::class,
+            \App\Listeners\GenerateInvoiceOnDelivery::class,
+            \App\Listeners\SendShipmentNotification::class,
+        ],
+        
+        // Account Security Events
+        \App\Events\Account\UserLoggedIn::class => [
+            \App\Listeners\Account\LogUserLogin::class,
+        ],
+        \App\Events\Account\PasswordChanged::class => [
+            \App\Listeners\Account\LogPasswordChange::class,
+        ],
+        \App\Events\Account\AccountLocked::class => [
+            \App\Listeners\Account\LogAccountLockout::class,
         ],
     ];
 

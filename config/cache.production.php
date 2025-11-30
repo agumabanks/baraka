@@ -10,11 +10,11 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option controls the default cache connection that gets used while
-    | using this caching library. PRODUCTION: Redis for optimal performance.
+    | using this caching library. PRODUCTION: File-based for compatibility.
     |
     */
 
-    'default' => env('CACHE_DRIVER', 'redis'),
+    'default' => env('CACHE_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------

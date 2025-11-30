@@ -124,7 +124,7 @@ const SupportDetail: React.FC = () => {
             <h1 className="text-xl font-semibold text-mono-black">Unable to load support ticket</h1>
             <p className="text-sm text-mono-gray-700">{error?.message ?? 'Something went wrong while fetching support data.'}</p>
             <div className="flex justify-center gap-2">
-              <Button onClick={() => navigate('/dashboard/support')} variant="secondary">
+              <Button onClick={() => navigate('/admin/dashboard/support')} variant="secondary">
                 Back to List
               </Button>
               <Button onClick={() => window.location.reload()} variant="primary">
@@ -148,7 +148,7 @@ const SupportDetail: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/dashboard/support')}
+            onClick={() => navigate('/admin/dashboard/support')}
             className="uppercase tracking-[0.2em]"
           >
             ← Back
@@ -175,7 +175,7 @@ const SupportDetail: React.FC = () => {
             <Button
               variant="secondary"
               className="uppercase tracking-[0.25em]"
-              onClick={() => navigate(`/dashboard/support/${id}/edit`)}
+              onClick={() => navigate(`/admin/dashboard/support/${id}/edit`)}
             >
               Edit Ticket
             </Button>

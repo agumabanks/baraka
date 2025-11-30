@@ -95,7 +95,7 @@ class ParcelRepository implements ParcelInterface
                         $from = Carbon::parse(trim($date[0]))->startOfDay()->toDateTimeString();
                         $to = Carbon::parse(trim($date[1]))->endOfDay()->toDateTimeString();
                         if ($request->parcel_status == ParcelStatus::DELIVERED || $request->parcel_status == ParcelStatus::PARTIAL_DELIVERED) {
-                            $query->whereBetween('deliverd_date', [$from, $to]);
+                            $query->whereBetween('delivered_date', [$from, $to]);
                         } else {
                             $query->whereBetween('created_at', [$from, $to]);
                         }
@@ -140,7 +140,7 @@ class ParcelRepository implements ParcelInterface
                         $from = Carbon::parse(trim($date[0]))->startOfDay()->toDateTimeString();
                         $to = Carbon::parse(trim($date[1]))->endOfDay()->toDateTimeString();
                         if ($request->parcel_status == ParcelStatus::DELIVERED || $request->parcel_status == ParcelStatus::PARTIAL_DELIVERED) {
-                            $query->whereBetween('deliverd_date', [$from, $to]);
+                            $query->whereBetween('delivered_date', [$from, $to]);
                         } else {
                             $query->whereBetween('created_at', [$from, $to]);
                         }
@@ -192,7 +192,7 @@ class ParcelRepository implements ParcelInterface
                         $from = Carbon::parse(trim($date[0]))->startOfDay()->toDateTimeString();
                         $to = Carbon::parse(trim($date[1]))->endOfDay()->toDateTimeString();
                         if ($request->parcel_status == ParcelStatus::DELIVERED || $request->parcel_status == ParcelStatus::PARTIAL_DELIVERED) {
-                            $query->whereBetween('deliverd_date', [$from, $to]);
+                            $query->whereBetween('delivered_date', [$from, $to]);
                         } else {
                             $query->whereBetween('created_at', [$from, $to]);
                         }
@@ -238,7 +238,7 @@ class ParcelRepository implements ParcelInterface
                         $from = Carbon::parse(trim($date[0]))->startOfDay()->toDateTimeString();
                         $to = Carbon::parse(trim($date[1]))->endOfDay()->toDateTimeString();
                         if ($request->parcel_status == ParcelStatus::DELIVERED || $request->parcel_status == ParcelStatus::PARTIAL_DELIVERED) {
-                            $query->whereBetween('deliverd_date', [$from, $to]);
+                            $query->whereBetween('delivered_date', [$from, $to]);
                         } else {
                             $query->whereBetween('created_at', [$from, $to]);
                         }
@@ -1822,7 +1822,7 @@ class ParcelRepository implements ParcelInterface
 
             $parcel->status = ParcelStatus::DELIVERED;
             $parcel->priority_type_id = 2;
-            $parcel->deliverd_date = Carbon::now();
+            $parcel->delivered_date = Carbon::now();
             $parcel->save();
             if ($request->send_sms_customer == 'on') {
 
@@ -2103,7 +2103,7 @@ class ParcelRepository implements ParcelInterface
             $parcel->current_payable = $request->cash_collection - $chargeWithVat;
             $parcel->partial_delivered = BooleanStatus::YES;
 
-            $parcel->deliverd_date = Carbon::now();
+            $parcel->delivered_date = Carbon::now();
 
             $parcel->save();
 

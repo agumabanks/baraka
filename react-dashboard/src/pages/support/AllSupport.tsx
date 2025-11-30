@@ -363,7 +363,7 @@ const AllSupport: React.FC = () => {
                           type="button"
                           className="block w-full px-4 py-2 text-left text-sm text-mono-gray-700 hover:bg-mono-gray-50"
                           onClick={() => {
-                            navigate(`/dashboard/support/${support.id}`);
+                            navigate(`/admin/dashboard/support/${support.id}`);
                             setOpenActionMenuId(null);
                           }}
                         >
@@ -373,7 +373,7 @@ const AllSupport: React.FC = () => {
                           type="button"
                           className="block w-full px-4 py-2 text-left text-sm text-mono-gray-700 hover:bg-mono-gray-50"
                           onClick={() => {
-                            navigate(`/dashboard/support/${support.id}/edit`);
+                            navigate(`/admin/dashboard/support/${support.id}/edit`);
                             setOpenActionMenuId(null);
                           }}
                         >
@@ -419,7 +419,7 @@ const AllSupport: React.FC = () => {
               <Button
                 variant="primary"
                 className="uppercase tracking-[0.25em]"
-                onClick={() => navigate('/dashboard/support/create')}
+                onClick={() => navigate('/admin/dashboard/support/create')}
               >
                 New Ticket
               </Button>

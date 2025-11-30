@@ -157,18 +157,21 @@ return new class extends Migration
             return;
         }
 
+        $existingIndexes = [];
         try {
-            $existingIndexes = DB::connection()->getDoctrineSchemaManager()->listTableIndexes($table);
+            $rawIndexes = DB::select("SHOW INDEX FROM {$table}");
+            foreach ($rawIndexes as $row) {
+                $existingIndexes[$row->Key_name] = true;
+            }
         } catch (\Exception $e) {
             echo "Could not check existing indexes for {$table}: " . $e->getMessage() . "\n";
-            $existingIndexes = [];
         }
 
         foreach ($indexes as $index) {
             $indexName = $index['name'];
             $columns = $index['columns'];
             
-            if (isset($existingIndexes[$indexName])) {
+            if (!empty($existingIndexes[$indexName])) {
                 echo "Index {$indexName} already exists on {$table}, skipping...\n";
                 continue;
             }

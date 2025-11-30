@@ -123,7 +123,7 @@ class DashboardRepository implements DashboardInterface
         return Parcel::where('status', $status)
             ->where(function ($query) use ($status, $date) {
                 if ($status == ParcelStatus::DELIVERED || $status == ParcelStatus::PARTIAL_DELIVERED) {
-                    $query->whereBetween('deliverd_date', [$date['from'], $date['to']]);
+                    $query->whereBetween('delivered_date', [$date['from'], $date['to']]);
                 } else {
                     $query->whereBetween('updated_at', [$date['from'], $date['to']]);
                 }

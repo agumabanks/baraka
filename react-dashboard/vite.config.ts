@@ -15,6 +15,7 @@ export default defineConfig(() => ({
   plugins: [
     react(),
   ],
+  base: '/app/',
   build: {
     target: 'esnext',
     sourcemap: false,

@@ -19,10 +19,24 @@ class Client extends Model
         'business_name',
         'status',
         'kyc_data',
+        'credit_limit',
+        'risk_score',
+        'kyc_status',
+        'contacts',
+        'addresses',
+        'pipeline_stage',
     ];
 
     protected $casts = [
         'kyc_data' => 'array',
+        'contacts' => 'array',
+        'addresses' => 'array',
+        'credit_limit' => 'decimal:2',
+        'risk_score' => 'integer',
+    ];
+
+    protected $appends = [
+        'is_over_limit',
     ];
 
     public function primaryBranch(): BelongsTo
@@ -38,5 +52,19 @@ class Client extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'client_id');
+    }
+
+    public function getIsOverLimitAttribute(): bool
+    {
+        if (is_null($this->credit_limit)) {
+            return false;
+        }
+
+        $balance = Invoice::query()
+            ->where('customer_id', $this->id)
+            ->whereNotIn('status', ['PAID', 'CANCELLED'])
+            ->sum('total_amount');
+
+        return $balance > $this->credit_limit;
     }
 }

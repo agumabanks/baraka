@@ -99,7 +99,7 @@ This project includes a modern React-based admin dashboard integrated with Larav
 6. **Access Dashboard**
    - Login at: `https://baraka.sanaa.ug/login`
    - Dashboard at: `https://baraka.sanaa.ug/admin`
-   - Admin credentials: `info@baraka.co` / `admin`
+   - Admin credentials: `info@baraka.co` / `Admin@123`
 
 ### API Endpoints
 <!-- https://baraka.sanaa.ug/react-dashboard/login -->

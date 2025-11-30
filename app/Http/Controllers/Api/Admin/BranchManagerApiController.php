@@ -22,6 +22,8 @@ class BranchManagerApiController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorizeManage();
+
         $query = BranchManager::with(['user', 'branch']);
 
         // Filter by branch
@@ -59,6 +61,8 @@ class BranchManagerApiController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorizeManage();
+
         $isExistingUser = $request->filled('user_id');
 
         $validator = Validator::make($request->all(), [
@@ -140,6 +144,8 @@ class BranchManagerApiController extends Controller
      */
     public function show($id): JsonResponse
     {
+        $this->authorizeManage();
+
         $manager = BranchManager::with(['user', 'branch'])->find($id);
 
         if (!$manager) {
@@ -161,6 +167,8 @@ class BranchManagerApiController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
+        $this->authorizeManage();
+
         $manager = BranchManager::find($id);
 
         if (!$manager) {
@@ -343,6 +351,8 @@ class BranchManagerApiController extends Controller
      */
     public function destroy($id): JsonResponse
     {
+        $this->authorizeManage();
+
         $manager = BranchManager::find($id);
 
         if (!$manager) {
@@ -379,6 +389,8 @@ class BranchManagerApiController extends Controller
      */
     public function formMeta(): JsonResponse
     {
+        $this->authorizeManage();
+
         $branches = Branch::query()
             ->select(['id', 'name', 'code', 'type', 'status'])
             ->orderBy('name')
@@ -419,6 +431,8 @@ class BranchManagerApiController extends Controller
      */
     public function updateBalance(Request $request, BranchManager $manager): JsonResponse
     {
+        $this->authorizeManage();
+
         $data = $request->validate([
             'amount' => ['required', 'numeric'],
             'type' => ['required', 'in:credit,debit,adjustment'],
@@ -457,6 +471,8 @@ class BranchManagerApiController extends Controller
      */
     public function settlements(BranchManager $manager): JsonResponse
     {
+        $this->authorizeManage();
+
         $shipments = Shipment::query()
             ->where('origin_branch_id', $manager->branch_id)
             ->orWhere('assigned_worker_id', $manager->user_id)
@@ -489,6 +505,8 @@ class BranchManagerApiController extends Controller
      */
     public function bulkStatusUpdate(Request $request): JsonResponse
     {
+        $this->authorizeManage();
+
         $data = $request->validate([
             'manager_ids' => ['required', 'array', 'min:1'],
             'manager_ids.*' => ['integer', 'exists:branch_managers,id'],
@@ -505,5 +523,23 @@ class BranchManagerApiController extends Controller
                 'updated' => $updated,
             ],
         ]);
+    }
+
+    /**
+     * Centralized authorization for manager endpoints.
+     */
+    private function authorizeManage(): void
+    {
+        $user = request()->user();
+
+        if (! $user) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        if ($user->hasRole(['admin', 'operations_admin']) || $user->hasPermission('branch_manage')) {
+            return;
+        }
+
+        abort(403, 'This action is unauthorized.');
     }
 }

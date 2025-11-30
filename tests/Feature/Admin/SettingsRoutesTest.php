@@ -97,13 +97,13 @@ class SettingsRoutesTest extends TestCase
         // Test that all settings routes have auth and verified middleware
         $route = \Route::getRoutes()->getByName('settings.index');
         $this->assertNotNull($route);
-        $this->assertTrue($route->middleware('auth'));
-        $this->assertTrue($route->middleware('verified'));
+        $this->assertTrue(in_array('auth', $route->middleware()));
+        $this->assertTrue(in_array('verified', $route->middleware()));
         
         $route = \Route::getRoutes()->getByName('settings.general.update');
         $this->assertNotNull($route);
-        $this->assertTrue($route->middleware('auth'));
-        $this->assertTrue($route->middleware('verified'));
+        $this->assertTrue(in_array('auth', $route->middleware()));
+        $this->assertTrue(in_array('verified', $route->middleware()));
     }
 
     /** @test */
@@ -138,7 +138,7 @@ class SettingsRoutesTest extends TestCase
         
         // The SPA route should have a constraint that excludes settings
         $uri = $spaRoute->uri();
-        $this->assertTrue(str_contains($uri, '^(?!api|settings|general-settings)'));
+        $this->assertTrue(str_contains($uri, '^(?!api|settings|general-settings|branch)'));
     }
 
     /** @test */
@@ -238,15 +238,15 @@ class SettingsRoutesTest extends TestCase
         // Test that GET routes don't accept POST
         $route = \Route::getRoutes()->getByName('settings.index');
         if ($route) {
-            $this->assertTrue($route->methods()->contains('GET'));
-            $this->assertFalse($route->methods()->contains('POST'));
+            $this->assertTrue(in_array('GET', $route->methods()));
+            $this->assertFalse(in_array('POST', $route->methods()));
         }
         
         // Test that POST routes only accept POST
         $route = \Route::getRoutes()->getByName('settings.general.update');
         if ($route) {
-            $this->assertTrue($route->methods()->contains('POST'));
-            $this->assertFalse($route->methods()->contains('GET'));
+            $this->assertTrue(in_array('POST', $route->methods()));
+            $this->assertFalse(in_array('GET', $route->methods()));
         }
     }
 
@@ -289,7 +289,7 @@ class SettingsRoutesTest extends TestCase
         foreach ($settingsRoutes as $routeName) {
             $route = \Route::getRoutes()->getByName($routeName);
             if ($route) {
-                $this->assertTrue($route->middleware('auth'));
+                $this->assertTrue(in_array('auth', $route->middleware()));
             }
         }
     }
@@ -323,7 +323,7 @@ class SettingsRoutesTest extends TestCase
         foreach ($settingsRoutes as $routeName) {
             $route = \Route::getRoutes()->getByName($routeName);
             if ($route) {
-                $this->assertTrue($route->middleware('verified'));
+                $this->assertTrue(in_array('verified', $route->middleware()));
             }
         }
     }

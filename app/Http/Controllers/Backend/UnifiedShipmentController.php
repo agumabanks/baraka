@@ -7,6 +7,7 @@ use App\Models\Shipment;
 use App\Models\Backend\Branch;
 use App\Models\Backend\BranchWorker;
 use App\Services\UnifiedShipmentWorkflowService;
+use App\Services\ShipmentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -14,10 +15,90 @@ use Illuminate\Support\Facades\Validator;
 class UnifiedShipmentController extends Controller
 {
     protected UnifiedShipmentWorkflowService $workflowService;
+    protected ShipmentService $shipmentService;
 
-    public function __construct(UnifiedShipmentWorkflowService $workflowService)
-    {
+    public function __construct(
+        UnifiedShipmentWorkflowService $workflowService,
+        ShipmentService $shipmentService
+    ) {
         $this->workflowService = $workflowService;
+        $this->shipmentService = $shipmentService;
+    }
+
+    /**
+     * Create a new individual shipment
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'customer_id' => 'required|exists:customers,id',
+            'origin_branch_id' => 'required|exists:branches,id',
+            'dest_branch_id' => 'required|exists:branches,id',
+            'weight_kg' => 'required|numeric|min:0.1',
+            'service_level' => 'required|string|in:standard,express',
+            'parcels' => 'nullable|array',
+            'parcels.*.weight_kg' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $shipment = $this->shipmentService->createShipment($request->all(), $request->user());
+
+            return response()->json([
+                'success' => true,
+                'data' => $shipment->load(['parcels', 'originBranch', 'destBranch']),
+                'message' => 'Shipment created successfully'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create shipment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Calculate shipping rates
+     */
+    public function calculateRates(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'origin_branch_id' => 'required|exists:branches,id',
+            'dest_branch_id' => 'required|exists:branches,id',
+            'weight_kg' => 'required|numeric|min:0.1',
+            'service_level' => 'nullable|string|in:standard,express',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $rates = $this->shipmentService->calculateRates($request->all());
+
+            return response()->json([
+                'success' => true,
+                'data' => $rates
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to calculate rates: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

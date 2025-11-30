@@ -1,0 +1,327 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --sidebar-width: 260px;
+        --header-height: 56px;
+    }
+
+    body {
+        @apply antialiased text-slate-900 bg-slate-100 dark:bg-slate-950 dark:text-slate-100;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter var', system-ui, sans-serif;
+    }
+}
+
+@layer components {
+    /* Shell Layout */
+    .settings-shell {
+        @apply flex h-screen overflow-hidden;
+    }
+
+    /* Sidebar - macOS Style */
+    .settings-sidebar {
+        @apply w-[var(--sidebar-width)] flex-shrink-0 flex flex-col h-full transition-all duration-300;
+        @apply bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xl;
+        @apply border-r border-slate-200/50 dark:border-slate-800/50;
+        @apply fixed lg:relative z-50 -translate-x-full lg:translate-x-0;
+    }
+
+    /* Main Content Area */
+    .settings-main {
+        @apply flex-1 flex flex-col min-w-0 overflow-hidden;
+        @apply bg-slate-100 dark:bg-slate-950;
+    }
+
+    /* Header - Translucent */
+    .settings-header {
+        @apply h-[var(--header-height)] flex items-center justify-between px-6 sticky top-0 z-10;
+        @apply bg-slate-100/80 dark:bg-slate-950/80 backdrop-blur-xl;
+        @apply border-b border-slate-200/50 dark:border-slate-800/50;
+    }
+
+    /* Content Area */
+    .settings-content {
+        @apply flex-1 overflow-y-auto p-6 md:p-8;
+    }
+
+    /* Navigation Items */
+    .nav-item {
+        @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium;
+        @apply text-slate-600 dark:text-slate-400;
+        @apply hover:bg-slate-200/60 dark:hover:bg-slate-800/60;
+        @apply hover:text-slate-900 dark:hover:text-slate-100;
+        @apply transition-all duration-150;
+    }
+
+    .nav-item.active {
+        @apply bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400;
+    }
+
+    .nav-icon {
+        @apply w-5 h-5 flex-shrink-0 opacity-70;
+    }
+
+    /* Cards */
+    .card {
+        @apply bg-white dark:bg-slate-900 rounded-2xl;
+        @apply border border-slate-200/80 dark:border-slate-800/80;
+        @apply shadow-sm shadow-slate-200/50 dark:shadow-slate-900/50;
+        @apply transition-all duration-200;
+    }
+
+    .card:hover {
+        @apply shadow-md shadow-slate-200/50 dark:shadow-slate-900/50;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        @apply inline-flex items-center justify-center px-4 py-2;
+        @apply bg-blue-500 hover:bg-blue-600 active:bg-blue-700;
+        @apply text-white text-sm font-semibold rounded-xl;
+        @apply shadow-sm shadow-blue-500/25;
+        @apply transition-all duration-150;
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center px-4 py-2;
+        @apply bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700;
+        @apply text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl;
+        @apply border border-slate-200 dark:border-slate-700;
+        @apply transition-all duration-150;
+        @apply focus:outline-none focus:ring-2 focus:ring-slate-500/50;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center justify-center px-4 py-2;
+        @apply bg-red-500 hover:bg-red-600 active:bg-red-700;
+        @apply text-white text-sm font-semibold rounded-xl;
+        @apply shadow-sm shadow-red-500/25;
+        @apply transition-all duration-150;
+    }
+
+    /* Input Fields - macOS Style */
+    .input-field {
+        @apply block w-full px-3 py-2 text-sm;
+        @apply bg-white dark:bg-slate-800;
+        @apply border border-slate-300 dark:border-slate-600;
+        @apply rounded-lg shadow-sm;
+        @apply text-slate-900 dark:text-white;
+        @apply placeholder-slate-400 dark:placeholder-slate-500;
+        @apply transition-all duration-150;
+        @apply focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20;
+    }
+
+    select.input-field {
+        @apply pr-10 cursor-pointer;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    /* Preference Cards */
+    .pref-card {
+        @apply bg-white dark:bg-slate-800/50 rounded-2xl;
+        @apply border border-slate-200 dark:border-slate-700/50;
+        @apply overflow-hidden;
+    }
+
+    .pref-card-header {
+        @apply flex items-center gap-4 px-6 py-4;
+        @apply bg-slate-50/80 dark:bg-slate-800/30;
+        @apply border-b border-slate-100 dark:border-slate-700/30;
+    }
+
+    .pref-card-header > i {
+        @apply text-xl flex-shrink-0;
+    }
+
+    .pref-card-title {
+        @apply text-base font-semibold text-slate-900 dark:text-white;
+    }
+
+    .pref-card-desc {
+        @apply text-sm text-slate-500 dark:text-slate-400;
+    }
+
+    .pref-card-body {
+        @apply p-6;
+    }
+
+    .pref-row {
+        @apply flex items-center justify-between py-3;
+        @apply border-b border-slate-100 dark:border-slate-700/30 last:border-0;
+    }
+
+    .pref-label {
+        @apply flex flex-col pr-4;
+    }
+
+    .pref-label > span:first-child {
+        @apply text-sm font-medium text-slate-900 dark:text-white;
+    }
+
+    .pref-hint {
+        @apply text-xs text-slate-500 dark:text-slate-400 mt-0.5;
+    }
+
+    .pref-control {
+        @apply flex-shrink-0;
+    }
+
+    /* macOS Toggle Switch */
+    .toggle-switch {
+        @apply relative inline-flex items-center cursor-pointer select-none;
+    }
+
+    .toggle-switch input {
+        @apply sr-only;
+    }
+
+    .toggle-slider {
+        @apply relative w-11 h-[26px] rounded-full transition-colors duration-200 ease-in-out;
+        @apply bg-slate-300 dark:bg-slate-600;
+    }
+
+    .toggle-slider::after {
+        content: '';
+        @apply absolute top-[3px] left-[3px] w-5 h-5 rounded-full bg-white shadow-md;
+        @apply transition-transform duration-200 ease-in-out;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+        @apply bg-blue-500;
+    }
+
+    .toggle-switch input:checked + .toggle-slider::after {
+        transform: translateX(18px);
+    }
+
+    .toggle-switch input:focus + .toggle-slider {
+        @apply ring-2 ring-blue-500/30 ring-offset-2 ring-offset-white dark:ring-offset-slate-800;
+    }
+
+    .toggle-switch input:disabled + .toggle-slider {
+        @apply opacity-50 cursor-not-allowed;
+    }
+
+    /* Checkbox - macOS Style */
+    .checkbox-macos {
+        @apply w-4 h-4 rounded border-slate-300 dark:border-slate-600;
+        @apply text-blue-500 focus:ring-blue-500/30 focus:ring-offset-0;
+        @apply bg-white dark:bg-slate-800;
+        @apply transition-colors duration-150;
+    }
+
+    /* Radio - macOS Style */
+    .radio-macos {
+        @apply w-4 h-4 border-slate-300 dark:border-slate-600;
+        @apply text-blue-500 focus:ring-blue-500/30 focus:ring-offset-0;
+        @apply bg-white dark:bg-slate-800;
+    }
+}
+
+@layer utilities {
+    /* Animations */
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-pulse-subtle {
+        animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse-subtle {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Line clamp */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Gradient text */
+    .text-gradient {
+        @apply bg-clip-text text-transparent bg-gradient-to-r;
+    }
+
+    /* Glass effect */
+    .glass {
+        @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl;
+    }
+}
+
+/* Custom Scrollbar - macOS Style */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-slate-300/60 dark:bg-slate-600/60 rounded-full;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400/80 dark:bg-slate-500/80;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.dark * {
+    scrollbar-color: rgba(71, 85, 105, 0.4) transparent;
+}
+
+/* Selection */
+::selection {
+    @apply bg-blue-500/20 text-blue-900 dark:text-blue-100;
+}
+
+/* Focus visible */
+:focus-visible {
+    @apply outline-none ring-2 ring-blue-500/50 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
+}
+
+/* Transitions for dark mode */
+html {
+    @apply transition-colors duration-200;
+}
+
+/* Smooth page transitions */
+.settings-content > * {
+    @apply animate-fade-in;
+}

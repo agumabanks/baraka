@@ -164,7 +164,7 @@ const Merchants: React.FC = () => {
               <i className="fas fa-sync-alt mr-2" aria-hidden="true" />
               Refresh
             </Button>
-            <Button variant="primary" size="sm" className="uppercase tracking-[0.25em]" onClick={() => navigate('/dashboard/merchant/payments')}>
+            <Button variant="primary" size="sm" className="uppercase tracking-[0.25em]" onClick={() => navigate('/admin/dashboard/merchant/payments')}>
               <i className="fas fa-wallet mr-2" aria-hidden="true" />
               Payments Desk
             </Button>
@@ -251,7 +251,7 @@ const Merchants: React.FC = () => {
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
                         <Badge variant="outline" size="sm">{resolveStatusLabel(merchant.status)}</Badge>
-                        <Button variant="primary" size="sm" className="uppercase tracking-[0.25em]" onClick={() => navigate(`/dashboard/merchants/${merchant.id}`)}>
+                        <Button variant="primary" size="sm" className="uppercase tracking-[0.25em]" onClick={() => navigate(`/admin/dashboard/merchants/${merchant.id}`)}>
                           View Merchant
                         </Button>
                       </div>

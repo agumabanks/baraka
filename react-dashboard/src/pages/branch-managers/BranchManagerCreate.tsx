@@ -41,7 +41,7 @@ const BranchManagerCreate: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: (data: BranchManagerFormData) => branchManagersApi.createManager(data),
     onSuccess: () => {
-      navigate('/dashboard/branch-managers');
+      navigate('/admin/dashboard/branch-managers');
     },
     onError: (error: any) => {
       console.error('Failed to create manager:', error);
@@ -372,7 +372,7 @@ const BranchManagerCreate: React.FC = () => {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => navigate('/dashboard/branch-managers')}
+                onClick={() => navigate('/admin/dashboard/branch-managers')}
                 disabled={createMutation.isPending}
               >
                 Cancel

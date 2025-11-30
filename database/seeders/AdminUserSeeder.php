@@ -16,8 +16,8 @@ class AdminUserSeeder extends Seeder
         $admins = [
             [
                 'email' => 'info@baraka.co',
-                'name' => 'baraka Administrator',
-                'password' => 'admin',
+                'name' => 'Admin Auth',
+                'password' => 'Admin@123',
             ],
             [
                 'email' => 'info@sanaa.co',
@@ -34,10 +34,7 @@ class AdminUserSeeder extends Seeder
         foreach ($admins as $admin) {
             $user = User::query()->firstOrNew(['email' => $admin['email']]);
 
-            if (! $user->exists || ! $user->name) {
-                $user->name = $admin['name'];
-            }
-
+            $user->name = $admin['name'];
             $user->email = $admin['email'];
             $user->password = Hash::make($admin['password']);
             $user->user_type = UserType::ADMIN;

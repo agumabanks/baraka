@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-
 class Customer extends Model
 {
     use HasFactory, LogsActivity;
@@ -52,6 +51,9 @@ class Customer extends Model
         'preferred_language',
         'account_manager_id',
         'primary_branch_id',
+        'created_by_branch_id',
+        'created_by_user_id',
+        'branch_id',
         'sales_rep_id',
         'status',
         'last_contact_date',
@@ -140,6 +142,30 @@ class Customer extends Model
     }
 
     /**
+     * CRM Activities relationship
+     */
+    public function crmActivities(): HasMany
+    {
+        return $this->hasMany(\App\Models\CrmActivity::class, 'customer_id');
+    }
+
+    /**
+     * CRM Reminders relationship
+     */
+    public function crmReminders(): HasMany
+    {
+        return $this->hasMany(\App\Models\CrmReminder::class, 'customer_id');
+    }
+
+    /**
+     * Client Addresses relationship
+     */
+    public function clientAddresses(): HasMany
+    {
+        return $this->hasMany(\App\Models\ClientAddress::class, 'customer_id');
+    }
+
+    /**
      * Contracts relationship
      */
     public function contracts(): HasMany
@@ -219,6 +245,40 @@ class Customer extends Model
     public function scopeRecentlyActive($query, $days = 30)
     {
         return $query->where('last_shipment_date', '>=', now()->subDays($days));
+    }
+
+    /**
+     * Scope to filter customers by branch (for branch-level access)
+     */
+    public function scopeForBranch($query, $branchId)
+    {
+        return $query->where('primary_branch_id', $branchId);
+    }
+
+    /**
+     * Scope to get customers visible to current user based on role
+     */
+    public function scopeVisibleToUser($query, $user = null)
+    {
+        $user = $user ?? auth()->user();
+        
+        if (!$user) {
+            return $query->whereRaw('1 = 0'); // No access if not authenticated
+        }
+
+        // Super admin and regional managers see ALL customers
+        if ($user->hasRole(['super-admin', 'super_admin', 'regional-manager', 'regional_manager', 'admin'])) {
+            return $query; // No filtering
+        }
+
+        // Branch users see only their branch's customers
+        $branchId = $user->primary_branch_id ?? $user->branchWorker?->branch_id ?? null;
+        
+        if ($branchId) {
+            return $query->where('primary_branch_id', $branchId);
+        }
+
+        return $query->whereRaw('1 = 0'); // No access if no branch association
     }
 
     // Accessors & Mutators

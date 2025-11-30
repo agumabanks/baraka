@@ -46,9 +46,16 @@ const stripPrefix = (path: string, prefix: string) => {
 };
 
 const stripKnownPrefixes = (path: string) => {
+  // First strip 'admin/dashboard' as a single prefix, then individual prefixes
+  let result = path;
+  if (result.startsWith('admin/dashboard/')) {
+    result = result.slice('admin/dashboard/'.length);
+  } else if (result === 'admin/dashboard') {
+    result = '';
+  }
+  
   const prefixes = ['dashboard', 'admin'];
-
-  return prefixes.reduce((acc, prefix) => stripPrefix(acc, prefix), path);
+  return prefixes.reduce((acc, prefix) => stripPrefix(acc, prefix), result);
 };
 
 export const canonicalisePath = (rawPath?: string): string => {
@@ -68,7 +75,7 @@ export const canonicalisePath = (rawPath?: string): string => {
 
 export const resolveRoutePath = (rawPath?: string): string => {
   const canonical = canonicalisePath(rawPath);
-  if (!canonical || canonical === 'dashboard') {
+  if (!canonical || canonical === 'dashboard' || canonical === 'admin/dashboard') {
     return '';
   }
 
@@ -84,7 +91,7 @@ export const resolveRoutePath = (rawPath?: string): string => {
 export const resolveDashboardNavigatePath = (rawPath?: string): string => {
   const trimmed = rawPath?.trim() ?? '';
   if (!trimmed) {
-    return '/dashboard';
+    return '/admin/dashboard';
   }
 
   if (/^(https?:)?\/\//.test(trimmed) || trimmed.startsWith('mailto:') || trimmed.startsWith('tel:')) {
@@ -93,13 +100,13 @@ export const resolveDashboardNavigatePath = (rawPath?: string): string => {
 
   const canonical = canonicalisePath(trimmed);
 
-  if (!canonical || canonical === 'dashboard') {
-    return '/dashboard';
+  if (!canonical || canonical === 'dashboard' || canonical === 'admin/dashboard') {
+    return '/admin/dashboard';
   }
 
   const withoutPrefixes = stripKnownPrefixes(canonical);
   const alias = ROUTE_ALIASES[withoutPrefixes] ?? withoutPrefixes;
-  const target = alias ? `/dashboard/${alias}` : '/dashboard';
+  const target = alias ? `/admin/dashboard/${alias}` : '/admin/dashboard';
 
   const normalised = target.replace(/\/{2,}/g, '/');
   return normalised.endsWith('/') && normalised !== '/' ? normalised.slice(0, -1) : normalised;

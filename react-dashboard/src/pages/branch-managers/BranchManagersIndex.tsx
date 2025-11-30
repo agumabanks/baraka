@@ -145,7 +145,7 @@ const BranchManagersIndex: React.FC = () => {
               variant="primary" 
               size="sm" 
               className="uppercase tracking-[0.25em]"
-              onClick={() => navigate('/dashboard/branch-managers/create')}
+              onClick={() => navigate('/admin/dashboard/branch-managers/create')}
             >
               <i className="fas fa-plus mr-2" aria-hidden="true" />
               Add Manager
@@ -182,7 +182,7 @@ const BranchManagersIndex: React.FC = () => {
                 <Button 
                   variant="primary" 
                   size="sm"
-                  onClick={() => navigate('/dashboard/branch-managers/create')}
+                  onClick={() => navigate('/admin/dashboard/branch-managers/create')}
                 >
                   <i className="fas fa-plus mr-2" aria-hidden="true" />
                   Add First Manager
@@ -208,7 +208,7 @@ const BranchManagersIndex: React.FC = () => {
                     <tr 
                       key={manager.id} 
                       className="border-b border-mono-gray-100 hover:bg-mono-gray-50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/dashboard/branch-managers/${manager.id}`)}
+                      onClick={() => navigate(`/admin/dashboard/branch-managers/${manager.id}`)}
                     >
                       <td className="py-4">
                         <div>
@@ -279,7 +279,7 @@ const BranchManagersIndex: React.FC = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/dashboard/branch-managers/${manager.id}`);
+                              navigate(`/admin/dashboard/branch-managers/${manager.id}`);
                             }}
                             title="View Details"
                           >
@@ -290,7 +290,7 @@ const BranchManagersIndex: React.FC = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/dashboard/branch-managers/${manager.id}/edit`);
+                              navigate(`/admin/dashboard/branch-managers/${manager.id}/edit`);
                             }}
                             title="Edit Manager"
                           >

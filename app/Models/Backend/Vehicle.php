@@ -28,6 +28,8 @@ class Vehicle extends Model
         'capacity_volume',
         'ownership',
         'status',
+        'current_branch_id',
+        'last_location_update',
     ];
 
     protected $casts = [
@@ -68,6 +70,11 @@ class Vehicle extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    public function currentBranch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'current_branch_id');
     }
 
     public function getMyStatusAttribute()

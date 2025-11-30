@@ -2,52 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-class BranchWorker extends Model
+/**
+ * BranchWorker Model - Backward Compatibility Alias
+ * 
+ * This class now extends the canonical Backend\BranchWorker model.
+ * All domain logic, relationships, and business methods are inherited.
+ * 
+ * @deprecated Use App\Models\Backend\BranchWorker directly
+ * 
+ * This alias maintains backward compatibility for code that references
+ * App\Models\BranchWorker but delegates all functionality to the
+ * authoritative Backend\BranchWorker model.
+ */
+class BranchWorker extends Backend\BranchWorker
 {
-    protected $fillable = [
-        'branch_id',
-        'user_id',
-        'role',
-        'permissions',
-        'work_schedule',
-        'hourly_rate',
-        'assigned_at',
-        'unassigned_at',
-        'notes',
-        'metadata',
-        'status',
-    ];
-
-    protected $casts = [
-        'permissions' => 'array',
-        'work_schedule' => 'array',
-        'hourly_rate' => 'decimal:2',
-        'assigned_at' => 'date',
-        'unassigned_at' => 'date',
-        'metadata' => 'array',
-        'status' => 'integer',
-    ];
-
-    public function branch(): BelongsTo
-    {
-        return $this->belongsTo(UnifiedBranch::class, 'branch_id');
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function isSupervisor(): bool
-    {
-        return $this->role === 'supervisor';
-    }
-
-    public function isDispatcher(): bool
-    {
-        return $this->role === 'dispatcher';
-    }
+    // All functionality inherited from Backend\BranchWorker
+    // This class serves only as a backward-compatible alias
 }

@@ -424,7 +424,7 @@ const AllCustomers: React.FC = () => {
                           className="block w-full px-4 py-2 text-left text-sm text-mono-gray-700 hover:bg-mono-gray-50"
                           onClick={() => {
                             setOpenActionMenuId(null);
-                            navigate('/dashboard/customers/create');
+                            navigate('/admin/dashboard/customers/create');
                           }}
                         >
                           Add New Client
@@ -468,7 +468,7 @@ const AllCustomers: React.FC = () => {
               <Button
                 variant="primary"
                 className="uppercase tracking-[0.25em]"
-                onClick={() => navigate('/dashboard/customers/create')}
+                onClick={() => navigate('/admin/dashboard/customers/create')}
               >
                 New Customer
               </Button>

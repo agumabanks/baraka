@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
       const path = window.location.pathname;
-      return path.startsWith('/dashboard') || path.startsWith('/react-dashboard');
+      return path.startsWith('/admin/dashboard') || path.startsWith('/dashboard') || path.startsWith('/react-dashboard');
     };
 
     try {

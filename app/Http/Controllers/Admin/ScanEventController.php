@@ -36,7 +36,7 @@ class ScanEventController extends Controller
         $payload = $request->validate([
             'sscc' => 'required|string',
             'type' => 'required|string',
-            'branch_id' => 'nullable|exists:hubs,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'leg_id' => 'nullable|exists:transport_legs,id',
             'occurred_at' => 'nullable|date',
             'note' => 'nullable|string',

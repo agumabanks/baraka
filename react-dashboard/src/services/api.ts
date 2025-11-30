@@ -1375,4 +1375,204 @@ export const branchOperationsApi = {
   },
 };
 
+// ==================== Enterprise Module APIs ====================
+
+// Analytics API
+export const analyticsApi = {
+  getDashboardData: async (params?: { preset?: string; start_date?: string; end_date?: string; branch_id?: string }) => {
+    const response = await api.get('/admin/analytics/data', { params });
+    return response.data;
+  },
+  getBranchComparison: async () => {
+    const response = await api.get('/admin/analytics/branch-comparison');
+    return response.data;
+  },
+  getDriverPerformance: async () => {
+    const response = await api.get('/admin/analytics/driver-performance');
+    return response.data;
+  },
+  getCustomerAnalytics: async () => {
+    const response = await api.get('/admin/analytics/customer-analytics');
+    return response.data;
+  },
+  predictDelivery: async (shipmentId: number) => {
+    const response = await api.get(`/admin/analytics/predict/${shipmentId}`);
+    return response.data;
+  },
+  generateShipmentReport: async (params?: Record<string, unknown>) => {
+    const response = await api.get('/admin/analytics/reports/shipment', { params });
+    return response.data;
+  },
+  generateFinancialReport: async (params?: Record<string, unknown>) => {
+    const response = await api.get('/admin/analytics/reports/financial', { params });
+    return response.data;
+  },
+};
+
+// Admin Finance API
+export const adminFinanceApi = {
+  getDashboardData: async (params?: { preset?: string; branch_id?: string }) => {
+    const response = await api.get('/admin/finance/dashboard/data', { params });
+    return response.data;
+  },
+  getCodCollections: async (params?: { status?: string; branch_id?: string }) => {
+    const response = await api.get('/admin/finance/cod', { params });
+    return response.data;
+  },
+  recordCollection: async (data: { shipment_id: number; amount: number; method: string; notes?: string }) => {
+    const response = await api.post('/admin/finance/cod/record', data);
+    return response.data;
+  },
+  verifyCollection: async (collectionId: number, data?: { verified: boolean }) => {
+    const response = await api.post(`/admin/finance/cod/${collectionId}/verify`, data);
+    return response.data;
+  },
+  getDriverCashAccounts: async () => {
+    const response = await api.get('/admin/finance/cod/driver-accounts');
+    return response.data;
+  },
+  getSettlements: async (params?: { status?: string; merchant_id?: string }) => {
+    const response = await api.get('/admin/finance/settlements', { params });
+    return response.data;
+  },
+  generateSettlement: async (data: { customer_id: number; period_start: string; period_end: string }) => {
+    const response = await api.post('/admin/finance/settlements/generate', data);
+    return response.data;
+  },
+  approveSettlement: async (settlementId: number) => {
+    const response = await api.post(`/admin/finance/settlements/${settlementId}/approve`);
+    return response.data;
+  },
+  paySettlement: async (settlementId: number, data: { payment_reference: string; payment_method: string }) => {
+    const response = await api.post(`/admin/finance/settlements/${settlementId}/pay`, data);
+    return response.data;
+  },
+  getExchangeRates: async () => {
+    const response = await api.get('/admin/finance/exchange-rates');
+    return response.data;
+  },
+  setExchangeRate: async (data: { from_currency: string; to_currency: string; rate: number }) => {
+    const response = await api.post('/admin/finance/exchange-rates', data);
+    return response.data;
+  },
+};
+
+// Security API
+export const securityApi = {
+  getOverview: async () => {
+    const response = await api.get('/admin/security/overview');
+    return response.data;
+  },
+  getAuditLogs: async (params?: { user_id?: number; action?: string; from?: string; to?: string }) => {
+    const response = await api.get('/admin/security/audit-logs', { params });
+    return response.data;
+  },
+  getActiveSessions: async () => {
+    const response = await api.get('/admin/security/sessions');
+    return response.data;
+  },
+  terminateSession: async (sessionId: number) => {
+    const response = await api.delete(`/admin/security/sessions/${sessionId}`);
+    return response.data;
+  },
+  unlockAccount: async (userId: number) => {
+    const response = await api.post(`/admin/security/users/${userId}/unlock`);
+    return response.data;
+  },
+  exportUserData: async (userId: number) => {
+    const response = await api.get(`/admin/security/gdpr/user/${userId}/export`);
+    return response.data;
+  },
+  getDataRetentionReport: async () => {
+    const response = await api.get('/admin/security/gdpr/retention');
+    return response.data;
+  },
+};
+
+// Dispatch API
+export const dispatchApi = {
+  optimizeRoute: async (data: { shipment_ids: number[]; driver_id?: number }) => {
+    const response = await api.post('/admin/dispatch/optimize-route', data);
+    return response.data;
+  },
+  autoAssign: async (data: { shipment_id: number }) => {
+    const response = await api.post('/admin/dispatch/auto-assign', data);
+    return response.data;
+  },
+  bulkAutoAssign: async (data: { shipment_ids: number[] }) => {
+    const response = await api.post('/admin/dispatch/bulk-auto-assign', data);
+    return response.data;
+  },
+  manualAssign: async (data: { shipment_id: number; driver_id: number }) => {
+    const response = await api.post('/admin/dispatch/manual-assign', data);
+    return response.data;
+  },
+  getSuggestions: async (params?: { shipment_id?: number }) => {
+    const response = await api.get('/admin/dispatch/suggestions', { params });
+    return response.data;
+  },
+  getWorkloadDistribution: async () => {
+    const response = await api.get('/admin/dispatch/workload-distribution');
+    return response.data;
+  },
+  getHubRoutes: async () => {
+    const response = await api.get('/admin/dispatch/hub-routes');
+    return response.data;
+  },
+  findHubRoute: async (data: { origin_hub_id: number; destination_hub_id: number }) => {
+    const response = await api.post('/admin/dispatch/find-hub-route', data);
+    return response.data;
+  },
+};
+
+// Tracking API
+export const trackingApi = {
+  getTrackingData: async (shipmentId: number) => {
+    const response = await api.get(`/admin/tracking/${shipmentId}/data`);
+    return response.data;
+  },
+  getMultipleTracking: async (shipmentIds: number[]) => {
+    const response = await api.post('/admin/tracking/multiple', { shipment_ids: shipmentIds });
+    return response.data;
+  },
+  refreshTracking: async (shipmentId: number) => {
+    const response = await api.post(`/admin/tracking/${shipmentId}/refresh`);
+    return response.data;
+  },
+};
+
+// API v2 (External Partner API)
+export const apiV2 = {
+  // Shipments
+  listShipments: async (params?: Record<string, unknown>) => {
+    const response = await api.get('/api/v2/shipments', { params });
+    return response.data;
+  },
+  createShipment: async (data: Record<string, unknown>) => {
+    const response = await api.post('/api/v2/shipments', data);
+    return response.data;
+  },
+  getShipment: async (id: string) => {
+    const response = await api.get(`/api/v2/shipments/${id}`);
+    return response.data;
+  },
+  trackShipment: async (id: string) => {
+    const response = await api.get(`/api/v2/shipments/${id}/track`);
+    return response.data;
+  },
+  // Webhooks
+  listWebhooks: async () => {
+    const response = await api.get('/api/v2/webhooks');
+    return response.data;
+  },
+  createWebhook: async (data: { url: string; events: string[]; secret?: string }) => {
+    const response = await api.post('/api/v2/webhooks', data);
+    return response.data;
+  },
+  deleteWebhook: async (id: string) => {
+    const response = await api.delete(`/api/v2/webhooks/${id}`);
+    return response.data;
+  },
+};
+
 export default api;

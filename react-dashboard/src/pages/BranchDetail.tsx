@@ -275,7 +275,7 @@ const BranchDetail: React.FC = () => {
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-mono-gray-500">Recent Shipments</p>
               <h2 className="text-xl font-semibold text-mono-black">Outbound Activity</h2>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/unified-shipments')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/admin/dashboard/unified-shipments')}>
               Open Workflow
             </Button>
           </div>

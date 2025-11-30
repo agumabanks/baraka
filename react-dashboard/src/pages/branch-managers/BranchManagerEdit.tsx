@@ -54,7 +54,7 @@ const BranchManagerEdit: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['branch-manager', id] });
       queryClient.invalidateQueries({ queryKey: ['branch-managers'] });
-      navigate(`/dashboard/branch-managers/${id}`);
+      navigate(`/admin/dashboard/branch-managers/${id}`);
     },
     onError: (error: any) => {
       console.error('Failed to update manager:', error);
@@ -256,7 +256,7 @@ const BranchManagerEdit: React.FC = () => {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => navigate(`/dashboard/branch-managers/${id}`)}
+                onClick={() => navigate(`/admin/dashboard/branch-managers/${id}`)}
                 disabled={updateMutation.isPending}
               >
                 Cancel

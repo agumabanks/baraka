@@ -40,7 +40,7 @@ const BranchWorkerCreate: React.FC = () => {
 
   const createMutation = useMutation({
     mutationFn: (data: BranchWorkerFormData) => branchWorkersApi.createWorker(data),
-    onSuccess: () => navigate('/dashboard/branch-workers'),
+    onSuccess: () => navigate('/admin/dashboard/branch-workers'),
     onError: (error: any) => alert(error?.response?.data?.message || 'Failed to create worker'),
   });
 
@@ -305,7 +305,7 @@ const BranchWorkerCreate: React.FC = () => {
               <Button type="submit" variant="primary" disabled={createMutation.isPending}>
                 {createMutation.isPending ? 'Creating...' : 'Create Worker'}
               </Button>
-              <Button type="button" variant="secondary" onClick={() => navigate('/dashboard/branch-workers')}>
+              <Button type="button" variant="secondary" onClick={() => navigate('/admin/dashboard/branch-workers')}>
                 Cancel
               </Button>
             </div>

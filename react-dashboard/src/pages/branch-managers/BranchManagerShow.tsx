@@ -34,7 +34,7 @@ const BranchManagerShow: React.FC = () => {
               <h2 className="text-2xl font-semibold text-mono-black">Unable to load manager</h2>
               <p className="text-sm text-mono-gray-600">{message}</p>
             </div>
-            <Button variant="primary" onClick={() => navigate('/dashboard/branch-managers')}>
+            <Button variant="primary" onClick={() => navigate('/admin/dashboard/branch-managers')}>
               Back to Managers
             </Button>
           </div>
@@ -70,7 +70,7 @@ const BranchManagerShow: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => navigate(`/dashboard/branch-managers/${id}/edit`)}
+              onClick={() => navigate(`/admin/dashboard/branch-managers/${id}/edit`)}
             >
               <i className="fas fa-edit mr-2" aria-hidden="true" />
               Edit Manager
@@ -78,7 +78,7 @@ const BranchManagerShow: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              onClick={() => navigate('/dashboard/branch-managers')}
+              onClick={() => navigate('/admin/dashboard/branch-managers')}
             >
               <i className="fas fa-arrow-left mr-2" aria-hidden="true" />
               Back to List

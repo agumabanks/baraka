@@ -32,10 +32,10 @@ const BranchWorkerShow: React.FC = () => {
             <h1 className="text-3xl font-semibold text-mono-black sm:text-4xl">{worker.user?.name || 'Worker Details'}</h1>
           </div>
           <div className="flex gap-3">
-            <Button variant="secondary" size="sm" onClick={() => navigate(`/dashboard/branch-workers/${id}/edit`)}>
+            <Button variant="secondary" size="sm" onClick={() => navigate(`/admin/dashboard/branch-workers/${id}/edit`)}>
               <i className="fas fa-edit mr-2" />Edit
             </Button>
-            <Button variant="primary" size="sm" onClick={() => navigate('/dashboard/branch-workers')}>
+            <Button variant="primary" size="sm" onClick={() => navigate('/admin/dashboard/branch-workers')}>
               <i className="fas fa-arrow-left mr-2" />Back
             </Button>
           </div>

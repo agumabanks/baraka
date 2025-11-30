@@ -66,13 +66,99 @@ Route::prefix('v1')->group(function () {
     
     // System Health & Status (Light rate limiting)
     Route::get('/health', [SystemHealthController::class, 'healthCheck'])
-        ->middleware(['api.middleware:health']);
+        ->middleware(['api.simple']);
     
     Route::get('/version', [SystemHealthController::class, 'version'])
-        ->middleware(['api.middleware:version']);
+        ->middleware(['api.simple']);
     
     Route::get('/business-rules', [SystemHealthController::class, 'businessRules'])
-        ->middleware(['api.middleware:business']);
+        ->middleware(['api.simple']);
+    
+    // Public Website Settings (for landing page)
+    Route::get('/website-settings', function () {
+        $settings = [
+            'site_title' => \App\Support\SystemSettings::get('website.site_title', config('app.name')),
+            'site_tagline' => \App\Support\SystemSettings::get('website.site_tagline', ''),
+            'site_description' => \App\Support\SystemSettings::get('website.site_description', ''),
+            'hero' => [
+                'title' => \App\Support\SystemSettings::get('website.hero_title', 'Fast & Reliable Logistics'),
+                'subtitle' => \App\Support\SystemSettings::get('website.hero_subtitle', ''),
+                'background' => \App\Support\SystemSettings::get('website.hero_background', ''),
+                'cta_primary' => [
+                    'text' => \App\Support\SystemSettings::get('website.hero_cta_primary_text', 'Get a Quote'),
+                    'url' => \App\Support\SystemSettings::get('website.hero_cta_primary_url', '/quote'),
+                ],
+                'cta_secondary' => [
+                    'text' => \App\Support\SystemSettings::get('website.hero_cta_secondary_text', 'Track Shipment'),
+                    'url' => \App\Support\SystemSettings::get('website.hero_cta_secondary_url', '/tracking'),
+                ],
+                'show_tracking_widget' => \App\Support\SystemSettings::get('website.hero_show_tracking_widget', true),
+            ],
+            'features' => [
+                'enabled' => \App\Support\SystemSettings::get('website.features_enabled', true),
+                'title' => \App\Support\SystemSettings::get('website.features_title', 'Why Choose Us'),
+                'subtitle' => \App\Support\SystemSettings::get('website.features_subtitle', ''),
+                'items' => \App\Support\SystemSettings::get('website.features', []),
+            ],
+            'services' => [
+                'enabled' => \App\Support\SystemSettings::get('website.services_enabled', true),
+                'title' => \App\Support\SystemSettings::get('website.services_title', 'Our Services'),
+                'subtitle' => \App\Support\SystemSettings::get('website.services_subtitle', ''),
+                'items' => \App\Support\SystemSettings::get('website.services', []),
+            ],
+            'stats' => [
+                'enabled' => \App\Support\SystemSettings::get('website.stats_enabled', true),
+                'items' => \App\Support\SystemSettings::get('website.stats', []),
+            ],
+            'about' => [
+                'enabled' => \App\Support\SystemSettings::get('website.about_enabled', true),
+                'title' => \App\Support\SystemSettings::get('website.about_title', ''),
+                'content' => \App\Support\SystemSettings::get('website.about_content', ''),
+                'image' => \App\Support\SystemSettings::get('website.about_image', ''),
+            ],
+            'testimonials' => [
+                'enabled' => \App\Support\SystemSettings::get('website.testimonials_enabled', true),
+                'title' => \App\Support\SystemSettings::get('website.testimonials_title', ''),
+                'items' => \App\Support\SystemSettings::get('website.testimonials', []),
+            ],
+            'contact' => [
+                'enabled' => \App\Support\SystemSettings::get('website.contact_enabled', true),
+                'title' => \App\Support\SystemSettings::get('website.contact_title', ''),
+                'subtitle' => \App\Support\SystemSettings::get('website.contact_subtitle', ''),
+                'email' => \App\Support\SystemSettings::get('website.contact_email', ''),
+                'phone' => \App\Support\SystemSettings::get('website.contact_phone', ''),
+                'whatsapp' => \App\Support\SystemSettings::get('website.contact_whatsapp', ''),
+                'address' => \App\Support\SystemSettings::get('website.contact_address', ''),
+                'hours' => \App\Support\SystemSettings::get('website.contact_hours', ''),
+                'map_embed' => \App\Support\SystemSettings::get('website.contact_map_embed', ''),
+            ],
+            'social' => [
+                'facebook' => \App\Support\SystemSettings::get('website.social_facebook', ''),
+                'twitter' => \App\Support\SystemSettings::get('website.social_twitter', ''),
+                'instagram' => \App\Support\SystemSettings::get('website.social_instagram', ''),
+                'linkedin' => \App\Support\SystemSettings::get('website.social_linkedin', ''),
+                'youtube' => \App\Support\SystemSettings::get('website.social_youtube', ''),
+                'tiktok' => \App\Support\SystemSettings::get('website.social_tiktok', ''),
+            ],
+            'footer' => [
+                'about' => \App\Support\SystemSettings::get('website.footer_about', ''),
+                'copyright' => \App\Support\SystemSettings::get('website.footer_copyright', ''),
+                'links' => \App\Support\SystemSettings::get('website.footer_links', []),
+            ],
+            'analytics' => [
+                'google_analytics_id' => \App\Support\SystemSettings::get('website.google_analytics_id', ''),
+                'google_tag_manager_id' => \App\Support\SystemSettings::get('website.google_tag_manager_id', ''),
+                'facebook_pixel_id' => \App\Support\SystemSettings::get('website.facebook_pixel_id', ''),
+            ],
+            'custom_css' => \App\Support\SystemSettings::get('website.custom_css', ''),
+            'custom_js_head' => \App\Support\SystemSettings::get('website.custom_js_head', ''),
+            'custom_js_body' => \App\Support\SystemSettings::get('website.custom_js_body', ''),
+            'maintenance_mode' => \App\Support\SystemSettings::get('website.maintenance_mode', false),
+            'maintenance_message' => \App\Support\SystemSettings::get('website.maintenance_message', ''),
+        ];
+        
+        return response()->json($settings);
+    })->middleware(['api.simple']);
     
     // Basic Rate Limiting for these routes
     Route::middleware(['advanced-rate-limit:quotes', 'api-security-validation'])->group(function () {
@@ -655,3 +741,49 @@ Route::prefix('v1/accessibility')->middleware(['accessibility.validation'])->gro
 
 // Route::post('/api/v1/monitoring/refresh-cache', [SystemHealthController::class, 'refreshCache'])
 //     ->middleware(['throttle:10,1']); // 10 requests per minute
+
+/*
+|--------------------------------------------------------------------------
+| API V2 - RESTful API with API Key Authentication
+|--------------------------------------------------------------------------
+*/
+
+// API Key Management (Admin authenticated)
+Route::prefix('v2/admin/api-keys')
+    ->middleware(['auth:sanctum', 'role:admin'])
+    ->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\V2\ApiKeyController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\V2\ApiKeyController::class, 'store']);
+        Route::get('/{apiKey}', [\App\Http\Controllers\Api\V2\ApiKeyController::class, 'show']);
+        Route::put('/{apiKey}', [\App\Http\Controllers\Api\V2\ApiKeyController::class, 'update']);
+        Route::delete('/{apiKey}', [\App\Http\Controllers\Api\V2\ApiKeyController::class, 'destroy']);
+        Route::post('/{apiKey}/regenerate-secret', [\App\Http\Controllers\Api\V2\ApiKeyController::class, 'regenerateSecret']);
+    });
+
+// API v2 Endpoints (API Key authenticated)
+Route::prefix('v2')
+    ->middleware(['api.key'])
+    ->group(function () {
+        // Shipments
+        Route::get('/shipments', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'index']);
+        Route::post('/shipments', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'store']);
+        Route::get('/shipments/{shipment}', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'show']);
+        Route::put('/shipments/{shipment}', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'update']);
+        Route::post('/shipments/{shipment}/status', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'updateStatus']);
+        Route::get('/shipments/{shipment}/tracking', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'tracking']);
+        Route::post('/shipments/{shipment}/cancel', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'cancel']);
+        Route::post('/shipments/rate', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'calculateRate']);
+        Route::post('/shipments/batch', [\App\Http\Controllers\Api\V2\ShipmentController::class, 'batchCreate']);
+        
+        // Webhooks
+        Route::get('/webhooks/events', [\App\Http\Controllers\Api\V2\WebhookController::class, 'events']);
+        Route::get('/webhooks', [\App\Http\Controllers\Api\V2\WebhookController::class, 'index']);
+        Route::post('/webhooks', [\App\Http\Controllers\Api\V2\WebhookController::class, 'store']);
+        Route::get('/webhooks/{webhook}', [\App\Http\Controllers\Api\V2\WebhookController::class, 'show']);
+        Route::put('/webhooks/{webhook}', [\App\Http\Controllers\Api\V2\WebhookController::class, 'update']);
+        Route::delete('/webhooks/{webhook}', [\App\Http\Controllers\Api\V2\WebhookController::class, 'destroy']);
+        Route::post('/webhooks/{webhook}/test', [\App\Http\Controllers\Api\V2\WebhookController::class, 'test']);
+        Route::get('/webhooks/{webhook}/deliveries', [\App\Http\Controllers\Api\V2\WebhookController::class, 'deliveries']);
+        Route::post('/webhooks/{webhook}/rotate-secret', [\App\Http\Controllers\Api\V2\WebhookController::class, 'rotateSecret']);
+        Route::post('/webhooks/deliveries/{delivery}/retry', [\App\Http\Controllers\Api\V2\WebhookController::class, 'retryDelivery']);
+    });

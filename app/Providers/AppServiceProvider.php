@@ -36,6 +36,13 @@ use App\Repositories\Wallet\WalletInterface;
 use App\Repositories\Wallet\WalletRepository;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
+use App\Support\BranchCache;
+use App\Models\Shipment;
+use App\Models\Backend\BranchWorker;
+use App\Models\Client;
+use App\Models\Invoice;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -147,6 +154,40 @@ class AppServiceProvider extends ServiceProvider
 
         Blade::directive('navExpanded', function ($patterns) {
             return "<?php echo \\App\\Support\\Nav::expanded($patterns); ?>";
+        });
+
+        // Branch cache invalidation hooks to preserve branch isolation and freshness
+        Shipment::saved(function (Shipment $shipment) {
+            BranchCache::flushForBranches([$shipment->origin_branch_id, $shipment->dest_branch_id]);
+        });
+        Shipment::deleted(function (Shipment $shipment) {
+            BranchCache::flushForBranches([$shipment->origin_branch_id, $shipment->dest_branch_id]);
+        });
+
+        BranchWorker::saved(function (BranchWorker $worker) {
+            BranchCache::flushForBranch($worker->branch_id);
+        });
+
+        Client::saved(function (Client $client) {
+            BranchCache::flushForBranch($client->primary_branch_id);
+        });
+
+        Invoice::saved(function (Invoice $invoice) {
+            $branchIds = [];
+            if ($invoice->shipment) {
+                $branchIds[] = $invoice->shipment->origin_branch_id;
+                $branchIds[] = $invoice->shipment->dest_branch_id;
+            }
+            BranchCache::flushForBranches($branchIds);
+        });
+
+        Payment::saved(function (Payment $payment) {
+            $branchIds = [];
+            if ($payment->shipment) {
+                $branchIds[] = $payment->shipment->origin_branch_id;
+                $branchIds[] = $payment->shipment->dest_branch_id;
+            }
+            BranchCache::flushForBranches($branchIds);
         });
     }
 }

@@ -6,6 +6,7 @@ use App\Enums\Status;
 use App\Enums\UserType;
 use App\Models\Backend\Account;
 use App\Models\Backend\Branch;
+use App\Models\Backend\BranchManager;
 use App\Models\Backend\BranchWorker;
 use App\Models\Backend\DeliveryMan;
 use App\Models\Backend\Department;
@@ -27,6 +28,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class User extends Authenticatable
 {
+    // Do NOT branch-scope the User model to avoid recursive Auth resolution loops.
     use HasApiTokens, HasFactory, LogsActivity, Notifiable;
 
     public const CLIENT_TYPES = [UserType::MERCHANT];
@@ -75,9 +77,10 @@ class User extends Authenticatable
         'phone_e164',
         'mobile',
         'address',
+        'company_name',
         'preferred_language',
         'primary_branch_id',
-
+        'branch_id',
     ];
 
     /**
@@ -110,7 +113,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'permissions' => 'array',
         'notification_prefs' => 'array',
+        'notification_prefs' => 'array',
         'primary_branch_id' => 'integer',
+        'branch_id' => 'integer',
     ];
 
     public const SUPPORTED_LANGUAGES = ['en', 'fr', 'sw'];
@@ -321,6 +326,11 @@ class User extends Authenticatable
     public function branchWorker()
     {
         return $this->hasOne(BranchWorker::class, 'user_id');
+    }
+
+    public function branchManager()
+    {
+        return $this->hasOne(BranchManager::class, 'user_id');
     }
 
     public function branchWorkers(): HasMany
