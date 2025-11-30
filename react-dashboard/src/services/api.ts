@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from 'axios';
+import { getDeviceUuid, getPlatformLabel, getStoredPushToken } from '../utils/device';
 import type {
   SalesAddressBookEntry,
   SalesAddressBookListResponse,
@@ -153,6 +154,20 @@ const DEFAULT_DEV_API_BASE = 'http://localhost:8000/api';
 
 const sanitizeBaseUrl = (url: string): string => url.replace(/\/$/, '');
 
+const resolveDeviceHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'device_uuid': getDeviceUuid(),
+    'platform': getPlatformLabel(),
+  };
+
+  const pushToken = getStoredPushToken();
+  if (pushToken) {
+    headers['push_token'] = pushToken;
+  }
+
+  return headers;
+};
+
 const resolveApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL as string | undefined;
 
@@ -207,6 +222,15 @@ const api: AxiosInstance = axios.create({
     'apiKey': '123456rx-ecourier123456', // Required API key for backend
   },
 });
+
+const applyDeviceHeadersToClient = () => {
+  const deviceHeaders = resolveDeviceHeaders();
+  Object.entries(deviceHeaders).forEach(([key, value]) => {
+    api.defaults.headers.common[key] = value;
+  });
+};
+
+applyDeviceHeadersToClient();
 
 if (typeof window !== 'undefined') {
   const storedLocale = window.localStorage.getItem('dashboard_locale');
@@ -297,7 +321,11 @@ export const getCsrfToken = async (): Promise<void> => {
 export const authApi = {
   login: async (email: string, password: string) => {
     await getCsrfToken();
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post(
+      '/auth/login',
+      { email: email.trim(), password },
+      { headers: resolveDeviceHeaders() }
+    );
     return response.data;
   },
 
