@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="{{ app()->getLocale() }}" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') • {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite(['resources/css/admin.css', 'resources/js/admin.js'])
+    <style>[x-cloak] { display: none !important; }</style>
     @stack('styles')
 </head>
 <body class="h-screen overflow-hidden">
@@ -25,6 +27,7 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-3">
+                        <x-language-switcher style="dropdown" :show-flags="true" :show-labels="true" />
                         <div class="text-right">
                             <div class="muted text-2xs">Signed in as</div>
                             <div class="text-sm font-semibold">{{ auth()->user()->name }}</div>

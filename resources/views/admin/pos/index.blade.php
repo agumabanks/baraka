@@ -238,6 +238,10 @@
             
             {{-- Quick Actions --}}
             <div class="flex items-center gap-2">
+                <button onclick="resetForm()" class="quick-action bg-red-600/20 hover:bg-red-600/40 border-red-500/30" title="Clear Form (Esc)">
+                    <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span class="hidden lg:inline text-red-400">Clear</span>
+                </button>
                 <button onclick="showHoldQueue()" class="quick-action" title="Hold Queue (F9)">
                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     <span class="hidden lg:inline">Hold</span>
@@ -336,7 +340,7 @@
                         <label class="block text-xs text-zinc-500 mb-2 uppercase">Origin Branch</label>
                         <select id="originBranch" class="pos-input pos-select">
                             @foreach($branches as $branch)
-                                <option value="{{ $branch->id }}" {{ ($currentBranch && $currentBranch->id == $branch->id) ? 'selected' : '' }}>
+                                <option value="{{ $branch->id }}" {{ ($currentBranch && $currentBranch->id == $branch->id) ? 'selected' : ((!$currentBranch && $branch->code === 'IST') ? 'selected' : '') }}>
                                     {{ $branch->name }} ({{ $branch->code ?? 'N/A' }})
                                 </option>
                             @endforeach
@@ -871,6 +875,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateHoldCount();
     updateValidationState();
     
+    // Pre-select customer if passed from client management
+    @if(isset($preSelectedCustomer) && $preSelectedCustomer)
+    const preCustomer = {
+        id: {{ $preSelectedCustomer->id }},
+        name: @json($preSelectedCustomer->contact_person ?: $preSelectedCustomer->company_name),
+        display: @json($preSelectedCustomer->company_name ? $preSelectedCustomer->contact_person . ' (' . $preSelectedCustomer->company_name . ')' : $preSelectedCustomer->contact_person),
+        phone: @json($preSelectedCustomer->phone ?? ''),
+        email: @json($preSelectedCustomer->email ?? ''),
+        company: @json($preSelectedCustomer->company_name ?? ''),
+        code: @json($preSelectedCustomer->customer_code ?? ''),
+        credit_limit: {{ $preSelectedCustomer->credit_limit ?? 0 }},
+        credit_used: {{ $preSelectedCustomer->credit_used ?? 0 }}
+    };
+    selectCustomer(preCustomer);
+    @endif
+    
     // Hide loading overlay after initialization
     setTimeout(() => {
         hideLoading();
@@ -1011,6 +1031,7 @@ function initPaymentMethods() {
         { key: 'card', icon: 'card', label: 'Card', color: 'blue' },
         { key: 'mobile_money', icon: 'mobile', label: 'Mobile', color: 'yellow' },
         { key: 'credit', icon: 'account', label: 'Account', color: 'purple' },
+        { key: 'bank_transfer', icon: 'bank', label: 'Bank Transfer', color: 'cyan' },
     ];
     
     container.innerHTML = methods
@@ -1031,6 +1052,7 @@ function getPaymentIcon(method) {
         card: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>',
         mobile_money: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>',
         credit: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
+        bank_transfer: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M4 6l8-4 8 4M6 14v6m4-6v6m4-6v6m4-6v6"/>',
     };
     return icons[method] || icons.cash;
 }
@@ -1170,8 +1192,9 @@ function updateValidationState() {
     const hasCustomer = !!selectedCustomer;
     const hasDestination = !!document.getElementById('destBranch').value;
     const hasWeight = parseFloat(document.getElementById('weight').value) > 0;
+    const pricingOk = currentPricing && currentPricing.success !== false;
     
-    const isValid = hasCustomer && hasDestination && hasWeight;
+    const isValid = hasCustomer && hasDestination && hasWeight && pricingOk;
     
     // Update button state
     createBtn.disabled = !isValid;
@@ -1328,6 +1351,9 @@ async function calculateRate() {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Rate calculation failed:', response.status, errorText);
+            currentPricing = { success: false, error: 'Rate calculation failed' };
+            updatePricingDisplay(currentPricing);
+            updateValidationState();
             return;
         }
         
@@ -1335,44 +1361,89 @@ async function calculateRate() {
         console.log('Rate calculated:', data);
         currentPricing = data;
         updatePricingDisplay(data);
+        updateValidationState();
     } catch (error) {
         console.error('Rate calculation error:', error);
+        currentPricing = { success: false, error: 'Rate calculation error' };
+        updateValidationState();
     } finally {
         isCalculating = false;
     }
 }
 
 function updatePricingDisplay(pricing) {
+    if (!pricing) {
+        document.getElementById('baseRate').textContent = '--';
+        document.getElementById('weightCharge').textContent = '--';
+        document.getElementById('surcharges').textContent = '--';
+        document.getElementById('insuranceAmount').textContent = '--';
+        document.getElementById('codFee').textContent = '--';
+        document.getElementById('taxAmount').textContent = '--';
+        document.getElementById('totalAmount').textContent = '--';
+        document.getElementById('surchargeRow').style.display = 'none';
+        document.getElementById('insuranceRow').style.display = 'none';
+        document.getElementById('codFeeRow').style.display = 'none';
+        return;
+    }
+
+    if (pricing.success === false) {
+        showToast(pricing.error || 'Pricing unavailable for this route', 'error');
+        document.getElementById('baseRate').textContent = '--';
+        document.getElementById('weightCharge').textContent = '--';
+        document.getElementById('surcharges').textContent = '--';
+        document.getElementById('insuranceAmount').textContent = '--';
+        document.getElementById('codFee').textContent = '--';
+        document.getElementById('taxAmount').textContent = '--';
+        document.getElementById('totalAmount').textContent = '--';
+        document.getElementById('surchargeRow').style.display = 'none';
+        document.getElementById('insuranceRow').style.display = 'none';
+        document.getElementById('codFeeRow').style.display = 'none';
+        return;
+    }
+
     const cs = systemConfig.currencySymbol;
     
-    // Handle nested base_rate object from RateCalculationService
-    const baseRate = typeof pricing.base_rate === 'object' ? pricing.base_rate.amount : (pricing.base_rate || 0);
-    const weightCharge = pricing.weight_charge || (pricing.weights?.chargeable_kg * (pricing.base_rate?.rate_per_kg || 0)) || 0;
-    
+    // Base rate - handle both flat number and nested object formats
+    const baseRate = typeof pricing.base_rate === 'object' 
+        ? (pricing.base_rate?.amount || 0) 
+        : (pricing.base_rate || 0);
     document.getElementById('baseRate').textContent = cs + baseRate.toFixed(2);
+    
+    // Weight charge
+    const weightCharge = pricing.weight_charge || 0;
     document.getElementById('weightCharge').textContent = cs + weightCharge.toFixed(2);
     
-    // Calculate surcharges total
+    // Surcharges - combine fuel_surcharge and surcharges
     let surchargesTotal = 0;
     if (Array.isArray(pricing.surcharges)) {
         surchargesTotal = pricing.surcharges.reduce((sum, s) => sum + (s.amount || 0), 0);
+    } else if (typeof pricing.surcharges === 'number') {
+        surchargesTotal = pricing.surcharges;
     } else if (pricing.surcharges?.total) {
         surchargesTotal = pricing.surcharges.total;
     }
+    // Add fuel surcharge if present
+    surchargesTotal += (pricing.fuel_surcharge || 0);
     document.getElementById('surchargeRow').style.display = surchargesTotal > 0 ? 'flex' : 'none';
     document.getElementById('surcharges').textContent = cs + surchargesTotal.toFixed(2);
     
-    const insurance = pricing.insurance?.amount || 0;
+    // Insurance - handle both flat number and nested object
+    const insurance = typeof pricing.insurance === 'object' 
+        ? (pricing.insurance?.amount || 0) 
+        : (pricing.insurance || 0);
     document.getElementById('insuranceRow').style.display = insurance > 0 ? 'flex' : 'none';
     document.getElementById('insuranceAmount').textContent = cs + insurance.toFixed(2);
     
+    // COD Fee
     const codFee = pricing.cod_fee || 0;
     document.getElementById('codFeeRow').style.display = codFee > 0 ? 'flex' : 'none';
     document.getElementById('codFee').textContent = cs + codFee.toFixed(2);
     
-    // Tax from pricing response
-    const taxAmount = pricing.taxes?.amount || pricing.tax || 0;
+    // Tax
+    const taxAmount = pricing.tax || pricing.taxes?.amount || 0;
     document.getElementById('taxAmount').textContent = cs + taxAmount.toFixed(2);
+    
+    // Total
     document.getElementById('totalAmount').textContent = cs + (pricing.total || 0).toFixed(2);
 }
 
@@ -1380,6 +1451,7 @@ function onRouteChange() {
     calculateRate();
     // Also fetch service level pricing comparison
     fetchServicePricing();
+    updateValidationState();
 }
 
 async function fetchServicePricing() {
@@ -1425,6 +1497,17 @@ async function createShipment() {
     if (!selectedCustomer) {
         showToast('Please select a customer', 'error');
         document.getElementById('customerSearch').focus();
+        return;
+    }
+    
+    if (!currentPricing || currentPricing.success === false) {
+        showToast('Please calculate a valid rate before creating a shipment', 'error');
+        calculateRate();
+        return;
+    }
+
+    if (currentPricing && currentPricing.success === false) {
+        showToast('Cannot create shipment without a valid rate', 'error');
         return;
     }
     
@@ -1754,6 +1837,9 @@ function resetForm() {
     selectPayer('sender');
     updatePricingDisplay({});
     currentPricing = null;
+    updateValidationState();
+    showToast('Form cleared', 'info');
+    playSound('select');
     
     document.getElementById('customerSearch').focus();
 }
@@ -1826,30 +1912,6 @@ function viewCustomerHistory() {
 
 function showAddressBook() {
     showToast('Address book coming soon', 'info');
-}
-
-// Utility Functions
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showToast(message, type = 'info') {
-    // Simple toast implementation
-    const toast = document.createElement('div');
-    const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500', info: 'bg-blue-500' };
-    toast.className = `fixed bottom-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-function playSound(type) {
-    // Sound feedback for POS actions (can be implemented with Web Audio API)
-    // For now, just log
-    console.log('Sound:', type);
 }
 </script>
 @endpush

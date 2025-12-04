@@ -4,13 +4,18 @@
 @section('header', 'Dashboard Overview')
 
 @section('content')
+@php
+    $defaultCurrency = $defaultCurrency ?? \App\Support\SystemSettings::defaultCurrency();
+    $formatCurrency = $formatCurrency ?? fn($amount, ?string $currency = null) => \App\Support\SystemSettings::formatCurrency((float) $amount, $currency);
+    $brandName = $branding['company_name'] ?? \App\Support\SystemSettings::companyName();
+@endphp
 <div id="dashboard-page">
     {{-- Welcome Banner --}}
     <div class="glass-panel p-6 mb-6 bg-gradient-to-r from-sky-500/10 via-purple-500/10 to-emerald-500/10">
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-xl font-semibold mb-1">Welcome back, {{ auth()->user()->name }}</h2>
-                <p class="text-slate-400 text-sm">Here's what's happening with your logistics network today.</p>
+                <p class="text-slate-400 text-sm">Here's what's happening across {{ $brandName }} today.</p>
             </div>
             <div class="hidden md:flex items-center gap-3">
                 <div class="text-right">
@@ -70,7 +75,7 @@
         ])
         @include('admin.components.kpi-card', [
             'title' => 'Revenue',
-            'value' => '$' . number_format($stats['revenue'] ?? 0, 2),
+            'value' => $formatCurrency($stats['revenue'] ?? 0, $defaultCurrency),
             'subtitle' => 'This period',
             'icon' => 'currency',
             'color' => 'amber',
@@ -144,11 +149,11 @@
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-sm muted">Collected</span>
-                    <span class="font-bold text-emerald-400">UGX {{ number_format($financeOverview['cod_collected'] ?? 0) }}</span>
+                    <span class="font-bold text-emerald-400">{{ $formatCurrency($financeOverview['cod_collected'] ?? 0, $defaultCurrency) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-sm muted">Pending</span>
-                    <span class="font-bold text-amber-400">UGX {{ number_format($financeOverview['cod_pending'] ?? 0) }}</span>
+                    <span class="font-bold text-amber-400">{{ $formatCurrency($financeOverview['cod_pending'] ?? 0, $defaultCurrency) }}</span>
                 </div>
             </div>
         </div>
@@ -160,11 +165,11 @@
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-sm muted">Completed</span>
-                    <span class="font-bold text-emerald-400">UGX {{ number_format($financeOverview['settlements_completed'] ?? 0) }}</span>
+                    <span class="font-bold text-emerald-400">{{ $formatCurrency($financeOverview['settlements_completed'] ?? 0, $defaultCurrency) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-sm muted">Pending</span>
-                    <span class="font-bold text-amber-400">UGX {{ number_format($financeOverview['settlements_pending'] ?? 0) }}</span>
+                    <span class="font-bold text-amber-400">{{ $formatCurrency($financeOverview['settlements_pending'] ?? 0, $defaultCurrency) }}</span>
                 </div>
             </div>
         </div>
@@ -176,11 +181,11 @@
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-sm muted">Pending</span>
-                    <span class="font-bold">UGX {{ number_format($financeOverview['invoices_pending'] ?? 0) }}</span>
+                    <span class="font-bold">{{ $formatCurrency($financeOverview['invoices_pending'] ?? 0, $defaultCurrency) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-sm muted">Overdue</span>
-                    <span class="font-bold text-rose-400">UGX {{ number_format($financeOverview['invoices_overdue'] ?? 0) }}</span>
+                    <span class="font-bold text-rose-400">{{ $formatCurrency($financeOverview['invoices_overdue'] ?? 0, $defaultCurrency) }}</span>
                 </div>
             </div>
         </div>
@@ -463,7 +468,7 @@
                                 <div class="text-xs muted">{{ number_format($customer['shipments'] ?? 0) }} shipments</div>
                             </div>
                         </div>
-                        <span class="text-sm font-bold text-emerald-400">UGX {{ number_format($customer['revenue'] ?? 0) }}</span>
+                        <span class="text-sm font-bold text-emerald-400">{{ $formatCurrency($customer['revenue'] ?? 0, $defaultCurrency) }}</span>
                     </div>
                 @empty
                     <div class="text-center py-4 muted text-sm">No data available</div>

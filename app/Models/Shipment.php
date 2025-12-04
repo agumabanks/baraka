@@ -7,6 +7,7 @@ use App\Enums\ShipmentStatus;
 use App\Events\ShipmentStatusChanged;
 use App\Models\Backend\Branch;
 use App\Models\Backend\Client as BackendClient;
+use App\Models\Customer;
 use App\Models\TrackerEvent;
 use App\Models\ShipmentTransition;
 use App\Observers\ShipmentInvoiceObserver;
@@ -30,6 +31,7 @@ class Shipment extends Model
     protected $fillable = [
         'client_id',
         'customer_id',
+        'customer_profile_id',
         'origin_branch_id',
         'dest_branch_id',
         'assigned_worker_id',
@@ -97,6 +99,25 @@ class Shipment extends Model
         'rerouted_by',
         'barcode',
         'qr_code',
+        // POS Hardening fields
+        'content_type',
+        'un_number',
+        'hazmat_class',
+        'packaging_group',
+        'rate_table_version',
+        'last_label_printed_at',
+        'label_print_count',
+        'payment_status',
+        'draft_id',
+        'base_rate',
+        'weight_charge',
+        'surcharges_total',
+        'insurance_fee',
+        'cod_fee',
+        'tax_amount',
+        'discount_amount',
+        'discount_reason',
+        'discount_approved_by',
     ];
 
     protected $casts = [
@@ -136,6 +157,16 @@ class Shipment extends Model
         'cancelled_at' => 'datetime',
         'held_at' => 'datetime',
         'rerouted_at' => 'datetime',
+        // POS Hardening casts
+        'last_label_printed_at' => 'datetime',
+        'label_print_count' => 'integer',
+        'base_rate' => 'decimal:2',
+        'weight_charge' => 'decimal:2',
+        'surcharges_total' => 'decimal:2',
+        'insurance_fee' => 'decimal:2',
+        'cod_fee' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
     ];
 
     // ... (existing methods)
@@ -248,6 +279,14 @@ class Shipment extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'customer_id');
+    }
+
+    /**
+     * POS/CRM customer profile (customers table).
+     */
+    public function customerProfile(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'customer_profile_id');
     }
 
     public function client(): BelongsTo

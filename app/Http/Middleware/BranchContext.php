@@ -38,10 +38,14 @@ class BranchContext
                 // Share branch context for downstream use.
                 $request->attributes->set('branch', $branch);
                 view()->share('branchContext', $branch);
+                view()->share('branch', $branch);
             } else {
                 // Clear invalid session override
                 $request->session()->forget('branch_context_id');
             }
+        } else {
+            // Ensure $branch is defined even if null to prevent undefined variable errors
+            view()->share('branch', null);
         }
 
         return $next($request);

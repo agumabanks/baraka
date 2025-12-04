@@ -5,6 +5,7 @@ export default {
         './resources/views/branch/**/*.blade.php',
         './resources/views/settings/**/*.blade.php',
         './resources/views/components/**/*.blade.php',
+        './resources/views/landing.blade.php',
         './resources/js/**/*.js',
         './resources/css/**/*.css',
     ],

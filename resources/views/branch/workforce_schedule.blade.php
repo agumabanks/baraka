@@ -118,7 +118,7 @@
                         <tr>
                             <td class="fw-bold">
                                 <div>{{ $worker->user->name }}</div>
-                                <small class="text-gray-400">{{ ucfirst($worker->role) }}</small>
+                                <small class="text-gray-400">{{ $worker->role?->label() ?? 'Staff' }}</small>
                             </td>
                             @foreach($weekDays as $day)
                             <td class="text-center p-1" style="min-width: 120px;">
@@ -257,7 +257,7 @@
                         <select name="worker_id" id="schedule_worker_id" class="form-select bg-gray-900 border-gray-700 text-white" required>
                             <option value="">Select Worker</option>
                             @foreach($workers as $worker)
-                            <option value="{{ $worker->id }}">{{ $worker->user->name }} - {{ ucfirst($worker->role) }}</option>
+                            <option value="{{ $worker->id }}">{{ $worker->user->name }} - {{ $worker->role?->label() ?? 'Staff' }}</option>
                             @endforeach
                         </select>
                     </div>

@@ -25,33 +25,38 @@
     <!-- Navigation Tabs -->
     <ul class="nav nav-tabs mb-4 bg-gray-800 border-gray-700">
         <li class="nav-item">
-            <a class="nav-link {{ $view === 'overview' ? 'active' : '' }}" href="{{ route('branch.finance', ['view' => 'overview']) }}">
+            <a class="nav-link {{ $view === 'overview' ? 'active' : '' }}" href="{{ route('branch.finance.index', ['view' => 'overview']) }}">
                 <i class="fas fa-chart-line me-2"></i>Overview
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ $view === 'receivables' ? 'active' : '' }}" href="{{ route('branch.finance', ['view' => 'receivables']) }}">
+            <a class="nav-link {{ $view === 'receivables' ? 'active' : '' }}" href="{{ route('branch.finance.index', ['view' => 'receivables']) }}">
                 <i class="fas fa-money-bill-wave me-2"></i>Receivables
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ $view === 'collections' ? 'active' : '' }}" href="{{ route('branch.finance', ['view' => 'collections']) }}">
+            <a class="nav-link {{ $view === 'collections' ? 'active' : '' }}" href="{{ route('branch.finance.index', ['view' => 'collections']) }}">
                 <i class="fas fa-hand-holding-usd me-2"></i>Collections
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ $view === 'revenue' ? 'active' : '' }}" href="{{ route('branch.finance', ['view' => 'revenue']) }}">
+            <a class="nav-link {{ $view === 'revenue' ? 'active' : '' }}" href="{{ route('branch.finance.index', ['view' => 'revenue']) }}">
                 <i class="fas fa-chart-bar me-2"></i>Revenue
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ $view === 'invoices' ? 'active' : '' }}" href="{{ route('branch.finance', ['view' => 'invoices']) }}">
-                <i class="fas fa-file-invoice me-2"></i>Invoices
+            <a class="nav-link" href="{{ route('branch.finance.cod') }}">
+                <i class="fas fa-money-check me-2"></i>COD
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ $view === 'payments' ? 'active' : '' }}" href="{{ route('branch.finance', ['view' => 'payments']) }}">
-                <i class="fas fa-receipt me-2"></i>Payments
+            <a class="nav-link" href="{{ route('branch.finance.expenses') }}">
+                <i class="fas fa-receipt me-2"></i>Expenses
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('branch.finance.daily-report') }}">
+                <i class="fas fa-calendar-day me-2"></i>Daily Report
             </a>
         </li>
     </ul>

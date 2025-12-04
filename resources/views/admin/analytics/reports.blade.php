@@ -1,172 +1,163 @@
-@extends('layouts.app')
+@extends('admin.layout')
 
-@section('title', 'Reports')
+@section('title', 'Analytics Reports')
+@section('header', 'Analytics Reports')
 
 @section('content')
-<div class="container-fluid">
+<div class="space-y-6">
     <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">Reports</h1>
-                <a href="{{ route('admin.analytics.dashboard') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-chart-line"></i> Dashboard
-                </a>
-            </div>
-        </div>
+    <div class="flex items-center justify-between">
+        <p class="muted">Generate comprehensive reports from your analytics data</p>
+        <a href="{{ route('admin.analytics.dashboard') }}" class="btn btn-secondary">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Dashboard
+        </a>
     </div>
 
     <!-- Report Type Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 report-card" data-report="shipment">
-                <div class="card-body text-center">
-                    <i class="fas fa-box fa-3x text-primary mb-3"></i>
-                    <h5 class="card-title">Shipment Report</h5>
-                    <p class="card-text text-muted">Detailed shipment data with status, routes, and delivery information.</p>
-                    <button class="btn btn-primary" onclick="showReportForm('shipment')">Generate</button>
-                </div>
+    <div class="grid gap-4 md:grid-cols-3">
+        <div class="glass-panel p-6 text-center hover:border-sky-500/30 transition cursor-pointer group" onclick="showReportForm('shipment')">
+            <div class="w-16 h-16 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
             </div>
+            <h3 class="text-lg font-semibold mb-2">Shipment Report</h3>
+            <p class="text-sm muted mb-4">Detailed shipment data with status, routes, and delivery information.</p>
+            <button class="btn btn-primary w-full justify-center">Generate</button>
         </div>
         
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 report-card" data-report="financial">
-                <div class="card-body text-center">
-                    <i class="fas fa-dollar-sign fa-3x text-success mb-3"></i>
-                    <h5 class="card-title">Financial Report</h5>
-                    <p class="card-text text-muted">Revenue, COD collection, invoicing, and financial metrics.</p>
-                    <button class="btn btn-success" onclick="showReportForm('financial')">Generate</button>
-                </div>
+        <div class="glass-panel p-6 text-center hover:border-emerald-500/30 transition cursor-pointer group" onclick="showReportForm('financial')">
+            <div class="w-16 h-16 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
+            <h3 class="text-lg font-semibold mb-2">Financial Report</h3>
+            <p class="text-sm muted mb-4">Revenue, COD collection, invoicing, and financial metrics.</p>
+            <button class="btn btn-primary w-full justify-center">Generate</button>
         </div>
         
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 report-card" data-report="performance">
-                <div class="card-body text-center">
-                    <i class="fas fa-tachometer-alt fa-3x text-info mb-3"></i>
-                    <h5 class="card-title">Performance Report</h5>
-                    <p class="card-text text-muted">Delivery rates, SLA compliance, driver and branch performance.</p>
-                    <button class="btn btn-info" onclick="showReportForm('performance')">Generate</button>
-                </div>
+        <div class="glass-panel p-6 text-center hover:border-purple-500/30 transition cursor-pointer group" onclick="showReportForm('performance')">
+            <div class="w-16 h-16 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
             </div>
+            <h3 class="text-lg font-semibold mb-2">Performance Report</h3>
+            <p class="text-sm muted mb-4">Delivery rates, SLA compliance, driver and branch performance.</p>
+            <button class="btn btn-primary w-full justify-center">Generate</button>
         </div>
     </div>
 
     <!-- Report Form -->
-    <div class="card mb-4" id="report-form-card" style="display: none;">
-        <div class="card-header">
-            <h5 class="mb-0" id="report-form-title">Generate Report</h5>
+    <div class="glass-panel p-6 hidden" id="report-form-card">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold" id="report-form-title">Generate Report</h3>
+            <button type="button" class="text-slate-400 hover:text-white" onclick="hideReportForm()">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
         </div>
-        <div class="card-body">
-            <form id="report-form">
-                <input type="hidden" id="report-type" name="type">
-                
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Date Range</label>
-                        <select class="form-select" id="preset" name="preset">
-                            @foreach($presets as $value => $label)
-                                <option value="{{ $value }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4 mb-3" id="custom-start" style="display: none;">
-                        <label class="form-label">Start Date</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date">
-                    </div>
-                    
-                    <div class="col-md-4 mb-3" id="custom-end" style="display: none;">
-                        <label class="form-label">End Date</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date">
-                    </div>
+        <form id="report-form" class="space-y-4">
+            <input type="hidden" id="report-type" name="type">
+            
+            <div class="grid gap-4 md:grid-cols-3">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Date Range</label>
+                    <select id="preset" name="preset" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                        @foreach($presets ?? ['today' => 'Today', 'last_7_days' => 'Last 7 Days', 'last_30_days' => 'Last 30 Days', 'this_month' => 'This Month', 'last_month' => 'Last Month', 'custom' => 'Custom Range'] as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 
-                <!-- Shipment-specific filters -->
-                <div id="shipment-filters" class="row" style="display: none;">
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" name="status">
-                            <option value="">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="picked_up">Picked Up</option>
-                            <option value="in_transit">In Transit</option>
-                            <option value="out_for_delivery">Out for Delivery</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="returned">Returned</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Payment Type</label>
-                        <select class="form-select" name="payment_type">
-                            <option value="">All Types</option>
-                            <option value="prepaid">Prepaid</option>
-                            <option value="cod">COD</option>
-                        </select>
-                    </div>
+                <div id="custom-start" class="hidden">
+                    <label class="block text-sm font-medium mb-2">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
                 </div>
                 
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Export Format</label>
-                        <select class="form-select" id="format" name="format">
-                            <option value="view">View in Browser</option>
-                            <option value="csv">Download CSV</option>
-                            <option value="xlsx">Download Excel</option>
-                        </select>
-                    </div>
+                <div id="custom-end" class="hidden">
+                    <label class="block text-sm font-medium mb-2">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                </div>
+            </div>
+            
+            <!-- Shipment-specific filters -->
+            <div id="shipment-filters" class="hidden grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Status</label>
+                    <select name="status" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="picked_up">Picked Up</option>
+                        <option value="in_transit">In Transit</option>
+                        <option value="out_for_delivery">Out for Delivery</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="returned">Returned</option>
+                    </select>
                 </div>
                 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-file-alt"></i> Generate Report
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="hideReportForm()">
-                        Cancel
-                    </button>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Payment Type</label>
+                    <select name="payment_type" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                        <option value="">All Types</option>
+                        <option value="prepaid">Prepaid</option>
+                        <option value="cod">COD</option>
+                    </select>
                 </div>
-            </form>
-        </div>
+            </div>
+            
+            <div class="grid gap-4 md:grid-cols-3">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Export Format</label>
+                    <select id="format" name="format" class="w-full bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50">
+                        <option value="view">View in Browser</option>
+                        <option value="csv">Download CSV</option>
+                        <option value="xlsx">Download Excel</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 pt-4 border-t border-white/10">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Generate Report
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="hideReportForm()">Cancel</button>
+            </div>
+        </form>
     </div>
 
     <!-- Report Results -->
-    <div class="card" id="report-results" style="display: none;">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Report Results</h5>
-            <div>
-                <button class="btn btn-sm btn-outline-primary" onclick="exportReport('csv')">
-                    <i class="fas fa-file-csv"></i> Export CSV
+    <div class="glass-panel p-6 hidden" id="report-results">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold">Report Results</h3>
+            <div class="flex gap-2">
+                <button class="btn btn-sm btn-secondary" onclick="exportReport('csv')">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    CSV
                 </button>
-                <button class="btn btn-sm btn-outline-success" onclick="exportReport('xlsx')">
-                    <i class="fas fa-file-excel"></i> Export Excel
+                <button class="btn btn-sm btn-secondary" onclick="exportReport('xlsx')">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Excel
                 </button>
             </div>
         </div>
-        <div class="card-body">
-            <!-- Summary Section -->
-            <div id="report-summary" class="row mb-4"></div>
-            
-            <!-- Data Table -->
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="report-table">
-                    <thead class="thead-dark"></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        
+        <!-- Summary Section -->
+        <div id="report-summary" class="grid gap-4 md:grid-cols-4 mb-6"></div>
+        
+        <!-- Data Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm" id="report-table">
+                <thead>
+                    <tr class="border-b border-white/10"></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
-</div>
 
-<!-- Loading Modal -->
-<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body text-center py-4">
-                <div class="spinner-border text-primary mb-3" role="status"></div>
-                <p class="mb-0">Generating report...</p>
-            </div>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="glass-panel p-8 text-center">
+            <div class="animate-spin w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full mx-auto mb-4"></div>
+            <p class="text-sm">Generating report...</p>
         </div>
     </div>
 </div>
@@ -177,33 +168,33 @@
 let currentReportType = '';
 let currentReportData = null;
 
-document.getElementById('preset').addEventListener('change', function() {
-    const custom = this.value === 'custom';
-    document.getElementById('custom-start').style.display = custom ? 'block' : 'none';
-    document.getElementById('custom-end').style.display = custom ? 'block' : 'none';
-});
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('preset').addEventListener('change', function() {
+        const custom = this.value === 'custom';
+        document.getElementById('custom-start').classList.toggle('hidden', !custom);
+        document.getElementById('custom-end').classList.toggle('hidden', !custom);
+    });
 
-document.getElementById('report-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    generateReport();
+    document.getElementById('report-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateReport();
+    });
 });
 
 function showReportForm(type) {
     currentReportType = type;
     document.getElementById('report-type').value = type;
     document.getElementById('report-form-title').textContent = `Generate ${type.charAt(0).toUpperCase() + type.slice(1)} Report`;
-    document.getElementById('report-form-card').style.display = 'block';
-    document.getElementById('report-results').style.display = 'none';
+    document.getElementById('report-form-card').classList.remove('hidden');
+    document.getElementById('report-results').classList.add('hidden');
     
-    // Show/hide type-specific filters
-    document.getElementById('shipment-filters').style.display = type === 'shipment' ? 'flex' : 'none';
+    document.getElementById('shipment-filters').classList.toggle('hidden', type !== 'shipment');
     
-    // Scroll to form
     document.getElementById('report-form-card').scrollIntoView({ behavior: 'smooth' });
 }
 
 function hideReportForm() {
-    document.getElementById('report-form-card').style.display = 'none';
+    document.getElementById('report-form-card').classList.add('hidden');
 }
 
 function generateReport() {
@@ -211,28 +202,24 @@ function generateReport() {
     const formData = new FormData(form);
     const format = formData.get('format');
     
-    // Build params
     const params = new URLSearchParams();
     for (const [key, value] of formData) {
         if (value) params.append(key, value);
     }
     
     if (format !== 'view') {
-        // Export directly
         exportReport(format);
         return;
     }
     
-    // Show loading
-    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
-    modal.show();
+    document.getElementById('loading-overlay').classList.remove('hidden');
     
     const endpoint = `/admin/analytics/reports/${currentReportType}`;
     
     fetch(`${endpoint}?${params}`)
         .then(response => response.json())
         .then(data => {
-            modal.hide();
+            document.getElementById('loading-overlay').classList.add('hidden');
             if (data.success) {
                 currentReportData = data.data;
                 displayReport(data.data);
@@ -241,15 +228,14 @@ function generateReport() {
             }
         })
         .catch(error => {
-            modal.hide();
+            document.getElementById('loading-overlay').classList.add('hidden');
             alert('Error: ' + error.message);
         });
 }
 
 function displayReport(data) {
-    document.getElementById('report-results').style.display = 'block';
+    document.getElementById('report-results').classList.remove('hidden');
     
-    // Display summary
     const summaryDiv = document.getElementById('report-summary');
     summaryDiv.innerHTML = '';
     
@@ -263,42 +249,37 @@ function displayReport(data) {
                  '$' + value.toLocaleString() : value.toLocaleString()) : value;
             
             summaryDiv.innerHTML += `
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-light">
-                        <div class="card-body text-center py-3">
-                            <div class="text-muted small">${label}</div>
-                            <div class="h5 mb-0">${formattedValue}</div>
-                        </div>
-                    </div>
+                <div class="stat-card">
+                    <div class="muted text-xs uppercase">${label}</div>
+                    <div class="text-2xl font-bold">${formattedValue}</div>
                 </div>
             `;
         });
     }
     
-    // Display table
     const tableData = data.data || data.daily_revenue || data.driver_performance || [];
-    const thead = document.querySelector('#report-table thead');
+    const thead = document.querySelector('#report-table thead tr');
     const tbody = document.querySelector('#report-table tbody');
     
     if (!tableData.length) {
         thead.innerHTML = '';
-        tbody.innerHTML = '<tr><td class="text-center">No data available</td></tr>';
+        tbody.innerHTML = '<tr><td class="text-center py-8 muted">No data available</td></tr>';
         return;
     }
     
-    // Build headers
     const headers = Object.keys(tableData[0]);
-    thead.innerHTML = '<tr>' + headers.map(h => 
-        `<th>${h.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</th>`
-    ).join('') + '</tr>';
+    thead.innerHTML = headers.map(h => 
+        `<th class="text-left py-3 px-4 text-xs uppercase muted">${h.replace(/_/g, ' ')}</th>`
+    ).join('');
     
-    // Build rows
     tbody.innerHTML = tableData.slice(0, 100).map(row => 
-        '<tr>' + headers.map(h => `<td>${row[h] ?? '-'}</td>`).join('') + '</tr>'
+        '<tr class="border-b border-white/5 hover:bg-white/5">' + 
+        headers.map(h => `<td class="py-3 px-4">${row[h] ?? '-'}</td>`).join('') + 
+        '</tr>'
     ).join('');
     
     if (tableData.length > 100) {
-        tbody.innerHTML += `<tr><td colspan="${headers.length}" class="text-center text-muted">
+        tbody.innerHTML += `<tr><td colspan="${headers.length}" class="text-center py-4 muted">
             Showing first 100 of ${tableData.length} rows. Export for full data.
         </td></tr>`;
     }
@@ -317,13 +298,12 @@ function exportReport(format) {
         if (value) params.append(key, value);
     }
     
-    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
-    modal.show();
+    document.getElementById('loading-overlay').classList.remove('hidden');
     
     fetch(`/admin/analytics/export?${params}`)
         .then(response => response.json())
         .then(data => {
-            modal.hide();
+            document.getElementById('loading-overlay').classList.add('hidden');
             if (data.success && data.download_url) {
                 window.location.href = data.download_url;
             } else {
@@ -331,7 +311,7 @@ function exportReport(format) {
             }
         })
         .catch(error => {
-            modal.hide();
+            document.getElementById('loading-overlay').classList.add('hidden');
             alert('Error: ' + error.message);
         });
 }

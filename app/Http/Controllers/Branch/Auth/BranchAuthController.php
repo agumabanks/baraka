@@ -67,15 +67,18 @@ class BranchAuthController extends Controller
             return redirect()->intended(route('branch.dashboard'));
         }
         // Authentication failed
+        $login = $request->input('login');
         $lockoutManager = app(\App\Services\Security\LockoutManager::class);
-        $lockoutManager->recordFailedAttempt($request->input('email'), $request->ip());
-        if ($lockoutManager->shouldLock($request->input('email'))) {
-            $user = \App\Models\User::where('email', $request->input('email'))->first();
+        $lockoutManager->recordFailedAttempt($login ?? '', $request->ip());
+        if ($login && $lockoutManager->shouldLock($login)) {
+            $user = \App\Models\User::where('email', $login)
+                ->orWhere('mobile', $login)
+                ->first();
             if ($user) {
                 $lockoutManager->lock($user);
             }
         }
-        return back()->withErrors(['email' => trans('auth.failed')]);
+        return back()->withErrors(['login' => trans('auth.failed')])->withInput($request->only('login', 'remember'));
     }
 
     /**

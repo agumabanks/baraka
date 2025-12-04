@@ -139,13 +139,38 @@ class EnforceBranchIsolation
             $branchIds[] = $user->current_branch_id;
         }
 
-        // Check branch worker assignments
+        // Primary branch (legacy field used for managers/supervisors)
+        if ($user->primary_branch_id ?? false) {
+            $branchIds[] = (int) $user->primary_branch_id;
+        }
+
+        // Branch manager assignment
+        if (method_exists($user, 'branchManager') && $user->branchManager) {
+            $branchIds[] = (int) $user->branchManager->branch_id;
+        }
+
+        // Single worker assignment shortcut
+        if (method_exists($user, 'branchWorker') && $user->branchWorker) {
+            $branchIds[] = (int) $user->branchWorker->branch_id;
+        }
+
+        // Branch worker assignments via dedicated relation (if present)
         if (method_exists($user, 'branchWorkerAssignments')) {
-            $workerBranches = $user->branchWorkerAssignments()
+            $assignmentBranches = $user->branchWorkerAssignments()
                 ->whereNull('unassigned_at')
                 ->pluck('branch_id')
                 ->toArray();
-            
+
+            $branchIds = array_merge($branchIds, $assignmentBranches);
+        }
+
+        // Branch worker assignments (multiple)
+        if (method_exists($user, 'branchWorkers')) {
+            $workerBranches = $user->branchWorkers()
+                ->whereNull('unassigned_at')
+                ->pluck('branch_id')
+                ->toArray();
+
             $branchIds = array_merge($branchIds, $workerBranches);
         }
 

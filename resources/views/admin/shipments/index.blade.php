@@ -79,12 +79,19 @@
 
     {{-- Filters --}}
     <div class="glass-panel p-4 mb-6">
-        <form method="GET" class="grid gap-3 md:grid-cols-6">
-            <div>
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Search tracking#, customer..." class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm">
+        <div class="grid gap-3 md:grid-cols-6">
+            <div class="relative">
+                <input type="text" id="shipmentSearch" value="{{ request('q') }}" placeholder="Search tracking#, customer..." autocomplete="off"
+                    class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm focus:border-sky-500 focus:ring-1 focus:ring-sky-500">
+                <div id="searchSpinner" class="hidden absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg class="animate-spin w-4 h-4 text-sky-500" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                </div>
             </div>
             <div>
-                <select name="status" class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm">
+                <select id="statusFilter" class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm">
                     <option value="">All Statuses</option>
                     @foreach($statuses ?? [] as $key => $label)
                         <option value="{{ $key }}" {{ request('status') === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -92,7 +99,7 @@
                 </select>
             </div>
             <div>
-                <select name="branch" class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm">
+                <select id="branchFilter" class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm">
                     <option value="">All Branches</option>
                     @foreach($branches ?? [] as $branch)
                         <option value="{{ $branch->id }}" {{ request('branch') == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
@@ -100,23 +107,20 @@
                 </select>
             </div>
             <div>
-                <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm" placeholder="From">
+                <input type="date" id="dateFrom" value="{{ request('date_from') }}" class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm">
             </div>
             <div>
-                <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm" placeholder="To">
+                <input type="date" id="dateTo" value="{{ request('date_to') }}" class="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm">
             </div>
             <div class="flex gap-2">
-                <button type="submit" class="btn btn-sm btn-primary flex-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    Filter
-                </button>
                 @if(request()->hasAny(['q', 'status', 'branch', 'date_from', 'date_to']))
-                    <a href="{{ route('admin.shipments.index') }}" class="btn btn-sm btn-secondary">
+                    <button type="button" onclick="clearFilters()" class="btn btn-sm btn-secondary flex-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </a>
+                        Clear
+                    </button>
                 @endif
             </div>
-        </form>
+        </div>
     </div>
 
     {{-- Bulk Actions Toolbar --}}
@@ -184,132 +188,16 @@
                         <th class="px-4 py-3 text-right text-xs font-semibold uppercase">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/5">
-                    @forelse($shipments as $shipment)
-                        <tr class="hover:bg-white/5 transition" data-shipment-id="{{ $shipment->id }}">
-                            <td class="px-4 py-3">
-                                <input type="checkbox" class="shipment-checkbox shipment-select" value="{{ $shipment->id }}" onchange="updateBulkToolbar()">
-                            </td>
-                            <td class="px-4 py-3">
-                                <a href="#" onclick="showShipmentModal({{ $shipment->id }}); return false;" class="font-mono text-sm font-semibold text-sky-400 hover:text-sky-300">
-                                    {{ $shipment->tracking_number ?? 'TRK-' . str_pad($shipment->id, 6, '0', STR_PAD_LEFT) }}
-                                </a>
-                                @if($shipment->waybill_number)
-                                    <div class="text-xs text-zinc-500 mt-0.5">{{ $shipment->waybill_number }}</div>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3">
-                                <div class="text-sm font-semibold">{{ $shipment->customer->name ?? 'Walk-in' }}</div>
-                                <div class="text-xs text-zinc-500">{{ $shipment->customer->email ?? $shipment->customer->phone ?? '' }}</div>
-                            </td>
-                            <td class="px-4 py-3 text-sm">
-                                <div class="flex items-center gap-1 text-xs">
-                                    <span class="text-zinc-400">{{ $shipment->originBranch->code ?? $shipment->originBranch->name ?? 'N/A' }}</span>
-                                    <svg class="w-3 h-3 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                                    <span class="text-zinc-400">{{ $shipment->destBranch->code ?? $shipment->destBranch->name ?? 'N/A' }}</span>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                @php
-                                    $serviceBadges = [
-                                        'economy' => 'bg-zinc-500/20 text-zinc-400',
-                                        'standard' => 'bg-blue-500/20 text-blue-400',
-                                        'express' => 'bg-amber-500/20 text-amber-400',
-                                        'priority' => 'bg-red-500/20 text-red-400',
-                                    ];
-                                    $serviceClass = $serviceBadges[$shipment->service_level ?? 'standard'] ?? 'bg-zinc-500/20 text-zinc-400';
-                                @endphp
-                                <span class="px-2 py-1 text-xs rounded-full {{ $serviceClass }}">
-                                    {{ ucfirst($shipment->service_level ?? 'Standard') }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                @php
-                                    $status = strtolower(str_replace(' ', '_', $shipment->status ?? $shipment->current_status ?? 'booked'));
-                                @endphp
-                                <span class="status-badge status-{{ $status }}">
-                                    @if($status === 'delivered')
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                                    @elseif(in_array($status, ['in_transit', 'linehaul_departed']))
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
-                                    @endif
-                                    {{ ucfirst(str_replace('_', ' ', $status)) }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-sm text-zinc-400">
-                                <div>{{ $shipment->created_at->format('M d, Y') }}</div>
-                                <div class="text-xs text-zinc-500">{{ $shipment->created_at->format('h:i A') }}</div>
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <div class="action-dropdown">
-                                    <button class="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-sm text-zinc-400 hover:text-white transition flex items-center gap-1">
-                                        Actions
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </button>
-                                    <div class="action-dropdown-content">
-                                        <a href="#" onclick="showShipmentModal({{ $shipment->id }}); return false;">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                            View Details
-                                        </a>
-                                        <a href="{{ route('admin.shipments.edit', $shipment) }}">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                            Edit Shipment
-                                        </a>
-                                        <div class="divider"></div>
-                                        <a href="{{ route('admin.pos.label', $shipment) }}" target="_blank">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                                            Print Label
-                                        </a>
-                                        <a href="{{ route('admin.pos.receipt', $shipment) }}" target="_blank">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            Print Receipt
-                                        </a>
-                                        <a href="#" onclick="downloadWaybill({{ $shipment->id }}); return false;">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            Download Waybill
-                                        </a>
-                                        <div class="divider"></div>
-                                        <a href="#" onclick="showTrackingModal({{ $shipment->id }}, '{{ $shipment->tracking_number }}'); return false;">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                                            Track Shipment
-                                        </a>
-                                        <a href="#" onclick="showStatusModal({{ $shipment->id }}); return false;">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                            Update Status
-                                        </a>
-                                        <a href="#" onclick="duplicateShipment({{ $shipment->id }}); return false;">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                                            Duplicate
-                                        </a>
-                                        @if(!in_array($status, ['delivered', 'cancelled']))
-                                        <div class="divider"></div>
-                                        <button onclick="cancelShipment({{ $shipment->id }})" class="danger">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            Cancel Shipment
-                                        </button>
-                                        @endif
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-4 py-12 text-center">
-                                <svg class="w-12 h-12 mx-auto text-zinc-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                <div class="text-zinc-400 mb-2">No shipments found</div>
-                                <a href="{{ route('admin.pos.index') }}" class="text-sky-400 hover:text-sky-300 text-sm">Create your first shipment</a>
-                            </td>
-                        </tr>
-                    @endforelse
+                <tbody id="shipmentsTableBody" class="divide-y divide-white/5">
+                    @include('admin.shipments._table', ['shipments' => $shipments])
                 </tbody>
             </table>
         </div>
 
-        @if(method_exists($shipments, 'hasPages') && $shipments->hasPages())
-            <div class="p-4 border-t border-white/10">
-                {{ $shipments->links() }}
-            </div>
-        @endif
+        {{-- Pagination --}}
+        <div id="paginationContainer">
+            @include('admin.shipments._pagination', ['shipments' => $shipments, 'perPage' => $perPage ?? 10])
+        </div>
     </div>
 
     {{-- Status Update Modal --}}
@@ -378,6 +266,73 @@
 
 @push('scripts')
 <script>
+let searchDebounce = null;
+let currentPerPage = {{ $perPage ?? 10 }};
+
+// AJAX Search and Filter
+function performSearch() {
+    const search = document.getElementById('shipmentSearch').value;
+    const status = document.getElementById('statusFilter').value;
+    const branch = document.getElementById('branchFilter').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    
+    const params = new URLSearchParams();
+    if (search) params.set('q', search);
+    if (status) params.set('status', status);
+    if (branch) params.set('branch', branch);
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
+    params.set('per_page', currentPerPage);
+    
+    // Show spinner
+    document.getElementById('searchSpinner').classList.remove('hidden');
+    
+    fetch(`{{ route('admin.shipments.index') }}?${params.toString()}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('shipmentsTableBody').innerHTML = data.html;
+        document.getElementById('paginationContainer').innerHTML = data.pagination;
+        // Update URL without reload
+        window.history.replaceState({}, '', `{{ route('admin.shipments.index') }}?${params.toString()}`);
+        // Reset bulk selection
+        clearSelection();
+    })
+    .catch(err => console.error('Search error:', err))
+    .finally(() => {
+        document.getElementById('searchSpinner').classList.add('hidden');
+    });
+}
+
+// Debounced search on input
+document.getElementById('shipmentSearch').addEventListener('input', function() {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(performSearch, 300);
+});
+
+// Instant filter on select/date change
+['statusFilter', 'branchFilter', 'dateFrom', 'dateTo'].forEach(id => {
+    document.getElementById(id).addEventListener('change', performSearch);
+});
+
+// Change per page
+function changePerPage(value) {
+    currentPerPage = parseInt(value);
+    performSearch();
+}
+
+// Clear all filters
+function clearFilters() {
+    document.getElementById('shipmentSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('branchFilter').value = '';
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    performSearch();
+}
+
 // Bulk Selection
 function toggleSelectAll() {
     const selectAll = document.getElementById('selectAll');
@@ -393,7 +348,8 @@ function updateBulkToolbar() {
 }
 
 function clearSelection() {
-    document.getElementById('selectAll').checked = false;
+    const selectAll = document.getElementById('selectAll');
+    if (selectAll) selectAll.checked = false;
     document.querySelectorAll('.shipment-select').forEach(cb => cb.checked = false);
     updateBulkToolbar();
 }

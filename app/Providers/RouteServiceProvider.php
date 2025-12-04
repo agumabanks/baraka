@@ -17,7 +17,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/admin/dashboard-blade';
+    public const HOME = '/admin/dashboard';
     // public const HOME = '/home';
 
     /**
@@ -76,7 +76,28 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // POS-specific rate limiters (POS-SEC-06)
+        RateLimiter::for('pos-search', function (Request $request) {
+            $limit = config('pos.rate_limits.search', 60);
+            return Limit::perMinute($limit)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('pos-quote', function (Request $request) {
+            $limit = config('pos.rate_limits.quote', 30);
+            return Limit::perMinute($limit)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('pos-create', function (Request $request) {
+            $limit = config('pos.rate_limits.create', 10);
+            return Limit::perMinute($limit)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('pos-payment', function (Request $request) {
+            $limit = config('pos.rate_limits.payment', 10);
+            return Limit::perMinute($limit)->by($request->user()?->id ?: $request->ip());
         });
     }
 }

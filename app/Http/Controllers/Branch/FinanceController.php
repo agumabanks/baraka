@@ -68,7 +68,7 @@ class FinanceController extends Controller
             $data = array_merge($data, $this->getPaymentsData($branch, $request));
         }
 
-        return view('branch.finance_dashboard', $data);
+        return view('branch.finance.index', $data);
     }
 
     protected function getReceivablesData($branch): array
@@ -472,6 +472,333 @@ class FinanceController extends Controller
         return response(implode("\n", $lines), 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename={$filename}",
+        ]);
+    }
+
+    /**
+     * COD Management Dashboard
+     */
+    public function codManagement(Request $request): View
+    {
+        $user = $request->user();
+        $this->assertBranchPermission($user);
+        $branch = $this->resolveBranch($request);
+
+        $today = now()->toDateString();
+        $startOfMonth = now()->startOfMonth();
+
+        // COD shipments pending collection (identified by cod_amount > 0)
+        $pendingCod = Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })
+            ->where('cod_amount', '>', 0)
+            ->whereNull('cod_collected_at')
+            ->where('current_status', 'DELIVERED')
+            ->with(['customer:id,name', 'assignedWorker.user:id,name'])
+            ->latest()
+            ->paginate(15);
+
+        // Today's COD collections
+        $todayCollections = Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })
+            ->where('cod_amount', '>', 0)
+            ->whereDate('cod_collected_at', $today)
+            ->sum('cod_collected_amount');
+
+        // Month-to-date collections
+        $mtdCollections = Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })
+            ->where('cod_amount', '>', 0)
+            ->where('cod_collected_at', '>=', $startOfMonth)
+            ->sum('cod_collected_amount');
+
+        // Outstanding COD
+        $outstandingCod = Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })
+            ->where('cod_amount', '>', 0)
+            ->whereNull('cod_collected_at')
+            ->where('current_status', 'DELIVERED')
+            ->sum('cod_amount');
+
+        // COD by courier/worker
+        $codByWorker = DB::table('shipments')
+            ->join('branch_workers', 'shipments.assigned_worker_id', '=', 'branch_workers.id')
+            ->join('users', 'branch_workers.user_id', '=', 'users.id')
+            ->where(function ($q) use ($branch) {
+                $q->where('shipments.origin_branch_id', $branch->id)
+                    ->orWhere('shipments.dest_branch_id', $branch->id);
+            })
+            ->where('shipments.cod_amount', '>', 0)
+            ->whereNull('shipments.cod_collected_at')
+            ->where('shipments.current_status', 'DELIVERED')
+            ->select(
+                'users.id',
+                'users.name',
+                DB::raw('SUM(shipments.cod_amount) as pending_amount'),
+                DB::raw('COUNT(shipments.id) as shipment_count')
+            )
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('pending_amount')
+            ->limit(10)
+            ->get();
+
+        return view('branch.finance.cod', [
+            'branch' => $branch,
+            'branchOptions' => $this->branchOptions($user),
+            'pendingCod' => $pendingCod,
+            'todayCollections' => $todayCollections,
+            'mtdCollections' => $mtdCollections,
+            'outstandingCod' => $outstandingCod,
+            'codByWorker' => $codByWorker,
+            'defaultCurrency' => SystemSettings::defaultCurrency(),
+        ]);
+    }
+
+    /**
+     * Reconcile COD collection
+     */
+    public function reconcileCod(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $this->assertBranchPermission($user);
+        $branch = $this->resolveBranch($request);
+
+        $data = $request->validate([
+            'shipment_id' => 'required|integer|exists:shipments,id',
+            'amount_collected' => 'required|numeric|min:0',
+            'collection_method' => 'required|string|max:50',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $shipment = Shipment::where(function ($q) use ($branch) {
+            $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+        })->findOrFail($data['shipment_id']);
+
+        $shipment->update([
+            'cod_collected_at' => now(),
+            'cod_collected_amount' => $data['amount_collected'],
+            'cod_collection_method' => $data['collection_method'],
+            'cod_collection_notes' => $data['notes'],
+            'cod_collected_by' => $user->id,
+        ]);
+
+        BranchCache::flushForBranch($branch->id);
+
+        return back()->with('success', 'COD collection recorded for ' . $shipment->tracking_number);
+    }
+
+    /**
+     * Daily cash position
+     */
+    public function cashPosition(Request $request): View
+    {
+        $user = $request->user();
+        $this->assertBranchPermission($user);
+        $branch = $this->resolveBranch($request);
+
+        $date = $request->get('date', now()->toDateString());
+
+        // Cash in (COD collections, prepaid payments)
+        $cashIn = [
+            'cod_collections' => Shipment::where(function ($q) use ($branch) {
+                    $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+                })
+                ->whereDate('cod_collected_at', $date)
+                ->sum('cod_collected_amount'),
+            'prepaid_revenue' => Shipment::where('origin_branch_id', $branch->id)
+                ->whereDate('created_at', $date)
+                ->where(function($q) {
+                    $q->whereNull('cod_amount')->orWhere('cod_amount', 0);
+                })
+                ->sum('price_amount'),
+        ];
+
+        // Cash out (expenses, remittances)
+        $cashOut = [
+            'expenses' => DB::table('branch_expenses')
+                ->where('branch_id', $branch->id)
+                ->whereDate('expense_date', $date)
+                ->sum('amount'),
+            'cod_remittances' => DB::table('cod_remittances')
+                ->where('branch_id', $branch->id)
+                ->whereDate('remitted_at', $date)
+                ->sum('amount'),
+        ];
+
+        // Week trend
+        $weekTrend = collect(range(6, 0))->map(function ($daysAgo) use ($branch) {
+            $d = now()->subDays($daysAgo)->toDateString();
+            return [
+                'date' => $d,
+                'cash_in' => Shipment::where(function ($q) use ($branch) {
+                        $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+                    })
+                    ->whereDate('cod_collected_at', $d)
+                    ->sum('cod_collected_amount'),
+                'cash_out' => DB::table('branch_expenses')
+                    ->where('branch_id', $branch->id)
+                    ->whereDate('expense_date', $d)
+                    ->sum('amount'),
+            ];
+        });
+
+        return view('branch.finance.cash_position', [
+            'branch' => $branch,
+            'branchOptions' => $this->branchOptions($user),
+            'date' => $date,
+            'cashIn' => $cashIn,
+            'cashOut' => $cashOut,
+            'weekTrend' => $weekTrend,
+            'defaultCurrency' => SystemSettings::defaultCurrency(),
+        ]);
+    }
+
+    /**
+     * Expense management
+     */
+    public function expenses(Request $request): View
+    {
+        $user = $request->user();
+        $this->assertBranchPermission($user);
+        $branch = $this->resolveBranch($request);
+
+        $category = $request->get('category');
+        $startDate = $request->get('start', now()->startOfMonth()->toDateString());
+        $endDate = $request->get('end', now()->toDateString());
+
+        $expenses = DB::table('branch_expenses')
+            ->where('branch_id', $branch->id)
+            ->when($category, fn($q) => $q->where('category', $category))
+            ->whereBetween('expense_date', [$startDate, $endDate])
+            ->orderByDesc('expense_date')
+            ->paginate(20);
+
+        $categories = ['Operations', 'Fuel', 'Maintenance', 'Utilities', 'Salaries', 'Supplies', 'Other'];
+
+        $totalByCategory = DB::table('branch_expenses')
+            ->where('branch_id', $branch->id)
+            ->whereBetween('expense_date', [$startDate, $endDate])
+            ->select('category', DB::raw('SUM(amount) as total'))
+            ->groupBy('category')
+            ->pluck('total', 'category');
+
+        return view('branch.finance.expenses', [
+            'branch' => $branch,
+            'branchOptions' => $this->branchOptions($user),
+            'expenses' => $expenses,
+            'categories' => $categories,
+            'categoryFilter' => $category,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'totalByCategory' => $totalByCategory,
+            'defaultCurrency' => SystemSettings::defaultCurrency(),
+        ]);
+    }
+
+    /**
+     * Store expense
+     */
+    public function storeExpense(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $this->assertBranchPermission($user);
+        $branch = $this->resolveBranch($request);
+
+        $data = $request->validate([
+            'category' => 'required|string|max:50',
+            'description' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0',
+            'expense_date' => 'required|date',
+            'receipt_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        DB::table('branch_expenses')->insert([
+            'branch_id' => $branch->id,
+            'category' => $data['category'],
+            'description' => $data['description'],
+            'amount' => $data['amount'],
+            'expense_date' => $data['expense_date'],
+            'receipt_number' => $data['receipt_number'],
+            'notes' => $data['notes'],
+            'created_by' => $user->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        BranchCache::flushForBranch($branch->id);
+
+        return back()->with('success', 'Expense recorded successfully.');
+    }
+
+    /**
+     * Daily financial report
+     */
+    public function dailyReport(Request $request): View
+    {
+        $user = $request->user();
+        $this->assertBranchPermission($user);
+        $branch = $this->resolveBranch($request);
+
+        $date = $request->get('date', now()->toDateString());
+
+        // Shipments delivered
+        $deliveredShipments = Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })
+            ->whereDate('delivered_at', $date)
+            ->count();
+
+        // Revenue
+        $revenue = Shipment::where('origin_branch_id', $branch->id)
+            ->whereDate('created_at', $date)
+            ->sum('total_charge');
+
+        // COD collected
+        $codCollected = Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })
+            ->whereDate('cod_collected_at', $date)
+            ->sum('cod_collected_amount');
+
+        // Expenses
+        $expenses = DB::table('branch_expenses')
+            ->where('branch_id', $branch->id)
+            ->whereDate('expense_date', $date)
+            ->sum('amount');
+
+        // Worker productivity
+        $workerStats = DB::table('shipments')
+            ->join('branch_workers', 'shipments.assigned_worker_id', '=', 'branch_workers.id')
+            ->join('users', 'branch_workers.user_id', '=', 'users.id')
+            ->where(function ($q) use ($branch) {
+                $q->where('shipments.origin_branch_id', $branch->id)
+                    ->orWhere('shipments.dest_branch_id', $branch->id);
+            })
+            ->whereDate('shipments.delivered_at', $date)
+            ->select(
+                'users.name',
+                DB::raw('COUNT(shipments.id) as deliveries'),
+                DB::raw('SUM(CASE WHEN shipments.cod_amount > 0 THEN COALESCE(shipments.cod_collected_amount, 0) ELSE 0 END) as cod_collected')
+            )
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('deliveries')
+            ->get();
+
+        return view('branch.finance.daily_report', [
+            'branch' => $branch,
+            'branchOptions' => $this->branchOptions($user),
+            'date' => $date,
+            'deliveredShipments' => $deliveredShipments,
+            'revenue' => $revenue,
+            'codCollected' => $codCollected,
+            'expenses' => $expenses,
+            'netPosition' => $revenue + $codCollected - $expenses,
+            'workerStats' => $workerStats,
+            'defaultCurrency' => SystemSettings::defaultCurrency(),
         ]);
     }
 }

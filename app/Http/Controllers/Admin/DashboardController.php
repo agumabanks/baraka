@@ -18,6 +18,7 @@ use App\Models\ScanEvent;
 use App\Models\Customer;
 use App\Models\Client;
 use App\Enums\StatementType;
+use App\Support\SystemSettings;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -112,6 +113,10 @@ class DashboardController extends Controller
         // Geographic Data
         $geographicData = $this->getGeographicData($dateRange);
 
+        $defaultCurrency = SystemSettings::defaultCurrency();
+        $formatCurrency = fn($amount, ?string $currency = null) => SystemSettings::formatCurrency((float) $amount, $currency);
+        $branding = ['company_name' => SystemSettings::companyName()];
+
         return view('admin.dashboard', compact(
             'stats',
             'slaMetrics',
@@ -124,7 +129,10 @@ class DashboardController extends Controller
             'chartData',
             'revenueChartData',
             'geographicData',
-            'dateRange'
+            'dateRange',
+            'defaultCurrency',
+            'formatCurrency',
+            'branding'
         ));
     }
     
@@ -786,6 +794,12 @@ class DashboardController extends Controller
                     'from' => Carbon::now()->subDays(29)->startOfDay(),
                     'to' => Carbon::now()->endOfDay(),
                     'label' => 'Last 30 Days',
+                ];
+            case 'this_month':
+                return [
+                    'from' => Carbon::now()->startOfMonth(),
+                    'to' => Carbon::now()->endOfDay(),
+                    'label' => Carbon::now()->format('F Y'),
                 ];
             case 'custom':
                 $from = $request->get('date_from') ? Carbon::parse($request->get('date_from'))->startOfDay() : Carbon::now()->subDays(6)->startOfDay();

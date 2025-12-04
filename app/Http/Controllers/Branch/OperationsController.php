@@ -101,6 +101,7 @@ class OperationsController extends Controller
         $slaRisk = $request->boolean('sla_risk');
         $dateFrom = $request->date('from');
         $dateTo = $request->date('to');
+        $perPage = $request->integer('per_page', 15);
 
         $shipments = Shipment::query()
             ->with(['assignedWorker.user:id,name', 'destBranch:id,name,code', 'originBranch:id,name,code'])
@@ -128,7 +129,7 @@ class OperationsController extends Controller
             ->when($dateFrom, fn ($q) => $q->whereDate('created_at', '>=', $dateFrom))
             ->when($dateTo, fn ($q) => $q->whereDate('created_at', '<=', $dateTo))
             ->latest()
-            ->paginate(15);
+            ->paginate($perPage);
 
         $backlog = Shipment::query()
             ->whereNull('assigned_worker_id')
@@ -174,6 +175,7 @@ class OperationsController extends Controller
             'workers' => $workers,
             'activeMaintenance' => $activeMaintenance,
             'maintenanceCapacity' => $maintenanceCapacity,
+            'perPage' => $perPage,
             'filters' => [
                 'direction' => $direction,
                 'status' => $status,

@@ -1,0 +1,612 @@
+openapi: 3.0.3
+info:
+  title: Baraka POS API
+  description: |
+    Point of Sale API endpoints for the Baraka Logistics system.
+    Implements the POS Hardening Plan requirements.
+  version: 1.0.0
+  contact:
+    name: Baraka Support
+    email: support@baraka.co
+
+servers:
+  - url: /api/pos
+    description: POS API Base URL
+
+security:
+  - BearerAuth: []
+
+paths:
+  /quote:
+    post:
+      summary: Get shipping quote (POS-RATE-02)
+      description: Calculate pricing for a shipment based on route, weight, and options.
+      operationId: getQuote
+      tags:
+        - Pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Quote calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+        '422':
+          description: Validation error
+        '429':
+          description: Rate limit exceeded
+
+  /route-capabilities:
+    get:
+      summary: Get route capabilities (POS-BR-03)
+      description: Get available services and constraints for a route.
+      operationId: getRouteCapabilities
+      tags:
+        - Routes
+      parameters:
+        - name: origin_branch_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: destination_branch_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Route capabilities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RouteCapability'
+
+  /route-templates:
+    get:
+      summary: Get route templates (POS-UX-06)
+      description: Get saved route templates for quick selection.
+      operationId: getRouteTemplates
+      tags:
+        - Routes
+      parameters:
+        - name: branch_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Route templates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RouteTemplate'
+
+  /clients/search:
+    get:
+      summary: Search clients (POS-INT-04)
+      description: Search for customers by name, phone, email, or company.
+      operationId: searchClients
+      tags:
+        - Customers
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerSummary'
+
+  /draft:
+    post:
+      summary: Save shipment draft (POS-REL-01)
+      description: Save or update a shipment draft for later completion.
+      operationId: saveDraft
+      tags:
+        - Drafts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - payload
+              properties:
+                draft_id:
+                  type: string
+                  format: uuid
+                payload:
+                  type: object
+      responses:
+        '200':
+          description: Draft saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      draft_id:
+                        type: string
+                        format: uuid
+                      expires_at:
+                        type: string
+                        format: date-time
+
+  /shipments/create:
+    post:
+      summary: Create shipment with idempotency (POS-REL-02)
+      description: Create a new shipment. Idempotent - returns existing shipment if idempotency_key matches.
+      operationId: createShipment
+      tags:
+        - Shipments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShipmentRequest'
+      responses:
+        '201':
+          description: Shipment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponse'
+        '200':
+          description: Existing shipment returned (idempotent)
+        '422':
+          description: Validation error
+
+  /pay:
+    post:
+      summary: Process payment (POS-PAY-02)
+      description: Process payment for a shipment. Idempotent.
+      operationId: processPayment
+      tags:
+        - Payments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '201':
+          description: Payment processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /shipments/{shipmentId}/print-label:
+    post:
+      summary: Print label (POS-REL-03)
+      description: Record label print and return label URL. Tracks reprint count.
+      operationId: printLabel
+      tags:
+        - Labels
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Label print recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      print_count:
+                        type: integer
+                      is_reprint:
+                        type: boolean
+                      label_url:
+                        type: string
+        '403':
+          description: Reprint requires supervisor approval
+
+  /shipments/{shipmentId}/audit:
+    get:
+      summary: Get audit history (POS-SEC-04)
+      description: Get the complete audit trail for a shipment.
+      operationId: getAuditHistory
+      tags:
+        - Audit
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Audit history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditEntry'
+
+  /override/request:
+    post:
+      summary: Request supervisor override (POS-SEC-03)
+      description: Request supervisor approval for restricted actions.
+      operationId: requestOverride
+      tags:
+        - Overrides
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OverrideRequest'
+      responses:
+        '201':
+          description: Override request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverrideResponse'
+
+  /override/{overrideId}/approve:
+    post:
+      summary: Approve override (POS-SEC-03)
+      description: Supervisor approves an override request.
+      operationId: approveOverride
+      tags:
+        - Overrides
+      parameters:
+        - name: overrideId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - supervisor_password
+              properties:
+                supervisor_password:
+                  type: string
+                approved_data:
+                  type: object
+      responses:
+        '200':
+          description: Override approved
+        '401':
+          description: Invalid supervisor password
+        '403':
+          description: Insufficient permissions
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    QuoteRequest:
+      type: object
+      required:
+        - origin_branch_id
+        - destination_branch_id
+        - service_level
+        - weight
+      properties:
+        origin_branch_id:
+          type: integer
+        destination_branch_id:
+          type: integer
+        service_level:
+          type: string
+          enum: [economy, standard, express, priority]
+        weight:
+          type: number
+          minimum: 0.01
+        length:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+        declared_value:
+          type: number
+        cod_amount:
+          type: number
+        insurance_type:
+          type: string
+          enum: [none, basic, full, premium]
+        customer_id:
+          type: integer
+        zone:
+          type: string
+
+    QuoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            base_freight:
+              type: number
+            weight_charge:
+              type: number
+            fuel_surcharge:
+              type: number
+            surcharges_total:
+              type: number
+            insurance_fee:
+              type: number
+            cod_fee:
+              type: number
+            discount:
+              type: number
+            subtotal:
+              type: number
+            tax_rate:
+              type: number
+            tax:
+              type: number
+            total:
+              type: number
+            currency:
+              type: string
+            rate_table_version:
+              type: string
+            warnings:
+              type: array
+              items:
+                type: string
+
+    RouteCapability:
+      type: object
+      properties:
+        id:
+          type: integer
+        origin_branch_id:
+          type: integer
+        destination_branch_id:
+          type: integer
+        service_level:
+          type: string
+        max_weight:
+          type: number
+        hazmat_allowed:
+          type: boolean
+        cod_allowed:
+          type: boolean
+        status:
+          type: string
+
+    RouteTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        origin_branch_id:
+          type: integer
+        destination_branch_id:
+          type: integer
+        default_service_level:
+          type: string
+        active:
+          type: boolean
+
+    CustomerSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        company:
+          type: string
+        address:
+          type: string
+
+    CreateShipmentRequest:
+      type: object
+      required:
+        - idempotency_key
+        - origin_branch_id
+        - destination_branch_id
+        - service_level
+        - weight
+        - receiver_name
+        - receiver_phone
+        - delivery_address
+      properties:
+        draft_id:
+          type: string
+          format: uuid
+        idempotency_key:
+          type: string
+          maxLength: 64
+        customer_id:
+          type: integer
+        origin_branch_id:
+          type: integer
+        destination_branch_id:
+          type: integer
+        service_level:
+          type: string
+        weight:
+          type: number
+        dimensions:
+          type: object
+        receiver_name:
+          type: string
+        receiver_phone:
+          type: string
+        delivery_address:
+          type: string
+        description:
+          type: string
+        declared_value:
+          type: number
+        cod_amount:
+          type: number
+        insurance_type:
+          type: string
+        payer_type:
+          type: string
+          enum: [sender, receiver, third_party, account]
+        content_type:
+          type: string
+          enum: [document, parcel, battery, liquid, hazmat, other]
+        special_instructions:
+          type: string
+
+    ShipmentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        message:
+          type: string
+
+    PaymentRequest:
+      type: object
+      required:
+        - shipment_id
+        - idempotency_key
+        - amount
+        - method
+      properties:
+        shipment_id:
+          type: integer
+        idempotency_key:
+          type: string
+        amount:
+          type: number
+        method:
+          type: string
+          enum: [cash, card, mobile_money, bank_transfer, on_account, cheque]
+        payer_type:
+          type: string
+        external_reference:
+          type: string
+
+    PaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+
+    AuditEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        shipment_id:
+          type: integer
+        event_type:
+          type: string
+        old_values:
+          type: object
+        new_values:
+          type: object
+        reason:
+          type: string
+        created_by:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    OverrideRequest:
+      type: object
+      required:
+        - action_type
+        - reason
+      properties:
+        shipment_id:
+          type: integer
+        action_type:
+          type: string
+          enum: [discount, cancel, backdate, reprint, price_override, refund]
+        reason:
+          type: string
+        request_data:
+          type: object
+
+    OverrideResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        message:
+          type: string

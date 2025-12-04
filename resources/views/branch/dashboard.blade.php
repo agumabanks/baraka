@@ -4,6 +4,112 @@
 @section('sla_rate', $onTimeRate . '%')
 
 @section('content')
+    {{-- Auto-refresh indicator --}}
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <div id="refreshIndicator" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Live updates active"></div>
+            <span class="text-xs muted">Auto-refresh: <span id="refreshCountdown">60</span>s</span>
+        </div>
+        <button onclick="refreshDashboard()" class="chip text-xs flex items-center gap-1">
+            <svg class="w-3 h-3" id="refreshIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Refresh Now
+        </button>
+    </div>
+
+    {{-- Priority Alerts Banner --}}
+    @if(count($priorityAlerts) > 0)
+    <div class="mb-4 space-y-2" id="priorityAlertsContainer">
+        @foreach($priorityAlerts as $alert)
+        <div class="glass-panel p-3 flex items-center justify-between gap-4 border-l-4 
+            @if($alert['severity'] === 'critical') border-red-500 bg-red-500/10
+            @elseif($alert['severity'] === 'high') border-orange-500 bg-orange-500/10
+            @elseif($alert['severity'] === 'medium') border-amber-500 bg-amber-500/10
+            @else border-sky-500 bg-sky-500/10 @endif">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0">
+                    @if($alert['severity'] === 'critical')
+                    <svg class="w-5 h-5 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    @elseif($alert['severity'] === 'high')
+                    <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                    </svg>
+                    @elseif($alert['severity'] === 'medium')
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    @else
+                    <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    @endif
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold uppercase
+                            @if($alert['severity'] === 'critical') text-red-400
+                            @elseif($alert['severity'] === 'high') text-orange-400
+                            @elseif($alert['severity'] === 'medium') text-amber-400
+                            @else text-sky-400 @endif">{{ $alert['severity'] }}</span>
+                        <span class="font-semibold text-sm">{{ $alert['title'] }}</span>
+                    </div>
+                    <p class="text-xs muted">{{ $alert['message'] }}</p>
+                </div>
+            </div>
+            <a href="{{ route($alert['action_route']) }}" class="chip text-xs flex-shrink-0">{{ $alert['action_label'] }}</a>
+        </div>
+        @endforeach
+    </div>
+    @endif
+
+    {{-- SLA At-Risk Countdown Widget --}}
+    @if(count($slaAtRisk) > 0)
+    <div class="glass-panel p-4 mb-4 border border-red-500/30">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="font-semibold text-sm text-red-400">SLA At Risk - {{ count($slaAtRisk) }} Shipment(s)</span>
+            </div>
+            <a href="{{ route('branch.operations') }}" class="chip text-xs">View All</a>
+        </div>
+        <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3" id="slaCountdownContainer">
+            @foreach(array_slice($slaAtRisk, 0, 6) as $shipment)
+            <div class="glass-panel p-3 border
+                @if($shipment['severity'] === 'critical') border-red-500/50 bg-red-500/5
+                @elseif($shipment['severity'] === 'high') border-orange-500/50 bg-orange-500/5
+                @elseif($shipment['severity'] === 'medium') border-amber-500/50 bg-amber-500/5
+                @else border-white/10 @endif"
+                data-deadline="{{ $shipment['deadline'] }}">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-mono text-sm font-semibold">#{{ $shipment['tracking_number'] ?? $shipment['id'] }}</span>
+                    @if($shipment['is_breached'])
+                    <span class="badge badge-danger text-xs animate-pulse">BREACHED</span>
+                    @else
+                    <span class="countdown-timer font-mono text-sm font-bold
+                        @if($shipment['severity'] === 'critical') text-red-400
+                        @elseif($shipment['severity'] === 'high') text-orange-400
+                        @elseif($shipment['severity'] === 'medium') text-amber-400
+                        @else text-emerald-400 @endif"
+                        data-deadline="{{ $shipment['deadline'] }}">
+                        {{ $shipment['hours_remaining'] }}h {{ $shipment['minutes_remaining'] % 60 }}m
+                    </span>
+                    @endif
+                </div>
+                <div class="text-xs muted">
+                    <div>{{ $shipment['status'] }}</div>
+                    <div>To: {{ $shipment['destination'] }}</div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         @php
             $cards = [
@@ -36,7 +142,7 @@
                 <div class="flex flex-wrap gap-2">
                     <a href="{{ route('branch.operations') }}" class="chip">Open Ops Board</a>
                     <a href="{{ route('branch.workforce') }}" class="chip">Dispatch workforce</a>
-                    <a href="{{ route('branch.finance') }}" class="chip">Reconcile finance</a>
+                    <a href="{{ route('branch.finance.index') }}" class="chip">Reconcile finance</a>
                 </div>
             </div>
             <div class="grid sm:grid-cols-2 gap-3">
@@ -60,7 +166,7 @@
                     <div class="text-sm font-semibold mb-1">Queues & Dispatch</div>
                     <p class="muted text-xs">Assign shipments, reprioritize, escalate.</p>
                 </a>
-                <a href="{{ route('branch.warehouse') }}" class="glass-panel p-4 hover:border-white/30 transition">
+                <a href="{{ route('branch.warehouse.index') }}" class="glass-panel p-4 hover:border-white/30 transition">
                     <div class="text-sm font-semibold mb-1">Warehouse</div>
                     <p class="muted text-xs">Stock, locations, and movement alerts.</p>
                 </a>
@@ -176,7 +282,7 @@
         <div class="glass-panel p-5 space-y-3">
             <div class="flex items-center justify-between">
                 <div class="text-sm font-semibold">Clients</div>
-                <a href="{{ route('branch.clients') }}" class="chip text-2xs">Manage</a>
+                <a href="{{ route('branch.clients.index') }}" class="chip text-2xs">Manage</a>
             </div>
             <div class="divide-y divide-white/5">
                 @forelse($clients as $client)
@@ -206,7 +312,7 @@
         <div class="glass-panel p-5">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm font-semibold">Warehouse</div>
-                <a href="{{ route('branch.warehouse') }}" class="text-2xs muted hover:text-white">Open</a>
+                <a href="{{ route('branch.warehouse.index') }}" class="text-2xs muted hover:text-white">Open</a>
             </div>
             @forelse($warehouseAlerts as $w)
                 <div class="flex justify-between muted text-sm border-b border-white/5 pb-2 mb-2">
@@ -291,6 +397,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Chart
     const ctx = document.getElementById('branchTrendsChart')?.getContext('2d');
     if (ctx) {
         new Chart(ctx, {
@@ -324,6 +431,133 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Initialize SLA Countdown Timers
+    initCountdownTimers();
+    
+    // Start auto-refresh countdown
+    startRefreshCountdown();
 });
+
+// SLA Countdown Timer functionality
+function initCountdownTimers() {
+    const timers = document.querySelectorAll('.countdown-timer[data-deadline]');
+    
+    timers.forEach(timer => {
+        updateCountdown(timer);
+    });
+    
+    // Update every second
+    setInterval(() => {
+        timers.forEach(timer => updateCountdown(timer));
+    }, 1000);
+}
+
+function updateCountdown(element) {
+    const deadline = new Date(element.dataset.deadline);
+    const now = new Date();
+    const diff = deadline - now;
+    
+    if (diff <= 0) {
+        element.textContent = 'BREACHED';
+        element.classList.remove('text-amber-400', 'text-orange-400', 'text-emerald-400');
+        element.classList.add('text-red-400', 'animate-pulse');
+        return;
+    }
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    if (hours > 0) {
+        element.textContent = `${hours}h ${minutes}m`;
+    } else if (minutes > 0) {
+        element.textContent = `${minutes}m ${seconds}s`;
+    } else {
+        element.textContent = `${seconds}s`;
+    }
+    
+    // Update color based on urgency
+    element.classList.remove('text-emerald-400', 'text-amber-400', 'text-orange-400', 'text-red-400');
+    if (hours < 2) {
+        element.classList.add('text-red-400');
+    } else if (hours < 6) {
+        element.classList.add('text-orange-400');
+    } else if (hours < 12) {
+        element.classList.add('text-amber-400');
+    } else {
+        element.classList.add('text-emerald-400');
+    }
+}
+
+// Auto-refresh functionality
+let refreshInterval = 60;
+let refreshCountdown = refreshInterval;
+let refreshTimer;
+
+function startRefreshCountdown() {
+    const countdownEl = document.getElementById('refreshCountdown');
+    
+    refreshTimer = setInterval(() => {
+        refreshCountdown--;
+        if (countdownEl) countdownEl.textContent = refreshCountdown;
+        
+        if (refreshCountdown <= 0) {
+            refreshDashboard();
+        }
+    }, 1000);
+}
+
+function refreshDashboard() {
+    const icon = document.getElementById('refreshIcon');
+    const indicator = document.getElementById('refreshIndicator');
+    
+    // Add spinning animation
+    if (icon) icon.classList.add('animate-spin');
+    if (indicator) {
+        indicator.classList.remove('bg-emerald-500');
+        indicator.classList.add('bg-amber-500');
+    }
+    
+    // Reload the page
+    window.location.reload();
+}
+
+// Skeleton loader for AJAX refresh (future enhancement)
+function showLoadingState() {
+    const containers = document.querySelectorAll('.stat-card, .glass-panel');
+    containers.forEach(container => {
+        container.classList.add('animate-pulse', 'opacity-70');
+    });
+}
+
+function hideLoadingState() {
+    const containers = document.querySelectorAll('.stat-card, .glass-panel');
+    containers.forEach(container => {
+        container.classList.remove('animate-pulse', 'opacity-70');
+    });
+}
+
+// Audio alert for critical SLA breaches (optional - user can enable)
+function playAlertSound() {
+    // Create a simple beep using Web Audio API
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.1;
+        
+        oscillator.start();
+        setTimeout(() => oscillator.stop(), 200);
+    } catch (e) {
+        // Audio not available
+    }
+}
 </script>
 @endpush

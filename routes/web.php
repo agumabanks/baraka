@@ -57,6 +57,11 @@ Route::middleware(['auth', 'verified'])->prefix('settings')->name('settings.')->
     Route::get('/language', [SettingsController::class, 'language'])->name('language');
     Route::post('/language', [SettingsController::class, 'updateLanguage'])->name('language.update');
     Route::delete('/language/{key}', [SettingsController::class, 'deleteTranslation'])->name('language.delete');
+    Route::get('/language/export', [SettingsController::class, 'exportTranslations'])->name('language.export');
+    Route::post('/language/import', [SettingsController::class, 'importTranslations'])->name('language.import');
+    Route::get('/language/validate', [SettingsController::class, 'validateTranslations'])->name('language.validate');
+    Route::post('/language/default-locale', [SettingsController::class, 'setDefaultLocale'])->name('language.default-locale');
+    Route::post('/language/sync-from-files', [\App\Http\Controllers\Backend\LanguageController::class, 'syncFromFiles'])->name('language.sync-from-files');
     
     // System Settings
     Route::get('/system', [SettingsController::class, 'system'])->name('system');
@@ -143,6 +148,20 @@ Route::prefix('branch')->name('branch.')->group(function () {
     Route::get('/login', [BranchAuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [BranchAuthController::class, 'login'])->middleware('account.lockout')->name('login.submit');
     Route::post('/logout', [BranchAuthController::class, 'logout'])->name('logout');
+});
+
+// Client (Customer) Authentication
+Route::prefix('client')->name('client.')->group(function () {
+    Route::get('/login', [\App\Http\Controllers\Client\Auth\ClientAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [\App\Http\Controllers\Client\Auth\ClientAuthController::class, 'login'])->name('login.submit');
+    Route::get('/register', [\App\Http\Controllers\Client\Auth\ClientAuthController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [\App\Http\Controllers\Client\Auth\ClientAuthController::class, 'register'])->name('register.submit');
+    Route::post('/logout', [\App\Http\Controllers\Client\Auth\ClientAuthController::class, 'logout'])->name('logout');
+});
+
+// Client Dashboard (authenticated customers)
+Route::middleware(['auth:customer'])->prefix('client')->name('client.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Client\ClientDashboardController::class, 'index'])->name('dashboard');
 });
 
 Route::middleware(['auth', 'branch.context', 'branch.locale', 'branch.isolation'])
@@ -348,6 +367,30 @@ Route::prefix('tracking')->name('tracking.')->group(function () {
 Route::get('/track/{token}', [PublicTrackingController::class, 'publicShow'])
     ->middleware('signed')
     ->name('public.track');
+
+/*
+|--------------------------------------------------------------------------
+| Landing Page Route
+|--------------------------------------------------------------------------
+*/
+Route::get('/', function () {
+    $user = auth()->user();
+    
+    // Redirect authenticated users to their respective dashboards
+    if ($user) {
+        if ($user->hasRole(['admin', 'super-admin', 'hq_admin', 'support'])) {
+            return redirect()->route('admin.dashboard');
+        }
+        if ($user->hasPermission('branch_read')) {
+            return redirect()->route('branch.dashboard');
+        }
+    }
+    
+    // Get all website settings from SystemSettings (includes all defaults)
+    $settings = \App\Support\SystemSettings::website();
+    
+    return view('landing', compact('settings'));
+})->name('landing');
 
 /*
 |--------------------------------------------------------------------------

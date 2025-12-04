@@ -12,7 +12,7 @@
                 <span class="badge badge-{{ $location->status === 'ACTIVE' ? 'success' : 'secondary' }}">{{ $location->status }}</span>
             </p>
         </div>
-        <a href="{{ route('branch.warehouse') }}" class="btn btn-secondary">
+        <a href="{{ route('branch.warehouse.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Back to Warehouse
         </a>
     </div>

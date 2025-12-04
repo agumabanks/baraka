@@ -12,7 +12,7 @@ class LabelGeneratorService
         // In a real implementation, this would generate a PDF using DomPDF or Snappy
         // For now, we'll return the HTML content which can be printed
         
-        $shipment->load(['originBranch', 'destBranch', 'customer']);
+        $shipment->load(['originBranch', 'destBranch', 'customer', 'customerProfile']);
         
         return View::make('branch.shipments.label', compact('shipment'))->render();
     }
@@ -21,7 +21,7 @@ class LabelGeneratorService
     {
         $html = '';
         foreach ($shipments as $shipment) {
-            $shipment->load(['originBranch', 'destBranch', 'customer']);
+            $shipment->load(['originBranch', 'destBranch', 'customer', 'customerProfile']);
             $html .= View::make('branch.shipments.label', compact('shipment'))->render();
             $html .= '<hr>';
         }

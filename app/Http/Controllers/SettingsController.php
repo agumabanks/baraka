@@ -449,7 +449,25 @@ class SettingsController extends Controller
         try {
             [$settings, $details] = $this->getSettingsWithDetails();
 
-            $details['branding'] = array_merge($details['branding'] ?? [], [
+            $brandingData = $details['branding'] ?? [];
+            
+            // Handle Logo Upload
+            if ($request->hasFile('logo')) {
+                $logo = $request->file('logo');
+                $filename = 'logo-' . time() . '.' . $logo->getClientOriginalExtension();
+                $logo->move(public_path('uploads/branding'), $filename);
+                $brandingData['logo_url'] = '/uploads/branding/' . $filename;
+            }
+
+            // Handle Favicon Upload
+            if ($request->hasFile('favicon')) {
+                $favicon = $request->file('favicon');
+                $filename = 'favicon-' . time() . '.' . $favicon->getClientOriginalExtension();
+                $favicon->move(public_path('uploads/branding'), $filename);
+                $brandingData['favicon_url'] = '/uploads/branding/' . $filename;
+            }
+
+            $details['branding'] = array_merge($brandingData, [
                 'theme' => $request->input('theme', 'auto'),
                 'primary_color' => $request->input('primary_color', '#3b82f6'),
                 'secondary_color' => $request->input('secondary_color', '#64748b'),
@@ -461,6 +479,12 @@ class SettingsController extends Controller
             // Update root level
             $settings->name = $request->input('company_name', $settings->name);
             $settings->primary_color = $request->input('primary_color', $settings->primary_color);
+            if (isset($brandingData['logo_url'])) {
+                $settings->logo_image = $brandingData['logo_url'];
+            }
+            if (isset($brandingData['favicon_url'])) {
+                $settings->favicon_image = $brandingData['favicon_url'];
+            }
 
             $this->saveSettings($settings, $details);
 
@@ -574,11 +598,27 @@ class SettingsController extends Controller
      */
     public function language(Request $request)
     {
-        $supportedLocales = ['en', 'fr', 'sw'];
-        $localeLabels = ['en' => 'English', 'fr' => 'Français', 'sw' => 'Kiswahili'];
+        $supportedLocales = config('translations.supported', ['en', 'fr', 'sw']);
+        $localeLabels = [
+            'en' => ['name' => 'English', 'native' => 'English', 'rtl' => false, 'flag' => 'gb'],
+            'fr' => ['name' => 'French', 'native' => 'Français', 'rtl' => false, 'flag' => 'fr'],
+            'sw' => ['name' => 'Swahili', 'native' => 'Kiswahili', 'rtl' => false, 'flag' => 'ke'],
+            'ar' => ['name' => 'Arabic', 'native' => 'العربية', 'rtl' => true, 'flag' => 'sa'],
+            'zh' => ['name' => 'Chinese', 'native' => '中文', 'rtl' => false, 'flag' => 'cn'],
+            'es' => ['name' => 'Spanish', 'native' => 'Español', 'rtl' => false, 'flag' => 'es'],
+        ];
 
         $search = trim((string) $request->get('q', ''));
         $statusFilter = $request->get('status');
+        $namespaceFilter = $request->get('namespace');
+        
+        // Configurable pagination with session persistence
+        $allowedPerPage = [10, 25, 50, 100, 250];
+        $perPage = (int) $request->get('per_page', session('language_per_page', 25));
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 25;
+        }
+        session(['language_per_page' => $perPage]);
 
         $keysQuery = Translation::distinct();
         if ($search !== '') {
@@ -589,6 +629,14 @@ class SettingsController extends Controller
         }
 
         $allKeys = $keysQuery->pluck('key')->unique()->sort()->values();
+
+        // Extract unique namespaces for filtering
+        $namespaces = $allKeys->map(fn($key) => explode('.', $key)[0])->unique()->sort()->values();
+
+        // Filter by namespace if specified
+        if ($namespaceFilter && $namespaceFilter !== '') {
+            $allKeys = $allKeys->filter(fn($key) => str_starts_with($key, $namespaceFilter . '.'));
+        }
 
         if ($statusFilter && in_array($statusFilter, ['complete', 'incomplete', 'empty'])) {
             $allKeys = $allKeys->filter(function ($key) use ($statusFilter, $supportedLocales) {
@@ -608,7 +656,6 @@ class SettingsController extends Controller
             })->values();
         }
 
-        $perPage = 25;
         $currentPage = $request->get('page', 1);
         $paginatedKeys = $allKeys->forPage($currentPage, $perPage);
 
@@ -620,6 +667,7 @@ class SettingsController extends Controller
                 $translations[$key][$lang] = [
                     'value' => $translation ? $translation->value : '',
                     'description' => $translation ? $translation->description : '',
+                    'updated_at' => $translation ? $translation->updated_at : null,
                 ];
             }
         }
@@ -633,17 +681,33 @@ class SettingsController extends Controller
         );
 
         $stats = Translation::getCompletionStats($supportedLocales);
-        $defaultLocale = config('app.locale', 'en');
+        $defaultLocale = SystemSettings::defaultLocale();
+
+        // Get locales with metadata
+        $localesWithMeta = [];
+        foreach ($supportedLocales as $code) {
+            $localesWithMeta[$code] = $localeLabels[$code] ?? [
+                'name' => strtoupper($code), 
+                'native' => strtoupper($code), 
+                'rtl' => false, 
+                'flag' => 'un'
+            ];
+        }
 
         return view('settings.language', [
-            'locales' => $localeLabels,
+            'locales' => collect($localesWithMeta)->mapWithKeys(fn($v, $k) => [$k => $v['native']])->toArray(),
+            'localesWithMeta' => $localesWithMeta,
             'supportedLocales' => $supportedLocales,
             'defaultLocale' => $defaultLocale,
             'search' => $search,
             'statusFilter' => $statusFilter,
+            'namespaceFilter' => $namespaceFilter,
+            'namespaces' => $namespaces,
             'translations' => $paginator,
             'stats' => $stats,
             'totalCount' => $allKeys->count(),
+            'perPage' => $perPage,
+            'allowedPerPage' => $allowedPerPage,
         ]);
     }
 
@@ -710,11 +774,19 @@ class SettingsController extends Controller
     {
         try {
             $deleted = Translation::deleteKey($key);
+            $supportedLocales = config('translations.supported', ['en', 'fr', 'sw']);
             if (function_exists('clear_translation_cache')) {
-                foreach (['en', 'fr', 'sw'] as $lang) {
+                foreach ($supportedLocales as $lang) {
                     clear_translation_cache($lang);
                 }
             }
+            
+            Log::info('Translation key deleted', [
+                'key' => $key,
+                'user_id' => auth()->id(),
+                'deleted_count' => $deleted,
+            ]);
+            
             return response()->json([
                 'success' => true,
                 'message' => "Translation key '{$key}' deleted ({$deleted} records).",
@@ -725,147 +797,389 @@ class SettingsController extends Controller
     }
 
     /**
+     * Export translations as JSON or CSV
+     */
+    public function exportTranslations(Request $request)
+    {
+        $format = $request->get('format', 'json');
+        $language = $request->get('language'); // null = all languages
+        $supportedLocales = config('translations.supported', ['en', 'fr', 'sw']);
+        
+        try {
+            $query = Translation::query();
+            
+            if ($language && in_array($language, $supportedLocales)) {
+                $query->where('language_code', $language);
+            }
+            
+            $translations = $query->orderBy('key')->get();
+            
+            if ($format === 'csv') {
+                $filename = 'translations_' . ($language ?? 'all') . '_' . date('Y-m-d_His') . '.csv';
+                $headers = [
+                    'Content-Type' => 'text/csv',
+                    'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                ];
+                
+                $callback = function () use ($translations, $supportedLocales, $language) {
+                    $file = fopen('php://output', 'w');
+                    
+                    // Header row
+                    $headerRow = ['key'];
+                    $langs = $language ? [$language] : $supportedLocales;
+                    foreach ($langs as $lang) {
+                        $headerRow[] = $lang . '_value';
+                    }
+                    fputcsv($file, $headerRow);
+                    
+                    // Group translations by key
+                    $grouped = $translations->groupBy('key');
+                    foreach ($grouped as $key => $items) {
+                        $row = [$key];
+                        foreach ($langs as $lang) {
+                            $item = $items->firstWhere('language_code', $lang);
+                            $row[] = $item ? $item->value : '';
+                        }
+                        fputcsv($file, $row);
+                    }
+                    
+                    fclose($file);
+                };
+                
+                return response()->stream($callback, 200, $headers);
+            }
+            
+            // JSON format
+            $grouped = [];
+            foreach ($translations as $t) {
+                if (!isset($grouped[$t->key])) {
+                    $grouped[$t->key] = [];
+                }
+                $grouped[$t->key][$t->language_code] = $t->value;
+            }
+            
+            $export = [
+                'exported_at' => now()->toIso8601String(),
+                'exported_by' => auth()->user()?->name ?? 'System',
+                'languages' => $language ? [$language] : $supportedLocales,
+                'total_keys' => count($grouped),
+                'translations' => $grouped,
+            ];
+            
+            $filename = 'translations_' . ($language ?? 'all') . '_' . date('Y-m-d_His') . '.json';
+            
+            Log::info('Translations exported', [
+                'user_id' => auth()->id(),
+                'format' => $format,
+                'language' => $language,
+                'count' => count($grouped),
+            ]);
+            
+            return response()->json($export)
+                ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+                
+        } catch (\Exception $e) {
+            Log::error('Translation export failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Import translations from JSON or CSV
+     */
+    public function importTranslations(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:json,csv,txt|max:5120',
+            'overwrite' => 'boolean',
+        ]);
+        
+        $supportedLocales = config('translations.supported', ['en', 'fr', 'sw']);
+        $overwrite = (bool) $request->input('overwrite', false);
+        
+        try {
+            $file = $request->file('file');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $content = file_get_contents($file->getRealPath());
+            
+            $imported = 0;
+            $skipped = 0;
+            $errors = [];
+            
+            if ($extension === 'json' || $extension === 'txt') {
+                $data = json_decode($content, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid JSON format: ' . json_last_error_msg(),
+                    ], 422);
+                }
+                
+                $translations = $data['translations'] ?? $data;
+                
+                foreach ($translations as $key => $values) {
+                    if (!is_array($values)) {
+                        continue;
+                    }
+                    
+                    foreach ($values as $lang => $value) {
+                        if (!in_array($lang, $supportedLocales) || !is_string($value)) {
+                            continue;
+                        }
+                        
+                        $existing = Translation::forLanguage($lang)->forKey($key)->first();
+                        
+                        if ($existing && !$overwrite) {
+                            $skipped++;
+                            continue;
+                        }
+                        
+                        Translation::updateOrCreate(
+                            ['key' => $key, 'language_code' => $lang],
+                            ['value' => $value]
+                        );
+                        $imported++;
+                    }
+                }
+            } elseif ($extension === 'csv') {
+                $lines = str_getcsv($content, "\n");
+                $header = str_getcsv(array_shift($lines));
+                
+                // Parse header to identify language columns
+                $langColumns = [];
+                foreach ($header as $idx => $col) {
+                    if ($idx === 0) continue; // Skip 'key' column
+                    $lang = str_replace('_value', '', $col);
+                    if (in_array($lang, $supportedLocales)) {
+                        $langColumns[$idx] = $lang;
+                    }
+                }
+                
+                foreach ($lines as $lineNum => $line) {
+                    if (empty(trim($line))) continue;
+                    
+                    $row = str_getcsv($line);
+                    $key = $row[0] ?? null;
+                    
+                    if (empty($key)) {
+                        $errors[] = "Line " . ($lineNum + 2) . ": Missing key";
+                        continue;
+                    }
+                    
+                    foreach ($langColumns as $idx => $lang) {
+                        $value = $row[$idx] ?? '';
+                        if ($value === '') continue;
+                        
+                        $existing = Translation::forLanguage($lang)->forKey($key)->first();
+                        
+                        if ($existing && !$overwrite) {
+                            $skipped++;
+                            continue;
+                        }
+                        
+                        Translation::updateOrCreate(
+                            ['key' => $key, 'language_code' => $lang],
+                            ['value' => $value]
+                        );
+                        $imported++;
+                    }
+                }
+            }
+            
+            // Clear cache
+            if (function_exists('clear_translation_cache')) {
+                foreach ($supportedLocales as $lang) {
+                    clear_translation_cache($lang);
+                }
+            }
+            
+            Log::info('Translations imported', [
+                'user_id' => auth()->id(),
+                'imported' => $imported,
+                'skipped' => $skipped,
+                'overwrite' => $overwrite,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Import complete: {$imported} translations imported, {$skipped} skipped.",
+                'imported' => $imported,
+                'skipped' => $skipped,
+                'errors' => $errors,
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Translation import failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Validate translations for common issues
+     */
+    public function validateTranslations(): JsonResponse
+    {
+        $supportedLocales = config('translations.supported', ['en', 'fr', 'sw']);
+        $issues = [];
+        
+        try {
+            $allKeys = Translation::distinct()->pluck('key')->unique();
+            
+            foreach ($allKeys as $key) {
+                $keyIssues = [];
+                $translations = [];
+                
+                foreach ($supportedLocales as $lang) {
+                    $translation = Translation::forLanguage($lang)->forKey($key)->first();
+                    $translations[$lang] = $translation ? $translation->value : null;
+                }
+                
+                // Check for missing translations
+                $missing = array_keys(array_filter($translations, fn($v) => empty($v)));
+                if (!empty($missing)) {
+                    $keyIssues[] = [
+                        'type' => 'missing',
+                        'message' => 'Missing translations for: ' . implode(', ', $missing),
+                        'severity' => 'warning',
+                    ];
+                }
+                
+                // Check for placeholder mismatches (e.g., :name, :count)
+                $baseValue = $translations['en'] ?? $translations[array_key_first($translations)] ?? '';
+                preg_match_all('/:[a-zA-Z_]+/', $baseValue, $basePlaceholders);
+                $basePlaceholders = $basePlaceholders[0] ?? [];
+                
+                foreach ($translations as $lang => $value) {
+                    if (empty($value) || $lang === 'en') continue;
+                    
+                    preg_match_all('/:[a-zA-Z_]+/', $value, $langPlaceholders);
+                    $langPlaceholders = $langPlaceholders[0] ?? [];
+                    
+                    $missingPlaceholders = array_diff($basePlaceholders, $langPlaceholders);
+                    $extraPlaceholders = array_diff($langPlaceholders, $basePlaceholders);
+                    
+                    if (!empty($missingPlaceholders)) {
+                        $keyIssues[] = [
+                            'type' => 'placeholder_missing',
+                            'language' => $lang,
+                            'message' => "Missing placeholders in {$lang}: " . implode(', ', $missingPlaceholders),
+                            'severity' => 'error',
+                        ];
+                    }
+                    
+                    if (!empty($extraPlaceholders)) {
+                        $keyIssues[] = [
+                            'type' => 'placeholder_extra',
+                            'language' => $lang,
+                            'message' => "Extra placeholders in {$lang}: " . implode(', ', $extraPlaceholders),
+                            'severity' => 'warning',
+                        ];
+                    }
+                }
+                
+                // Check for overly long translations
+                foreach ($translations as $lang => $value) {
+                    if (!empty($value) && strlen($value) > 500) {
+                        $keyIssues[] = [
+                            'type' => 'length',
+                            'language' => $lang,
+                            'message' => "{$lang} translation exceeds 500 characters (" . strlen($value) . ")",
+                            'severity' => 'info',
+                        ];
+                    }
+                }
+                
+                if (!empty($keyIssues)) {
+                    $issues[$key] = $keyIssues;
+                }
+            }
+            
+            $errorCount = 0;
+            $warningCount = 0;
+            foreach ($issues as $keyIssues) {
+                foreach ($keyIssues as $issue) {
+                    if ($issue['severity'] === 'error') $errorCount++;
+                    elseif ($issue['severity'] === 'warning') $warningCount++;
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'summary' => [
+                    'total_keys' => $allKeys->count(),
+                    'keys_with_issues' => count($issues),
+                    'errors' => $errorCount,
+                    'warnings' => $warningCount,
+                ],
+                'issues' => $issues,
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Set the default system locale
+     */
+    public function setDefaultLocale(Request $request): JsonResponse
+    {
+        $request->validate([
+            'locale' => 'required|string|max:5',
+        ]);
+        
+        $locale = $request->input('locale');
+        $supportedLocales = config('translations.supported', ['en', 'fr', 'sw']);
+        
+        if (!in_array($locale, $supportedLocales)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unsupported locale: ' . $locale,
+            ], 422);
+        }
+        
+        try {
+            [$settings, $details] = $this->getSettingsWithDetails();
+            
+            $details['localization'] = array_merge($details['localization'] ?? [], [
+                'default_locale' => $locale,
+            ]);
+            
+            $this->saveSettings($settings, $details);
+            
+            Log::info('Default locale changed', [
+                'user_id' => auth()->id(),
+                'locale' => $locale,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Default locale updated to ' . $locale,
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Display website settings page
      */
     public function website()
     {
         [$settings, $details] = $this->getSettingsWithDetails();
-        $websiteData = $details['website'] ?? [];
         
-        // Provide comprehensive defaults - DHL-Grade Courier for Africa, Europe & Global
-        $defaults = [
-            // SEO & Meta
-            'site_title' => config('app.name', 'Baraka Logistics'),
-            'site_tagline' => 'Africa\'s Premier International Courier & Logistics Partner',
-            'site_description' => 'Baraka Logistics delivers world-class express courier, freight forwarding, and supply chain solutions connecting Africa to Europe, Asia, Americas and 220+ destinations worldwide. Same-day, next-day, and international express shipping.',
-            'site_keywords' => 'international courier Africa, express shipping Uganda, freight forwarding East Africa, DHL alternative Africa, logistics Europe Africa, air freight, sea freight, customs clearance, e-commerce fulfillment, B2B logistics, cross-border shipping',
-            'og_image' => '/images/baraka-og-image.jpg',
-            
-            // Hero Section
-            'hero_title' => 'Connecting Africa to the World',
-            'hero_subtitle' => 'DHL-grade express courier and logistics solutions serving 220+ destinations across Africa, Europe, Asia, and the Americas. Experience reliability, speed, and precision with every shipment.',
-            'hero_background' => '/images/hero-logistics-bg.jpg',
-            'hero_cta_primary_text' => 'Get Instant Quote',
-            'hero_cta_primary_url' => '/quote',
-            'hero_cta_secondary_text' => 'Track Your Shipment',
-            'hero_cta_secondary_url' => '/tracking',
-            'hero_show_tracking_widget' => true,
-            
-            // Features Section
-            'features_enabled' => true,
-            'features_title' => 'Why Leading Businesses Choose Baraka',
-            'features_subtitle' => 'Enterprise-grade logistics infrastructure with the personal touch of a dedicated partner',
-            'features' => [
-                ['icon' => 'globe-2', 'title' => 'Global Network', 'description' => '220+ countries & territories covered with strategic hubs in Kampala, Nairobi, Dubai, Amsterdam, and London'],
-                ['icon' => 'clock', 'title' => 'Express Delivery', 'description' => 'Same-day delivery within East Africa, 24-48hr to Europe, 48-72hr worldwide with guaranteed SLAs'],
-                ['icon' => 'shield-check', 'title' => 'Fully Insured', 'description' => 'Comprehensive cargo insurance up to $100,000 with real-time proof of delivery and chain of custody'],
-                ['icon' => 'smartphone', 'title' => 'Live Tracking', 'description' => 'GPS-enabled tracking with SMS/email notifications at every milestone - from pickup to doorstep'],
-                ['icon' => 'file-text', 'title' => 'Customs Expertise', 'description' => 'Licensed customs brokerage with 99.8% clearance success rate across all African ports of entry'],
-                ['icon' => 'headphones', 'title' => '24/7 Support', 'description' => 'Dedicated account managers and round-the-clock customer support in English, French & Swahili'],
-            ],
-            
-            // Services Section
-            'services_enabled' => true,
-            'services_title' => 'Comprehensive Logistics Solutions',
-            'services_subtitle' => 'From documents to freight - we move what matters most to your business',
-            'services' => [
-                ['icon' => 'zap', 'title' => 'Express Courier', 'description' => 'Time-critical document and parcel delivery with same-day, next-day, and priority options across Africa and worldwide', 'price' => 'From $12'],
-                ['icon' => 'plane', 'title' => 'Air Freight', 'description' => 'Scheduled and charter air cargo services to Europe, Asia, Middle East and Americas with customs-cleared delivery', 'price' => 'From $4.50/kg'],
-                ['icon' => 'ship', 'title' => 'Sea Freight', 'description' => 'FCL and LCL ocean freight with port-to-door service, container tracking, and competitive rates for bulk shipments', 'price' => 'From $800/CBM'],
-                ['icon' => 'truck', 'title' => 'Road Freight', 'description' => 'Cross-border trucking across East, Central and Southern Africa with bonded transit and real-time fleet tracking', 'price' => 'Custom Quote'],
-                ['icon' => 'package', 'title' => 'E-Commerce Fulfillment', 'description' => 'End-to-end fulfillment for online sellers: warehousing, pick-pack, last-mile delivery and returns management', 'price' => 'From $2/order'],
-                ['icon' => 'building', 'title' => 'Contract Logistics', 'description' => 'Dedicated supply chain solutions for enterprises: 3PL, inventory management, distribution and reverse logistics', 'price' => 'Custom Quote'],
-            ],
-            
-            // Statistics Section
-            'stats_enabled' => true,
-            'stats_background' => '/images/stats-bg.jpg',
-            'stats' => [
-                ['value' => '2M+', 'label' => 'Shipments Delivered'],
-                ['value' => '220+', 'label' => 'Countries Served'],
-                ['value' => '99.2%', 'label' => 'On-Time Delivery'],
-                ['value' => '50+', 'label' => 'Branch Locations'],
-                ['value' => '15K+', 'label' => 'Business Clients'],
-                ['value' => '24/7', 'label' => 'Operations Center'],
-            ],
-            
-            // About Section
-            'about_enabled' => true,
-            'about_title' => 'Africa\'s Fastest-Growing Logistics Company',
-            'about_content' => 'Founded in Kampala, Baraka Logistics has grown from a local courier service to East Africa\'s leading international logistics provider. We combine global reach with deep local expertise, offering DHL-grade service quality at competitive African pricing.
-
-Our state-of-the-art operations center processes over 10,000 shipments daily, with automated sorting, real-time tracking, and AI-powered route optimization. We\'ve built strategic partnerships with major airlines, shipping lines, and customs authorities to ensure seamless cross-border movement.
-
-Whether you\'re an e-commerce entrepreneur shipping to Europe, a manufacturer importing machinery from China, or a corporation managing complex supply chains across Africa - Baraka delivers with precision, transparency, and care.',
-            'about_image' => '/images/about-baraka-hub.jpg',
-            'about_points' => [
-                'ISO 9001:2015 & AEO Certified Operations',
-                'Strategic hubs in 5 continents for fastest routing',
-                'Integrated customs brokerage in 25 African countries',
-                'Dedicated key account management for enterprise clients',
-                'Carbon-neutral shipping options available',
-                'Multi-currency billing (USD, EUR, GBP, UGX, KES)',
-            ],
-            
-            // Testimonials Section
-            'testimonials_enabled' => true,
-            'testimonials_title' => 'Trusted by Africa\'s Leading Businesses',
-            'testimonials' => [
-                ['name' => 'Sarah Nakamya', 'company' => 'Jumia Uganda', 'content' => 'Baraka handles over 5,000 of our deliveries monthly with a 99.5% success rate. Their real-time tracking integration with our platform has transformed our customer experience.', 'rating' => 5, 'avatar' => ''],
-                ['name' => 'Jean-Pierre Habimana', 'company' => 'Rwanda Trading Co.', 'content' => 'We\'ve been shipping coffee exports to Europe through Baraka for 3 years. Their customs expertise and air freight reliability are unmatched in the region.', 'rating' => 5, 'avatar' => ''],
-                ['name' => 'Mohammed Al-Hassan', 'company' => 'Dubai Imports Ltd', 'content' => 'Baraka\'s door-to-door service from Dubai to Kampala is faster and more reliable than any carrier we\'ve used. The tracking is exceptional.', 'rating' => 5, 'avatar' => ''],
-                ['name' => 'Emma Okonkwo', 'company' => 'Lagos Fashion House', 'content' => 'As an e-commerce business shipping to customers across Africa, Baraka\'s fulfillment service has been a game-changer. Returns are handled seamlessly.', 'rating' => 5, 'avatar' => ''],
-            ],
-            
-            // Contact Section
-            'contact_enabled' => true,
-            'contact_title' => 'Get Started Today',
-            'contact_subtitle' => 'Request a quote, schedule a pickup, or speak with our logistics experts',
-            'contact_email' => 'info@baraka.co',
-            'contact_phone' => '+256 312 000 000',
-            'contact_whatsapp' => '+256 700 000 000',
-            'contact_address' => 'Baraka Logistics Hub, Plot 45 Jinja Road, Industrial Area, Kampala, Uganda',
-            'contact_map_embed' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.7574744620366!2d32.6155!3d0.3136!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMMKwMTgnNDkuMCJOIDMywrAzNic1NS44IkU!5e0!3m2!1sen!2sug!4v1234567890',
-            'contact_hours' => 'Operations: 24/7 | Customer Service: Mon-Sat 7AM-9PM EAT',
-            
-            // Social Links
-            'social_facebook' => 'https://facebook.com/barakalogistics',
-            'social_twitter' => 'https://twitter.com/baraboralogistics',
-            'social_instagram' => 'https://instagram.com/barakalogistics',
-            'social_linkedin' => 'https://linkedin.com/company/baraka-logistics',
-            'social_youtube' => 'https://youtube.com/@barakalogistics',
-            'social_tiktok' => '',
-            
-            // Footer
-            'footer_about' => 'Baraka Logistics is East Africa\'s leading international courier and freight company, connecting businesses to 220+ destinations worldwide. Licensed customs broker, AEO certified, ISO 9001:2015 compliant.',
-            'footer_copyright' => '© ' . date('Y') . ' Baraka Logistics Ltd. All rights reserved. Licensed by Uganda Revenue Authority & East African Community.',
-            'footer_links' => [
-                ['title' => 'Privacy Policy', 'url' => '/privacy'],
-                ['title' => 'Terms of Service', 'url' => '/terms'],
-                ['title' => 'Shipping Policy', 'url' => '/shipping-policy'],
-                ['title' => 'Prohibited Items', 'url' => '/prohibited-items'],
-                ['title' => 'Claims & Insurance', 'url' => '/claims'],
-                ['title' => 'Careers', 'url' => '/careers'],
-                ['title' => 'API Documentation', 'url' => '/developers'],
-            ],
-            
-            // Analytics & Tracking
-            'google_analytics_id' => '',
-            'google_tag_manager_id' => '',
-            'facebook_pixel_id' => '',
-            'hotjar_id' => '',
-            
-            // Advanced
-            'custom_css' => '',
-            'custom_js_head' => '',
-            'custom_js_body' => '',
-            'robots_txt' => "User-agent: *\nAllow: /\n\nSitemap: https://baraka.co/sitemap.xml",
-            'maintenance_mode' => false,
-            'maintenance_message' => 'We are performing scheduled system maintenance to improve our services. Tracking remains available at track.baraka.co. We apologize for any inconvenience.',
-        ];
-        
-        // Merge saved settings with defaults
-        $mergedSettings = array_merge($defaults, $websiteData);
+        // Get merged settings from SystemSettings helper
+        $mergedSettings = SystemSettings::website();
         
         return view('settings.website', [
             'settings' => $mergedSettings,

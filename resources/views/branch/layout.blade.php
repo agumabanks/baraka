@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="{{ app()->getLocale() }}" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Branch Control Center') • {{ config('app.name') }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite(['resources/css/branch.css', 'resources/js/branch.js'])
+    <style>[x-cloak] { display: none !important; }</style>
+    @stack('styles')
 </head>
 <body class="h-screen overflow-hidden">
     <div class="flex h-screen bg-obsidian-900">
@@ -40,6 +44,7 @@
                                 </select>
                             </form>
                         @endif
+                        <x-language-switcher style="dropdown" :show-flags="true" :show-labels="true" />
                         <div class="text-right">
                             <div class="muted text-2xs">Signed in as</div>
                             <div class="text-sm font-semibold">{{ auth()->user()->name }}</div>
@@ -68,5 +73,6 @@
             </main>
         </div>
     </div>
+    @stack('scripts')
 </body>
 </html>

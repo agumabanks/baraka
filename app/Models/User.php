@@ -17,6 +17,7 @@ use App\Models\Backend\Role;
 use App\Models\Backend\Salary;
 use App\Models\Backend\Upload;
 use App\Models\Driver;
+use App\Models\Security\SecurityMfaDevice;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -359,6 +360,14 @@ class User extends Authenticatable
     public function shipments(): HasMany
     {
         return $this->hasMany(Shipment::class, 'customer_id');
+    }
+
+    /**
+     * MFA devices associated with this user.
+     */
+    public function mfaDevices(): HasMany
+    {
+        return $this->hasMany(SecurityMfaDevice::class, 'user_id');
     }
 
     /**

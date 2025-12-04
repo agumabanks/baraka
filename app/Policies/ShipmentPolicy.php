@@ -27,6 +27,31 @@ class ShipmentPolicy
     }
 
     /**
+     * Determine whether the user can update the shipment.
+     */
+    public function update(User $user, Shipment $shipment): bool
+    {
+        if ($this->isAdmin($user)) {
+            return true;
+        }
+
+        $branchId = BranchContext::currentId() ?? $user->primary_branch_id;
+
+        // Branch users can update shipments in their branch
+        if ($branchId && ($shipment->origin_branch_id === $branchId || $shipment->dest_branch_id === $branchId)) {
+            return true;
+        }
+
+        // Customers can update their own shipments if not yet picked up
+        if ($shipment->customer_id === $user->id) {
+            $status = is_object($shipment->current_status) ? $shipment->current_status->value : $shipment->current_status;
+            return in_array(strtoupper($status), ['CREATED', 'BOOKED']);
+        }
+
+        return false;
+    }
+
+    /**
      * Determine whether the user can create shipments.
      */
     public function create(User $user): bool

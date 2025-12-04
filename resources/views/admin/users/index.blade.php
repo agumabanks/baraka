@@ -4,195 +4,226 @@
 @section('header', 'User Management')
 
 @section('content')
-    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <div class="stat-card">
-            <div class="muted text-xs uppercase">Total Users</div>
-            <div class="text-2xl font-bold">{{ number_format($stats['total']) }}</div>
+<div class="space-y-6">
+    {{-- Stats Cards --}}
+    <div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div class="glass-panel p-4 border-l-4 border-zinc-500">
+            <div class="text-xs text-zinc-400 uppercase tracking-wider">Total Users</div>
+            <div class="text-2xl font-bold text-white mt-1">{{ number_format($stats['total']) }}</div>
         </div>
-        <div class="stat-card border-emerald-500/30">
-            <div class="muted text-xs uppercase">Active Users</div>
-            <div class="text-2xl font-bold text-emerald-400">{{ number_format($stats['active']) }}</div>
+        <div class="glass-panel p-4 border-l-4 border-emerald-500">
+            <div class="text-xs text-zinc-400 uppercase tracking-wider">Active Users</div>
+            <div class="text-2xl font-bold text-emerald-400 mt-1">{{ number_format($stats['active']) }}</div>
         </div>
-        <div class="stat-card border-sky-500/30">
-            <div class="muted text-xs uppercase">Branch Managers</div>
-            <div class="text-2xl font-bold text-sky-400">{{ number_format($stats['branch_managers']) }}</div>
+        <div class="glass-panel p-4 border-l-4 border-sky-500">
+            <div class="text-xs text-zinc-400 uppercase tracking-wider">Branch Managers</div>
+            <div class="text-2xl font-bold text-sky-400 mt-1">{{ number_format($stats['branch_managers']) }}</div>
         </div>
-        <div class="stat-card border-amber-500/30">
-            <div class="muted text-xs uppercase">Branch Workers</div>
-            <div class="text-2xl font-bold text-amber-400">{{ number_format($stats['branch_workers']) }}</div>
+        <div class="glass-panel p-4 border-l-4 border-amber-500">
+            <div class="text-xs text-zinc-400 uppercase tracking-wider">Branch Workers</div>
+            <div class="text-2xl font-bold text-amber-400 mt-1">{{ number_format($stats['branch_workers']) }}</div>
         </div>
     </div>
 
-    <div class="glass-panel p-5 space-y-4">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex items-center gap-2">
+    {{-- Main Panel --}}
+    <div class="glass-panel">
+        {{-- Header --}}
+        <div class="p-4 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
                 <h2 class="text-lg font-semibold">All Users</h2>
-                <span class="pill-soft">{{ $users->total() }}</span>
+                <span class="px-2 py-0.5 text-xs bg-zinc-700 rounded-full" id="totalCount">{{ $users->total() }}</span>
+                <div id="loadingSpinner" class="hidden">
+                    <div class="w-4 h-4 border-2 border-zinc-600 border-t-sky-500 rounded-full animate-spin"></div>
+                </div>
             </div>
-            <div class="flex items-center gap-2 flex-wrap justify-end">
-                <a href="{{ route('admin.users.branch-managers') }}" class="chip hover:bg-white/10 transition">Branch Managers</a>
-                <a href="{{ route('admin.users.impersonation-logs') }}" class="chip hover:bg-white/10 transition">Logs</a>
-                <a href="{{ route('admin.branches.create') }}" class="btn btn-sm btn-secondary">Add Branch</a>
-                <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-primary">Add User</a>
+            <div class="flex items-center gap-2 flex-wrap">
+                <a href="{{ route('admin.users.branch-managers') }}" class="btn btn-xs btn-secondary">Branch Managers</a>
+                <a href="{{ route('admin.users.impersonation-logs') }}" class="btn btn-xs btn-secondary">Logs</a>
+                <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-primary">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Add User
+                </a>
             </div>
         </div>
 
-        <form method="GET" action="{{ route('admin.users.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input type="text" name="search" placeholder="Search name, email..." value="{{ $search }}" 
-                   class="bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50 text-white">
-            
-            <select name="branch" class="bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50 text-white">
-                <option value="">All Branches</option>
-                @foreach($branches as $b)
-                    <option value="{{ $b->id }}" @selected($branch == $b->id)>{{ $b->name }}</option>
-                @endforeach
-            </select>
-
-            <select name="role" class="bg-obsidian-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500/50 text-white">
-                <option value="">All Roles</option>
-                <option value="admin" @selected($role == 'admin')>Admin</option>
-                <option value="branch_manager" @selected($role == 'branch_manager')>Branch Manager</option>
-                <option value="user" @selected($role == 'user')>User</option>
-            </select>
-
-            <div class="flex gap-2">
-                <button type="submit" class="btn btn-primary px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition flex-1">Filter</button>
-                <a href="{{ route('admin.users.index') }}" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition">Clear</a>
+        {{-- Filters --}}
+        <div class="p-4 border-b border-white/10 bg-white/5">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <div class="md:col-span-2 relative">
+                    <input type="text" id="searchInput" placeholder="Search name, email, phone..." value="{{ $search }}"
+                           class="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm focus:border-sky-500 focus:ring-1 focus:ring-sky-500">
+                    <svg class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <select id="branchFilter" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-sky-500">
+                    <option value="">All Branches</option>
+                    @foreach($branches as $b)
+                        <option value="{{ $b->id }}" {{ $branch == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+                    @endforeach
+                </select>
+                <select id="roleFilter" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-sky-500">
+                    <option value="">All Roles</option>
+                    <option value="admin" {{ $role == 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="branch_manager" {{ $role == 'branch_manager' ? 'selected' : '' }}>Branch Manager</option>
+                    <option value="user" {{ $role == 'user' ? 'selected' : '' }}>User</option>
+                </select>
+                <select id="statusFilter" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-sky-500">
+                    <option value="">All Status</option>
+                    <option value="1" {{ $status === '1' ? 'selected' : '' }}>Active</option>
+                    <option value="0" {{ $status === '0' ? 'selected' : '' }}>Inactive</option>
+                </select>
             </div>
-        </form>
+        </div>
 
+        {{-- Table --}}
         <div class="overflow-x-auto">
-            <table class="dhl-table text-left w-full">
-                <thead>
+            <table class="w-full">
+                <thead class="bg-white/5 text-xs uppercase text-zinc-400">
                     <tr>
-                        <th>User</th>
-                        <th>Branch</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Last Login</th>
-                        <th class="text-right">Actions</th>
+                        <th class="px-4 py-3 text-left">User</th>
+                        <th class="px-4 py-3 text-left">Branch</th>
+                        <th class="px-4 py-3 text-left">Role</th>
+                        <th class="px-4 py-3 text-left">Status</th>
+                        <th class="px-4 py-3 text-left">Last Login</th>
+                        <th class="px-4 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse($users as $user)
-                        <tr>
-                            <td data-label="User">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-xs font-bold">
-                                        {{ substr($user->name, 0, 2) }}
-                                    </div>
-                                    <div>
-                                        <div class="font-medium text-white">{{ $user->name }}</div>
-                                        <div class="text-xs muted">{{ $user->email }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td data-label="Branch">
-                                @if($user->branchWorker)
-                                    <span class="badge bg-sky-500/20 text-sky-300 border border-sky-500/30">{{ $user->branchWorker->branch->name ?? 'N/A' }}</span>
-                                @elseif($user->branchManager)
-                                    <span class="badge bg-purple-500/20 text-purple-300 border border-purple-500/30">{{ $user->branchManager->branch->name ?? 'N/A' }}</span>
-                                @elseif($user->primary_branch_id)
-                                    <span class="badge bg-slate-700 text-slate-300">Branch #{{ $user->primary_branch_id }}</span>
-                                @else
-                                    <span class="text-xs muted">System</span>
-                                @endif
-                            </td>
-                            <td data-label="Role">
-                                <div class="flex flex-wrap gap-1">
-                                    @if($user->role)
-                                        <span class="badge bg-white/10 text-slate-300">{{ $user->role->name }}</span>
-                                    @else
-                                        <span class="badge bg-white/5 text-slate-500">No Role</span>
-                                    @endif
-                                </div>
-                            </td>
-                            <td data-label="Status">
-                                @if($user->status == 1)
-                                    <span class="badge badge-success">Active</span>
-                                @else
-                                    <span class="badge badge-danger">Inactive</span>
-                                @endif
-                            </td>
-                            <td class="text-xs muted" data-label="Last Login">
-                                {{ $user->last_login_at ? $user->last_login_at->diffForHumans() : 'Never' }}
-                            </td>
-                            <td class="text-right" data-label="Actions">
-                                @if(auth()->id() !== $user->id)
-                                    <button onclick="openImpersonateModal({{ $user->id }}, '{{ addslashes($user->name) }}')" 
-                                            class="text-xs bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-1 rounded transition">
-                                        Login As
-                                    </button>
-                                @else
-                                    <span class="text-xs muted">You</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-8 muted">No users found.</td>
-                        </tr>
-                    @endforelse
+                <tbody id="usersTableBody">
+                    @include('admin.users._table')
                 </tbody>
             </table>
         </div>
-        
-        @if($users->hasPages())
-            <div class="pt-4 border-t border-white/5">
-                {{ $users->links() }}
-            </div>
-        @endif
-    </div>
 
-    <!-- Impersonation Modal -->
-    <div id="impersonationModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onclick="closeImpersonateModal()"></div>
-        <div class="fixed inset-0 z-10 overflow-y-auto">
-            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div class="relative transform overflow-hidden rounded-lg bg-obsidian-800 border border-white/10 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                    <form id="impersonationForm" method="POST">
-                        @csrf
-                        <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                            <div class="sm:flex sm:items-start">
-                                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 sm:mx-0 sm:h-10 sm:w-10">
-                                    <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                                    </svg>
-                                </div>
-                                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                                    <h3 class="text-base font-semibold leading-6 text-white" id="modal-title">Login As User</h3>
-                                    <div class="mt-2">
-                                        <p class="text-sm text-slate-300">
-                                            You are about to impersonate <strong id="targetUserName" class="text-white"></strong>. 
-                                            All actions performed during this session will be logged in the audit trail.
-                                        </p>
-                                        <div class="mt-4">
-                                            <label for="reason" class="block text-sm font-medium text-slate-300">Reason (Optional)</label>
-                                            <textarea name="reason" id="reason" rows="3" class="mt-1 block w-full rounded-md bg-obsidian-900 border-white/10 text-white shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm" placeholder="Why are you logging in as this user?"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-obsidian-900/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                            <button type="submit" class="inline-flex w-full justify-center rounded-md bg-amber-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500 sm:ml-3 sm:w-auto">Login As User</button>
-                            <button type="button" onclick="closeImpersonateModal()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white/5 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-white/10 hover:bg-white/10 sm:mt-0 sm:w-auto">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        {{-- Pagination --}}
+        <div class="p-4 border-t border-white/10" id="paginationContainer">
+            @include('admin.users._pagination', ['perPage' => $perPage ?? 10])
         </div>
     </div>
+</div>
 
-    <script>
-        function openImpersonateModal(userId, userName) {
-            document.getElementById('targetUserName').textContent = userName;
-            document.getElementById('impersonationForm').action = `/admin/users/${userId}/impersonate`;
-            document.getElementById('impersonationModal').classList.remove('hidden');
-        }
-
-        function closeImpersonateModal() {
-            document.getElementById('impersonationModal').classList.add('hidden');
-        }
-    </script>
+{{-- Impersonation Modal --}}
+<div id="impersonationModal" class="fixed inset-0 z-50 hidden">
+    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeImpersonateModal()"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg">
+            <form id="impersonationForm" method="POST">
+                @csrf
+                <div class="p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold">Login As User</h3>
+                            <p class="text-sm text-zinc-400 mt-1">
+                                You are about to impersonate <strong id="targetUserName" class="text-white"></strong>. 
+                                All actions will be logged.
+                            </p>
+                            <div class="mt-4">
+                                <label class="block text-sm text-zinc-400 mb-1">Reason (Optional)</label>
+                                <textarea name="reason" rows="2" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm" placeholder="Why are you logging in as this user?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-white/10 flex justify-end gap-3">
+                    <button type="button" onclick="closeImpersonateModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn bg-amber-600 hover:bg-amber-500 text-white">Login As User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+let currentPage = 1;
+let perPage = {{ $perPage ?? 10 }};
+let searchTimeout;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Live search with debounce
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1;
+            fetchUsers();
+        }, 300);
+    });
+
+    // Filter changes
+    ['branchFilter', 'roleFilter', 'statusFilter'].forEach(id => {
+        document.getElementById(id).addEventListener('change', function() {
+            currentPage = 1;
+            fetchUsers();
+        });
+    });
+});
+
+function fetchUsers() {
+    const params = new URLSearchParams({
+        q: document.getElementById('searchInput').value,
+        branch: document.getElementById('branchFilter').value,
+        role: document.getElementById('roleFilter').value,
+        status: document.getElementById('statusFilter').value,
+        per_page: perPage,
+        page: currentPage
+    });
+
+    // Show loading
+    document.getElementById('loadingSpinner').classList.remove('hidden');
+
+    fetch(`{{ route('admin.users.index') }}?${params}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('usersTableBody').innerHTML = data.html;
+        document.getElementById('paginationContainer').innerHTML = data.pagination;
+        document.getElementById('totalCount').textContent = data.total;
+        
+        // Update URL without reload
+        const url = new URL(window.location);
+        url.searchParams.set('q', document.getElementById('searchInput').value);
+        url.searchParams.set('branch', document.getElementById('branchFilter').value);
+        url.searchParams.set('role', document.getElementById('roleFilter').value);
+        url.searchParams.set('status', document.getElementById('statusFilter').value);
+        url.searchParams.set('per_page', perPage);
+        url.searchParams.set('page', currentPage);
+        window.history.replaceState({}, '', url);
+    })
+    .catch(error => console.error('Error:', error))
+    .finally(() => {
+        document.getElementById('loadingSpinner').classList.add('hidden');
+    });
+}
+
+function goToPage(page) {
+    currentPage = page;
+    fetchUsers();
+}
+
+function changePerPage(value) {
+    perPage = parseInt(value);
+    currentPage = 1;
+    fetchUsers();
+}
+
+function openImpersonateModal(userId, userName) {
+    document.getElementById('targetUserName').textContent = userName;
+    document.getElementById('impersonationForm').action = `/admin/users/${userId}/impersonate`;
+    document.getElementById('impersonationModal').classList.remove('hidden');
+}
+
+function closeImpersonateModal() {
+    document.getElementById('impersonationModal').classList.add('hidden');
+}
+</script>
+@endpush

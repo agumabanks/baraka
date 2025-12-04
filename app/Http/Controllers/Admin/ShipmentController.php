@@ -33,17 +33,32 @@ class ShipmentController extends Controller
     {
         $query = Shipment::with(['originBranch', 'destBranch', 'customer']);
 
+        // Per page with validation
+        $perPage = (int) $request->get('per_page', 10);
+        $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+
         // Enhanced filters
         if ($q = trim((string) $request->input('q'))) {
             $query->where(function ($sq) use ($q) {
                 $sq->where('id', $q)
                     ->orWhere('tracking_number', 'like', "%$q%")
-                    ->orWhere('waybill_number', 'like', "%$q%");
+                    ->orWhere('waybill_number', 'like', "%$q%")
+                    ->orWhereHas('customer', function($cq) use ($q) {
+                        $cq->where('contact_person', 'like', "%$q%")
+                           ->orWhere('company_name', 'like', "%$q%")
+                           ->orWhere('phone', 'like', "%$q%");
+                    });
             });
         }
 
         if ($status = $request->input('status')) {
-            $query->where('status', $status);
+            if ($status === 'unassigned') {
+                $query->whereNull('assigned_worker_id')
+                      ->whereNull('assigned_driver_id')
+                      ->whereNotIn('status', ['delivered', 'cancelled', 'returned']);
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         if ($priority = $request->input('priority')) {
@@ -82,19 +97,21 @@ class ShipmentController extends Controller
             });
         }
 
-        $shipments = $query->latest()->paginate(25)->withQueryString();
+        $shipments = $query->latest()->paginate($perPage)->withQueryString();
 
         // Get stats
         $stats = [
             'total' => Shipment::count(),
             'delivered' => Shipment::where('status', 'delivered')->count(),
             'in_transit' => Shipment::where('status', 'in_transit')->count(),
-            'pending' => Shipment::whereIn('status', ['created', 'processing'])->count(),
+            'out_for_delivery' => Shipment::where('status', 'out_for_delivery')->count(),
+            'pending' => Shipment::whereIn('status', ['created', 'processing', 'booked'])->count(),
         ];
 
         // Statuses for filter
         $statuses = [
             'created' => 'Created',
+            'booked' => 'Booked',
             'picked_up' => 'Picked Up',
             'processing' => 'Processing',
             'in_transit' => 'In Transit',
@@ -106,7 +123,16 @@ class ShipmentController extends Controller
 
         $branches = Branch::select('id', 'name')->orderBy('name')->get();
 
-        return view('admin.shipments.index', compact('shipments', 'stats', 'statuses', 'branches'));
+        // Return JSON for AJAX requests
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'html' => view('admin.shipments._table', compact('shipments'))->render(),
+                'pagination' => view('admin.shipments._pagination', compact('shipments', 'perPage'))->render(),
+                'total' => $shipments->total(),
+            ]);
+        }
+
+        return view('admin.shipments.index', compact('shipments', 'stats', 'statuses', 'branches', 'perPage'));
     }
 
     public function show(Request $request, Shipment $shipment)

@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\V10\ParcelController as V10ParcelController;
 use App\Http\Controllers\Backend\OperationsControlCenterController;
 use App\Http\Controllers\Backend\UnifiedShipmentController;
 use App\Http\Controllers\Admin\BookingWizardController;
+use App\Http\Controllers\Api\PosApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -671,6 +672,47 @@ Route::prefix('v10')
                 ->whereNumber('shipment');
         });
     });
+
+// ================================
+// POS API ENDPOINTS (POS-RATE-02, POS-REL-01, POS-REL-02, POS-SEC-03)
+// ================================
+Route::prefix('pos')->middleware(['auth:sanctum'])->group(function () {
+    // Quote endpoint (POS-RATE-02)
+    Route::post('/quote', [PosApiController::class, 'quote'])
+        ->middleware(['throttle:pos-quote']);
+    
+    // Route capabilities (POS-BR-03)
+    Route::get('/route-capabilities', [PosApiController::class, 'routeCapabilities']);
+    
+    // Route templates (POS-UX-06)
+    Route::get('/route-templates', [PosApiController::class, 'routeTemplates']);
+    
+    // Client search (POS-INT-04)
+    Route::get('/clients/search', [PosApiController::class, 'searchClients'])
+        ->middleware(['throttle:pos-search']);
+    
+    // Draft management (POS-REL-01)
+    Route::post('/draft', [PosApiController::class, 'saveDraft']);
+    
+    // Shipment creation with idempotency (POS-REL-02)
+    Route::post('/shipments/create', [PosApiController::class, 'createShipment'])
+        ->middleware(['throttle:pos-create']);
+    
+    // Payment processing (POS-PAY-02)
+    Route::post('/pay', [PosApiController::class, 'processPayment'])
+        ->middleware(['throttle:pos-payment']);
+    
+    // Label printing with reprint tracking (POS-REL-03)
+    Route::post('/shipments/{shipment}/print-label', [PosApiController::class, 'printLabel']);
+    
+    // Audit history
+    Route::get('/shipments/{shipment}/audit', [PosApiController::class, 'getAuditHistory']);
+    
+    // Supervisor override flow (POS-SEC-03)
+    Route::post('/override/request', [PosApiController::class, 'requestOverride']);
+    Route::post('/override/{override}/approve', [PosApiController::class, 'approveOverride'])
+        ->middleware(['role:admin|branch_admin|supervisor']);
+});
 
 // ================================
 // FALLBACK ERROR HANDLING

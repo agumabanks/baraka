@@ -10,7 +10,7 @@
                     <div class="text-sm font-semibold">Client roster</div>
                     <p class="muted text-xs">KYC, credit flags, and managers.</p>
                 </div>
-                <form method="GET" action="{{ route('branch.clients') }}" class="text-sm">
+                <form method="GET" action="{{ route('branch.clients.index') }}" class="text-sm">
                     <select name="status" class="bg-obsidian-700 border border-white/10 rounded px-3 py-2" onchange="this.form.submit()">
                         <option value="">All statuses</option>
                         @foreach(['ACTIVE', 'INACTIVE', 'SUSPENDED'] as $status)

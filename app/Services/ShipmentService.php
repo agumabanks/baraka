@@ -43,6 +43,7 @@ class ShipmentService
                 'tracking_number' => $trackingNumber,
                 'waybill_number' => $data['waybill_number'] ?? null,
                 'customer_id' => $data['customer_id'],
+                'customer_profile_id' => $data['customer_profile_id'] ?? null,
                 'client_id' => $data['client_id'] ?? null,
                 'origin_branch_id' => $data['origin_branch_id'],
                 'dest_branch_id' => $data['dest_branch_id'],
@@ -61,9 +62,23 @@ class ShipmentService
                 'current_status' => $initialStatus->value,
                 'booked_at' => now(),
                 'expected_delivery_date' => $data['expected_delivery_date'] ?? null,
-                'metadata' => $this->prepareShipmentMetadata($data),
+                'metadata' => array_merge(
+                    $this->prepareShipmentMetadata($data),
+                    $data['metadata'] ?? []
+                ),
                 'barcode' => $hasBarcode ? $trackingNumber : null,
                 'qr_code' => $hasQr ? url('/track/'.$trackingNumber) : null,
+                // POS Hardening: Pricing breakdown fields
+                'base_rate' => $data['base_rate'] ?? null,
+                'weight_charge' => $data['weight_charge'] ?? null,
+                'surcharges_total' => $data['surcharges_total'] ?? null,
+                'insurance_fee' => $data['insurance_fee'] ?? null,
+                'cod_fee' => $data['cod_fee'] ?? null,
+                'tax_amount' => $data['tax_amount'] ?? null,
+                'discount_amount' => $data['discount_amount'] ?? null,
+                'rate_table_version' => $data['rate_table_version'] ?? null,
+                'payment_status' => $data['payment_status'] ?? 'unpaid',
+                'content_type' => $data['content_type'] ?? 'parcel',
             ]);
 
             // Create parcels when schema supports shipment-linked parcels
@@ -599,7 +614,7 @@ class ShipmentService
 
     private function validateShipmentCreation(array $data): void
     {
-        if (!isset($data['customer_id']) || !isset($data['origin_branch_id']) || !isset($data['dest_branch_id'])) {
+        if ((!isset($data['customer_id']) && !isset($data['customer_profile_id'])) || !isset($data['origin_branch_id']) || !isset($data['dest_branch_id'])) {
             throw new \Exception('Missing required shipment data');
         }
 
@@ -612,8 +627,8 @@ class ShipmentService
         }
 
         // Validate customer can place order
-        $customer = \App\Models\Customer::find($data['customer_id']);
-        $userCustomer = \App\Models\User::find($data['customer_id']);
+        $customer = isset($data['customer_profile_id']) ? \App\Models\Customer::find($data['customer_profile_id']) : \App\Models\Customer::find($data['customer_id']);
+        $userCustomer = isset($data['customer_id']) ? \App\Models\User::find($data['customer_id']) : null;
 
         if ($customer) {
             if (! $customer->canPlaceOrder($data['cod_amount'] ?? 0)) {
@@ -694,8 +709,10 @@ class ShipmentService
 
     private function prepareShipmentMetadata(array $data): array
     {
+        $createdVia = $data['created_via'] ?? 'admin';
+
         return [
-            'created_via' => 'admin',
+            'created_via' => $createdVia,
             'original_data' => $data,
             'created_at' => now()->toISOString(),
         ];

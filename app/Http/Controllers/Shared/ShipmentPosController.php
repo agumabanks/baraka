@@ -7,11 +7,19 @@ use App\Models\Shipment;
 use App\Models\Backend\Branch;
 use App\Models\User;
 use App\Models\Customer;
+use App\Models\Payment;
+use App\Models\PaymentTransaction;
+use App\Models\RouteCapability;
+use App\Models\ServiceConstraint;
+use App\Models\ShipmentAudit;
 use App\Services\ShipmentService;
+use App\Services\RatingService;
 use App\Services\Pricing\RateCalculationService;
 use App\Services\LabelGeneratorService;
 use App\Services\BranchContext;
 use App\Services\Logistics\ShipmentLifecycleService;
+use App\Services\ShipmentAuditService;
+use App\Services\Finance\PostingService;
 use App\Enums\ShipmentStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -25,20 +33,29 @@ class ShipmentPosController extends Controller
 {
     protected ShipmentService $shipmentService;
     protected RateCalculationService $rateService;
+    protected RatingService $ratingService;
     protected LabelGeneratorService $labelGenerator;
     protected ShipmentLifecycleService $lifecycleService;
+    protected ShipmentAuditService $auditService;
+    protected PostingService $postingService;
     protected string $context; // 'admin' or 'branch'
 
     public function __construct(
         ShipmentService $shipmentService,
         RateCalculationService $rateService,
+        RatingService $ratingService,
         LabelGeneratorService $labelGenerator,
-        ShipmentLifecycleService $lifecycleService
+        ShipmentLifecycleService $lifecycleService,
+        ShipmentAuditService $auditService,
+        PostingService $postingService
     ) {
         $this->shipmentService = $shipmentService;
         $this->rateService = $rateService;
+        $this->ratingService = $ratingService;
         $this->labelGenerator = $labelGenerator;
         $this->lifecycleService = $lifecycleService;
+        $this->auditService = $auditService;
+        $this->postingService = $postingService;
     }
 
     /**
@@ -129,7 +146,13 @@ class ShipmentPosController extends Controller
 
         $viewPath = $context === 'admin' ? 'admin.pos.index' : 'branch.pos.index';
 
-        return view($viewPath, compact('branches', 'currentBranch', 'branchId', 'recentShipments', 'todayStats', 'systemConfig'));
+        // Check for pre-selected customer (from client management quick shipment)
+        $preSelectedCustomer = null;
+        if ($request->has('customer_id')) {
+            $preSelectedCustomer = Customer::find($request->input('customer_id'));
+        }
+
+        return view($viewPath, compact('branches', 'currentBranch', 'branchId', 'recentShipments', 'todayStats', 'systemConfig', 'preSelectedCustomer'));
     }
 
     /**
@@ -249,7 +272,7 @@ class ShipmentPosController extends Controller
     }
 
     /**
-     * Calculate rate (live pricing)
+     * Calculate rate (live pricing) - Uses enhanced RatingService with route validation
      */
     public function calculateRate(Request $request): JsonResponse
     {
@@ -264,26 +287,73 @@ class ShipmentPosController extends Controller
             'declared_value' => 'nullable|numeric|min:0',
             'insurance_type' => 'nullable|string',
             'cod_amount' => 'nullable|numeric|min:0',
+            'customer_id' => 'nullable|exists:customers,id',
         ]);
 
-        $pricing = $this->rateService->calculateRate([
-            'origin_branch_id' => $validated['origin_branch_id'],
-            'dest_branch_id' => $validated['dest_branch_id'],
-            'service_level' => $validated['service_level'],
-            'weight' => $validated['weight'],
-            'length' => $validated['length'] ?? 0,
-            'width' => $validated['width'] ?? 0,
-            'height' => $validated['height'] ?? 0,
-            'declared_value' => $validated['declared_value'] ?? 0,
-            'insurance_type' => $validated['insurance_type'] ?? 'none',
-            'cod_amount' => $validated['cod_amount'] ?? 0,
-        ]);
+        try {
+            // Use enhanced RatingService for quote with route/service validation
+            $quote = $this->ratingService->quote([
+                'origin_branch_id' => $validated['origin_branch_id'],
+                'destination_branch_id' => $validated['dest_branch_id'],
+                'service_level' => $validated['service_level'],
+                'weight' => $validated['weight'],
+                'length' => $validated['length'] ?? null,
+                'width' => $validated['width'] ?? null,
+                'height' => $validated['height'] ?? null,
+                'declared_value' => $validated['declared_value'] ?? 0,
+                'insurance_type' => $validated['insurance_type'] ?? 'none',
+                'cod_amount' => $validated['cod_amount'] ?? 0,
+                'customer_id' => $validated['customer_id'] ?? null,
+            ]);
 
-        return response()->json($pricing);
+            // Map to expected frontend format
+            return response()->json([
+                'success' => true,
+                'total' => $quote['total'],
+                'currency' => $quote['currency'],
+                'base_rate' => $quote['base_freight'],
+                'weight_charge' => $quote['weight_charge'],
+                'fuel_surcharge' => $quote['fuel_surcharge'],
+                'surcharges' => $quote['surcharges_total'],
+                'insurance' => ['amount' => $quote['insurance_fee'], 'type' => $validated['insurance_type'] ?? 'none'],
+                'cod_fee' => $quote['cod_fee'],
+                'tax' => $quote['tax'],
+                'tax_rate' => $quote['tax_rate'],
+                'discount' => $quote['discount'],
+                'rate_table_version' => $quote['rate_table_version'],
+                'weight_data' => $quote['weight_data'],
+                'warnings' => $quote['warnings'],
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('POS rate calculation failed', ['error' => $e->getMessage()]);
+            
+            // Fallback to legacy rate service
+            try {
+                $pricing = $this->rateService->calculateRate([
+                    'origin_branch_id' => $validated['origin_branch_id'],
+                    'dest_branch_id' => $validated['dest_branch_id'],
+                    'service_level' => $validated['service_level'],
+                    'weight' => $validated['weight'],
+                    'length' => $validated['length'] ?? 0,
+                    'width' => $validated['width'] ?? 0,
+                    'height' => $validated['height'] ?? 0,
+                    'declared_value' => $validated['declared_value'] ?? 0,
+                    'insurance_type' => $validated['insurance_type'] ?? 'none',
+                    'cod_amount' => $validated['cod_amount'] ?? 0,
+                ]);
+                return response()->json($pricing);
+            } catch (\Throwable $e2) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Rate calculation failed',
+                    'total' => 0,
+                ], 500);
+            }
+        }
     }
 
     /**
-     * Create shipment (POS transaction)
+     * Create shipment (POS transaction) - Enhanced with audit trail and payment transactions
      */
     public function createShipment(Request $request): JsonResponse
     {
@@ -309,7 +379,7 @@ class ShipmentPosController extends Controller
             'declared_value' => 'nullable|numeric|min:0',
             'insurance_type' => 'nullable|string|in:none,basic,full,premium',
             'cod_amount' => 'nullable|numeric|min:0',
-            'payment_method' => 'required|in:cash,card,mobile_money,account,cod',
+            'payment_method' => 'required|in:cash,card,mobile_money,bank_transfer,credit,account,cod',
             'amount_received' => 'nullable|numeric|min:0',
 
             // Addresses
@@ -322,71 +392,102 @@ class ShipmentPosController extends Controller
             'special_instructions' => 'nullable|string|max:2000',
             'is_fragile' => 'nullable|boolean',
             'requires_signature' => 'nullable|boolean',
+            
+            // Content classification (POS-BR-05)
+            'content_type' => 'nullable|string|in:document,parcel,battery,liquid,hazmat,other',
         ]);
 
         DB::beginTransaction();
 
         try {
-            // Calculate pricing
-            $pricing = $this->rateService->calculateRate([
+            // Use enhanced RatingService for pricing with validation
+            $quote = $this->ratingService->quote([
                 'origin_branch_id' => $branchId,
-                'dest_branch_id' => $validated['dest_branch_id'],
+                'destination_branch_id' => $validated['dest_branch_id'],
                 'service_level' => $validated['service_level'],
                 'weight' => $validated['weight'],
-                'length' => $validated['length'] ?? 0,
-                'width' => $validated['width'] ?? 0,
-                'height' => $validated['height'] ?? 0,
+                'length' => $validated['length'] ?? null,
+                'width' => $validated['width'] ?? null,
+                'height' => $validated['height'] ?? null,
                 'declared_value' => $validated['declared_value'] ?? 0,
                 'insurance_type' => $validated['insurance_type'] ?? 'none',
                 'cod_amount' => $validated['cod_amount'] ?? 0,
+                'customer_id' => $validated['customer_id'],
             ]);
 
-            if (!$pricing['success']) {
-                throw new \Exception('Failed to calculate pricing');
+            // Check for blocking warnings (hazmat on restricted route, overweight, etc.)
+            $blockingWarnings = array_filter($quote['warnings'] ?? [], fn($w) => 
+                str_contains($w, 'not available') || str_contains($w, 'exceeds maximum')
+            );
+            if (!empty($blockingWarnings)) {
+                throw new \Exception(implode('; ', $blockingWarnings));
             }
 
-            // Create shipment
-            $trackingNumber = 'TRK-' . strtoupper(Str::random(10));
+            // Resolve customer profile and optional linked user (legacy FK)
+            $customerProfile = Customer::find($validated['customer_id']);
+            $linkedUserId = null;
+            if ($customerProfile && $customerProfile->email) {
+                $linkedUserId = User::where('email', $customerProfile->email)->value('id');
+            }
+            $customerIdForCreation = $linkedUserId;
 
-            $shipment = Shipment::create([
-                'tracking_number' => $trackingNumber,
-                'waybill_number' => 'WB-' . date('Ymd') . '-' . strtoupper(Str::random(6)),
-                'customer_id' => $validated['customer_id'],
+            // Build parcel payload (single-piece POS entry)
+            $parcels = [[
+                'weight_kg' => $validated['weight'],
+                'length_cm' => $validated['length'] ?? 0,
+                'width_cm' => $validated['width'] ?? 0,
+                'height_cm' => $validated['height'] ?? 0,
+                'description' => $validated['description'] ?? 'POS Parcel',
+            ]];
+
+            // Create shipment via service pipeline with enhanced pricing breakdown
+            $shipment = $this->shipmentService->createShipment([
+                'customer_id' => $customerIdForCreation,
+                'customer_profile_id' => $customerProfile?->id,
                 'origin_branch_id' => $branchId,
                 'dest_branch_id' => $validated['dest_branch_id'],
                 'service_level' => $validated['service_level'],
                 'payer_type' => $validated['payer_type'],
-                'chargeable_weight_kg' => $pricing['weights']['chargeable_kg'] ?? $validated['weight'],
-                'volume_cbm' => $pricing['weights']['volumetric_kg'] ? ($pricing['weights']['volumetric_kg'] / 167) : 0,
                 'declared_value' => $validated['declared_value'] ?? 0,
-                'insurance_amount' => $pricing['insurance']['amount'] ?? 0,
-                'price_amount' => $pricing['total'],
-                'currency' => $pricing['currency'] ?? 'USD',
-                'special_instructions' => $validated['special_instructions'],
-                'current_status' => ShipmentStatus::BOOKED,
-                'status' => 'booked',
-                'created_by' => Auth::id(),
-                'booked_at' => now(),
+                'insurance_amount' => $quote['insurance_fee'] ?? 0,
+                'currency' => $quote['currency'] ?? 'UGX',
+                'price_amount' => $quote['total'],
+                // POS Hardening pricing breakdown fields
+                'base_rate' => $quote['base_freight'] ?? 0,
+                'weight_charge' => $quote['weight_charge'] ?? 0,
+                'surcharges_total' => ($quote['surcharges_total'] ?? 0) + ($quote['fuel_surcharge'] ?? 0),
+                'insurance_fee' => $quote['insurance_fee'] ?? 0,
+                'cod_fee' => $quote['cod_fee'] ?? 0,
+                'tax_amount' => $quote['tax'] ?? 0,
+                'rate_table_version' => $quote['rate_table_version'] ?? 'default-1.0',
+                'payment_status' => $validated['payment_method'] === 'cod' ? 'unpaid' : 
+                    (($validated['amount_received'] ?? 0) >= $quote['total'] ? 'paid' : 'partial'),
+                'content_type' => $validated['content_type'] ?? 'parcel',
+                'priority' => 0,
                 'metadata' => [
                     'pos_transaction' => true,
                     'payment_method' => $validated['payment_method'],
                     'amount_received' => $validated['amount_received'] ?? 0,
-                    'receiver_name' => $validated['receiver_name'],
-                    'receiver_phone' => $validated['receiver_phone'],
-                    'pickup_address' => $validated['pickup_address'],
-                    'delivery_address' => $validated['delivery_address'],
+                    'receiver_name' => $validated['receiver_name'] ?? null,
+                    'receiver_phone' => $validated['receiver_phone'] ?? null,
+                    'pickup_address' => $validated['pickup_address'] ?? null,
+                    'delivery_address' => $validated['delivery_address'] ?? null,
                     'is_fragile' => $validated['is_fragile'] ?? false,
                     'requires_signature' => $validated['requires_signature'] ?? false,
                     'pieces' => $validated['pieces'] ?? 1,
-                    'description' => $validated['description'],
-                    'pricing_breakdown' => $pricing,
+                    'description' => $validated['description'] ?? null,
+                    'pricing_breakdown' => $quote,
+                    'warnings' => $quote['warnings'] ?? [],
                 ],
-            ]);
+                'weight' => $validated['weight'],
+                'length' => $validated['length'] ?? 0,
+                'width' => $validated['width'] ?? 0,
+                'height' => $validated['height'] ?? 0,
+                'parcels' => $parcels,
+                'created_via' => 'pos',
+            ], Auth::user());
 
-            // Parcel data stored in metadata (parcels table doesn't have shipment_id column)
-            // Weight and dimensions are stored in the shipment's metadata field
-
-            // Record lifecycle transition
+            // Record lifecycle transition (ensures unified tracking)
             $this->lifecycleService->transition($shipment, ShipmentStatus::BOOKED, [
                 'trigger' => 'pos_transaction',
                 'performed_by' => Auth::id(),
@@ -396,19 +497,58 @@ class ShipmentPosController extends Controller
                 'location_id' => $branchId,
             ]);
 
-            // Handle payment recording
+            // POS-SEC-04: Log audit trail for shipment creation
+            $this->auditService->logCreated($shipment);
+
+            // Handle payment recording with PaymentTransaction (POS-PAY-02)
             if ($validated['payment_method'] !== 'cod' && ($validated['amount_received'] ?? 0) > 0) {
-                // Record payment received
-                DB::table('payments')->insert([
+                $paymentTransaction = PaymentTransaction::create([
                     'shipment_id' => $shipment->id,
+                    'customer_id' => $customerProfile?->id,
+                    'idempotency_key' => 'pos-' . $shipment->tracking_number . '-' . now()->timestamp,
                     'amount' => $validated['amount_received'],
-                    'payment_method' => $validated['payment_method'],
+                    'currency' => $quote['currency'] ?? 'UGX',
+                    'status' => 'completed',
+                    'method' => $validated['payment_method'] === 'account' ? 'on_account' : $validated['payment_method'],
+                    'payer_type' => $validated['payer_type'],
+                    'created_by' => Auth::id(),
+                    'branch_id' => $branchId,
+                    'completed_at' => now(),
+                    'metadata' => [
+                        'pos_transaction' => true,
+                        'cashier_id' => Auth::id(),
+                    ],
+                ]);
+
+                // Post accounting entries (POS-PAY-03)
+                $this->postingService->postPayment($paymentTransaction);
+
+                // Log payment audit
+                $this->auditService->logPaymentReceived($shipment, $validated['amount_received'], $validated['payment_method']);
+
+                // Also create legacy Payment record for backward compatibility
+                Payment::create([
+                    'shipment_id' => $shipment->id,
+                    'client_id' => $shipment->client_id,
+                    'branch_id' => $branchId,
+                    'amount' => $validated['amount_received'],
+                    'payment_method' => $validated['payment_method'] === 'account' ? 'credit' : $validated['payment_method'],
                     'status' => 'completed',
                     'paid_at' => now(),
-                    'received_by' => Auth::id(),
+                    'metadata' => [
+                        'pos_transaction' => true,
+                        'cashier_id' => Auth::id(),
+                        'payer_type' => $validated['payer_type'],
+                        'payment_transaction_id' => $paymentTransaction->id,
+                    ],
+                ]);
+
+                Log::info('POS payment recorded', [
+                    'shipment_id' => $shipment->id,
+                    'payment_transaction_id' => $paymentTransaction->id,
+                    'amount' => $validated['amount_received'],
+                    'method' => $validated['payment_method'],
                     'branch_id' => $branchId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
                 ]);
             }
 
@@ -416,9 +556,9 @@ class ShipmentPosController extends Controller
 
             Log::info('POS shipment created', [
                 'shipment_id' => $shipment->id,
-                'tracking' => $trackingNumber,
+                'tracking' => $shipment->tracking_number,
                 'branch_id' => $branchId,
-                'amount' => $pricing['total'],
+                'amount' => $quote['total'],
             ]);
 
             return response()->json([
@@ -428,8 +568,9 @@ class ShipmentPosController extends Controller
                     'tracking_number' => $shipment->tracking_number,
                     'waybill_number' => $shipment->waybill_number,
                     'status' => 'booked',
-                    'total' => $pricing['total'],
-                    'currency' => $pricing['currency'],
+                    'total' => $quote['total'],
+                    'currency' => $quote['currency'],
+                    'warnings' => $quote['warnings'] ?? [],
                 ],
                 'urls' => [
                     'label' => route($context . '.pos.label', $shipment),
@@ -453,13 +594,29 @@ class ShipmentPosController extends Controller
     }
 
     /**
-     * Generate label for POS shipment
+     * Generate label for POS shipment - Tracks label prints (POS-REL-03)
      */
     public function printLabel(Request $request, Shipment $shipment)
     {
         $this->authorize('view', $shipment);
 
         $format = $request->get('format', 'html');
+        $isReprint = ($shipment->label_print_count ?? 0) > 0;
+
+        // Track label print (POS-REL-03)
+        $shipment->increment('label_print_count');
+        $shipment->update(['last_label_printed_at' => now()]);
+
+        // Log audit trail
+        $this->auditService->logLabelPrinted($shipment, $isReprint);
+
+        Log::info('POS label printed', [
+            'shipment_id' => $shipment->id,
+            'tracking' => $shipment->tracking_number,
+            'is_reprint' => $isReprint,
+            'print_count' => $shipment->label_print_count,
+            'user_id' => Auth::id(),
+        ]);
 
         if ($format === 'pdf' && class_exists(Pdf::class)) {
             $html = $this->labelGenerator->generateLabel($shipment);
@@ -482,7 +639,7 @@ class ShipmentPosController extends Controller
     public function printReceipt(Request $request, Shipment $shipment)
     {
         $this->authorize('view', $shipment);
-        $shipment->load(['customer', 'originBranch', 'destBranch']);
+        $shipment->load(['customer', 'customerProfile', 'originBranch', 'destBranch']);
 
         $format = $request->get('format', 'html');
         $context = $this->getContext($request);
@@ -545,10 +702,20 @@ class ShipmentPosController extends Controller
     public function quickTrack(Request $request): JsonResponse
     {
         $tracking = $request->input('tracking');
+        $context = $this->getContext($request);
+        $branchId = $context === 'branch' ? BranchContext::currentId() : null;
 
-        $shipment = Shipment::with(['customer', 'originBranch', 'destBranch', 'scanEvents' => fn($q) => $q->latest()->limit(5)])
-            ->where('tracking_number', $tracking)
-            ->orWhere('waybill_number', $tracking)
+        $shipment = Shipment::with(['customer', 'customerProfile', 'originBranch', 'destBranch', 'scanEvents' => fn($q) => $q->latest()->limit(5)])
+            ->when($branchId, function ($q) use ($branchId) {
+                $q->where(function ($inner) use ($branchId) {
+                    $inner->where('origin_branch_id', $branchId)
+                        ->orWhere('dest_branch_id', $branchId);
+                });
+            })
+            ->where(function ($q) use ($tracking) {
+                $q->where('tracking_number', $tracking)
+                  ->orWhere('waybill_number', $tracking);
+            })
             ->first();
 
         if (!$shipment) {
@@ -565,7 +732,7 @@ class ShipmentPosController extends Controller
                 'tracking_number' => $shipment->tracking_number,
                 'waybill_number' => $shipment->waybill_number,
                 'status' => $shipment->current_status,
-                'customer' => $shipment->customer?->name,
+                'customer' => $shipment->customerProfile?->contact_person ?: $shipment->customer?->name,
                 'origin' => $shipment->originBranch?->name,
                 'destination' => $shipment->destBranch?->name,
                 'created_at' => $shipment->created_at->format('Y-m-d H:i'),

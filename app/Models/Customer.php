@@ -4,17 +4,20 @@ namespace App\Models;
 
 use App\Enums\Status;
 use App\Models\Backend\Branch;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-class Customer extends Model
+class Customer extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, Notifiable;
 
     protected $table = 'customers';
 
@@ -23,6 +26,7 @@ class Customer extends Model
         'company_name',
         'contact_person',
         'email',
+        'password',
         'phone',
         'mobile',
         'fax',
@@ -68,6 +72,16 @@ class Customer extends Model
         'kyc_verified',
         'kyc_verified_at',
         'compliance_flags',
+        'last_login_at',
+        'last_login_ip',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [
@@ -86,7 +100,19 @@ class Customer extends Model
         'last_shipment_date' => 'datetime',
         'kyc_verified_at' => 'datetime',
         'kyc_verified' => 'boolean',
+        'email_verified_at' => 'datetime',
+        'last_login_at' => 'datetime',
     ];
+
+    /**
+     * Automatically hash password when setting
+     */
+    public function setPasswordAttribute($value)
+    {
+        if ($value) {
+            $this->attributes['password'] = Hash::needsRehash($value) ? Hash::make($value) : $value;
+        }
+    }
 
     /**
      * Activity Log Configuration

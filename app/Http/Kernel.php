@@ -96,6 +96,7 @@ class Kernel extends HttpKernel
         'api.key' => \App\Http\Middleware\ApiKeyAuthentication::class,
         'branch.locale' => \App\Http\Middleware\BranchLocale::class,
         'branch.isolation' => \App\Http\Middleware\EnforceBranchIsolation::class,
+        'pos.enabled' => \App\Http\Middleware\EnsurePosEnabled::class,
         
         // Account Security Middleware
         'account.lockout' => \App\Http\Middleware\Security\CheckAccountLockout::class,

@@ -176,6 +176,12 @@ class BranchDashboardController extends Controller
         
         // First attempt delivery rate
         $firstAttemptRate = $this->getBranchFirstAttemptRate($branch, $last7Days);
+        
+        // SLA at-risk shipments (approaching deadline)
+        $slaAtRisk = $this->getSlaAtRiskShipments($branch);
+        
+        // Priority-based exceptions
+        $priorityAlerts = $this->getPriorityAlerts($branch);
 
         return view('branch.dashboard', [
             'branch' => $branch,
@@ -199,7 +205,206 @@ class BranchDashboardController extends Controller
             'scanActivity' => $scanActivity,
             'avgDeliveryTime' => $avgDeliveryTime,
             'firstAttemptRate' => $firstAttemptRate,
+            'slaAtRisk' => $slaAtRisk,
+            'priorityAlerts' => $priorityAlerts,
         ]);
+    }
+    
+    /**
+     * Get shipments at risk of SLA breach with countdown
+     */
+    private function getSlaAtRiskShipments(Branch $branch): array
+    {
+        if (!Schema::hasColumn('shipments', 'expected_delivery_date')) {
+            return [];
+        }
+        
+        $now = now();
+        $next24h = $now->copy()->addHours(24);
+        
+        // Get shipments with expected delivery within 24 hours that aren't delivered
+        $atRisk = $branch->originShipments()
+            ->with(['destBranch:id,name,code', 'customer:id,company_name'])
+            ->whereNotNull('expected_delivery_date')
+            ->where('expected_delivery_date', '<=', $next24h)
+            ->whereNotIn('current_status', [
+                ShipmentStatus::DELIVERED->value,
+                ShipmentStatus::CANCELLED->value,
+                ShipmentStatus::RETURNED->value,
+            ])
+            ->orderBy('expected_delivery_date')
+            ->limit(10)
+            ->get(['id', 'tracking_number', 'current_status', 'expected_delivery_date', 'dest_branch_id', 'customer_id', 'created_at']);
+            
+        return $atRisk->map(function ($shipment) use ($now) {
+            $deadline = Carbon::parse($shipment->expected_delivery_date);
+            $hoursRemaining = $now->diffInHours($deadline, false);
+            $minutesRemaining = $now->diffInMinutes($deadline, false);
+            
+            // Determine severity
+            $severity = 'low';
+            if ($hoursRemaining < 0) {
+                $severity = 'critical'; // Already breached
+            } elseif ($hoursRemaining <= 2) {
+                $severity = 'critical';
+            } elseif ($hoursRemaining <= 6) {
+                $severity = 'high';
+            } elseif ($hoursRemaining <= 12) {
+                $severity = 'medium';
+            }
+            
+            return [
+                'id' => $shipment->id,
+                'tracking_number' => $shipment->tracking_number,
+                'status' => $shipment->current_status,
+                'deadline' => $deadline->toIso8601String(),
+                'hours_remaining' => max(0, $hoursRemaining),
+                'minutes_remaining' => max(0, $minutesRemaining),
+                'severity' => $severity,
+                'is_breached' => $hoursRemaining < 0,
+                'destination' => $shipment->destBranch?->name ?? 'N/A',
+                'customer' => $shipment->customer?->company_name ?? 'Walk-in',
+            ];
+        })->toArray();
+    }
+    
+    /**
+     * Get priority-based alerts for exceptions and operational issues
+     */
+    private function getPriorityAlerts(Branch $branch): array
+    {
+        $alerts = [];
+        $now = now();
+        
+        // Critical: SLA breached shipments
+        $breached = $branch->originShipments()
+            ->when(Schema::hasColumn('shipments', 'expected_delivery_date'), function ($q) {
+                $q->whereNotNull('expected_delivery_date')
+                    ->where('expected_delivery_date', '<', now());
+            })
+            ->whereNotIn('current_status', [
+                ShipmentStatus::DELIVERED->value,
+                ShipmentStatus::CANCELLED->value,
+                ShipmentStatus::RETURNED->value,
+            ])
+            ->count();
+            
+        if ($breached > 0) {
+            $alerts[] = [
+                'severity' => 'critical',
+                'icon' => 'exclamation-triangle',
+                'title' => 'SLA Breached',
+                'message' => "{$breached} shipment(s) past delivery deadline",
+                'action_label' => 'View',
+                'action_route' => 'branch.operations',
+                'count' => $breached,
+            ];
+        }
+        
+        // High: Exceptions needing attention
+        $exceptions = $branch->originShipments()
+            ->where('has_exception', true)
+            ->count();
+            
+        if ($exceptions > 0) {
+            $alerts[] = [
+                'severity' => 'high',
+                'icon' => 'flag',
+                'title' => 'Exceptions Open',
+                'message' => "{$exceptions} shipment(s) flagged for review",
+                'action_label' => 'Review',
+                'action_route' => 'branch.operations',
+                'count' => $exceptions,
+            ];
+        }
+        
+        // High: Stuck in transit (no movement for 24h+)
+        $stuckStatuses = [
+            ShipmentStatus::LINEHAUL_DEPARTED->value,
+            ShipmentStatus::LINEHAUL_ARRIVED->value,
+        ];
+        
+        $stuck = $branch->originShipments()
+            ->whereIn('current_status', $stuckStatuses)
+            ->where('updated_at', '<', $now->copy()->subHours(24))
+            ->count();
+            
+        if ($stuck > 0) {
+            $alerts[] = [
+                'severity' => 'high',
+                'icon' => 'pause-circle',
+                'title' => 'Stuck in Transit',
+                'message' => "{$stuck} shipment(s) with no updates for 24h+",
+                'action_label' => 'Investigate',
+                'action_route' => 'branch.operations',
+                'count' => $stuck,
+            ];
+        }
+        
+        // Medium: Pending pickup (not collected within 4h of booking)
+        $pendingPickup = $branch->originShipments()
+            ->whereIn('current_status', [
+                ShipmentStatus::BOOKED->value,
+                ShipmentStatus::PICKUP_SCHEDULED->value,
+            ])
+            ->where('created_at', '<', $now->copy()->subHours(4))
+            ->count();
+            
+        if ($pendingPickup > 0) {
+            $alerts[] = [
+                'severity' => 'medium',
+                'icon' => 'clock',
+                'title' => 'Pickup Delayed',
+                'message' => "{$pendingPickup} shipment(s) awaiting pickup 4h+",
+                'action_label' => 'Assign',
+                'action_route' => 'branch.operations',
+                'count' => $pendingPickup,
+            ];
+        }
+        
+        // Medium: COD pending reconciliation
+        $codPending = $branch->originShipments()
+            ->where('cod_amount', '>', 0)
+            ->where('current_status', ShipmentStatus::DELIVERED->value)
+            ->when(Schema::hasColumn('shipments', 'cod_collected'), function ($q) {
+                $q->where('cod_collected', false);
+            })
+            ->count();
+            
+        if ($codPending > 5) {
+            $alerts[] = [
+                'severity' => 'medium',
+                'icon' => 'currency-dollar',
+                'title' => 'COD Pending',
+                'message' => "{$codPending} COD collection(s) to reconcile",
+                'action_label' => 'Reconcile',
+                'action_route' => 'branch.finance.cod',
+                'count' => $codPending,
+            ];
+        }
+        
+        // Low: Out for delivery (informational)
+        $outForDelivery = $branch->originShipments()
+            ->where('current_status', ShipmentStatus::OUT_FOR_DELIVERY->value)
+            ->count();
+            
+        if ($outForDelivery > 0) {
+            $alerts[] = [
+                'severity' => 'low',
+                'icon' => 'truck',
+                'title' => 'Out for Delivery',
+                'message' => "{$outForDelivery} shipment(s) in progress",
+                'action_label' => 'Track',
+                'action_route' => 'branch.operations',
+                'count' => $outForDelivery,
+            ];
+        }
+        
+        // Sort by severity
+        $severityOrder = ['critical' => 0, 'high' => 1, 'medium' => 2, 'low' => 3];
+        usort($alerts, fn($a, $b) => $severityOrder[$a['severity']] <=> $severityOrder[$b['severity']]);
+        
+        return $alerts;
     }
     
     /**
@@ -311,11 +516,11 @@ class BranchDashboardController extends Controller
             ->count();
             
         $byType = DB::table('scan_events')
-            ->select('scan_type', DB::raw('COUNT(*) as count'))
+            ->select('type', DB::raw('COUNT(*) as count'))
             ->where('branch_id', $branch->id)
             ->whereDate('created_at', $today)
-            ->groupBy('scan_type')
-            ->pluck('count', 'scan_type')
+            ->groupBy('type')
+            ->pluck('count', 'type')
             ->toArray();
             
         return [

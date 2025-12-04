@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/settings.js',
                 'resources/css/admin.css',
                 'resources/js/admin.js',
+                'resources/css/landing.css',
             ],
             refresh: true,
         }),

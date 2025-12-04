@@ -149,22 +149,27 @@
         </div>
 
         {{-- Details Grid --}}
+        @php
+            $weightData = $shipment->metadata['pricing_breakdown']['weight_data'] ?? [];
+            $displayWeight = $weightData['chargeable_weight'] ?? $shipment->chargeable_weight_kg ?? $shipment->weight ?? 0;
+            $codAmount = $shipment->metadata['cod_amount'] ?? $shipment->cod_amount ?? 0;
+        @endphp
         <div class="details-grid">
             <div class="detail-item">
                 <div class="detail-label">Weight</div>
-                <div class="detail-value">{{ number_format($shipment->chargeable_weight_kg ?? $shipment->weight ?? $shipment->actual_weight ?? 0, 2) }} KG</div>
+                <div class="detail-value">{{ number_format($displayWeight, 2) }} KG</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Pieces</div>
-                <div class="detail-value">{{ $shipment->pieces ?? $shipment->parcel_count ?? 1 }}</div>
+                <div class="detail-value">{{ $shipment->metadata['pieces'] ?? $shipment->pieces ?? 1 }}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Value</div>
-                <div class="detail-value">{{ $shipment->currency ?? 'UGX' }} {{ number_format($shipment->declared_value ?? $shipment->total_amount ?? $shipment->amount ?? 0) }}</div>
+                <div class="detail-value">{{ $shipment->currency ?? 'USD' }} {{ number_format($shipment->declared_value ?? 0) }}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">COD</div>
-                <div class="detail-value">{{ $shipment->cod_amount ? ($shipment->currency ?? 'UGX') . ' ' . number_format($shipment->cod_amount) : 'N/A' }}</div>
+                <div class="detail-value">{{ $codAmount > 0 ? ($shipment->currency ?? 'USD') . ' ' . number_format($codAmount) : 'N/A' }}</div>
             </div>
         </div>
 
@@ -172,13 +177,13 @@
         <div class="sender-receiver">
             <div class="sender">
                 <div class="person-label">From / Sender</div>
-                <div class="person-name">{{ $shipment->customer?->name ?? $shipment->sender_name ?? 'Walk-in' }}</div>
-                <div class="person-phone">{{ $shipment->customer?->mobile ?? $shipment->sender_phone ?? '' }}</div>
+                <div class="person-name">{{ $shipment->customerProfile?->contact_person ?? $shipment->customer?->name ?? $shipment->sender_name ?? 'Walk-in' }}</div>
+                <div class="person-phone">{{ $shipment->customerProfile?->mobile ?? $shipment->customer?->mobile ?? $shipment->sender_phone ?? '' }}</div>
             </div>
             <div class="receiver">
                 <div class="person-label">To / Receiver</div>
-                <div class="person-name">{{ $shipment->receiver_name ?? 'N/A' }}</div>
-                <div class="person-phone">{{ $shipment->receiver_phone ?? '' }}</div>
+                <div class="person-name">{{ $shipment->metadata['receiver_name'] ?? $shipment->receiver_name ?? 'N/A' }}</div>
+                <div class="person-phone">{{ $shipment->metadata['receiver_phone'] ?? $shipment->receiver_phone ?? '' }}</div>
             </div>
         </div>
 

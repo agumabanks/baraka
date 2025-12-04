@@ -18,7 +18,7 @@ class UserManagementController extends Controller
     /**
      * Display all users across the system
      */
-    public function index(Request $request): View
+    public function index(Request $request)
     {
         $admin = $request->user();
         
@@ -27,10 +27,14 @@ class UserManagementController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $search = $request->get('search');
+        $search = $request->get('search') ?? $request->get('q');
         $role = $request->get('role');
         $branch = $request->get('branch');
         $status = $request->get('status');
+        
+        // Per page with validation
+        $perPage = (int) $request->get('per_page', 10);
+        $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
 
         // Build users query
         $users = User::query()
@@ -58,11 +62,20 @@ class UserManagementController extends Controller
                           });
                 });
             })
-            ->when($status !== null, function ($q) use ($status) {
+            ->when($status !== null && $status !== '', function ($q) use ($status) {
                 $q->where('status', $status);
             })
             ->latest()
-            ->paginate(50);
+            ->paginate($perPage);
+        
+        // Return JSON for AJAX requests
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'html' => view('admin.users._table', compact('users'))->render(),
+                'pagination' => view('admin.users._pagination', compact('users', 'perPage'))->render(),
+                'total' => $users->total(),
+            ]);
+        }
 
         // Get statistics
         $stats = [
@@ -96,6 +109,7 @@ class UserManagementController extends Controller
             'role',
             'branch',
             'status',
+            'perPage',
             'recentImpersonations'
         ));
     }

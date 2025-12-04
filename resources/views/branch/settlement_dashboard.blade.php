@@ -100,7 +100,7 @@
             <div class="lg:col-span-2 glass-panel p-5">
                 <div class="flex items-center justify-between mb-4">
                     <div class="text-lg font-semibold">Recent Settlements</div>
-                    <a href="{{ route('branch.settlements') }}" class="chip text-xs">View All</a>
+                    <a href="{{ route('branch.settlements.index') }}" class="chip text-xs">View All</a>
                 </div>
                 
                 <div class="table-card">

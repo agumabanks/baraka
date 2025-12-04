@@ -51,7 +51,7 @@
                     <h1 class="text-2xl font-bold tracking-tight text-white">Branch Access</h1>
                     <p class="mt-2 text-sm text-gray-400">Enter your credentials to continue</p>
                     <div class="mt-3 flex justify-center gap-2 text-xs">
-                        <a href="{{ route('admin.login') }}" class="px-3 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10">Admin Login</a>
+                        <a href="{{ route('admin.login') }}" class="px-3 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 transition-colors">Admin Login</a>
                         <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Branch</span>
                     </div>
                 </div>

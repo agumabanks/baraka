@@ -264,12 +264,12 @@
     <div class="section">
         <div class="section-title">Sender</div>
         <div class="address-block">
-            <div class="address-name">{{ $shipment->customer?->name ?? 'Walk-in Customer' }}</div>
-            @if($shipment->customer?->phone)
-            <div>{{ $shipment->customer->phone }}</div>
+            <div class="address-name">{{ $shipment->customerProfile?->contact_person ?? $shipment->customer?->name ?? 'Walk-in Customer' }}</div>
+            @if($shipment->customerProfile?->phone || $shipment->customer?->phone)
+            <div>{{ $shipment->customerProfile?->phone ?? $shipment->customer?->phone }}</div>
             @endif
-            @if($shipment->customer?->email)
-            <div>{{ $shipment->customer->email }}</div>
+            @if($shipment->customerProfile?->email || $shipment->customer?->email)
+            <div>{{ $shipment->customerProfile?->email ?? $shipment->customer?->email }}</div>
             @endif
         </div>
     </div>
@@ -307,10 +307,20 @@
             <span class="info-label">Service:</span>
             <span class="info-value">{{ strtoupper($shipment->service_level ?? 'STANDARD') }}</span>
         </div>
+        @php
+            $weightData = $shipment->metadata['pricing_breakdown']['weight_data'] ?? [];
+            $displayWeight = $weightData['chargeable_weight'] ?? $shipment->chargeable_weight_kg ?? $shipment->weight ?? 0;
+        @endphp
         <div class="info-row">
             <span class="info-label">Weight:</span>
-            <span class="info-value">{{ number_format($shipment->chargeable_weight_kg ?? 0, 2) }} KG</span>
+            <span class="info-value">{{ number_format($displayWeight, 2) }} KG</span>
         </div>
+        @if(($weightData['volumetric_weight'] ?? 0) > ($weightData['actual_weight'] ?? 0))
+        <div class="info-row">
+            <span class="info-label">Volumetric:</span>
+            <span class="info-value">{{ number_format($weightData['volumetric_weight'], 2) }} KG</span>
+        </div>
+        @endif
         <div class="info-row">
             <span class="info-label">Pieces:</span>
             <span class="info-value">{{ $shipment->metadata['pieces'] ?? 1 }}</span>
@@ -334,68 +344,97 @@
         <div class="section-title">Charges</div>
         @php
             $pricing = $shipment->metadata['pricing_breakdown'] ?? [];
+            $currency = $pricing['currency'] ?? 'USD';
+            $currencySymbol = match($currency) {
+                'USD' => '$',
+                'EUR' => '€',
+                'GBP' => '£',
+                default => $currency . ' '
+            };
         @endphp
         <div class="charge-row">
-            <span>Base Rate:</span>
-            <span>${{ number_format($pricing['base_rate'] ?? 0, 2) }}</span>
+            <span>Base Freight:</span>
+            <span>{{ $currencySymbol }}{{ number_format($pricing['base_freight'] ?? $shipment->base_rate ?? 0, 2) }}</span>
         </div>
         <div class="charge-row">
             <span>Weight Charge:</span>
-            <span>${{ number_format($pricing['weight_charge'] ?? 0, 2) }}</span>
+            <span>{{ $currencySymbol }}{{ number_format($pricing['weight_charge'] ?? $shipment->weight_charge ?? 0, 2) }}</span>
         </div>
-        @if(($pricing['surcharges']['total'] ?? 0) > 0)
+        @if(($pricing['fuel_surcharge'] ?? 0) > 0)
+        <div class="charge-row">
+            <span>Fuel Surcharge:</span>
+            <span>{{ $currencySymbol }}{{ number_format($pricing['fuel_surcharge'], 2) }}</span>
+        </div>
+        @endif
+        @if(($pricing['surcharges_total'] ?? 0) > 0)
         <div class="charge-row">
             <span>Surcharges:</span>
-            <span>${{ number_format($pricing['surcharges']['total'], 2) }}</span>
+            <span>{{ $currencySymbol }}{{ number_format($pricing['surcharges_total'], 2) }}</span>
         </div>
         @endif
-        @if(($pricing['insurance']['amount'] ?? 0) > 0)
+        @if(($pricing['insurance_fee'] ?? $shipment->insurance_fee ?? 0) > 0)
         <div class="charge-row">
             <span>Insurance:</span>
-            <span>${{ number_format($pricing['insurance']['amount'], 2) }}</span>
+            <span>{{ $currencySymbol }}{{ number_format($pricing['insurance_fee'] ?? $shipment->insurance_fee ?? 0, 2) }}</span>
         </div>
         @endif
-        @if(($pricing['cod_fee'] ?? 0) > 0)
+        @if(($pricing['cod_fee'] ?? $shipment->cod_fee ?? 0) > 0)
         <div class="charge-row">
             <span>COD Fee:</span>
-            <span>${{ number_format($pricing['cod_fee'], 2) }}</span>
+            <span>{{ $currencySymbol }}{{ number_format($pricing['cod_fee'] ?? $shipment->cod_fee ?? 0, 2) }}</span>
         </div>
         @endif
-        @if(($pricing['tax'] ?? 0) > 0)
+        @if(($pricing['discount'] ?? 0) > 0)
         <div class="charge-row">
-            <span>Tax (18%):</span>
-            <span>${{ number_format($pricing['tax'], 2) }}</span>
+            <span>Discount:</span>
+            <span>-{{ $currencySymbol }}{{ number_format($pricing['discount'], 2) }}</span>
+        </div>
+        @endif
+        @if(($pricing['tax'] ?? $shipment->tax_amount ?? 0) > 0)
+        <div class="charge-row">
+            <span>Tax ({{ $pricing['tax_rate'] ?? 18 }}%):</span>
+            <span>{{ $currencySymbol }}{{ number_format($pricing['tax'] ?? $shipment->tax_amount ?? 0, 2) }}</span>
         </div>
         @endif
         <div class="charge-row charge-total">
             <span>TOTAL:</span>
-            <span>${{ number_format($shipment->price_amount ?? 0, 2) }}</span>
+            <span>{{ $currencySymbol }}{{ number_format($pricing['total'] ?? $shipment->price_amount ?? 0, 2) }}</span>
         </div>
     </div>
     
     {{-- Payment --}}
     <div class="payment-section">
+        @php
+            $amountReceived = $shipment->metadata['amount_received'] ?? 0;
+            $totalAmount = $pricing['total'] ?? $shipment->price_amount ?? 0;
+            $paymentStatus = $shipment->payment_status ?? (($amountReceived >= $totalAmount) ? 'paid' : 'unpaid');
+        @endphp
         <div class="payment-method">
             Payment: {{ strtoupper(str_replace('_', ' ', $shipment->metadata['payment_method'] ?? 'CASH')) }}
         </div>
-        @if(($shipment->metadata['amount_received'] ?? 0) > 0)
+        @if($amountReceived > 0)
         <div class="payment-amount">
-            Received: ${{ number_format($shipment->metadata['amount_received'], 2) }}
+            Received: {{ $currencySymbol }}{{ number_format($amountReceived, 2) }}
         </div>
-        @if(($shipment->metadata['amount_received'] ?? 0) > ($shipment->price_amount ?? 0))
+        @if($amountReceived > $totalAmount)
         <div style="margin-top: 4px;">
-            Change: ${{ number_format(($shipment->metadata['amount_received'] ?? 0) - ($shipment->price_amount ?? 0), 2) }}
+            Change: {{ $currencySymbol }}{{ number_format($amountReceived - $totalAmount, 2) }}
         </div>
         @endif
         @endif
-        <div class="payment-status">PAID</div>
+        <div class="payment-status" style="background: {{ $paymentStatus === 'paid' ? '#000' : '#c00' }};">
+            {{ strtoupper($paymentStatus) }}
+        </div>
     </div>
     
     {{-- COD Box (if applicable) --}}
-    @if(($shipment->metadata['cod_amount'] ?? 0) > 0)
+    @php
+        $codAmount = $shipment->metadata['cod_amount'] ?? $shipment->cod_amount ?? 0;
+    @endphp
+    @if($codAmount > 0)
     <div class="cod-box">
         <div class="cod-label">⚠️ COLLECT ON DELIVERY</div>
-        <div class="cod-amount">${{ number_format($shipment->metadata['cod_amount'], 2) }}</div>
+        <div class="cod-amount">{{ $currencySymbol }}{{ number_format($codAmount, 2) }}</div>
         <div style="font-size: 9px; margin-top: 4px;">Collect this amount from receiver</div>
     </div>
     @endif

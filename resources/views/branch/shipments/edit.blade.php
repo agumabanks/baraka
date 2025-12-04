@@ -106,89 +106,35 @@
                 </div>
             </div>
 
-            {{-- Parcels --}}
+            {{-- Package Weight --}}
             <div class="border-t border-white/10 pt-6 mb-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-medium">Parcels</h3>
-                    <button type="button" onclick="addParcel()" class="btn btn-sm btn-secondary">
-                        + Add Parcel
-                    </button>
-                </div>
-
-                <div id="parcels-container">
-                    @forelse($shipment->parcels as $index => $parcel)
-                    <div class="parcel-item bg-white/5 rounded-lg p-4 mb-4">
-                        <input type="hidden" name="parcels[{{ $index }}][id]" value="{{ $parcel->id }}">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="font-medium">Parcel {{ $index + 1 }}</span>
-                            @if($shipment->parcels->count() > 1)
-                            <button type="button" onclick="removeParcel(this)" class="text-rose-400 hover:text-rose-300">
-                                Remove
-                            </button>
-                            @endif
+                <h3 class="text-lg font-medium mb-4">Package Details</h3>
+                <div class="bg-white/5 rounded-lg p-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs mb-1">Chargeable Weight (kg)</label>
+                            <input type="number" name="chargeable_weight_kg" step="0.01" min="0.01"
+                                   class="form-input text-sm" value="{{ $shipment->chargeable_weight_kg ?? 1 }}">
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                            <div>
-                                <label class="block text-xs mb-1">Weight (kg) *</label>
-                                <input type="number" name="parcels[{{ $index }}][weight_kg]" step="0.01" min="0.01" required
-                                       class="form-input text-sm" value="{{ $parcel->weight_kg ?? $parcel->weight }}">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">Length (cm)</label>
-                                <input type="number" name="parcels[{{ $index }}][length_cm]" step="0.1" min="0"
-                                       class="form-input text-sm" value="{{ $parcel->length_cm ?? $parcel->length }}">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">Width (cm)</label>
-                                <input type="number" name="parcels[{{ $index }}][width_cm]" step="0.1" min="0"
-                                       class="form-input text-sm" value="{{ $parcel->width_cm ?? $parcel->width }}">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">Height (cm)</label>
-                                <input type="number" name="parcels[{{ $index }}][height_cm]" step="0.1" min="0"
-                                       class="form-input text-sm" value="{{ $parcel->height_cm ?? $parcel->height }}">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">Description</label>
-                                <input type="text" name="parcels[{{ $index }}][description]" maxlength="500"
-                                       class="form-input text-sm" value="{{ $parcel->description ?? $parcel->contents }}">
-                            </div>
+                        <div>
+                            <label class="block text-xs mb-1">Pieces</label>
+                            <input type="number" name="piece_count" min="1"
+                                   class="form-input text-sm" value="{{ $shipment->piece_count ?? 1 }}">
+                        </div>
+                        <div>
+                            <label class="block text-xs mb-1">Package Type</label>
+                            <select name="package_type" class="form-select text-sm">
+                                <option value="parcel" {{ ($shipment->package_type ?? 'parcel') == 'parcel' ? 'selected' : '' }}>Parcel</option>
+                                <option value="document" {{ ($shipment->package_type ?? '') == 'document' ? 'selected' : '' }}>Document</option>
+                                <option value="pallet" {{ ($shipment->package_type ?? '') == 'pallet' ? 'selected' : '' }}>Pallet</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs mb-1">Contents Description</label>
+                            <input type="text" name="contents_description" maxlength="500"
+                                   class="form-input text-sm" value="{{ $shipment->contents_description ?? '' }}">
                         </div>
                     </div>
-                    @empty
-                    <div class="parcel-item bg-white/5 rounded-lg p-4 mb-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="font-medium">Parcel 1</span>
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                            <div>
-                                <label class="block text-xs mb-1">Weight (kg) *</label>
-                                <input type="number" name="parcels[0][weight_kg]" step="0.01" min="0.01" required
-                                       class="form-input text-sm" value="1">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">Length (cm)</label>
-                                <input type="number" name="parcels[0][length_cm]" step="0.1" min="0"
-                                       class="form-input text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">Width (cm)</label>
-                                <input type="number" name="parcels[0][width_cm]" step="0.1" min="0"
-                                       class="form-input text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">Height (cm)</label>
-                                <input type="number" name="parcels[0][height_cm]" step="0.1" min="0"
-                                       class="form-input text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs mb-1">Description</label>
-                                <input type="text" name="parcels[0][description]" maxlength="500"
-                                       class="form-input text-sm">
-                            </div>
-                        </div>
-                    </div>
-                    @endforelse
                 </div>
             </div>
 
@@ -208,59 +154,5 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-let parcelIndex = {{ $shipment->parcels->count() }};
 
-function addParcel() {
-    const container = document.getElementById('parcels-container');
-    const parcelHtml = `
-        <div class="parcel-item bg-white/5 rounded-lg p-4 mb-4">
-            <div class="flex items-center justify-between mb-3">
-                <span class="font-medium">Parcel ${parcelIndex + 1}</span>
-                <button type="button" onclick="removeParcel(this)" class="text-rose-400 hover:text-rose-300">
-                    Remove
-                </button>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div>
-                    <label class="block text-xs mb-1">Weight (kg) *</label>
-                    <input type="number" name="parcels[${parcelIndex}][weight_kg]" step="0.01" min="0.01" required
-                           class="form-input text-sm" value="1">
-                </div>
-                <div>
-                    <label class="block text-xs mb-1">Length (cm)</label>
-                    <input type="number" name="parcels[${parcelIndex}][length_cm]" step="0.1" min="0"
-                           class="form-input text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs mb-1">Width (cm)</label>
-                    <input type="number" name="parcels[${parcelIndex}][width_cm]" step="0.1" min="0"
-                           class="form-input text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs mb-1">Height (cm)</label>
-                    <input type="number" name="parcels[${parcelIndex}][height_cm]" step="0.1" min="0"
-                           class="form-input text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs mb-1">Description</label>
-                    <input type="text" name="parcels[${parcelIndex}][description]" maxlength="500"
-                           class="form-input text-sm">
-                </div>
-            </div>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', parcelHtml);
-    parcelIndex++;
-}
-
-function removeParcel(btn) {
-    const items = document.querySelectorAll('.parcel-item');
-    if (items.length > 1) {
-        btn.closest('.parcel-item').remove();
-    }
-}
-</script>
-@endpush
 @endsection

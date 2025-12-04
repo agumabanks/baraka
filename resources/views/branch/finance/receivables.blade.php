@@ -62,7 +62,7 @@
                         </td>
                         <td class="text-end">{{ $debtor->invoice_count }}</td>
                         <td>
-                            <a href="{{ route('branch.clients') }}?customer_id={{ $debtor->id }}" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ route('branch.clients.index') }}?customer_id={{ $debtor->id }}" class="btn btn-sm btn-outline-primary">
                                 View Details
                             </a>
                         </td>

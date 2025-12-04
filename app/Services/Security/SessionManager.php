@@ -91,6 +91,17 @@ class SessionManager
     }
 
     /**
+     * Alias for getSessions - Get all active sessions for a user
+     *
+     * @param User $user
+     * @return \Illuminate\Support\Collection
+     */
+    public function getActiveSessions(User $user)
+    {
+        return $this->getSessions($user);
+    }
+
+    /**
      * Revoke a specific session
      *
      * @param User $user

@@ -38,19 +38,19 @@
             </div>
 
             <div class="bg-slate-900 border border-slate-800 rounded-lg p-4">
-                <h3 class="text-sm font-semibold text-slate-200 mb-3">Parcels</h3>
+                <h3 class="text-sm font-semibold text-slate-200 mb-3">Package Details</h3>
                 <div class="text-sm text-slate-300 space-y-2">
-                    @forelse ($shipment->parcels as $parcel)
+                    @if($shipment->chargeable_weight_kg)
                         <div class="flex items-center justify-between rounded border border-slate-800 bg-slate-800/40 px-3 py-2">
                             <div>
-                                <div class="text-slate-100">Parcel #{{ $parcel->id }}</div>
-                                <div class="text-xs text-slate-400">{{ $parcel->weight_kg }} kg · {{ $parcel->length_cm }}x{{ $parcel->width_cm }}x{{ $parcel->height_cm }} cm</div>
+                                <div class="text-slate-100">Package Weight</div>
+                                <div class="text-xs text-slate-400">{{ number_format($shipment->chargeable_weight_kg, 2) }} kg (chargeable)</div>
                             </div>
-                            <div class="text-xs text-slate-400">{{ $parcel->barcode }}</div>
+                            <div class="text-xs text-slate-400">{{ $shipment->service_level ?? 'Standard' }}</div>
                         </div>
-                    @empty
-                        <p class="text-slate-400 text-sm">No parcels recorded.</p>
-                    @endforelse
+                    @else
+                        <p class="text-slate-400 text-sm">No package details recorded.</p>
+                    @endif
                 </div>
             </div>
         </div>

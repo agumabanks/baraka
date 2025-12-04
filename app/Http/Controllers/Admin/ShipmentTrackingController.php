@@ -25,10 +25,34 @@ class ShipmentTrackingController extends Controller
     {
         // Get active shipments for real-time tracking
         $activeShipments = Shipment::whereNotIn('status', ['delivered', 'cancelled', 'returned'])
-            ->with(['originBranch', 'destBranch'])
+            ->with(['originBranch', 'destBranch', 'customer'])
             ->latest()
             ->limit(50)
             ->get();
+
+        // Calculate average transit time (in hours) for delivered shipments in last 30 days
+        $avgTransitHours = Shipment::where('status', 'delivered')
+            ->where('delivered_at', '>=', now()->subDays(30))
+            ->whereNotNull('picked_up_at')
+            ->whereNotNull('delivered_at')
+            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, picked_up_at, delivered_at)) as avg_hours')
+            ->value('avg_hours') ?? 0;
+
+        // Calculate first attempt delivery rate
+        // Check if delivery_attempts column exists, otherwise use scan events
+        $totalDelivered = Shipment::where('status', 'delivered')
+            ->where('delivered_at', '>=', now()->subDays(30))
+            ->count();
+        
+        // Count shipments with failed delivery attempts (scan events with failed delivery types)
+        $failedAttemptShipments = \DB::table('scan_events')
+            ->whereIn('type', ['delivery_failed', 'delivery_attempted', 'recipient_unavailable', 'failed_delivery'])
+            ->where('created_at', '>=', now()->subDays(30))
+            ->distinct('shipment_id')
+            ->count('shipment_id');
+        
+        $firstAttemptDelivered = max(0, $totalDelivered - $failedAttemptShipments);
+        $firstAttemptRate = $totalDelivered > 0 ? round(($firstAttemptDelivered / $totalDelivered) * 100) : 0;
 
         $stats = [
             'in_transit' => Shipment::where('status', 'in_transit')->count(),
@@ -39,6 +63,8 @@ class ShipmentTrackingController extends Controller
             'on_time' => Shipment::where('expected_delivery_date', '>=', now())
                 ->whereNotIn('status', ['delivered', 'cancelled'])
                 ->count(),
+            'avg_transit_hours' => round($avgTransitHours, 1),
+            'first_attempt_rate' => $firstAttemptRate,
         ];
 
         return view('admin.shipments.tracking-dashboard', compact('activeShipments', 'stats'));

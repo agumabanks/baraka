@@ -52,7 +52,7 @@
                     <p class="mt-2 text-sm text-gray-400">Sign in with your admin or support account.</p>
                     <div class="mt-3 flex justify-center gap-2 text-xs">
                         <span class="px-3 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">Admin</span>
-                        <a href="{{ route('branch.login') }}" class="px-3 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10">Branch Login</a>
+                        <a href="{{ route('branch.login') }}" class="px-3 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 transition-colors">Branch Login</a>
                     </div>
                 </div>
 
