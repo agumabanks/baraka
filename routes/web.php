@@ -433,24 +433,8 @@ Route::get('/admin', function () {
 })->middleware(['auth']);
 
 // Redirect common admin paths to SPA dashboard equivalents
-Route::get('/admin/analytics/{any?}', function ($any = '') {
-    return redirect('/admin/dashboard/analytics' . ($any ? '/' . $any : ''));
-})->where('any', '.*')->middleware(['auth']);
-
-Route::get('/admin/reports/{any?}', function ($any = '') {
-    return redirect('/admin/dashboard/reports' . ($any ? '/' . $any : ''));
-})->where('any', '.*')->middleware(['auth']);
-
 Route::get('/admin/settings/{any?}', function ($any = '') {
     return redirect('/admin/dashboard/settings' . ($any ? '/' . $any : ''));
-})->where('any', '.*')->middleware(['auth']);
-
-Route::get('/admin/branches/{any?}', function ($any = '') {
-    return redirect('/admin/dashboard/branches' . ($any ? '/' . $any : ''));
-})->where('any', '.*')->middleware(['auth']);
-
-Route::get('/admin/merchants/{any?}', function ($any = '') {
-    return redirect('/admin/dashboard/merchants' . ($any ? '/' . $any : ''));
 })->where('any', '.*')->middleware(['auth']);
 
 Route::get('/admin/support/{any?}', function ($any = '') {
@@ -565,6 +549,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,super-ad
     // Client Management (Centralized Customer System)
     Route::prefix('clients')->name('clients.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ClientController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ClientController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ClientController::class, 'store'])->name('store');
+        Route::get('/search', [\App\Http\Controllers\Admin\ClientController::class, 'search'])->name('search');
+        Route::get('/export', [\App\Http\Controllers\Admin\ClientController::class, 'export'])->name('export');
+        Route::post('/bulk-action', [\App\Http\Controllers\Admin\ClientController::class, 'bulkAction'])->name('bulk-action');
         Route::get('/{client}', [\App\Http\Controllers\Admin\ClientController::class, 'show'])->name('show');
         Route::get('/{client}/edit', [\App\Http\Controllers\Admin\ClientController::class, 'edit'])->name('edit');
         Route::put('/{client}', [\App\Http\Controllers\Admin\ClientController::class, 'update'])->name('update');
@@ -572,6 +561,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,super-ad
         Route::patch('/{client}/reassign', [\App\Http\Controllers\Admin\ClientController::class, 'reassign'])->name('reassign');
         Route::get('/{client}/statement', [\App\Http\Controllers\Admin\ClientController::class, 'statementPreview'])->name('statement');
         Route::get('/{client}/statement/download', [\App\Http\Controllers\Admin\ClientController::class, 'statement'])->name('statement.download');
+        Route::get('/{client}/contracts', [\App\Http\Controllers\Admin\ClientController::class, 'contracts'])->name('contracts');
+        Route::post('/{client}/refresh-stats', [\App\Http\Controllers\Admin\ClientController::class, 'refreshStats'])->name('refresh-stats');
+        Route::get('/{client}/quick-shipment', [\App\Http\Controllers\Admin\ClientController::class, 'quickShipment'])->name('quick-shipment');
+        Route::post('/{client}/activity', [\App\Http\Controllers\Admin\ClientController::class, 'storeActivity'])->name('activity.store');
+        Route::post('/{client}/reminder', [\App\Http\Controllers\Admin\ClientController::class, 'storeReminder'])->name('reminder.store');
+        Route::post('/{client}/reminder/{reminder}/complete', [\App\Http\Controllers\Admin\ClientController::class, 'completeReminder'])->name('reminder.complete');
+        Route::post('/{client}/adjust-credit', [\App\Http\Controllers\Admin\ClientController::class, 'adjustCredit'])->name('adjust-credit');
     });
 
     // Delivery Personnel

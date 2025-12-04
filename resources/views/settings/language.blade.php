@@ -81,16 +81,13 @@
                 </div>
 
                 <!-- Export Dropdown -->
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" type="button" class="btn-secondary text-sm">
+                <div class="relative" id="exportDropdown">
+                    <button type="button" onclick="toggleDropdown('exportDropdown')" class="btn-secondary text-sm">
                         <i class="bi bi-download mr-2"></i>
                         Export
-                        <i class="bi bi-chevron-down ml-2 text-xs"></i>
+                        <i class="bi bi-chevron-down ml-2 text-xs dropdown-chevron transition-transform"></i>
                     </button>
-                    <div x-show="open" @click.away="open = false" 
-                         x-transition
-                         class="absolute left-0 z-50 mt-2 w-48 rounded-xl bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 overflow-hidden"
-                         style="display: none;">
+                    <div class="dropdown-menu hidden absolute left-0 z-50 mt-2 w-48 rounded-xl bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
                         <a href="{{ route('settings.language.export', ['format' => 'json']) }}" 
                            class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
                             <i class="bi bi-filetype-json"></i> Export as JSON
@@ -337,9 +334,68 @@
                             <span class="text-slate-400">({{ $perPage }} per page)</span>
                         @endif
                     </div>
-                    <div class="flex items-center gap-4">
-                        {{ $translations->links() }}
-                    </div>
+                    
+                    <!-- Custom Tailwind Pagination -->
+                    @if($translations->hasPages())
+                        <nav class="flex items-center gap-1">
+                            {{-- Previous Page Link --}}
+                            @if($translations->onFirstPage())
+                                <span class="px-3 py-1.5 text-sm text-slate-400 dark:text-slate-600 cursor-not-allowed">
+                                    <i class="bi bi-chevron-left"></i>
+                                </span>
+                            @else
+                                <a href="{{ $translations->previousPageUrl() }}" 
+                                   class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            @endif
+
+                            {{-- Page Numbers --}}
+                            @php
+                                $currentPage = $translations->currentPage();
+                                $lastPage = $translations->lastPage();
+                                $start = max(1, $currentPage - 2);
+                                $end = min($lastPage, $currentPage + 2);
+                            @endphp
+
+                            @if($start > 1)
+                                <a href="{{ $translations->url(1) }}" 
+                                   class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">1</a>
+                                @if($start > 2)
+                                    <span class="px-2 text-slate-400">...</span>
+                                @endif
+                            @endif
+
+                            @for($page = $start; $page <= $end; $page++)
+                                @if($page == $currentPage)
+                                    <span class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $translations->url($page) }}" 
+                                       class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">{{ $page }}</a>
+                                @endif
+                            @endfor
+
+                            @if($end < $lastPage)
+                                @if($end < $lastPage - 1)
+                                    <span class="px-2 text-slate-400">...</span>
+                                @endif
+                                <a href="{{ $translations->url($lastPage) }}" 
+                                   class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">{{ $lastPage }}</a>
+                            @endif
+
+                            {{-- Next Page Link --}}
+                            @if($translations->hasMorePages())
+                                <a href="{{ $translations->nextPageUrl() }}" 
+                                   class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            @else
+                                <span class="px-3 py-1.5 text-sm text-slate-400 dark:text-slate-600 cursor-not-allowed">
+                                    <i class="bi bi-chevron-right"></i>
+                                </span>
+                            @endif
+                        </nav>
+                    @endif
                 </div>
             </div>
         </form>
@@ -589,5 +645,72 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
+
+        // Dropdown toggle function
+        function toggleDropdown(id) {
+            const container = document.getElementById(id);
+            if (!container) return;
+            
+            const dropdown = container.querySelector('.dropdown-menu');
+            const chevron = container.querySelector('.dropdown-chevron');
+            
+            // Close other dropdowns first
+            document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
+                if (menu !== dropdown && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                    const otherChevron = menu.closest('[id]')?.querySelector('.dropdown-chevron');
+                    if (otherChevron) otherChevron.classList.remove('rotate-180');
+                }
+            });
+            
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+                if (chevron) {
+                    chevron.classList.toggle('rotate-180');
+                }
+            }
+        }
+
+        // Language switcher toggle function
+        function toggleLangDropdown(id) {
+            const container = document.getElementById(id);
+            if (!container) return;
+            
+            const dropdown = container.querySelector('.lang-dropdown');
+            const chevron = container.querySelector('.lang-chevron');
+            
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+                if (chevron) {
+                    chevron.classList.toggle('rotate-180');
+                }
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            // Close export dropdown
+            const exportDropdown = document.getElementById('exportDropdown');
+            if (exportDropdown && !exportDropdown.contains(e.target)) {
+                const menu = exportDropdown.querySelector('.dropdown-menu');
+                const chevron = exportDropdown.querySelector('.dropdown-chevron');
+                if (menu && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                    if (chevron) chevron.classList.remove('rotate-180');
+                }
+            }
+            
+            // Close language switcher dropdowns
+            document.querySelectorAll('[id^="lang-switcher-"]').forEach(function(container) {
+                if (!container.contains(e.target)) {
+                    const dropdown = container.querySelector('.lang-dropdown');
+                    const chevron = container.querySelector('.lang-chevron');
+                    if (dropdown && !dropdown.classList.contains('hidden')) {
+                        dropdown.classList.add('hidden');
+                        if (chevron) chevron.classList.remove('rotate-180');
+                    }
+                }
+            });
+        });
     </script>
 @endsection

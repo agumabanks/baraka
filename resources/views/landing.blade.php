@@ -336,7 +336,7 @@
     </main>
 
     <!-- Footer - Steve Jobs Inspired (Dark) -->
-    <footer class="bg-black text-white">
+    <footer class="bg-black text-white" style="background-color: #000000 !important; color: #ffffff;">
         <!-- Main Footer Content -->
         <div class="max-w-[980px] mx-auto px-6 pt-8 pb-4">
             <!-- Tagline -->
@@ -428,16 +428,16 @@
         </div>
         
         <!-- Bottom Bar -->
-        <div class="border-t border-white/10">
+        <div class="border-t border-white/10" style="border-color: rgba(255,255,255,0.1);">
             <div class="max-w-[980px] mx-auto px-6 py-4">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-white/60">
+                <div class="flex flex-col items-center justify-center gap-3 text-xs text-white/60 text-center">
                     <!-- Copyright -->
                     <div>
                         <span>{{ $settings['footer_copyright'] }}</span>
                     </div>
                     
-                    <!-- Legal Links -->
-                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <!-- Legal Links & Region -->
+                    <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
                         <a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a>
                         <span class="text-white/30">|</span>
                         <a href="/terms" class="hover:text-white transition-colors">Terms of Use</a>
@@ -445,41 +445,40 @@
                         <a href="/cookies" class="hover:text-white transition-colors">Cookies</a>
                         <span class="text-white/30">|</span>
                         <a href="/sitemap" class="hover:text-white transition-colors">Site Map</a>
-                    </div>
-                    
-                    <!-- Region & Social -->
-                    <div class="flex items-center gap-4">
+                        <span class="text-white/30">|</span>
                         <span class="flex items-center gap-1">
                             <i class="bi bi-geo-alt text-[10px]"></i>
                             Uganda
                         </span>
-                        <div class="flex items-center gap-3">
-                            @if(!empty($settings['social_twitter']))
-                            <a href="{{ $settings['social_twitter'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="Twitter">
-                                <i class="bi bi-twitter-x text-sm"></i>
-                            </a>
-                            @endif
-                            @if(!empty($settings['social_linkedin']))
-                            <a href="{{ $settings['social_linkedin'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="LinkedIn">
-                                <i class="bi bi-linkedin text-sm"></i>
-                            </a>
-                            @endif
-                            @if(!empty($settings['social_facebook']))
-                            <a href="{{ $settings['social_facebook'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="Facebook">
-                                <i class="bi bi-facebook text-sm"></i>
-                            </a>
-                            @endif
-                            @if(!empty($settings['social_instagram']))
-                            <a href="{{ $settings['social_instagram'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="Instagram">
-                                <i class="bi bi-instagram text-sm"></i>
-                            </a>
-                            @endif
-                            @if(!empty($settings['social_youtube']))
-                            <a href="{{ $settings['social_youtube'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="YouTube">
-                                <i class="bi bi-youtube text-sm"></i>
-                            </a>
-                            @endif
-                        </div>
+                    </div>
+                    
+                    <!-- Social Icons -->
+                    <div class="flex items-center gap-4">
+                        @if(!empty($settings['social_twitter']))
+                        <a href="{{ $settings['social_twitter'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="Twitter">
+                            <i class="bi bi-twitter-x text-sm"></i>
+                        </a>
+                        @endif
+                        @if(!empty($settings['social_linkedin']))
+                        <a href="{{ $settings['social_linkedin'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="LinkedIn">
+                            <i class="bi bi-linkedin text-sm"></i>
+                        </a>
+                        @endif
+                        @if(!empty($settings['social_facebook']))
+                        <a href="{{ $settings['social_facebook'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="Facebook">
+                            <i class="bi bi-facebook text-sm"></i>
+                        </a>
+                        @endif
+                        @if(!empty($settings['social_instagram']))
+                        <a href="{{ $settings['social_instagram'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="Instagram">
+                            <i class="bi bi-instagram text-sm"></i>
+                        </a>
+                        @endif
+                        @if(!empty($settings['social_youtube']))
+                        <a href="{{ $settings['social_youtube'] }}" target="_blank" rel="noopener" class="text-white/60 hover:text-white transition-colors" aria-label="YouTube">
+                            <i class="bi bi-youtube text-sm"></i>
+                        </a>
+                        @endif
                     </div>
                 </div>
             </div>

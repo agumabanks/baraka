@@ -2,7 +2,6 @@
     'style' => 'dropdown', // dropdown, inline, minimal, compact
     'showFlags' => true,
     'showLabels' => true,
-    'persistPreference' => true, // Save preference to user settings
 ])
 
 @php
@@ -14,12 +13,6 @@
         'ar' => ['label' => 'Arabic', 'native' => 'العربية', 'flag' => '🇸🇦', 'rtl' => true],
         'zh' => ['label' => 'Chinese', 'native' => '中文', 'flag' => '🇨🇳', 'rtl' => false],
         'es' => ['label' => 'Spanish', 'native' => 'Español', 'flag' => '🇪🇸', 'rtl' => false],
-        'de' => ['label' => 'German', 'native' => 'Deutsch', 'flag' => '🇩🇪', 'rtl' => false],
-        'pt' => ['label' => 'Portuguese', 'native' => 'Português', 'flag' => '🇵🇹', 'rtl' => false],
-        'hi' => ['label' => 'Hindi', 'native' => 'हिन्दी', 'flag' => '🇮🇳', 'rtl' => false],
-        'ja' => ['label' => 'Japanese', 'native' => '日本語', 'flag' => '🇯🇵', 'rtl' => false],
-        'ko' => ['label' => 'Korean', 'native' => '한국어', 'flag' => '🇰🇷', 'rtl' => false],
-        'ru' => ['label' => 'Russian', 'native' => 'Русский', 'flag' => '🇷🇺', 'rtl' => false],
     ];
     
     // Get supported locales from config
@@ -28,12 +21,13 @@
     
     $currentLocale = app()->getLocale();
     if (!isset($locales[$currentLocale])) {
-        $currentLocale = 'en'; // Fallback
+        $currentLocale = 'en';
     }
     
     $currentUrl = request()->fullUrl();
+    $switcherId = 'lang-switcher-' . uniqid();
     
-    // Build URL with lang parameter (clean implementation)
+    // Build URL with lang parameter
     $buildUrl = function($lang) use ($currentUrl) {
         $url = preg_replace('/([?&])lang=[^&]*(&|$)/', '$1', $currentUrl);
         $url = rtrim($url, '?&');
@@ -43,9 +37,9 @@
 @endphp
 
 @if($style === 'dropdown')
-<div class="relative" x-data="{ open: false }" @click.away="open = false">
-    <button @click="open = !open" 
-            type="button"
+<div class="relative" id="{{ $switcherId }}">
+    <button type="button"
+            onclick="toggleLangDropdown('{{ $switcherId }}')"
             class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
         @if($showFlags)
             <span class="text-base">{{ $locales[$currentLocale]['flag'] }}</span>
@@ -53,20 +47,12 @@
         @if($showLabels)
             <span class="hidden sm:inline">{{ $locales[$currentLocale]['native'] }}</span>
         @endif
-        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 transition-transform duration-200 lang-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
         </svg>
     </button>
 
-    <div x-show="open" 
-         x-transition:enter="transition ease-out duration-100"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-75"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-xl bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none overflow-hidden"
-         style="display: none;">
+    <div class="lang-dropdown hidden absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-xl bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none overflow-hidden">
         <div class="py-1">
             @foreach($locales as $code => $locale)
                 <a href="{{ $buildUrl($code) }}" 
@@ -105,20 +91,16 @@
 </div>
 
 @elseif($style === 'compact')
-{{-- Compact style: just current locale code with dropdown --}}
-<div class="relative" x-data="{ open: false }" @click.away="open = false">
-    <button @click="open = !open" 
-            type="button"
+<div class="relative" id="{{ $switcherId }}">
+    <button type="button"
+            onclick="toggleLangDropdown('{{ $switcherId }}')"
             class="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-700 rounded transition-all focus:outline-none">
         {{ strtoupper($currentLocale) }}
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-3 h-3 lang-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
         </svg>
     </button>
-    <div x-show="open" 
-         x-transition
-         class="absolute right-0 z-50 mt-1 w-36 origin-top-right rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 overflow-hidden"
-         style="display: none;">
+    <div class="lang-dropdown hidden absolute right-0 z-50 mt-1 w-36 origin-top-right rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
         @foreach($locales as $code => $locale)
             <a href="{{ $buildUrl($code) }}" 
                class="flex items-center gap-2 px-3 py-2 text-xs transition-colors {{ $code === $currentLocale ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700' }}">
@@ -134,8 +116,7 @@
     @foreach($locales as $code => $locale)
         <a href="{{ $buildUrl($code) }}" 
            title="{{ $locale['native'] }} ({{ $locale['label'] }})"
-           class="w-8 h-8 flex items-center justify-center rounded-full text-sm transition-all {{ $code === $currentLocale ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500' : 'hover:bg-slate-100 dark:hover:bg-slate-700' }}"
-           @if($locale['rtl'] ?? false) dir="rtl" @endif>
+           class="w-8 h-8 flex items-center justify-center rounded-full text-sm transition-all {{ $code === $currentLocale ? 'bg-blue-100 dark:bg-blue-900/30 ring-2 ring-blue-500' : 'hover:bg-slate-100 dark:hover:bg-slate-700' }}">
             {{ $locale['flag'] }}
         </a>
     @endforeach
