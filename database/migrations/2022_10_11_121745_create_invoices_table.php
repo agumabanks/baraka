@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\InvoiceStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -23,10 +22,8 @@ return new class extends Migration
             $table->decimal('cash_collection', 16, 2)->nullable();
             $table->decimal('current_payable', 16, 2)->nullable();
             $table->longText('parcels_id')->nullable();
-            $table->unsignedTinyInteger('status')->default(InvoiceStatus::PROCESSING)->comment(
-                ' Unpaid      = '.InvoiceStatus::UNPAID.
-                ', Processing  = '.InvoiceStatus::PROCESSING.
-                ', Paid        = '.InvoiceStatus::PAID,
+            $table->unsignedTinyInteger('status')->default(2)->comment(
+                ' Unpaid = 1, Processing = 2, Paid = 3',
             );
             $table->bigInteger('payment_id')->nullable();
             $table->timestamps();

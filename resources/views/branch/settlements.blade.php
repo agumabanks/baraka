@@ -14,7 +14,7 @@
 
         <div class="glass-panel p-5">
             <div class="flex items-center justify-between mb-4">
-                <form method="GET" action="{{ route('branch.settlements') }}" class="flex gap-2">
+                <form method="GET" action="{{ route('branch.settlements.index') }}" class="flex gap-2">
                     <select name="status" class="bg-obsidian-700 border border-white/10 rounded px-3 py-2 text-sm" onchange="this.form.submit()">
                         <option value="">All Statuses</option>
                         <option value="draft" @selected($statusFilter === 'draft')>Draft</option>

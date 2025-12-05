@@ -227,6 +227,111 @@ class UserManagementController extends Controller
         return view('admin.users.impersonation-logs', compact('logs', 'stats'));
     }
 
+    /**
+     * Show user details
+     */
+    public function show(User $user): View
+    {
+        $this->authorizeAdmin();
+
+        $user->load(['role', 'branchWorker.branch', 'branchManager.branch']);
+
+        $recentActivity = DB::table('impersonation_logs')
+            ->where('impersonated_user_id', $user->id)
+            ->orderByDesc('started_at')
+            ->limit(10)
+            ->get();
+
+        return view('admin.users.show', compact('user', 'recentActivity'));
+    }
+
+    /**
+     * Edit user form
+     */
+    public function edit(User $user): View
+    {
+        $this->authorizeAdmin();
+
+        $roles = Role::orderBy('name')->get(['id', 'name']);
+        $branches = Branch::orderBy('name')->get(['id', 'name']);
+
+        return view('admin.users.edit', compact('user', 'roles', 'branches'));
+    }
+
+    /**
+     * Update user
+     */
+    public function update(Request $request, User $user)
+    {
+        $this->authorizeAdmin();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'mobile' => 'nullable|string|max:50',
+            'role_id' => 'nullable|exists:roles,id',
+            'primary_branch_id' => 'nullable|exists:branches,id',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'User updated successfully.');
+    }
+
+    /**
+     * Toggle user status (activate/deactivate)
+     */
+    public function toggleStatus(User $user)
+    {
+        $this->authorizeAdmin();
+
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'You cannot deactivate your own account.');
+        }
+
+        $user->update(['status' => !$user->status]);
+
+        $status = $user->status ? 'activated' : 'deactivated';
+        return back()->with('success', "User {$user->name} has been {$status}.");
+    }
+
+    /**
+     * Reset user password
+     */
+    public function resetPassword(User $user)
+    {
+        $this->authorizeAdmin();
+
+        $newPassword = str()->random(12);
+        $user->update([
+            'password' => Hash::make($newPassword),
+            'password_changed_at' => null,
+        ]);
+
+        return back()->with('success', "Password reset for {$user->name}. New password: {$newPassword}");
+    }
+
+    /**
+     * Delete user
+     */
+    public function destroy(User $user)
+    {
+        $this->authorizeAdmin();
+
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $userName = $user->name;
+        $user->delete();
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', "User {$userName} has been deleted.");
+    }
+
     private function authorizeAdmin(): void
     {
         $user = auth()->user();

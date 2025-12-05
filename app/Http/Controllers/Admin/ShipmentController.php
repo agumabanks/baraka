@@ -146,8 +146,8 @@ class ShipmentController extends Controller
             'scanEvents' => function ($query) {
                 $query->latest();
             },
-            'podProofs',
-            'assignedDriver'
+            'podProof',
+            'assignedWorker'
         ]);
 
         // Return JSON for AJAX/modal requests

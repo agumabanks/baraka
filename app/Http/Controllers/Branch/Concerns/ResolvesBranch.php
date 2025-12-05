@@ -62,10 +62,35 @@ trait ResolvesBranch
 
     protected function assertBranchPermission(User $user): void
     {
-        if ($user->hasPermission(['branch_manage', 'branch_read']) || $user->hasRole(['admin', 'super-admin', 'operations_admin'])) {
+        // Allow users with branch permissions
+        if ($user->hasPermission(['branch_manage', 'branch_read'])) {
             return;
         }
 
-        abort(403);
+        // Allow admin roles
+        if ($user->hasRole(['admin', 'super-admin', 'operations_admin'])) {
+            return;
+        }
+
+        // Allow branch managers and workers
+        if ($user->hasRole(['branch_manager', 'branch_ops_manager', 'branch_worker', 'branch_staff'])) {
+            return;
+        }
+
+        // Allow users with a branch association
+        if ($user->primary_branch_id) {
+            return;
+        }
+
+        // Check for branch worker/manager relationship
+        if (method_exists($user, 'branchWorker') && $user->branchWorker?->branch_id) {
+            return;
+        }
+
+        if (method_exists($user, 'branchManager') && $user->branchManager?->branch_id) {
+            return;
+        }
+
+        abort(403, 'Access denied. You do not have permission to access this resource.');
     }
 }

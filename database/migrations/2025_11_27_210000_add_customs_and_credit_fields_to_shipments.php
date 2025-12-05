@@ -8,8 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Add customs document and inspection fields (column by column check)
+        // Add credit hold and customs document fields (column by column check)
         $columnsToAdd = [
+            'credit_hold' => ['type' => 'boolean', 'nullable' => false, 'default' => false],
+            'credit_hold_reason' => ['type' => 'string', 'nullable' => true],
+            'credit_hold_at' => ['type' => 'timestamp', 'nullable' => true],
+            'credit_hold_released_at' => ['type' => 'timestamp', 'nullable' => true],
+            'credit_hold_released_by' => ['type' => 'unsignedBigInteger', 'nullable' => true],
+            'credit_hold_release_notes' => ['type' => 'text', 'nullable' => true],
+            'customs_status' => ['type' => 'string', 'nullable' => true],
+            'customs_hold_reason' => ['type' => 'string', 'nullable' => true],
+            'customs_hold_at' => ['type' => 'timestamp', 'nullable' => true],
             'customs_required_documents' => ['type' => 'json', 'nullable' => true],
             'customs_documents' => ['type' => 'json', 'nullable' => true],
             'customs_document_notes' => ['type' => 'text', 'nullable' => true],
@@ -39,6 +48,7 @@ return new class extends Migration
             foreach ($columnsToAdd as $column => $config) {
                 if (!Schema::hasColumn('shipments', $column)) {
                     $col = match($config['type']) {
+                        'boolean' => $table->boolean($column)->default($config['default'] ?? false),
                         'json' => $table->json($column),
                         'text' => $table->text($column),
                         'timestamp' => $table->timestamp($column),
@@ -48,6 +58,9 @@ return new class extends Migration
                     };
                     if ($config['nullable'] ?? false) {
                         $col->nullable();
+                    }
+                    if (isset($config['default']) && $config['type'] !== 'boolean') {
+                        $col->default($config['default']);
                     }
                 }
             }

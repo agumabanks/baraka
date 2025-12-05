@@ -22,8 +22,25 @@ return new class extends Migration
             return;
         }
 
+        $driver = Schema::getConnection()->getDriverName();
+
         // Step 1: Migrate existing data from lowercase 'status' to uppercase 'current_status'
         $this->migrateLegacyStatuses();
+
+        if ($driver === 'sqlite') {
+            // SQLite: Skip enum changes as SQLite doesn't support them
+            // The data migration above is still performed
+            if (!$this->indexExists('shipments', 'shipments_current_status_index')) {
+                try {
+                    Schema::table('shipments', function (Blueprint $table) {
+                        $table->index('current_status');
+                    });
+                } catch (\Exception $e) {
+                    // Index might already exist
+                }
+            }
+            return;
+        }
 
         // Step 2: Update schema to use proper enum values
         Schema::table('shipments', function (Blueprint $table) {
@@ -176,6 +193,13 @@ return new class extends Migration
      */
     private function indexExists(string $table, string $index): bool
     {
+        $driver = Schema::getConnection()->getDriverName();
+        
+        if ($driver === 'sqlite') {
+            $indexes = DB::select("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND name = ?", [$table, $index]);
+            return !empty($indexes);
+        }
+        
         $indexes = DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$index]);
         return !empty($indexes);
     }

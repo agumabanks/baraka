@@ -22,7 +22,6 @@
             </span>
         </a>
         <a href="{{ route('branch.shipments.index') }}" class="nav-link {{ request()->routeIs('branch.shipments.*') ? 'nav-link-active' : '' }}">Shipments Management</a>
-        <a href="{{ route('branch.booking.index') }}" class="nav-link {{ request()->routeIs('branch.booking.*') ? 'nav-link-active' : '' }}">Booking Wizard</a>
         
         <div class="text-xs uppercase muted mt-4 mb-2">Operations</div>
         <a href="{{ route('branch.operations') }}" class="nav-link {{ request()->routeIs('branch.operations*') ? 'nav-link-active' : '' }}">Operations Board</a>

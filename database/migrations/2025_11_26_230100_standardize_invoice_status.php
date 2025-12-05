@@ -19,6 +19,18 @@ return new class extends Migration
             return;
         }
 
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            // SQLite: Just ensure the status column exists and add index
+            if (!Schema::hasColumn('invoices', 'status')) {
+                Schema::table('invoices', function (Blueprint $table) {
+                    $table->string('status', 20)->default('DRAFT');
+                });
+            }
+            return;
+        }
+
         // Step 1: Add temporary column for migration
         Schema::table('invoices', function (Blueprint $table) {
             $table->string('status_new', 20)->nullable()->after('status');
@@ -129,6 +141,13 @@ return new class extends Migration
      */
     private function indexExists(string $table, string $index): bool
     {
+        $driver = Schema::getConnection()->getDriverName();
+        
+        if ($driver === 'sqlite') {
+            $indexes = DB::select("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND name = ?", [$table, $index]);
+            return !empty($indexes);
+        }
+        
         $indexes = DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$index]);
         return !empty($indexes);
     }

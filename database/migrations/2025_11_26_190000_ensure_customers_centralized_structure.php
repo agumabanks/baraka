@@ -112,6 +112,14 @@ return new class extends Migration
      */
     private function hasIndex(string $table, string $index): bool
     {
+        $driver = Schema::getConnection()->getDriverName();
+        
+        if ($driver === 'sqlite') {
+            $indexes = \DB::select("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND name = ?", [$table, $index]);
+            return count($indexes) > 0;
+        }
+        
+        // MySQL/MariaDB
         $indexes = \DB::select("SHOW INDEX FROM {$table} WHERE Key_name = ?", [$index]);
         return count($indexes) > 0;
     }

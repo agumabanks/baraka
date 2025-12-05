@@ -1,21 +1,16 @@
 @props([
-    'style' => 'dropdown', // dropdown, inline, minimal, compact
+    'style' => 'dropdown', // dropdown, inline, minimal
     'showFlags' => true,
     'showLabels' => true,
 ])
 
 @php
-    // Full locale metadata with RTL support and flags
     $allLocales = [
-        'en' => ['label' => 'English', 'native' => 'English', 'flag' => '🇬🇧', 'rtl' => false],
-        'fr' => ['label' => 'French', 'native' => 'Français', 'flag' => '🇫🇷', 'rtl' => false],
-        'sw' => ['label' => 'Swahili', 'native' => 'Kiswahili', 'flag' => '🇰🇪', 'rtl' => false],
-        'ar' => ['label' => 'Arabic', 'native' => 'العربية', 'flag' => '🇸🇦', 'rtl' => true],
-        'zh' => ['label' => 'Chinese', 'native' => '中文', 'flag' => '🇨🇳', 'rtl' => false],
-        'es' => ['label' => 'Spanish', 'native' => 'Español', 'flag' => '🇪🇸', 'rtl' => false],
+        'en' => ['label' => 'English', 'native' => 'English', 'flag' => '🇬🇧'],
+        'fr' => ['label' => 'French', 'native' => 'Français', 'flag' => '🇫🇷'],
+        'sw' => ['label' => 'Swahili', 'native' => 'Kiswahili', 'flag' => '🇰🇪'],
     ];
     
-    // Get supported locales from config
     $supportedCodes = config('translations.supported', ['en', 'fr', 'sw']);
     $locales = collect($allLocales)->only($supportedCodes)->toArray();
     
@@ -25,9 +20,7 @@
     }
     
     $currentUrl = request()->fullUrl();
-    $switcherId = 'lang-switcher-' . uniqid();
     
-    // Build URL with lang parameter
     $buildUrl = function($lang) use ($currentUrl) {
         $url = preg_replace('/([?&])lang=[^&]*(&|$)/', '$1', $currentUrl);
         $url = rtrim($url, '?&');
@@ -37,22 +30,20 @@
 @endphp
 
 @if($style === 'dropdown')
-<div class="relative" id="{{ $switcherId }}">
-    <button type="button"
-            onclick="toggleLangDropdown('{{ $switcherId }}')"
-            class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+<div class="relative inline-block">
+    <button type="button" class="lang-toggle-btn flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
         @if($showFlags)
             <span class="text-base">{{ $locales[$currentLocale]['flag'] }}</span>
         @endif
         @if($showLabels)
             <span class="hidden sm:inline">{{ $locales[$currentLocale]['native'] }}</span>
         @endif
-        <svg class="w-4 h-4 transition-transform duration-200 lang-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
         </svg>
     </button>
 
-    <div class="lang-dropdown hidden absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-xl bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none overflow-hidden">
+    <div class="lang-dropdown-menu hidden absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-xl bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
         <div class="py-1">
             @foreach($locales as $code => $locale)
                 <a href="{{ $buildUrl($code) }}" 
@@ -75,6 +66,27 @@
     </div>
 </div>
 
+<script>
+(function() {
+    const wrapper = document.currentScript.previousElementSibling;
+    const btn = wrapper.querySelector('.lang-toggle-btn');
+    const menu = wrapper.querySelector('.lang-dropdown-menu');
+    
+    if (btn && menu) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            menu.classList.toggle('hidden');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!wrapper.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    }
+})();
+</script>
+
 @elseif($style === 'inline')
 <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
     @foreach($locales as $code => $locale)
@@ -88,27 +100,6 @@
             @endif
         </a>
     @endforeach
-</div>
-
-@elseif($style === 'compact')
-<div class="relative" id="{{ $switcherId }}">
-    <button type="button"
-            onclick="toggleLangDropdown('{{ $switcherId }}')"
-            class="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-700 rounded transition-all focus:outline-none">
-        {{ strtoupper($currentLocale) }}
-        <svg class="w-3 h-3 lang-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-    </button>
-    <div class="lang-dropdown hidden absolute right-0 z-50 mt-1 w-36 origin-top-right rounded-lg bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
-        @foreach($locales as $code => $locale)
-            <a href="{{ $buildUrl($code) }}" 
-               class="flex items-center gap-2 px-3 py-2 text-xs transition-colors {{ $code === $currentLocale ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700' }}">
-                <span>{{ $locale['flag'] }}</span>
-                <span>{{ $locale['native'] }}</span>
-            </a>
-        @endforeach
-    </div>
 </div>
 
 @else {{-- minimal --}}

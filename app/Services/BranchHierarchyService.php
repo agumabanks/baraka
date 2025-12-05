@@ -177,7 +177,7 @@ class BranchHierarchyService
      */
     public function getAncestors(Branch $branch): Collection
     {
-        $ancestors = collect();
+        $ancestors = new Collection();
         $current = $branch->parent;
 
         while ($current) {
@@ -185,13 +185,13 @@ class BranchHierarchyService
             $current = $current->parent;
         }
 
-        return $ancestors->reverse(); // Root first
+        return new Collection($ancestors->reverse()); // Root first
     }
 
     /**
      * Get all descendants of a branch (all levels)
      */
-    public function getAllDescendants(Branch $branch): Collection
+    public function getAllDescendants(Branch $branch): SupportCollection
     {
         $descendants = collect();
 
@@ -203,7 +203,7 @@ class BranchHierarchyService
     /**
      * Recursively collect all descendants
      */
-    private function collectDescendants(Branch $branch, Collection &$descendants): void
+    private function collectDescendants(Branch $branch, SupportCollection &$descendants): void
     {
         foreach ($branch->children as $child) {
             $descendants->push($child);

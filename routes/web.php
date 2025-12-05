@@ -171,6 +171,7 @@ Route::middleware(['auth', 'branch.context', 'branch.locale', 'branch.isolation'
         Route::get('/dashboard', [BranchDashboardController::class, 'index'])->name('dashboard');
         Route::get('/operations', [OperationsController::class, 'index'])->name('operations');
         Route::get('/shipments', [OperationsController::class, 'shipments'])->name('shipments');
+        Route::get('/exceptions', [OperationsController::class, 'exceptions'])->name('exceptions.index');
         Route::post('/operations/assign', [OperationsController::class, 'assign'])->name('operations.assign');
         Route::post('/operations/status', [OperationsController::class, 'updateStatus'])->name('operations.status');
         Route::post('/operations/prioritize', [OperationsController::class, 'reprioritize'])->name('operations.prioritize');
@@ -232,6 +233,7 @@ Route::middleware(['auth', 'branch.context', 'branch.locale', 'branch.isolation'
             Route::post('/compare', [\App\Http\Controllers\Branch\BookingWizardController::class, 'compareServices'])->name('compare');
         });
 
+        // Workforce routes
         Route::get('/workforce', [WorkforceController::class, 'index'])->name('workforce');
         Route::get('/workforce/schedule', [WorkforceController::class, 'scheduleView'])->name('workforce.schedule');
         Route::post('/workforce', [WorkforceController::class, 'store'])->name('workforce.store');
@@ -240,28 +242,71 @@ Route::middleware(['auth', 'branch.context', 'branch.locale', 'branch.isolation'
         Route::post('/workforce/check-out', [WorkforceController::class, 'checkOut'])->name('workforce.checkout');
         Route::patch('/workforce/{worker}', [WorkforceController::class, 'update'])->name('workforce.update');
         Route::delete('/workforce/{worker}', [WorkforceController::class, 'archive'])->name('workforce.archive');
+        Route::post('/workforce/bulk-action', [WorkforceController::class, 'bulkAction'])->name('workforce.bulk-action');
+        Route::get('/workforce/export', [WorkforceController::class, 'export'])->name('workforce.export');
+        Route::get('/workforce/{worker}', [WorkforceController::class, 'show'])->name('workforce.show');
+        Route::get('/workforce/{worker}/edit', [WorkforceController::class, 'edit'])->name('workforce.edit');
 
+        // Clients routes
         Route::get('/clients', [ClientsController::class, 'index'])->name('clients');
+        Route::get('/clients/index', [ClientsController::class, 'index'])->name('clients.index');
+        Route::get('/clients/create', [ClientsController::class, 'create'])->name('clients.create');
         Route::post('/clients', [ClientsController::class, 'store'])->name('clients.store');
         Route::patch('/clients/{client}', [ClientsController::class, 'update'])->name('clients.update');
+        Route::post('/clients/bulk-action', [ClientsController::class, 'bulkAction'])->name('clients.bulk-action');
+        Route::get('/clients/export', [ClientsController::class, 'export'])->name('clients.export');
+        Route::get('/clients/{client}', [ClientsController::class, 'show'])->name('clients.show');
+        Route::get('/clients/{client}/edit', [ClientsController::class, 'edit'])->name('clients.edit');
+        Route::get('/clients/{client}/quick-shipment', [ClientsController::class, 'quickShipment'])->name('clients.quick-shipment');
+        Route::get('/clients/{client}/statement', [ClientsController::class, 'statement'])->name('clients.statement');
+        Route::get('/clients/{client}/statement/download', [ClientsController::class, 'statement'])->name('clients.statement.download');
+        Route::get('/clients/{client}/statement-preview', [ClientsController::class, 'statementPreview'])->name('clients.statement-preview');
+        Route::get('/clients/{client}/contracts', [ClientsController::class, 'contracts'])->name('clients.contracts');
+        Route::post('/clients/{client}/activity', [ClientsController::class, 'storeActivity'])->name('clients.activity.store');
+        Route::post('/clients/{client}/reminder', [ClientsController::class, 'storeReminder'])->name('clients.reminder.store');
+        Route::post('/clients/{client}/reminder/{reminder}/complete', [ClientsController::class, 'completeReminder'])->name('clients.reminder.complete');
+        Route::post('/clients/{client}/credit', [ClientsController::class, 'adjustCredit'])->name('clients.credit.adjust');
+        Route::post('/clients/{client}/refresh-stats', [ClientsController::class, 'refreshStats'])->name('clients.refresh-stats');
 
+        // Finance routes
         Route::get('/finance', [FinanceController::class, 'index'])->name('finance');
+        Route::get('/finance/index', [FinanceController::class, 'index'])->name('finance.index');
         Route::post('/finance/invoices', [FinanceController::class, 'storeInvoice'])->name('finance.invoice.store');
         Route::post('/finance/payments', [FinanceController::class, 'storePayment'])->name('finance.payment.store');
         Route::get('/finance/export', [FinanceController::class, 'export'])->name('finance.export');
+        Route::get('/finance/cod', [FinanceController::class, 'cod'])->name('finance.cod');
+        Route::post('/finance/cod/reconcile', [FinanceController::class, 'codReconcile'])->name('finance.cod.reconcile');
+        Route::get('/finance/expenses', [FinanceController::class, 'expenses'])->name('finance.expenses');
+        Route::post('/finance/expenses', [FinanceController::class, 'storeExpense'])->name('finance.expenses.store');
+        Route::get('/finance/cash-position', [FinanceController::class, 'cashPosition'])->name('finance.cash-position');
+        Route::get('/finance/daily-report', [FinanceController::class, 'dailyReport'])->name('finance.daily-report');
 
         // Branch Settlements (P&L)
         Route::prefix('settlements')->name('settlements.')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\Branch\SettlementController::class, 'dashboard'])->name('dashboard');
             Route::get('/', [\App\Http\Controllers\Branch\SettlementController::class, 'index'])->name('index');
             Route::post('/', [\App\Http\Controllers\Branch\SettlementController::class, 'create'])->name('create');
+            Route::get('/pl-report', [\App\Http\Controllers\Branch\SettlementController::class, 'plReport'])->name('pl-report');
+            Route::get('/expense-breakdown', [\App\Http\Controllers\Branch\SettlementController::class, 'expenseBreakdown'])->name('expense-breakdown');
             Route::get('/{settlement}', [\App\Http\Controllers\Branch\SettlementController::class, 'show'])->name('show');
             Route::post('/{settlement}/submit', [\App\Http\Controllers\Branch\SettlementController::class, 'submit'])->name('submit');
             Route::post('/{settlement}/notes', [\App\Http\Controllers\Branch\SettlementController::class, 'addNotes'])->name('notes');
         });
 
+        // Warehouse routes
         Route::get('/warehouse', [WarehouseController::class, 'index'])->name('warehouse');
+        Route::get('/warehouse/index', [WarehouseController::class, 'index'])->name('warehouse.index');
         Route::get('/warehouse/picking', [WarehouseController::class, 'picking'])->name('warehouse.picking');
+        Route::post('/warehouse/picking', [WarehouseController::class, 'processPicking'])->name('warehouse.picking.store');
+        Route::get('/warehouse/receiving', [WarehouseController::class, 'receiving'])->name('warehouse.receiving');
+        Route::post('/warehouse/receiving', [WarehouseController::class, 'processReceiving'])->name('warehouse.receiving.process');
+        Route::get('/warehouse/dispatch', [WarehouseController::class, 'dispatchView'])->name('warehouse.dispatch');
+        Route::post('/warehouse/dispatch', [WarehouseController::class, 'processDispatch'])->name('warehouse.dispatch.process');
+        Route::get('/warehouse/zones', [WarehouseController::class, 'zones'])->name('warehouse.zones');
+        Route::post('/warehouse/zones', [WarehouseController::class, 'storeZone'])->name('warehouse.zones.store');
+        Route::get('/warehouse/capacity', [WarehouseController::class, 'capacity'])->name('warehouse.capacity');
+        Route::get('/warehouse/cycle-count', [WarehouseController::class, 'cycleCount'])->name('warehouse.cycle-count');
+        Route::post('/warehouse/cycle-count', [WarehouseController::class, 'storeCycleCount'])->name('warehouse.cycle-count.store');
         Route::post('/warehouse/locations', [WarehouseController::class, 'storeLocation'])->name('warehouse.store');
         Route::patch('/warehouse/locations/{location}', [WarehouseController::class, 'updateLocation'])->name('warehouse.update');
 
@@ -627,6 +672,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin,super-ad
         Route::post('/', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('store');
         Route::get('/branch-managers', [\App\Http\Controllers\Admin\UserManagementController::class, 'branchManagers'])->name('branch-managers');
         Route::get('/impersonation-logs', [\App\Http\Controllers\Admin\UserManagementController::class, 'impersonationLogs'])->name('impersonation-logs');
+        Route::get('/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'show'])->name('show');
+        Route::get('/{user}/edit', [\App\Http\Controllers\Admin\UserManagementController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])->name('update');
+        Route::post('/{user}/toggle-status', [\App\Http\Controllers\Admin\UserManagementController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{user}/reset-password', [\App\Http\Controllers\Admin\UserManagementController::class, 'resetPassword'])->name('reset-password');
+        Route::delete('/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])->name('destroy');
     });
     
     Route::post('/users/{user}/impersonate', [\App\Http\Controllers\Admin\ImpersonationController::class, 'start'])->name('impersonation.start');

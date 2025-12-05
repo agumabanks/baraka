@@ -161,15 +161,15 @@
                 </div>
             </div>
 
-            {{-- Assigned Driver --}}
-            @if($shipment->assignedDriver)
+            {{-- Assigned Worker --}}
+            @if($shipment->assignedWorker)
             <div class="glass-panel">
                 <div class="p-4 border-b border-white/10">
-                    <h2 class="font-semibold">Assigned Driver</h2>
+                    <h2 class="font-semibold">Assigned Worker</h2>
                 </div>
                 <div class="p-4">
-                    <div class="text-sm font-semibold">{{ $shipment->assignedDriver->name ?? 'N/A' }}</div>
-                    <div class="text-sm muted">{{ $shipment->assignedDriver->phone ?? '' }}</div>
+                    <div class="text-sm font-semibold">{{ $shipment->assignedWorker->user->name ?? $shipment->assignedWorker->name ?? 'N/A' }}</div>
+                    <div class="text-sm muted">{{ $shipment->assignedWorker->user->phone ?? $shipment->assignedWorker->phone ?? '' }}</div>
                 </div>
             </div>
             @endif

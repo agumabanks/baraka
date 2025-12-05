@@ -186,6 +186,52 @@ class OperationsController extends Controller
         ]);
     }
 
+    /**
+     * View exceptions/problem shipments
+     */
+    public function exceptions(Request $request): View
+    {
+        $user = $request->user();
+        $this->assertBranchPermission($user);
+        $branch = $this->resolveBranch($request);
+
+        $exceptionStatuses = [
+            ShipmentStatus::EXCEPTION->value ?? 'EXCEPTION',
+            ShipmentStatus::FAILED_DELIVERY->value ?? 'FAILED_DELIVERY',
+            ShipmentStatus::ON_HOLD->value ?? 'ON_HOLD',
+            ShipmentStatus::RETURNED_TO_SENDER->value ?? 'RETURNED_TO_SENDER',
+        ];
+
+        $exceptions = Shipment::query()
+            ->with(['customer:id,company_name,contact_person', 'assignedWorker.user:id,name', 'originBranch:id,name,code', 'destBranch:id,name,code'])
+            ->where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })
+            ->whereIn('current_status', $exceptionStatuses)
+            ->latest()
+            ->paginate(20);
+
+        $stats = [
+            'total' => $exceptions->total(),
+            'failed_delivery' => Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })->where('current_status', ShipmentStatus::FAILED_DELIVERY->value ?? 'FAILED_DELIVERY')->count(),
+            'on_hold' => Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })->where('current_status', ShipmentStatus::ON_HOLD->value ?? 'ON_HOLD')->count(),
+            'returned' => Shipment::where(function ($q) use ($branch) {
+                $q->where('origin_branch_id', $branch->id)->orWhere('dest_branch_id', $branch->id);
+            })->where('current_status', ShipmentStatus::RETURNED_TO_SENDER->value ?? 'RETURNED_TO_SENDER')->count(),
+        ];
+
+        return view('branch.exceptions.index', [
+            'branch' => $branch,
+            'branchOptions' => $this->branchOptions($user),
+            'exceptions' => $exceptions,
+            'stats' => $stats,
+        ]);
+    }
+
     public function assign(Request $request, AssignmentEngine $assignmentEngine, ShipmentLifecycleService $lifecycleService): RedirectResponse
     {
         $user = $request->user();

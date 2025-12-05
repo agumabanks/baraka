@@ -135,7 +135,7 @@ class BranchCapacityService
     {
         if ($dailyWorkload->isEmpty()) {
             return [
-                'peak_days' => [],
+                'peak_days' => collect(),
                 'average_daily_load' => 0,
                 'peak_threshold' => 0,
                 'peak_frequency' => 0,
@@ -385,8 +385,15 @@ class BranchCapacityService
      */
     private function calculateRecommendedAllocation(Branch $branch, array $workloadAnalysis): array
     {
-        $avgDailyLoad = $workloadAnalysis['daily_patterns']->avg('shipment_count') ?? 0;
-        $peakLoad = $workloadAnalysis['peak_hours']['peak_days']->max('shipment_count') ?? $avgDailyLoad;
+        $dailyPatterns = $workloadAnalysis['daily_patterns'] ?? collect();
+        $avgDailyLoad = $dailyPatterns instanceof \Illuminate\Support\Collection 
+            ? ($dailyPatterns->avg('shipment_count') ?? 0) 
+            : 0;
+        
+        $peakDays = $workloadAnalysis['peak_hours']['peak_days'] ?? collect();
+        $peakLoad = $peakDays instanceof \Illuminate\Support\Collection && $peakDays->isNotEmpty()
+            ? ($peakDays->max('shipment_count') ?? $avgDailyLoad)
+            : $avgDailyLoad;
 
         // Calculate required capacity for different scenarios
         $normalCapacity = ceil($avgDailyLoad * 1.2); // 20% buffer

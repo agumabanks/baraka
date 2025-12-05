@@ -159,9 +159,18 @@ return new class extends Migration
 
         $existingIndexes = [];
         try {
-            $rawIndexes = DB::select("SHOW INDEX FROM {$table}");
-            foreach ($rawIndexes as $row) {
-                $existingIndexes[$row->Key_name] = true;
+            $driver = Schema::getConnection()->getDriverName();
+            
+            if ($driver === 'sqlite') {
+                $rawIndexes = DB::select("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = ?", [$table]);
+                foreach ($rawIndexes as $row) {
+                    $existingIndexes[$row->name] = true;
+                }
+            } else {
+                $rawIndexes = DB::select("SHOW INDEX FROM {$table}");
+                foreach ($rawIndexes as $row) {
+                    $existingIndexes[$row->Key_name] = true;
+                }
             }
         } catch (\Exception $e) {
             echo "Could not check existing indexes for {$table}: " . $e->getMessage() . "\n";

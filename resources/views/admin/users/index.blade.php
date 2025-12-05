@@ -77,7 +77,7 @@
         </div>
 
         {{-- Table --}}
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-y-visible">
             <table class="w-full">
                 <thead class="bg-white/5 text-xs uppercase text-zinc-400">
                     <tr>

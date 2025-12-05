@@ -476,6 +476,22 @@ class FinanceController extends Controller
     }
 
     /**
+     * COD Management Dashboard (alias for route compatibility)
+     */
+    public function cod(Request $request): View
+    {
+        return $this->codManagement($request);
+    }
+
+    /**
+     * Reconcile COD (alias for route compatibility)
+     */
+    public function codReconcile(Request $request): RedirectResponse
+    {
+        return $this->reconcileCod($request);
+    }
+
+    /**
      * COD Management Dashboard
      */
     public function codManagement(Request $request): View

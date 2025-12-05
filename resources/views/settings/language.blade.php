@@ -81,13 +81,13 @@
                 </div>
 
                 <!-- Export Dropdown -->
-                <div class="relative" id="exportDropdown">
-                    <button type="button" onclick="toggleDropdown('exportDropdown')" class="btn-secondary text-sm">
+                <div class="relative inline-block" id="exportDropdownWrapper">
+                    <button type="button" class="export-toggle-btn btn-secondary text-sm">
                         <i class="bi bi-download mr-2"></i>
                         Export
-                        <i class="bi bi-chevron-down ml-2 text-xs dropdown-chevron transition-transform"></i>
+                        <i class="bi bi-chevron-down ml-2 text-xs transition-transform"></i>
                     </button>
-                    <div class="dropdown-menu hidden absolute left-0 z-50 mt-2 w-48 rounded-xl bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
+                    <div class="export-dropdown-menu hidden absolute left-0 z-50 mt-2 w-48 rounded-xl bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
                         <a href="{{ route('settings.language.export', ['format' => 'json']) }}" 
                            class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
                             <i class="bi bi-filetype-json"></i> Export as JSON
@@ -104,6 +104,22 @@
                         @endforeach
                     </div>
                 </div>
+                <script>
+                (function() {
+                    var wrapper = document.getElementById('exportDropdownWrapper');
+                    var btn = wrapper.querySelector('.export-toggle-btn');
+                    var menu = wrapper.querySelector('.export-dropdown-menu');
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        menu.classList.toggle('hidden');
+                    });
+                    document.addEventListener('click', function(e) {
+                        if (!wrapper.contains(e.target)) {
+                            menu.classList.add('hidden');
+                        }
+                    });
+                })();
+                </script>
 
                 <!-- Import Button -->
                 <button type="button" onclick="document.getElementById('importModal').classList.remove('hidden')" class="btn-secondary text-sm">
@@ -645,72 +661,5 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-
-        // Dropdown toggle function
-        function toggleDropdown(id) {
-            const container = document.getElementById(id);
-            if (!container) return;
-            
-            const dropdown = container.querySelector('.dropdown-menu');
-            const chevron = container.querySelector('.dropdown-chevron');
-            
-            // Close other dropdowns first
-            document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
-                if (menu !== dropdown && !menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
-                    const otherChevron = menu.closest('[id]')?.querySelector('.dropdown-chevron');
-                    if (otherChevron) otherChevron.classList.remove('rotate-180');
-                }
-            });
-            
-            if (dropdown) {
-                dropdown.classList.toggle('hidden');
-                if (chevron) {
-                    chevron.classList.toggle('rotate-180');
-                }
-            }
-        }
-
-        // Language switcher toggle function
-        function toggleLangDropdown(id) {
-            const container = document.getElementById(id);
-            if (!container) return;
-            
-            const dropdown = container.querySelector('.lang-dropdown');
-            const chevron = container.querySelector('.lang-chevron');
-            
-            if (dropdown) {
-                dropdown.classList.toggle('hidden');
-                if (chevron) {
-                    chevron.classList.toggle('rotate-180');
-                }
-            }
-        }
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(e) {
-            // Close export dropdown
-            const exportDropdown = document.getElementById('exportDropdown');
-            if (exportDropdown && !exportDropdown.contains(e.target)) {
-                const menu = exportDropdown.querySelector('.dropdown-menu');
-                const chevron = exportDropdown.querySelector('.dropdown-chevron');
-                if (menu && !menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
-                    if (chevron) chevron.classList.remove('rotate-180');
-                }
-            }
-            
-            // Close language switcher dropdowns
-            document.querySelectorAll('[id^="lang-switcher-"]').forEach(function(container) {
-                if (!container.contains(e.target)) {
-                    const dropdown = container.querySelector('.lang-dropdown');
-                    const chevron = container.querySelector('.lang-chevron');
-                    if (dropdown && !dropdown.classList.contains('hidden')) {
-                        dropdown.classList.add('hidden');
-                        if (chevron) chevron.classList.remove('rotate-180');
-                    }
-                }
-            });
-        });
     </script>
 @endsection

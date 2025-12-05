@@ -204,6 +204,35 @@ class WarehouseController extends Controller
     }
 
     /**
+     * Process picking action
+     */
+    public function processPicking(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $this->assertBranchPermission($user);
+        $branch = $this->resolveBranch($request);
+
+        $data = $request->validate([
+            'shipment_ids' => 'required|array',
+            'shipment_ids.*' => 'exists:shipments,id',
+            'worker_id' => 'nullable|exists:branch_workers,id',
+        ]);
+
+        $count = Shipment::where('origin_branch_id', $branch->id)
+            ->whereIn('id', $data['shipment_ids'])
+            ->update([
+                'current_status' => ShipmentStatus::READY_FOR_DISPATCH->value,
+                'picked_at' => now(),
+                'picked_by' => $user->id,
+                'assigned_worker_id' => $data['worker_id'] ?? null,
+            ]);
+
+        BranchCache::flushForBranch($branch->id);
+
+        return back()->with('success', "{$count} shipments marked as picked.");
+    }
+
+    /**
      * Inventory overview with location tracking
      */
     public function inventoryOverview(Request $request): View
@@ -367,6 +396,14 @@ class WarehouseController extends Controller
         BranchCache::flushForBranch($branch->id);
 
         return back()->with('success', "Shipment {$shipment->tracking_number} received successfully.");
+    }
+
+    /**
+     * Dispatch view (alias for dispatchStaging)
+     */
+    public function dispatchView(Request $request): View
+    {
+        return $this->dispatchStaging($request);
     }
 
     /**
@@ -615,6 +652,14 @@ class WarehouseController extends Controller
             : "Cycle count completed. Discrepancy of {$discrepancy} items found.";
 
         return back()->with($discrepancy === 0 ? 'success' : 'warning', $message);
+    }
+
+    /**
+     * Capacity (alias for capacityReport)
+     */
+    public function capacity(Request $request): View
+    {
+        return $this->capacityReport($request);
     }
 
     /**
