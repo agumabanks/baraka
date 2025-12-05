@@ -391,8 +391,16 @@ Route::middleware(['auth', 'branch.context', 'branch.locale', 'branch.isolation'
             Route::post('/{manifest}/arrive', [\App\Http\Controllers\Branch\ManifestController::class, 'arriveManifest'])->name('arrive');
         });
 
-        Route::get('/settings', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'index'])->name('settings');
-        Route::post('/settings', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'update'])->name('settings.save');
+        // Branch Settings (DHL-grade)
+        Route::prefix('settings')->name('settings')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'update'])->name('.save');
+            Route::post('/general', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'updateGeneral'])->name('.general');
+            Route::post('/operations', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'updateOperations'])->name('.operations');
+            Route::post('/notifications', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'updateNotifications'])->name('.notifications');
+            Route::post('/labels', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'updateLabels'])->name('.labels');
+            Route::post('/security', [\App\Http\Controllers\Branch\BranchSettingsController::class, 'updateSecurity'])->name('.security');
+        });
     });
 
 /*

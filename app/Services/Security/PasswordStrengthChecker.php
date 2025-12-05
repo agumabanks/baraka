@@ -87,6 +87,18 @@ class PasswordStrengthChecker
     }
 
     /**
+     * Check if password is in user's history (alias for checkHistory)
+     *
+     * @param User $user
+     * @param string $password
+     * @return bool True if password is in history (should be rejected)
+     */
+    public function isInHistory(User $user, string $password): bool
+    {
+        return $this->checkHistory($user, $password);
+    }
+
+    /**
      * Check if password was used in user's history
      *
      * @param User $user

@@ -3,68 +3,105 @@
 @section('title', 'Branch Settings')
 
 @section('content')
-    <div class="glass-panel p-6 space-y-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <div class="text-sm font-semibold">Branch Settings</div>
-                <p class="muted text-xs">Localization and operational preferences scoped to this branch.</p>
-            </div>
-            <div class="chip text-2xs">Overrides use branch context</div>
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Branch Settings</h1>
+            <p class="text-slate-400 mt-1">Configure localization, operations, notifications, and security for {{ $branch->name }}.</p>
         </div>
-
-        <form method="POST" action="{{ route('branch.settings.save') }}" class="space-y-6">
-            @csrf
-            <div class="grid md:grid-cols-2 gap-4">
-                <div class="glass-panel p-4 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm font-semibold">Localization</div>
-                        <span class="pill-soft">System: {{ strtoupper($systemLocale) }}</span>
-                    </div>
-                    <label class="muted text-xs block">Preferred Language</label>
-                    <select name="preferred_language" class="w-full bg-obsidian-700 border border-white/10 rounded px-3 py-2 text-sm">
-                        <option value="">Inherit ({{ strtoupper($systemLocale) }})</option>
-                        @foreach($supportedLocales as $locale)
-                            <option value="{{ $locale }}" @selected(($settings['preferred_language'] ?? null) === $locale)>{{ strtoupper($locale) }}</option>
-                        @endforeach
-                    </select>
-                    <label class="muted text-xs block">Timezone</label>
-                    <input type="text" name="timezone" value="{{ $settings['timezone'] ?? '' }}" placeholder="Africa/Kampala" class="w-full bg-obsidian-700 border border-white/10 rounded px-3 py-2 text-sm">
-                </div>
-                <div class="glass-panel p-4 space-y-3">
-                    <div class="text-sm font-semibold">Presentation</div>
-                    <label class="muted text-xs block">Display name / label</label>
-                    <input type="text" name="display_name" value="{{ $settings['display_name'] ?? '' }}" placeholder="{{ $branch->name }}" class="w-full bg-obsidian-700 border border-white/10 rounded px-3 py-2 text-sm">
-                    <label class="muted text-xs block">Contact email</label>
-                    <input type="email" name="contact_email" value="{{ $settings['contact_email'] ?? '' }}" placeholder="ops@branch.com" class="w-full bg-obsidian-700 border border-white/10 rounded px-3 py-2 text-sm">
-                </div>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-4">
-                <div class="glass-panel p-4 space-y-3">
-                    <div class="text-sm font-semibold">Operational guardrails</div>
-                    <label class="muted text-xs block">SLA threshold (%)</label>
-                    <input type="number" name="sla_threshold" value="{{ $settings['sla_threshold'] ?? '' }}" min="0" max="100" class="w-full bg-obsidian-700 border border-white/10 rounded px-3 py-2 text-sm">
-                    <label class="muted text-xs block">Operating notes</label>
-                    <textarea name="operating_notes" rows="3" class="w-full bg-obsidian-700 border border-white/10 rounded px-3 py-2 text-sm">{{ $settings['operating_notes'] ?? '' }}</textarea>
-                    <p class="muted text-2xs">Use for cutoff windows, after-hours contacts, or on-call rotations.</p>
-                </div>
-                <div class="glass-panel p-4 space-y-3">
-                    <div class="text-sm font-semibold">Inheritance</div>
-                    <p class="muted text-xs">
-                        Values left blank will inherit global defaults (currency, language, and runtime toggles). Branch overrides apply only inside this branch context.
-                    </p>
-                    <div class="glass-panel px-3 py-2 border border-white/10 text-xs">
-                        <div class="flex items-center justify-between">
-                            <span class="muted">System default locale</span>
-                            <span class="chip text-2xs">{{ strtoupper($systemLocale) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-end">
-                <button type="submit" class="chip px-4 py-2 text-sm">Save branch settings</button>
-            </div>
-        </form>
+        <div class="flex items-center gap-3">
+            <span class="px-3 py-1.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 rounded-lg">
+                <i class="bi bi-building mr-1"></i> {{ $branch->code }}
+            </span>
+        </div>
     </div>
+
+    <!-- Tabs Navigation -->
+    <div class="glass-panel p-1 flex flex-wrap gap-1">
+        <a href="{{ route('branch.settings', ['tab' => 'general']) }}" 
+           class="px-4 py-2 text-sm font-medium rounded-lg transition-all {{ $activeTab === 'general' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+            <i class="bi bi-gear mr-2"></i>General
+        </a>
+        <a href="{{ route('branch.settings', ['tab' => 'operations']) }}" 
+           class="px-4 py-2 text-sm font-medium rounded-lg transition-all {{ $activeTab === 'operations' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+            <i class="bi bi-truck mr-2"></i>Operations
+        </a>
+        <a href="{{ route('branch.settings', ['tab' => 'notifications']) }}" 
+           class="px-4 py-2 text-sm font-medium rounded-lg transition-all {{ $activeTab === 'notifications' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+            <i class="bi bi-bell mr-2"></i>Notifications
+        </a>
+        <a href="{{ route('branch.settings', ['tab' => 'labels']) }}" 
+           class="px-4 py-2 text-sm font-medium rounded-lg transition-all {{ $activeTab === 'labels' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+            <i class="bi bi-printer mr-2"></i>Labels & Printing
+        </a>
+        <a href="{{ route('branch.settings', ['tab' => 'security']) }}" 
+           class="px-4 py-2 text-sm font-medium rounded-lg transition-all {{ $activeTab === 'security' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+            <i class="bi bi-shield-lock mr-2"></i>Security
+        </a>
+    </div>
+
+    <!-- Tab Content -->
+    @if($activeTab === 'general')
+        @include('branch.settings._general')
+    @elseif($activeTab === 'operations')
+        @include('branch.settings._operations')
+    @elseif($activeTab === 'notifications')
+        @include('branch.settings._notifications')
+    @elseif($activeTab === 'labels')
+        @include('branch.settings._labels')
+    @elseif($activeTab === 'security')
+        @include('branch.settings._security')
+    @endif
+</div>
+
+<script>
+function saveSettings(formId, endpoint) {
+    const form = document.getElementById(formId);
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin mr-2"></i>Saving...';
+    
+    const formData = new FormData(form);
+    
+    fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+        } else {
+            showToast(data.message || 'Failed to save settings', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('An error occurred while saving', 'error');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-rose-500' : 'bg-blue-500';
+    toast.className = `fixed bottom-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${bgColor}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'transition-opacity');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+</script>
 @endsection
