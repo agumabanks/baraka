@@ -162,6 +162,28 @@ Route::prefix('client')->name('client.')->group(function () {
 // Client Dashboard (authenticated customers)
 Route::middleware(['auth:customer'])->prefix('client')->name('client.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Client\ClientDashboardController::class, 'index'])->name('dashboard');
+
+    // Client Portal
+    Route::get('/shipments', [\App\Http\Controllers\Client\ClientPortalController::class, 'shipments'])->name('shipments.index');
+    Route::get('/shipments/create', [\App\Http\Controllers\Client\ClientPortalController::class, 'createShipment'])->name('shipments.create');
+    Route::post('/shipments', [\App\Http\Controllers\Client\ClientPortalController::class, 'storeShipment'])->name('shipments.store');
+    Route::get('/shipments/{shipment}', [\App\Http\Controllers\Client\ClientPortalController::class, 'showShipment'])->name('shipments.show');
+
+    Route::get('/tracking', [\App\Http\Controllers\Client\ClientPortalController::class, 'tracking'])->name('tracking');
+    Route::get('/quotes', [\App\Http\Controllers\Client\ClientPortalController::class, 'quotes'])->name('quotes');
+    Route::post('/quotes/calculate', [\App\Http\Controllers\Client\ClientPortalController::class, 'calculateQuote'])->name('quotes.calculate');
+
+    Route::get('/addresses', [\App\Http\Controllers\Client\ClientPortalController::class, 'addresses'])->name('addresses');
+    Route::post('/addresses', [\App\Http\Controllers\Client\ClientPortalController::class, 'storeAddress'])->name('addresses.store');
+    Route::delete('/addresses/{address}', [\App\Http\Controllers\Client\ClientPortalController::class, 'deleteAddress'])->name('addresses.delete');
+
+    Route::get('/invoices', [\App\Http\Controllers\Client\ClientPortalController::class, 'invoices'])->name('invoices');
+
+    Route::get('/profile', [\App\Http\Controllers\Client\ClientPortalController::class, 'profile'])->name('profile');
+    Route::put('/profile', [\App\Http\Controllers\Client\ClientPortalController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/password', [\App\Http\Controllers\Client\ClientPortalController::class, 'updatePassword'])->name('profile.password');
+
+    Route::get('/support', [\App\Http\Controllers\Client\ClientPortalController::class, 'support'])->name('support');
 });
 
 Route::middleware(['auth', 'branch.context', 'branch.locale', 'branch.isolation'])
@@ -265,7 +287,7 @@ Route::middleware(['auth', 'branch.context', 'branch.locale', 'branch.isolation'
         Route::post('/clients/{client}/activity', [ClientsController::class, 'storeActivity'])->name('clients.activity.store');
         Route::post('/clients/{client}/reminder', [ClientsController::class, 'storeReminder'])->name('clients.reminder.store');
         Route::post('/clients/{client}/reminder/{reminder}/complete', [ClientsController::class, 'completeReminder'])->name('clients.reminder.complete');
-        Route::post('/clients/{client}/credit', [ClientsController::class, 'adjustCredit'])->name('clients.credit.adjust');
+        Route::post('/clients/{client}/credit', [ClientsController::class, 'adjustCredit'])->name('clients.adjust-credit');
         Route::post('/clients/{client}/refresh-stats', [ClientsController::class, 'refreshStats'])->name('clients.refresh-stats');
 
         // Finance routes

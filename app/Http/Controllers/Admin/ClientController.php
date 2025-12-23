@@ -199,7 +199,10 @@ class ClientController extends Controller
     public function create(): View
     {
         $branches = Branch::where('status', 'active')->orderBy('name')->get(['id', 'name', 'code']);
-        $accountManagers = User::whereHas('roles', fn($q) => $q->whereIn('name', ['admin', 'super-admin', 'regional-manager']))
+        $accountManagers = User::whereHas('role', function ($q) {
+                $roleKeys = ['admin', 'super-admin', 'regional-manager'];
+                $q->whereIn('slug', $roleKeys)->orWhereIn('name', $roleKeys);
+            })
             ->orderBy('name')
             ->get(['id', 'name']);
 

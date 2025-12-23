@@ -9,6 +9,7 @@ export default defineConfig({
                 'resources/sass/app.scss',
                 'resources/js/app.js',
                 'resources/css/branch.css',
+                'resources/css/client.css',
                 'resources/js/branch.js',
                 'resources/css/settings.css',
                 'resources/js/settings.js',

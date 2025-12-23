@@ -4,6 +4,7 @@ namespace App\Http\Middleware\Security;
 
 use Closure;
 use Illuminate\Http\Request;
+use App\Models\User;
 use App\Services\Security\PasswordStrengthChecker;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -23,7 +24,7 @@ class CheckPasswordExpiry
     {
         $user = auth()->user();
         
-        if (!$user) {
+        if (!$user instanceof User) {
             return $next($request);
         }
         

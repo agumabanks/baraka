@@ -7,20 +7,8 @@
     <title>@yield('title', 'Dashboard') - {{ config('app.name') }} Portal</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
-    @vite(['resources/css/branch.css', 'resources/js/branch.js'])
+    @vite(['resources/css/client.css', 'resources/js/branch.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        :root { --dhl-red: #d40511; --dhl-yellow: #ffcc00; }
-        body { font-family: 'Inter', sans-serif; }
-        .brand-gradient { background: linear-gradient(135deg, var(--dhl-red) 0%, #b8040e 100%); }
-        .sidebar-link { @apply flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all; }
-        .sidebar-link.active { @apply text-white bg-white/10; }
-        .stat-card { @apply bg-zinc-800/50 border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all; }
-        .btn-primary { @apply px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors flex items-center gap-2; }
-        .btn-secondary { @apply px-4 py-2.5 bg-zinc-700 hover:bg-zinc-600 rounded-lg font-medium transition-colors flex items-center gap-2; }
-        .input-field { @apply w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-zinc-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all; }
-        .glass-panel { @apply bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-xl; }
-    </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
     <div class="flex min-h-screen" x-data="{ sidebarOpen: false }">
