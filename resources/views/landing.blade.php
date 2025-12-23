@@ -44,8 +44,11 @@
             <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
                 <div class="flex items-center gap-3">
-                    @if(\App\Support\SystemSettings::logo() && \App\Support\SystemSettings::logo() !== '/images/logo.png')
-                        <img src="{{ \App\Support\SystemSettings::logo() }}" alt="{{ config('app.name') }}" class="h-10 w-auto">
+                    @php
+                        $landingLogo = \App\Support\SystemSettings::landingLogo();
+                    @endphp
+                    @if(!empty($landingLogo))
+                        <img src="{{ $landingLogo }}" alt="{{ \App\Support\SystemSettings::companyName() }}" class="h-10 w-auto">
                     @else
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-600/20">
                             {{ substr(config('app.name'), 0, 1) }}
@@ -57,24 +60,25 @@
                 <!-- Desktop Nav -->
                 <nav class="hidden md:flex items-center gap-8">
                     @if($settings['services_enabled'])
-                    <a href="#solutions" class="nav-link">Solutions</a>
+                    <a href="#solutions" class="nav-link">{{ trans_db('landing.nav.solutions', [], null, 'Solutions') }}</a>
                     @endif
                     @if($settings['features_enabled'])
-                    <a href="#features" class="nav-link">Platform</a>
+                    <a href="#features" class="nav-link">{{ trans_db('landing.nav.platform', [], null, 'Platform') }}</a>
                     @endif
                     @if($settings['stats_enabled'])
-                    <a href="#network" class="nav-link">Network</a>
+                    <a href="#network" class="nav-link">{{ trans_db('landing.nav.network', [], null, 'Network') }}</a>
                     @endif
-                    <a href="{{ route('tracking.index') }}" class="nav-link">Tracking</a>
+                    <a href="{{ route('tracking.index') }}" class="nav-link">{{ trans_db('landing.nav.tracking', [], null, 'Tracking') }}</a>
                 </nav>
 
                 <!-- Auth Buttons -->
                 <div class="flex items-center gap-4">
+                    <x-language-switcher style="dropdown" :show-flags="true" :show-labels="true" />
                     <a href="{{ route('client.login') }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-                        Sign In
+                        {{ trans_db('landing.auth.sign_in', [], null, 'Sign In') }}
                     </a>
                     <a href="{{ route('client.register') }}" class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30">
-                        Sign Up
+                        {{ trans_db('landing.auth.sign_up', [], null, 'Sign Up') }}
                     </a>
                 </div>
             </div>

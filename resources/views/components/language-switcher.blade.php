@@ -13,10 +13,20 @@
     
     $supportedCodes = config('translations.supported', ['en', 'fr', 'sw']);
     $locales = collect($allLocales)->only($supportedCodes)->toArray();
-    
+
+    $mode = \App\Support\SystemSettings::localizationMode();
+    $isLocked = $mode === 'global';
+
     $currentLocale = app()->getLocale();
     if (!isset($locales[$currentLocale])) {
         $currentLocale = 'en';
+    }
+
+    if ($isLocked) {
+        $forced = \App\Support\SystemSettings::defaultLocale();
+        if (isset($locales[$forced])) {
+            $currentLocale = $forced;
+        }
     }
     
     $currentUrl = request()->fullUrl();
@@ -30,6 +40,19 @@
 @endphp
 
 @if($style === 'dropdown')
+@if($isLocked)
+<div class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg" title="Language is locked by system settings">
+    @if($showFlags)
+        <span class="text-base">{{ $locales[$currentLocale]['flag'] }}</span>
+    @endif
+    @if($showLabels)
+        <span class="hidden sm:inline">{{ $locales[$currentLocale]['native'] }}</span>
+    @endif
+    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V7a4 4 0 00-8 0v4a4 4 0 004 4h8m-6 0v2a2 2 0 002 2h6a2 2 0 002-2v-6a2 2 0 00-2-2h-6a2 2 0 00-2 2v6z"/>
+    </svg>
+</div>
+@else
 <div class="relative inline-block">
     <button type="button" class="lang-toggle-btn flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
         @if($showFlags)
@@ -86,6 +109,7 @@
     }
 })();
 </script>
+@endif
 
 @elseif($style === 'inline')
 <div class="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">

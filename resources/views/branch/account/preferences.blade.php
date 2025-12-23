@@ -26,12 +26,15 @@
                         <label for="language" class="block text-sm font-medium mb-2">Language</label>
                         <select id="language" 
                                 name="language" 
-                                class="w-full bg-obsidian-700/50 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
+                                class="w-full bg-obsidian-700/50 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                @disabled(\App\Support\SystemSettings::localizationMode() === 'global')>
                             <option value="en" {{ (auth()->user()->preferred_language ?? 'en') === 'en' ? 'selected' : '' }}>English</option>
                             <option value="fr" {{ (auth()->user()->preferred_language ?? 'en') === 'fr' ? 'selected' : '' }}>Français (French)</option>
                             <option value="sw" {{ (auth()->user()->preferred_language ?? 'en') === 'sw' ? 'selected' : '' }}>Kiswahili (Swahili)</option>
-                            <option value="ar" {{ (auth()->user()->preferred_language ?? 'en') === 'ar' ? 'selected' : '' }}>العربية (Arabic)</option>
                         </select>
+                        @if(\App\Support\SystemSettings::localizationMode() === 'global')
+                            <div class="mt-2 text-xs muted">Language is managed globally in Settings → Language.</div>
+                        @endif
                     </div>
 
                     <div>

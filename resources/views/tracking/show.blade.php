@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Tracking {{ $shipment->tracking_number }} - {{ config('app.name') }}</title>
+    <title>{{ trans_db('tracking.show.title', ['tracking' => $shipment->tracking_number], null, 'Tracking :tracking') }} - {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -65,12 +65,15 @@
                 </div>
                 <span class="text-xl font-bold">{{ config('app.name') }}</span>
             </a>
-            <a href="{{ route('tracking.index') }}" class="text-sm text-slate-400 hover:text-white transition flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                Track Another
-            </a>
+            <div class="flex items-center gap-3">
+                <x-language-switcher style="dropdown" :show-flags="true" :show-labels="true" />
+                <a href="{{ route('tracking.index') }}" class="text-sm text-slate-400 hover:text-white transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    {{ trans_db('tracking.show.track_another', [], null, 'Track Another') }}
+                </a>
+            </div>
         </div>
     </header>
 

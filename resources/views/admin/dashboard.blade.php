@@ -1,7 +1,7 @@
 @extends('admin.layout')
 
-@section('title', 'Dashboard')
-@section('header', 'Dashboard Overview')
+@section('title', trans_db('admin.dashboard.title', [], null, 'Dashboard'))
+@section('header', trans_db('admin.dashboard.header', [], null, 'Dashboard Overview'))
 
 @section('content')
 @php
@@ -10,79 +10,79 @@
     $brandName = $branding['company_name'] ?? \App\Support\SystemSettings::companyName();
 @endphp
 <div id="dashboard-page">
-    {{-- Welcome Banner --}}
-    <div class="glass-panel p-6 mb-6 bg-gradient-to-r from-sky-500/10 via-purple-500/10 to-emerald-500/10">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-xl font-semibold mb-1">Welcome back, {{ auth()->user()->name }}</h2>
-                <p class="text-slate-400 text-sm">Here's what's happening across {{ $brandName }} today.</p>
-            </div>
-            <div class="hidden md:flex items-center gap-3">
-                <div class="text-right">
-                    <div class="text-2xs uppercase muted">Current Time</div>
-                    <div class="text-lg font-mono" id="current-time">{{ now()->format('H:i') }}</div>
-                </div>
-                <div class="w-px h-10 bg-white/10"></div>
-                <div class="text-right">
-                    <div class="text-2xs uppercase muted">Date</div>
-                    <div class="text-sm">{{ now()->format('D, M d Y') }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
+	    {{-- Welcome Banner --}}
+	    <div class="glass-panel p-6 mb-6 bg-gradient-to-r from-sky-500/10 via-purple-500/10 to-emerald-500/10">
+	        <div class="flex items-center justify-between">
+	            <div>
+	                <h2 class="text-xl font-semibold mb-1">{{ trans_db('admin.dashboard.welcome', ['name' => auth()->user()->name], null, 'Welcome back, :name') }}</h2>
+	                <p class="text-slate-400 text-sm">{{ trans_db('admin.dashboard.subtitle', ['brand' => $brandName], null, "Here's what's happening across :brand today.") }}</p>
+	            </div>
+	            <div class="hidden md:flex items-center gap-3">
+	                <div class="text-right">
+	                    <div class="text-2xs uppercase muted">{{ trans_db('admin.dashboard.current_time', [], null, 'Current Time') }}</div>
+	                    <div class="text-lg font-mono" id="current-time">{{ now()->format('H:i') }}</div>
+	                </div>
+	                <div class="w-px h-10 bg-white/10"></div>
+	                <div class="text-right">
+	                    <div class="text-2xs uppercase muted">{{ trans_db('admin.dashboard.date', [], null, 'Date') }}</div>
+	                    <div class="text-sm">{{ now()->locale(app()->getLocale())->translatedFormat('D, M d Y') }}</div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
 
     {{-- Date Range Filter --}}
-    <div class="glass-panel p-4 mb-6">
-        <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-wrap items-center gap-3">
-            <div class="flex gap-2">
-                <button type="submit" name="range" value="today" class="btn btn-sm {{ request('range', '7d') === 'today' ? 'btn-primary' : 'btn-secondary' }}">Today</button>
-                <button type="submit" name="range" value="7d" class="btn btn-sm {{ request('range', '7d') === '7d' ? 'btn-primary' : 'btn-secondary' }}">7 Days</button>
-                <button type="submit" name="range" value="30d" class="btn btn-sm {{ request('range') === '30d' ? 'btn-primary' : 'btn-secondary' }}">30 Days</button>
-                <button type="submit" name="range" value="this_month" class="btn btn-sm {{ request('range') === 'this_month' ? 'btn-primary' : 'btn-secondary' }}">This Month</button>
-            </div>
-            <div class="flex-1 text-right">
-                <span class="text-sm muted">{{ $dateRange['label'] ?? 'Last 7 Days' }}</span>
-            </div>
-        </form>
-    </div>
+	    <div class="glass-panel p-4 mb-6">
+	        <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-wrap items-center gap-3">
+	            <div class="flex gap-2">
+	                <button type="submit" name="range" value="today" class="btn btn-sm {{ request('range', '7d') === 'today' ? 'btn-primary' : 'btn-secondary' }}">{{ trans_db('admin.dashboard.range.today', [], null, 'Today') }}</button>
+	                <button type="submit" name="range" value="7d" class="btn btn-sm {{ request('range', '7d') === '7d' ? 'btn-primary' : 'btn-secondary' }}">{{ trans_db('admin.dashboard.range.7d', [], null, '7 Days') }}</button>
+	                <button type="submit" name="range" value="30d" class="btn btn-sm {{ request('range') === '30d' ? 'btn-primary' : 'btn-secondary' }}">{{ trans_db('admin.dashboard.range.30d', [], null, '30 Days') }}</button>
+	                <button type="submit" name="range" value="this_month" class="btn btn-sm {{ request('range') === 'this_month' ? 'btn-primary' : 'btn-secondary' }}">{{ trans_db('admin.dashboard.range.this_month', [], null, 'This Month') }}</button>
+	            </div>
+	            <div class="flex-1 text-right">
+	                <span class="text-sm muted">{{ $dateRange['label'] ?? trans_db('admin.dashboard.range.last_7_days', [], null, 'Last 7 Days') }}</span>
+	            </div>
+	        </form>
+	    </div>
 
     {{-- Primary KPIs --}}
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
-        @include('admin.components.kpi-card', [
-            'title' => 'Total Shipments',
-            'value' => number_format($stats['total_shipments'] ?? 0),
-            'subtitle' => 'This period',
-            'icon' => 'box',
-            'color' => 'sky',
-            'trend' => $stats['shipment_trend'] ?? null,
-            'href' => route('admin.shipments.index'),
-        ])
-        @include('admin.components.kpi-card', [
-            'title' => 'Delivered',
-            'value' => number_format($stats['delivered'] ?? 0),
-            'subtitle' => ($stats['delivery_rate'] ?? 0) . '% success rate',
-            'icon' => 'check',
-            'color' => 'emerald',
-            'href' => route('admin.shipments.index', ['status' => 'delivered']),
-        ])
-        @include('admin.components.kpi-card', [
-            'title' => 'In Transit',
-            'value' => number_format($stats['in_transit'] ?? 0),
-            'subtitle' => 'Active shipments',
-            'icon' => 'truck',
-            'color' => 'purple',
-            'href' => route('admin.tracking.dashboard'),
-        ])
-        @include('admin.components.kpi-card', [
-            'title' => 'Revenue',
-            'value' => $formatCurrency($stats['revenue'] ?? 0, $defaultCurrency),
-            'subtitle' => 'This period',
-            'icon' => 'currency',
-            'color' => 'amber',
-            'trend' => $stats['revenue_trend'] ?? null,
-            'href' => route('admin.finance.dashboard'),
-        ])
-    </div>
+	    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
+	        @include('admin.components.kpi-card', [
+	            'title' => trans_db('admin.dashboard.kpi.total_shipments.title', [], null, 'Total Shipments'),
+	            'value' => number_format($stats['total_shipments'] ?? 0),
+	            'subtitle' => trans_db('admin.dashboard.kpi.this_period', [], null, 'This period'),
+	            'icon' => 'box',
+	            'color' => 'sky',
+	            'trend' => $stats['shipment_trend'] ?? null,
+	            'href' => route('admin.shipments.index'),
+	        ])
+	        @include('admin.components.kpi-card', [
+	            'title' => trans_db('admin.dashboard.kpi.delivered.title', [], null, 'Delivered'),
+	            'value' => number_format($stats['delivered'] ?? 0),
+	            'subtitle' => trans_db('admin.dashboard.kpi.delivered.subtitle', ['rate' => ($stats['delivery_rate'] ?? 0)], null, ':rate% success rate'),
+	            'icon' => 'check',
+	            'color' => 'emerald',
+	            'href' => route('admin.shipments.index', ['status' => 'delivered']),
+	        ])
+	        @include('admin.components.kpi-card', [
+	            'title' => trans_db('admin.dashboard.kpi.in_transit.title', [], null, 'In Transit'),
+	            'value' => number_format($stats['in_transit'] ?? 0),
+	            'subtitle' => trans_db('admin.dashboard.kpi.in_transit.subtitle', [], null, 'Active shipments'),
+	            'icon' => 'truck',
+	            'color' => 'purple',
+	            'href' => route('admin.tracking.dashboard'),
+	        ])
+	        @include('admin.components.kpi-card', [
+	            'title' => trans_db('admin.dashboard.kpi.revenue.title', [], null, 'Revenue'),
+	            'value' => $formatCurrency($stats['revenue'] ?? 0, $defaultCurrency),
+	            'subtitle' => trans_db('admin.dashboard.kpi.this_period', [], null, 'This period'),
+	            'icon' => 'currency',
+	            'color' => 'amber',
+	            'trend' => $stats['revenue_trend'] ?? null,
+	            'href' => route('admin.finance.dashboard'),
+	        ])
+	    </div>
 
     {{-- System Alerts (if any) --}}
     @if(!empty($alerts))
@@ -110,95 +110,95 @@
     </div>
     @endif
 
-    {{-- SLA & Performance Metrics --}}
-    <div class="grid gap-4 md:grid-cols-5 mb-6">
-        <div class="stat-card border-l-2 border-emerald-500">
-            <div class="muted text-xs uppercase mb-1">On-Time Delivery</div>
-            <div class="text-2xl font-bold text-emerald-400">{{ $slaMetrics['on_time_rate'] ?? 0 }}%</div>
-            <div class="text-xs muted">{{ $slaMetrics['on_time_delivered'] ?? 0 }} of {{ $slaMetrics['total_delivered'] ?? 0 }}</div>
-        </div>
-        <div class="stat-card border-l-2 border-sky-500">
-            <div class="muted text-xs uppercase mb-1">Avg Delivery Time</div>
-            <div class="text-2xl font-bold">{{ $slaMetrics['avg_delivery_time'] ?? 0 }}h</div>
-            <div class="text-xs muted">Hours from pickup</div>
-        </div>
-        <div class="stat-card border-l-2 border-purple-500">
-            <div class="muted text-xs uppercase mb-1">First Attempt Rate</div>
-            <div class="text-2xl font-bold text-purple-400">{{ $slaMetrics['first_attempt_rate'] ?? 0 }}%</div>
-            <div class="text-xs muted">Delivered on 1st try</div>
-        </div>
-        <div class="stat-card border-l-2 border-amber-500">
-            <div class="muted text-xs uppercase mb-1">Exceptions</div>
-            <div class="text-2xl font-bold text-amber-400">{{ $slaMetrics['exceptions'] ?? 0 }}</div>
-            <div class="text-xs muted">{{ $slaMetrics['exception_rate'] ?? 0 }}% rate</div>
-        </div>
-        <div class="stat-card border-l-2 border-rose-500">
-            <div class="muted text-xs uppercase mb-1">Returns</div>
-            <div class="text-2xl font-bold text-rose-400">{{ $slaMetrics['returns'] ?? 0 }}</div>
-            <div class="text-xs muted">+ {{ $slaMetrics['cancelled'] ?? 0 }} cancelled</div>
-        </div>
-    </div>
+	    {{-- SLA & Performance Metrics --}}
+	    <div class="grid gap-4 md:grid-cols-5 mb-6">
+	        <div class="stat-card border-l-2 border-emerald-500">
+	            <div class="muted text-xs uppercase mb-1">{{ trans_db('admin.dashboard.sla.on_time_delivery', [], null, 'On-Time Delivery') }}</div>
+	            <div class="text-2xl font-bold text-emerald-400">{{ $slaMetrics['on_time_rate'] ?? 0 }}%</div>
+	            <div class="text-xs muted">{{ trans_db('admin.dashboard.common.of', ['count' => ($slaMetrics['on_time_delivered'] ?? 0), 'total' => ($slaMetrics['total_delivered'] ?? 0)], null, ':count of :total') }}</div>
+	        </div>
+	        <div class="stat-card border-l-2 border-sky-500">
+	            <div class="muted text-xs uppercase mb-1">{{ trans_db('admin.dashboard.sla.avg_delivery_time', [], null, 'Avg Delivery Time') }}</div>
+	            <div class="text-2xl font-bold">{{ $slaMetrics['avg_delivery_time'] ?? 0 }}h</div>
+	            <div class="text-xs muted">{{ trans_db('admin.dashboard.sla.hours_from_pickup', [], null, 'Hours from pickup') }}</div>
+	        </div>
+	        <div class="stat-card border-l-2 border-purple-500">
+	            <div class="muted text-xs uppercase mb-1">{{ trans_db('admin.dashboard.sla.first_attempt_rate', [], null, 'First Attempt Rate') }}</div>
+	            <div class="text-2xl font-bold text-purple-400">{{ $slaMetrics['first_attempt_rate'] ?? 0 }}%</div>
+	            <div class="text-xs muted">{{ trans_db('admin.dashboard.sla.delivered_first_try', [], null, 'Delivered on 1st try') }}</div>
+	        </div>
+	        <div class="stat-card border-l-2 border-amber-500">
+	            <div class="muted text-xs uppercase mb-1">{{ trans_db('admin.dashboard.sla.exceptions', [], null, 'Exceptions') }}</div>
+	            <div class="text-2xl font-bold text-amber-400">{{ $slaMetrics['exceptions'] ?? 0 }}</div>
+	            <div class="text-xs muted">{{ trans_db('admin.dashboard.sla.rate', ['rate' => ($slaMetrics['exception_rate'] ?? 0)], null, ':rate% rate') }}</div>
+	        </div>
+	        <div class="stat-card border-l-2 border-rose-500">
+	            <div class="muted text-xs uppercase mb-1">{{ trans_db('admin.dashboard.sla.returns', [], null, 'Returns') }}</div>
+	            <div class="text-2xl font-bold text-rose-400">{{ $slaMetrics['returns'] ?? 0 }}</div>
+	            <div class="text-xs muted">{{ trans_db('admin.dashboard.sla.cancelled', ['count' => ($slaMetrics['cancelled'] ?? 0)], null, '+ :count cancelled') }}</div>
+	        </div>
+	    </div>
 
     {{-- COD & Finance Overview --}}
-    <div class="grid gap-4 md:grid-cols-3 mb-6">
-        <div class="glass-panel p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h4 class="font-semibold">COD Collections</h4>
-                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-sm muted">Collected</span>
-                    <span class="font-bold text-emerald-400">{{ $formatCurrency($financeOverview['cod_collected'] ?? 0, $defaultCurrency) }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm muted">Pending</span>
-                    <span class="font-bold text-amber-400">{{ $formatCurrency($financeOverview['cod_pending'] ?? 0, $defaultCurrency) }}</span>
-                </div>
-            </div>
-        </div>
-        <div class="glass-panel p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h4 class="font-semibold">Settlements</h4>
-                <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-            </div>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-sm muted">Completed</span>
-                    <span class="font-bold text-emerald-400">{{ $formatCurrency($financeOverview['settlements_completed'] ?? 0, $defaultCurrency) }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm muted">Pending</span>
-                    <span class="font-bold text-amber-400">{{ $formatCurrency($financeOverview['settlements_pending'] ?? 0, $defaultCurrency) }}</span>
-                </div>
-            </div>
-        </div>
-        <div class="glass-panel p-5">
-            <div class="flex items-center justify-between mb-4">
-                <h4 class="font-semibold">Invoices</h4>
-                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            </div>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-sm muted">Pending</span>
-                    <span class="font-bold">{{ $formatCurrency($financeOverview['invoices_pending'] ?? 0, $defaultCurrency) }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm muted">Overdue</span>
-                    <span class="font-bold text-rose-400">{{ $formatCurrency($financeOverview['invoices_overdue'] ?? 0, $defaultCurrency) }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
+	    <div class="grid gap-4 md:grid-cols-3 mb-6">
+	        <div class="glass-panel p-5">
+	            <div class="flex items-center justify-between mb-4">
+	                <h4 class="font-semibold">{{ trans_db('admin.dashboard.finance.cod_collections', [], null, 'COD Collections') }}</h4>
+	                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+	            </div>
+	            <div class="space-y-3">
+	                <div class="flex justify-between items-center">
+	                    <span class="text-sm muted">{{ trans_db('admin.common.collected', [], null, 'Collected') }}</span>
+	                    <span class="font-bold text-emerald-400">{{ $formatCurrency($financeOverview['cod_collected'] ?? 0, $defaultCurrency) }}</span>
+	                </div>
+	                <div class="flex justify-between items-center">
+	                    <span class="text-sm muted">{{ trans_db('admin.common.pending', [], null, 'Pending') }}</span>
+	                    <span class="font-bold text-amber-400">{{ $formatCurrency($financeOverview['cod_pending'] ?? 0, $defaultCurrency) }}</span>
+	                </div>
+	            </div>
+	        </div>
+	        <div class="glass-panel p-5">
+	            <div class="flex items-center justify-between mb-4">
+	                <h4 class="font-semibold">{{ trans_db('admin.dashboard.finance.settlements', [], null, 'Settlements') }}</h4>
+	                <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+	            </div>
+	            <div class="space-y-3">
+	                <div class="flex justify-between items-center">
+	                    <span class="text-sm muted">{{ trans_db('admin.common.completed', [], null, 'Completed') }}</span>
+	                    <span class="font-bold text-emerald-400">{{ $formatCurrency($financeOverview['settlements_completed'] ?? 0, $defaultCurrency) }}</span>
+	                </div>
+	                <div class="flex justify-between items-center">
+	                    <span class="text-sm muted">{{ trans_db('admin.common.pending', [], null, 'Pending') }}</span>
+	                    <span class="font-bold text-amber-400">{{ $formatCurrency($financeOverview['settlements_pending'] ?? 0, $defaultCurrency) }}</span>
+	                </div>
+	            </div>
+	        </div>
+	        <div class="glass-panel p-5">
+	            <div class="flex items-center justify-between mb-4">
+	                <h4 class="font-semibold">{{ trans_db('admin.dashboard.finance.invoices', [], null, 'Invoices') }}</h4>
+	                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+	            </div>
+	            <div class="space-y-3">
+	                <div class="flex justify-between items-center">
+	                    <span class="text-sm muted">{{ trans_db('admin.common.pending', [], null, 'Pending') }}</span>
+	                    <span class="font-bold">{{ $formatCurrency($financeOverview['invoices_pending'] ?? 0, $defaultCurrency) }}</span>
+	                </div>
+	                <div class="flex justify-between items-center">
+	                    <span class="text-sm muted">{{ trans_db('admin.common.overdue', [], null, 'Overdue') }}</span>
+	                    <span class="font-bold text-rose-400">{{ $formatCurrency($financeOverview['invoices_overdue'] ?? 0, $defaultCurrency) }}</span>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
 
     {{-- Secondary Stats Row --}}
     <div class="grid gap-4 md:grid-cols-5 mb-6">
         <div class="stat-card">
             <div class="flex items-center justify-between">
                 <div>
-                    <div class="muted text-xs uppercase">Branches</div>
+                    <div class="muted text-xs uppercase">{{ trans_db('admin.dashboard.stats.branches', [], null, 'Branches') }}</div>
                     <div class="text-2xl font-bold">{{ number_format($stats['active_branches'] ?? $stats['total_branches'] ?? 0) }}</div>
-                    <div class="text-xs muted">of {{ number_format($stats['total_branches'] ?? 0) }} total</div>
+                    <div class="text-xs muted">{{ trans_db('admin.dashboard.stats.of_total', ['total' => number_format($stats['total_branches'] ?? 0)], null, 'of :total total') }}</div>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
                     <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -208,9 +208,9 @@
         <div class="stat-card">
             <div class="flex items-center justify-between">
                 <div>
-                    <div class="muted text-xs uppercase">Drivers</div>
+                    <div class="muted text-xs uppercase">{{ trans_db('admin.dashboard.stats.drivers', [], null, 'Drivers') }}</div>
                     <div class="text-2xl font-bold">{{ number_format($stats['active_drivers'] ?? 0) }}</div>
-                    <div class="text-xs muted">{{ $operationsMetrics['driver_metrics']['avg_deliveries_per_driver'] ?? 0 }} avg/driver</div>
+                    <div class="text-xs muted">{{ trans_db('admin.dashboard.stats.avg_per_driver', ['avg' => ($operationsMetrics['driver_metrics']['avg_deliveries_per_driver'] ?? 0)], null, ':avg avg/driver') }}</div>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
                     <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -220,7 +220,7 @@
         <div class="stat-card">
             <div class="flex items-center justify-between">
                 <div>
-                    <div class="muted text-xs uppercase">Merchants</div>
+                    <div class="muted text-xs uppercase">{{ trans_db('admin.dashboard.stats.merchants', [], null, 'Merchants') }}</div>
                     <div class="text-2xl font-bold">{{ number_format($stats['total_merchants'] ?? 0) }}</div>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
@@ -231,7 +231,7 @@
         <div class="stat-card">
             <div class="flex items-center justify-between">
                 <div>
-                    <div class="muted text-xs uppercase">Customers</div>
+                    <div class="muted text-xs uppercase">{{ trans_db('admin.dashboard.stats.customers', [], null, 'Customers') }}</div>
                     <div class="text-2xl font-bold">{{ number_format($stats['total_customers'] ?? 0) }}</div>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
@@ -242,7 +242,7 @@
         <div class="stat-card">
             <div class="flex items-center justify-between">
                 <div>
-                    <div class="muted text-xs uppercase">Scans Today</div>
+                    <div class="muted text-xs uppercase">{{ trans_db('admin.dashboard.stats.scans_today', [], null, 'Scans Today') }}</div>
                     <div class="text-2xl font-bold">{{ number_format($operationsMetrics['scans_today'] ?? 0) }}</div>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
@@ -261,7 +261,7 @@
                 </div>
                 <div>
                     <div class="text-2xl font-bold">{{ $operationsMetrics['pending_pickups'] ?? 0 }}</div>
-                    <div class="text-sm muted">Pending Pickups</div>
+                    <div class="text-sm muted">{{ trans_db('admin.dashboard.ops.pending_pickups', [], null, 'Pending Pickups') }}</div>
                 </div>
             </div>
         </div>
@@ -272,7 +272,7 @@
                 </div>
                 <div>
                     <div class="text-2xl font-bold">{{ $operationsMetrics['out_for_delivery'] ?? 0 }}</div>
-                    <div class="text-sm muted">Out for Delivery</div>
+                    <div class="text-sm muted">{{ trans_db('admin.dashboard.ops.out_for_delivery', [], null, 'Out for Delivery') }}</div>
                 </div>
             </div>
         </div>
@@ -283,7 +283,7 @@
                 </div>
                 <div>
                     <div class="text-2xl font-bold">{{ $operationsMetrics['fleet_status']['active'] ?? 0 }}</div>
-                    <div class="text-sm muted">Active Vehicles</div>
+                    <div class="text-sm muted">{{ trans_db('admin.dashboard.ops.active_vehicles', [], null, 'Active Vehicles') }}</div>
                 </div>
             </div>
         </div>
@@ -294,7 +294,7 @@
                 </div>
                 <div>
                     <div class="text-2xl font-bold">{{ $operationsMetrics['fleet_status']['maintenance'] ?? 0 }}</div>
-                    <div class="text-sm muted">In Maintenance</div>
+                    <div class="text-sm muted">{{ trans_db('admin.dashboard.ops.in_maintenance', [], null, 'In Maintenance') }}</div>
                 </div>
             </div>
         </div>
@@ -305,15 +305,15 @@
         {{-- Shipment Trends Chart --}}
         <div class="lg:col-span-2 glass-panel p-5">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold">Shipment Trends</h3>
+                <h3 class="text-lg font-semibold">{{ trans_db('admin.dashboard.charts.shipment_trends', [], null, 'Shipment Trends') }}</h3>
                 <div class="flex items-center gap-4 text-xs">
                     <div class="flex items-center gap-2">
                         <span class="w-3 h-3 rounded-full bg-sky-500"></span>
-                        <span class="muted">Created</span>
+                        <span class="muted">{{ trans_db('admin.dashboard.charts.created', [], null, 'Created') }}</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                        <span class="muted">Delivered</span>
+                        <span class="muted">{{ trans_db('admin.dashboard.charts.delivered', [], null, 'Delivered') }}</span>
                     </div>
                 </div>
             </div>
@@ -324,7 +324,7 @@
 
         {{-- Status Distribution --}}
         <div class="glass-panel p-5">
-            <h3 class="text-lg font-semibold mb-4">Status Distribution</h3>
+            <h3 class="text-lg font-semibold mb-4">{{ trans_db('admin.dashboard.charts.status_distribution', [], null, 'Status Distribution') }}</h3>
             <div class="h-48 flex items-center justify-center">
                 <canvas id="statusChart"></canvas>
             </div>
@@ -356,15 +356,15 @@
     <div class="grid gap-6 lg:grid-cols-2 mb-6">
         {{-- Quick Actions --}}
         <div class="glass-panel p-5">
-            <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+            <h3 class="text-lg font-semibold mb-4">{{ trans_db('admin.dashboard.quick_actions.title', [], null, 'Quick Actions') }}</h3>
             <div class="grid grid-cols-2 gap-3">
                 <a href="{{ route('admin.pos.index') }}" class="flex items-center gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 transition group">
                     <div class="w-10 h-10 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center group-hover:scale-110 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     </div>
                     <div>
-                        <div class="font-medium">New Shipment</div>
-                        <div class="text-xs muted">Shipment POS</div>
+                        <div class="font-medium">{{ trans_db('admin.dashboard.quick_actions.new_shipment', [], null, 'New Shipment') }}</div>
+                        <div class="text-xs muted">{{ trans_db('admin.dashboard.quick_actions.shipment_pos', [], null, 'Shipment POS') }}</div>
                     </div>
                 </a>
                 <a href="{{ route('admin.tracking.dashboard') }}" class="flex items-center gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 transition group">
@@ -372,8 +372,8 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
                     </div>
                     <div>
-                        <div class="font-medium">Live Tracking</div>
-                        <div class="text-xs muted">Monitor fleet</div>
+                        <div class="font-medium">{{ trans_db('admin.dashboard.quick_actions.live_tracking', [], null, 'Live Tracking') }}</div>
+                        <div class="text-xs muted">{{ trans_db('admin.dashboard.quick_actions.monitor_fleet', [], null, 'Monitor fleet') }}</div>
                     </div>
                 </a>
                 <a href="{{ route('admin.analytics.dashboard') }}" class="flex items-center gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 transition group">
@@ -381,8 +381,8 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     </div>
                     <div>
-                        <div class="font-medium">Analytics</div>
-                        <div class="text-xs muted">View reports</div>
+                        <div class="font-medium">{{ trans_db('admin.dashboard.quick_actions.analytics', [], null, 'Analytics') }}</div>
+                        <div class="text-xs muted">{{ trans_db('admin.dashboard.quick_actions.view_reports', [], null, 'View reports') }}</div>
                     </div>
                 </a>
                 <a href="{{ route('admin.dispatch.index') }}" class="flex items-center gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 transition group">
@@ -390,8 +390,8 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                     </div>
                     <div>
-                        <div class="font-medium">Dispatch</div>
-                        <div class="text-xs muted">Route optimization</div>
+                        <div class="font-medium">{{ trans_db('admin.dashboard.quick_actions.dispatch', [], null, 'Dispatch') }}</div>
+                        <div class="text-xs muted">{{ trans_db('admin.dashboard.quick_actions.route_optimization', [], null, 'Route optimization') }}</div>
                     </div>
                 </a>
             </div>
@@ -400,8 +400,8 @@
         {{-- Recent Activity --}}
         <div class="glass-panel p-5">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold">Recent Activity</h3>
-                <a href="{{ route('admin.security.dashboard') }}" class="text-xs text-sky-400 hover:text-sky-300">View All</a>
+                <h3 class="text-lg font-semibold">{{ trans_db('admin.dashboard.recent_activity.title', [], null, 'Recent Activity') }}</h3>
+                <a href="{{ route('admin.security.dashboard') }}" class="text-xs text-sky-400 hover:text-sky-300">{{ trans_db('admin.common.view_all', [], null, 'View All') }}</a>
             </div>
             <div class="space-y-3 max-h-64 overflow-y-auto">
                 @forelse($recentActivity ?? [] as $activity)
@@ -436,49 +436,49 @@
     <div class="grid gap-6 lg:grid-cols-3 mb-6">
         {{-- Top Branches --}}
         <div class="glass-panel p-5">
-            <h3 class="text-lg font-semibold mb-4">Top Branches</h3>
+            <h3 class="text-lg font-semibold mb-4">{{ trans_db('admin.dashboard.top_branches.title', [], null, 'Top Branches') }}</h3>
             <div class="space-y-3">
                 @forelse($topPerformers['top_branches'] ?? [] as $index => $branch)
                     <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
                         <div class="flex items-center gap-3">
                             <span class="w-6 h-6 rounded-full {{ $index === 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-white/10' }} flex items-center justify-center text-xs font-bold">{{ $index + 1 }}</span>
                             <div>
-                                <div class="font-medium">{{ $branch['name'] ?? 'Unknown' }}</div>
+                                <div class="font-medium">{{ $branch['name'] ?? trans_db('admin.common.unknown', [], null, 'Unknown') }}</div>
                                 <div class="text-xs muted">{{ $branch['code'] ?? '' }}</div>
                             </div>
                         </div>
                         <span class="text-sm font-bold">{{ number_format($branch['shipments'] ?? 0) }}</span>
                     </div>
                 @empty
-                    <div class="text-center py-4 muted text-sm">No data available</div>
+                    <div class="text-center py-4 muted text-sm">{{ trans_db('admin.common.no_data', [], null, 'No data available') }}</div>
                 @endforelse
             </div>
         </div>
 
         {{-- Top Customers --}}
         <div class="glass-panel p-5">
-            <h3 class="text-lg font-semibold mb-4">Top Customers</h3>
+            <h3 class="text-lg font-semibold mb-4">{{ trans_db('admin.dashboard.top_customers.title', [], null, 'Top Customers') }}</h3>
             <div class="space-y-3">
                 @forelse($topPerformers['top_customers'] ?? [] as $index => $customer)
                     <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
                         <div class="flex items-center gap-3">
                             <span class="w-6 h-6 rounded-full {{ $index === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10' }} flex items-center justify-center text-xs font-bold">{{ $index + 1 }}</span>
                             <div>
-                                <div class="font-medium truncate" style="max-width: 120px;">{{ $customer['name'] ?? 'Unknown' }}</div>
-                                <div class="text-xs muted">{{ number_format($customer['shipments'] ?? 0) }} shipments</div>
+                                <div class="font-medium truncate" style="max-width: 120px;">{{ $customer['name'] ?? trans_db('admin.common.unknown', [], null, 'Unknown') }}</div>
+                                <div class="text-xs muted">{{ trans_db('admin.dashboard.top_customers.shipments', ['count' => number_format($customer['shipments'] ?? 0)], null, ':count shipments') }}</div>
                             </div>
                         </div>
                         <span class="text-sm font-bold text-emerald-400">{{ $formatCurrency($customer['revenue'] ?? 0, $defaultCurrency) }}</span>
                     </div>
                 @empty
-                    <div class="text-center py-4 muted text-sm">No data available</div>
+                    <div class="text-center py-4 muted text-sm">{{ trans_db('admin.common.no_data', [], null, 'No data available') }}</div>
                 @endforelse
             </div>
         </div>
 
         {{-- Geographic Distribution --}}
         <div class="glass-panel p-5">
-            <h3 class="text-lg font-semibold mb-4">Shipments by City</h3>
+            <h3 class="text-lg font-semibold mb-4">{{ trans_db('admin.dashboard.shipments_by_city.title', [], null, 'Shipments by City') }}</h3>
             <div class="space-y-2">
                 @forelse($geographicData['by_city'] ?? [] as $city)
                     @php 
@@ -487,7 +487,7 @@
                     @endphp
                     <div class="space-y-1">
                         <div class="flex justify-between text-sm">
-                            <span>{{ $city['city'] ?? 'Unknown' }}</span>
+                            <span>{{ $city['city'] ?? trans_db('admin.common.unknown', [], null, 'Unknown') }}</span>
                             <span class="muted">{{ number_format($city['count']) }}</span>
                         </div>
                         <div class="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -495,7 +495,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="text-center py-4 muted text-sm">No data available</div>
+                    <div class="text-center py-4 muted text-sm">{{ trans_db('admin.common.no_data', [], null, 'No data available') }}</div>
                 @endforelse
             </div>
         </div>
@@ -504,16 +504,16 @@
     {{-- Top Routes --}}
     @if(!empty($topPerformers['top_routes']))
     <div class="glass-panel p-5 mb-6">
-        <h3 class="text-lg font-semibold mb-4">Top Routes</h3>
+        <h3 class="text-lg font-semibold mb-4">{{ trans_db('admin.dashboard.top_routes.title', [], null, 'Top Routes') }}</h3>
         <div class="grid gap-3 md:grid-cols-5">
             @foreach($topPerformers['top_routes'] as $index => $route)
                 <div class="p-4 rounded-lg bg-gradient-to-br from-white/5 to-white/0 border border-white/10">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="w-5 h-5 rounded-full {{ $index === 0 ? 'bg-amber-500/30 text-amber-400' : 'bg-white/10' }} flex items-center justify-center text-xs font-bold">#{{ $index + 1 }}</span>
                     </div>
-                    <div class="text-sm font-medium mb-1">{{ $route['route'] ?? 'Unknown' }}</div>
+                    <div class="text-sm font-medium mb-1">{{ $route['route'] ?? trans_db('admin.common.unknown', [], null, 'Unknown') }}</div>
                     <div class="text-2xl font-bold text-sky-400">{{ number_format($route['volume'] ?? 0) }}</div>
-                    <div class="text-xs muted">shipments</div>
+                    <div class="text-xs muted">{{ trans_db('admin.dashboard.top_routes.shipments', [], null, 'shipments') }}</div>
                 </div>
             @endforeach
         </div>
@@ -523,27 +523,27 @@
     {{-- Recent Shipments Table --}}
     <div class="glass-panel p-5">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold">Recent Shipments</h3>
-            <a href="{{ route('admin.shipments.index') }}" class="btn btn-sm btn-secondary">View All</a>
+            <h3 class="text-lg font-semibold">{{ trans_db('admin.dashboard.recent_shipments.title', [], null, 'Recent Shipments') }}</h3>
+            <a href="{{ route('admin.shipments.index') }}" class="btn btn-sm btn-secondary">{{ trans_db('admin.common.view_all', [], null, 'View All') }}</a>
         </div>
         <div class="overflow-x-auto">
             <table class="dhl-table">
                 <thead>
                     <tr>
-                        <th class="text-left">Tracking #</th>
-                        <th class="text-left">Origin</th>
-                        <th class="text-left">Destination</th>
-                        <th class="text-left">Status</th>
-                        <th class="text-left">Created</th>
-                        <th class="text-right">Actions</th>
+                        <th class="text-left">{{ trans_db('admin.dashboard.recent_shipments.tracking', [], null, 'Tracking #') }}</th>
+                        <th class="text-left">{{ trans_db('admin.dashboard.recent_shipments.origin', [], null, 'Origin') }}</th>
+                        <th class="text-left">{{ trans_db('admin.dashboard.recent_shipments.destination', [], null, 'Destination') }}</th>
+                        <th class="text-left">{{ trans_db('admin.dashboard.recent_shipments.status', [], null, 'Status') }}</th>
+                        <th class="text-left">{{ trans_db('admin.dashboard.recent_shipments.created', [], null, 'Created') }}</th>
+                        <th class="text-right">{{ trans_db('admin.common.actions', [], null, 'Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($recentShipments ?? [] as $shipment)
                         <tr class="hover:bg-white/5">
                             <td class="font-mono text-sky-400">{{ $shipment->tracking_number ?? '#' . $shipment->id }}</td>
-                            <td>{{ $shipment->originBranch->name ?? 'N/A' }}</td>
-                            <td>{{ $shipment->destBranch->name ?? $shipment->receiver_city ?? 'N/A' }}</td>
+                            <td>{{ $shipment->originBranch->name ?? trans_db('admin.common.na', [], null, 'N/A') }}</td>
+                            <td>{{ $shipment->destBranch->name ?? $shipment->receiver_city ?? trans_db('admin.common.na', [], null, 'N/A') }}</td>
                             <td>
                                 @php
                                     $statusClasses = [
@@ -559,14 +559,14 @@
                                     {{ ucfirst(str_replace('_', ' ', $shipment->status)) }}
                                 </span>
                             </td>
-                            <td class="muted text-sm">{{ $shipment->created_at->format('M d, H:i') }}</td>
+                            <td class="muted text-sm">{{ $shipment->created_at->locale(app()->getLocale())->translatedFormat('M d, H:i') }}</td>
                             <td class="text-right">
-                                <a href="{{ route('admin.shipments.show', $shipment) }}" class="btn btn-xs btn-secondary">View</a>
+                                <a href="{{ route('admin.shipments.show', $shipment) }}" class="btn btn-xs btn-secondary">{{ trans_db('admin.common.view', [], null, 'View') }}</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-8 muted">No shipments found</td>
+                            <td colspan="6" class="text-center py-8 muted">{{ trans_db('admin.dashboard.recent_shipments.empty', [], null, 'No shipments found') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -577,13 +577,18 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@php
+    $chartLabelCreated = trans_db('admin.dashboard.charts.created', [], null, 'Created');
+    $chartLabelDelivered = trans_db('admin.dashboard.charts.delivered', [], null, 'Delivered');
+@endphp
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Update clock
     function updateTime() {
         const now = new Date();
+        const locale = @json(app()->getLocale());
         document.getElementById('current-time').textContent = 
-            now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false });
     }
     setInterval(updateTime, 1000);
 
@@ -595,14 +600,14 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: {!! json_encode($chartData['labels'] ?? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) !!},
                 datasets: [{
-                    label: 'Created',
+                    label: @json($chartLabelCreated),
                     data: {!! json_encode($chartData['created'] ?? [12, 19, 15, 22, 18, 25, 20]) !!},
                     borderColor: '#0ea5e9',
                     backgroundColor: 'rgba(14, 165, 233, 0.1)',
                     tension: 0.4,
                     fill: true,
                 }, {
-                    label: 'Delivered',
+                    label: @json($chartLabelDelivered),
                     data: {!! json_encode($chartData['delivered'] ?? [10, 15, 12, 18, 15, 22, 18]) !!},
                     borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',

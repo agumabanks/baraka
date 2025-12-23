@@ -21,6 +21,13 @@
             font-weight: bold;
             color: #1a1a1a;
         }
+        .company-logo-img {
+            display: block;
+            max-height: 50px;
+            max-width: 220px;
+            margin-bottom: 6px;
+            object-fit: contain;
+        }
         .statement-title {
             font-size: 16px;
             color: #666;
@@ -119,8 +126,22 @@
     </style>
 </head>
 <body>
+    @php
+        $companyName = \App\Support\SystemSettings::companyName();
+        $printLogoUrl = \App\Support\SystemSettings::printLogo();
+        $printLogoPath = null;
+        if (is_string($printLogoUrl) && str_starts_with($printLogoUrl, '/')) {
+            $candidate = public_path(ltrim($printLogoUrl, '/'));
+            if (is_file($candidate)) {
+                $printLogoPath = $candidate;
+            }
+        }
+    @endphp
     <div class="header">
-        <div class="company-name">BARAKA COURIER</div>
+        @if($printLogoPath)
+            <img src="{{ $printLogoPath }}" alt="{{ $companyName }}" class="company-logo-img">
+        @endif
+        <div class="company-name">{{ strtoupper($companyName) }}</div>
         <div class="statement-title">Account Statement</div>
     </div>
 

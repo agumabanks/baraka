@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->prefix('settings')->name('settings.')->
     Route::post('/language/import', [SettingsController::class, 'importTranslations'])->name('language.import');
     Route::get('/language/validate', [SettingsController::class, 'validateTranslations'])->name('language.validate');
     Route::post('/language/default-locale', [SettingsController::class, 'setDefaultLocale'])->name('language.default-locale');
+    Route::post('/language/mode', [SettingsController::class, 'setLanguageMode'])->name('language.mode');
     Route::post('/language/sync-from-files', [\App\Http\Controllers\Backend\LanguageController::class, 'syncFromFiles'])->name('language.sync-from-files');
     
     // System Settings

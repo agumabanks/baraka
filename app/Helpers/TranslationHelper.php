@@ -54,10 +54,15 @@ if (!function_exists('get_translation_cache')) {
      */
     function get_translation_cache($locale = null): array
     {
+        static $inMemory = [];
+
         $locale = $locale ?? app()->getLocale();
+        if (isset($inMemory[$locale])) {
+            return $inMemory[$locale];
+        }
         $cacheKey = "translations_array_{$locale}";
 
-        return Cache::remember(
+        $translations = Cache::remember(
             $cacheKey,
             config('translations.cache_ttl', 10_800),
             function () use ($locale) {
@@ -67,6 +72,9 @@ if (!function_exists('get_translation_cache')) {
                 return $repository->getTranslationsForLanguage($locale);
             }
         );
+
+        $inMemory[$locale] = is_array($translations) ? $translations : [];
+        return $inMemory[$locale];
     }
 }
 

@@ -85,7 +85,7 @@ class GeneralSettings extends Model
             return static_asset($path);
         }
 
-        return static_asset('images/default/light-logo.png');
+        return static_asset('images/default/light-logo1.png');
     }
 
     public function getFaviconImageAttribute()

@@ -26,6 +26,9 @@ class SystemSettings
                     'currency' => $settings->currency ?? 'UGX',
                     'par_track_prefix' => $settings->par_track_prefix ?? 'BRK',
                     'invoice_prefix' => $settings->invoice_prefix ?? 'INV',
+                    'logo_image' => $settings->logo_image ?? null,
+                    'light_logo_image' => $settings->light_logo_image ?? null,
+                    'favicon_image' => $settings->favicon_image ?? null,
                     'details' => $details,
                 ];
             } catch (\Throwable $e) {
@@ -89,6 +92,17 @@ class SystemSettings
     public static function defaultLocale(): string
     {
         return (string) self::get('localization.default_locale', config('app.locale', 'en'));
+    }
+
+    /**
+     * Locale selection behavior.
+     * - per_user: each authenticated user/customer can choose their locale (cookie/session fallback for guests)
+     * - global: force defaultLocale() for everyone (admins included)
+     */
+    public static function localizationMode(): string
+    {
+        $mode = (string) self::get('localization.mode', 'per_user');
+        return in_array($mode, ['per_user', 'global'], true) ? $mode : 'per_user';
     }
 
     public static function trackingPrefix(): string
@@ -423,14 +437,112 @@ class SystemSettings
 
     public static function logo(): string
     {
-        return (string) self::get('branding.logo_url', 
-            data_get(self::snapshot(), 'logo_image', '/images/logo.png'));
+        $logo = self::get('branding.logo_url');
+        if (is_string($logo) && $logo !== '') {
+            return $logo;
+        }
+
+        $legacy = data_get(self::snapshot(), 'logo_image');
+        if (is_string($legacy) && $legacy !== '') {
+            return $legacy;
+        }
+
+        return '/images/default/logo1.png';
     }
 
     public static function favicon(): string
     {
-        return (string) self::get('branding.favicon_url', 
-            data_get(self::snapshot(), 'favicon_image', '/favicon.ico'));
+        $favicon = self::get('branding.favicon_url');
+        if (is_string($favicon) && $favicon !== '') {
+            return $favicon;
+        }
+
+        $legacy = data_get(self::snapshot(), 'favicon_image');
+        if (is_string($legacy) && $legacy !== '') {
+            return $legacy;
+        }
+
+        return '/images/default/favicon.png';
+    }
+
+    public static function adminLogo(): string
+    {
+        $logo = self::get('branding.logos.admin');
+        if (is_string($logo) && $logo !== '') {
+            return $logo;
+        }
+
+        $main = self::get('branding.logo_url');
+        if (is_string($main) && $main !== '') {
+            return $main;
+        }
+
+        $legacy = data_get(self::snapshot(), 'light_logo_image');
+        if (is_string($legacy) && $legacy !== '') {
+            return $legacy;
+        }
+
+        return '/images/default/light-logo1.png';
+    }
+
+    public static function branchLogo(): string
+    {
+        $logo = self::get('branding.logos.branch');
+        if (is_string($logo) && $logo !== '') {
+            return $logo;
+        }
+
+        $main = self::get('branding.logo_url');
+        if (is_string($main) && $main !== '') {
+            return $main;
+        }
+
+        $legacy = data_get(self::snapshot(), 'light_logo_image');
+        if (is_string($legacy) && $legacy !== '') {
+            return $legacy;
+        }
+
+        return '/images/default/light-logo1.png';
+    }
+
+    public static function clientPortalLogo(): string
+    {
+        $logo = self::get('branding.logos.client');
+        if (is_string($logo) && $logo !== '') {
+            return $logo;
+        }
+
+        $main = self::get('branding.logo_url');
+        if (is_string($main) && $main !== '') {
+            return $main;
+        }
+
+        $legacy = data_get(self::snapshot(), 'light_logo_image');
+        if (is_string($legacy) && $legacy !== '') {
+            return $legacy;
+        }
+
+        return '/images/default/light-logo1.png';
+    }
+
+    public static function landingLogo(): string
+    {
+        $logo = self::get('branding.logos.landing');
+        if (is_string($logo) && $logo !== '') {
+            return $logo;
+        }
+
+        return self::logo();
+    }
+
+    public static function printLogo(): string
+    {
+        $logo = self::get('branding.logos.print');
+        if (is_string($logo) && $logo !== '') {
+            return $logo;
+        }
+
+        return self::logo();
     }
 
     /**

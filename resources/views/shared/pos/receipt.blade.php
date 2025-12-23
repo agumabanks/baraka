@@ -29,6 +29,13 @@
             letter-spacing: 2px;
             margin-bottom: 4px;
         }
+        .company-logo-img {
+            display: block;
+            max-height: 16mm;
+            max-width: 100%;
+            margin: 0 auto 6px;
+            object-fit: contain;
+        }
         .company-tagline {
             font-size: 9px;
             color: #666;
@@ -236,6 +243,19 @@
 <body>
     {{-- Header --}}
     <div class="receipt-header">
+        @php
+            $printLogo = \App\Support\SystemSettings::printLogo();
+            $printLogoSrc = $printLogo;
+            if (request()->get('format') === 'pdf' && is_string($printLogo) && str_starts_with($printLogo, '/')) {
+                $candidate = public_path(ltrim($printLogo, '/'));
+                if (is_file($candidate)) {
+                    $printLogoSrc = $candidate;
+                }
+            }
+        @endphp
+        @if(!empty($printLogo))
+            <img src="{{ $printLogoSrc }}" alt="{{ \App\Support\SystemSettings::companyName() }}" class="company-logo-img">
+        @endif
         <div class="company-logo">{{ strtoupper($company['name']) }}</div>
         <div class="company-tagline">Fast. Reliable. Professional.</div>
         <div class="branch-info">

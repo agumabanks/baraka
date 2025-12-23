@@ -449,22 +449,74 @@ class SettingsController extends Controller
         try {
             [$settings, $details] = $this->getSettingsWithDetails();
 
+            $request->validate([
+                'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+                'favicon' => ['nullable', 'file', 'mimes:png,ico', 'max:1024'],
+
+                'logo_admin' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+                'logo_branch' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+                'logo_client' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+                'logo_landing' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+                'logo_print' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+
+                'reset_logo_admin' => ['nullable', 'boolean'],
+                'reset_logo_branch' => ['nullable', 'boolean'],
+                'reset_logo_client' => ['nullable', 'boolean'],
+                'reset_logo_landing' => ['nullable', 'boolean'],
+                'reset_logo_print' => ['nullable', 'boolean'],
+            ]);
+
             $brandingData = $details['branding'] ?? [];
+            $brandingData['logos'] = is_array($brandingData['logos'] ?? null) ? $brandingData['logos'] : [];
+
+            $brandingUploadDir = public_path('uploads/branding');
+            if (! is_dir($brandingUploadDir)) {
+                @mkdir($brandingUploadDir, 0755, true);
+            }
+
+            $storeUpload = function (string $inputName, string $filenamePrefix) use ($request, $brandingUploadDir): ?string {
+                if (! $request->hasFile($inputName)) {
+                    return null;
+                }
+
+                $file = $request->file($inputName);
+                $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+                $filename = $filenamePrefix . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+                $file->move($brandingUploadDir, $filename);
+
+                return '/uploads/branding/' . $filename;
+            };
             
             // Handle Logo Upload
-            if ($request->hasFile('logo')) {
-                $logo = $request->file('logo');
-                $filename = 'logo-' . time() . '.' . $logo->getClientOriginalExtension();
-                $logo->move(public_path('uploads/branding'), $filename);
-                $brandingData['logo_url'] = '/uploads/branding/' . $filename;
+            $mainLogoUrl = $storeUpload('logo', 'logo');
+            if ($mainLogoUrl) {
+                $brandingData['logo_url'] = $mainLogoUrl;
             }
 
             // Handle Favicon Upload
-            if ($request->hasFile('favicon')) {
-                $favicon = $request->file('favicon');
-                $filename = 'favicon-' . time() . '.' . $favicon->getClientOriginalExtension();
-                $favicon->move(public_path('uploads/branding'), $filename);
-                $brandingData['favicon_url'] = '/uploads/branding/' . $filename;
+            $faviconUrl = $storeUpload('favicon', 'favicon');
+            if ($faviconUrl) {
+                $brandingData['favicon_url'] = $faviconUrl;
+            }
+
+            // Optional per-area logos (fallback to Main Logo)
+            $logoKeys = [
+                'admin' => ['file' => 'logo_admin', 'reset' => 'reset_logo_admin', 'prefix' => 'logo-admin'],
+                'branch' => ['file' => 'logo_branch', 'reset' => 'reset_logo_branch', 'prefix' => 'logo-branch'],
+                'client' => ['file' => 'logo_client', 'reset' => 'reset_logo_client', 'prefix' => 'logo-client'],
+                'landing' => ['file' => 'logo_landing', 'reset' => 'reset_logo_landing', 'prefix' => 'logo-landing'],
+                'print' => ['file' => 'logo_print', 'reset' => 'reset_logo_print', 'prefix' => 'logo-print'],
+            ];
+
+            foreach ($logoKeys as $key => $cfg) {
+                if ($request->boolean($cfg['reset'])) {
+                    unset($brandingData['logos'][$key]);
+                }
+
+                $url = $storeUpload($cfg['file'], $cfg['prefix']);
+                if ($url) {
+                    $brandingData['logos'][$key] = $url;
+                }
             }
 
             $details['branding'] = array_merge($brandingData, [
@@ -479,12 +531,6 @@ class SettingsController extends Controller
             // Update root level
             $settings->name = $request->input('company_name', $settings->name);
             $settings->primary_color = $request->input('primary_color', $settings->primary_color);
-            if (isset($brandingData['logo_url'])) {
-                $settings->logo_image = $brandingData['logo_url'];
-            }
-            if (isset($brandingData['favicon_url'])) {
-                $settings->favicon_image = $brandingData['favicon_url'];
-            }
 
             $this->saveSettings($settings, $details);
 
@@ -682,6 +728,7 @@ class SettingsController extends Controller
 
         $stats = Translation::getCompletionStats($supportedLocales);
         $defaultLocale = SystemSettings::defaultLocale();
+        $languageMode = SystemSettings::localizationMode();
 
         // Get locales with metadata
         $localesWithMeta = [];
@@ -699,6 +746,7 @@ class SettingsController extends Controller
             'localesWithMeta' => $localesWithMeta,
             'supportedLocales' => $supportedLocales,
             'defaultLocale' => $defaultLocale,
+            'languageMode' => $languageMode,
             'search' => $search,
             'statusFilter' => $statusFilter,
             'namespaceFilter' => $namespaceFilter,
@@ -1163,6 +1211,44 @@ class SettingsController extends Controller
                 'message' => 'Default locale updated to ' . $locale,
             ]);
             
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Set the locale selection mode (global vs per-user).
+     */
+    public function setLanguageMode(Request $request): JsonResponse
+    {
+        $request->validate([
+            'mode' => 'required|string|in:global,per_user',
+        ]);
+
+        $mode = $request->string('mode')->toString();
+
+        try {
+            [$settings, $details] = $this->getSettingsWithDetails();
+
+            $details['localization'] = array_merge($details['localization'] ?? [], [
+                'mode' => $mode,
+            ]);
+
+            $this->saveSettings($settings, $details);
+
+            Log::info('Localization mode changed', [
+                'user_id' => auth()->id(),
+                'mode' => $mode,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Localization mode updated',
+                'mode' => $mode,
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

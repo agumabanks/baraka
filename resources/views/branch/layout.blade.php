@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Branch Control Center') • {{ config('app.name') }}</title>
+    <title>@yield('title', trans_db('branch.layout.title', [], null, 'Branch Control Center')) • {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite(['resources/css/branch.css', 'resources/js/branch.js'])
@@ -20,12 +20,12 @@
             <header class="sticky top-0 z-30 border-b border-white/10 bg-obsidian-800/80 backdrop-blur">
                 <div class="px-4 lg:px-8 py-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div class="flex items-center gap-3">
-                        <button class="lg:hidden nav-link !px-2 !py-1" type="button" data-sidebar-toggle>Menu</button>
+                        <button class="lg:hidden nav-link !px-2 !py-1" type="button" data-sidebar-toggle>{{ trans_db('branch.layout.menu', [], null, 'Menu') }}</button>
                         <div>
-                            <div class="text-xs uppercase muted">Active branch</div>
-                            <div class="text-xl font-semibold leading-tight">{{ $branch->name ?? 'Branch' }}</div>
+                            <div class="text-xs uppercase muted">{{ trans_db('branch.layout.active_branch', [], null, 'Active branch') }}</div>
+                            <div class="text-xl font-semibold leading-tight">{{ $branch->name ?? trans_db('branch.layout.branch_fallback', [], null, 'Branch') }}</div>
                             @if($branch?->parent)
-                                <div class="muted text-xs">Parent: {{ $branch->parent->code }} • {{ $branch->parent->name }}</div>
+                                <div class="muted text-xs">{{ trans_db('branch.layout.parent_line', ['code' => $branch->parent->code, 'name' => $branch->parent->name], null, 'Parent: :code • :name') }}</div>
                             @endif
                         </div>
                     </div>
@@ -46,7 +46,7 @@
                         @endif
                         <x-language-switcher style="dropdown" :show-flags="true" :show-labels="true" />
                         <div class="text-right">
-                            <div class="muted text-2xs">Signed in as</div>
+                            <div class="muted text-2xs">{{ trans_db('branch.layout.signed_in_as', [], null, 'Signed in as') }}</div>
                             <div class="text-sm font-semibold">{{ auth()->user()->name }}</div>
                         </div>
                     </div>
@@ -61,7 +61,7 @@
                 @endif
                 @if($errors->any())
                     <div class="glass-panel px-4 py-3 border-amber-500/30 text-amber-100">
-                        <div class="font-semibold">Please fix the following:</div>
+                        <div class="font-semibold">{{ trans_db('branch.layout.errors.fix_following', [], null, 'Please fix the following:') }}</div>
                         <ul class="list-disc list-inside text-sm">
                             @foreach($errors->all() as $error)
                                 <li>{{ $error }}</li>

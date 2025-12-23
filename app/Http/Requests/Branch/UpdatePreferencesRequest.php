@@ -14,7 +14,7 @@ class UpdatePreferencesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'language' => ['required', 'in:en,fr,sw,ar'],
+            'language' => ['required', 'in:en,fr,sw'],
             'timezone' => ['required', 'timezone'],
             'date_format' => ['required', 'in:Y-m-d,m/d/Y,d/m/Y,d-M-Y'],
             'time_format' => ['required', 'in:24h,12h'],

@@ -210,6 +210,13 @@ class AccountController extends Controller
         $user->number_format = $validated['number_format'];
         $user->theme = $validated['theme'];
         $user->save();
+
+        // Keep UserSetting locale (used by LanguageManager) in sync with profile preference
+        try {
+            \App\Models\UserSetting::setLocale($user->id, $validated['language']);
+        } catch (\Throwable $e) {
+            // Ignore if table not available (e.g. during migrations)
+        }
         
         return redirect()
             ->route('branch.account.preferences')

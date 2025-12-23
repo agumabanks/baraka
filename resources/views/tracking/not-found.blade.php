@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shipment Not Found - {{ config('app.name') }}</title>
+    <title>{{ trans_db('tracking.not_found.title', [], null, 'Shipment Not Found') }} - {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -24,6 +24,7 @@
                 </div>
                 <span class="text-xl font-bold">{{ config('app.name') }}</span>
             </a>
+            <x-language-switcher style="dropdown" :show-flags="true" :show-labels="true" />
         </div>
     </header>
 
@@ -35,24 +36,24 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </div>
-            <h1 class="text-3xl font-bold mb-4">Shipment Not Found</h1>
+            <h1 class="text-3xl font-bold mb-4">{{ trans_db('tracking.not_found.heading', [], null, 'Shipment Not Found') }}</h1>
             <p class="text-slate-400 mb-2">
-                We couldn't find a shipment with tracking number:
+                {{ trans_db('tracking.not_found.body', [], null, 'We couldn\\'t find a shipment with tracking number:') }}
             </p>
             <p class="font-mono text-lg text-sky-400 mb-8">{{ $tracking_number }}</p>
             <div class="space-y-3">
                 <a href="{{ route('tracking.index') }}" 
                    class="block w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-6 rounded-xl transition">
-                    Try Another Tracking Number
+                    {{ trans_db('tracking.not_found.try_another', [], null, 'Try Another Tracking Number') }}
                 </a>
                 <a href="mailto:support@{{ request()->host() }}" 
                    class="block w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white py-3 px-6 rounded-xl transition">
-                    Contact Support
+                    {{ trans_db('tracking.not_found.contact_support', [], null, 'Contact Support') }}
                 </a>
             </div>
             <div class="mt-8 text-sm text-slate-500">
-                <p>Please check your tracking number and try again.</p>
-                <p class="mt-1">If you continue to have issues, please contact our support team.</p>
+                <p>{{ trans_db('tracking.not_found.hint1', [], null, 'Please check your tracking number and try again.') }}</p>
+                <p class="mt-1">{{ trans_db('tracking.not_found.hint2', [], null, 'If you continue to have issues, please contact our support team.') }}</p>
             </div>
         </div>
     </main>

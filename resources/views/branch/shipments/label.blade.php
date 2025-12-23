@@ -109,14 +109,28 @@
 </head>
 <body>
     <div class="label">
-        {{-- Header --}}
-        <div class="header">
-            <div class="logo-section">
-                <div class="logo">BARAKA</div>
-                <span class="service-badge {{ strtolower($shipment->service_level ?? 'standard') }}">
-                    {{ strtoupper($shipment->service_level ?? 'STANDARD') }}
-                </span>
-            </div>
+	        {{-- Header --}}
+	        <div class="header">
+	            <div class="logo-section">
+                    @php
+                        $printLogo = \App\Support\SystemSettings::printLogo();
+                        $printLogoSrc = $printLogo;
+                        if (request()->get('format') === 'pdf' && is_string($printLogo) && str_starts_with($printLogo, '/')) {
+                            $candidate = public_path(ltrim($printLogo, '/'));
+                            if (is_file($candidate)) {
+                                $printLogoSrc = $candidate;
+                            }
+                        }
+                    @endphp
+                    @if(!empty($printLogo))
+                        <img src="{{ $printLogoSrc }}" alt="{{ \App\Support\SystemSettings::companyName() }}" style="height: 24px; width: auto;">
+                    @else
+                        <div class="logo">{{ strtoupper(substr(config('app.name'), 0, 12)) }}</div>
+                    @endif
+	                <span class="service-badge {{ strtolower($shipment->service_level ?? 'standard') }}">
+	                    {{ strtoupper($shipment->service_level ?? 'STANDARD') }}
+	                </span>
+	            </div>
             <div class="tracking-section">
                 <div class="tracking-number">{{ $shipment->tracking_number }}</div>
                 @if($shipment->waybill_number)

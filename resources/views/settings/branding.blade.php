@@ -162,46 +162,104 @@
                 </div>
             </div>
             <div class="pref-card-body">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Main Logo -->
-                    <div class="space-y-3">
-                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Main Logo</label>
-                        <div class="relative group">
-                            <div class="w-full h-32 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 group-hover:border-purple-400 transition-colors">
-                                @if(!empty($s['logo_url']))
-                                    <img src="{{ $s['logo_url'] }}" alt="Logo" class="max-h-24 max-w-full object-contain">
-                                @else
-                                    <div class="text-center">
-                                        <i class="bi bi-cloud-arrow-up text-3xl text-slate-400"></i>
-                                        <p class="text-xs text-slate-500 mt-1">Drop logo here</p>
-                                    </div>
-                                @endif
-                            </div>
-                            <input type="file" name="logo" accept="image/*" 
-                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                        </div>
-                        <p class="text-xs text-slate-500">PNG, SVG or JPG. Max 2MB. Recommended: 512x512px</p>
-                    </div>
+                @php
+                    $logoFields = [
+                        [
+                            'name' => 'logo',
+                            'label' => 'Main Logo (Default)',
+                            'current' => $s['logo_url'] ?? null,
+                            'help' => 'Used as the default logo across the system. Recommended: transparent PNG.',
+                            'accept' => 'image/png,image/jpeg,image/webp',
+                        ],
+                        [
+                            'name' => 'favicon',
+                            'label' => 'Favicon',
+                            'current' => $s['favicon_url'] ?? null,
+                            'help' => 'ICO or PNG. Recommended: 32x32px or 64x64px.',
+                            'accept' => 'image/png,image/x-icon',
+                        ],
+                        [
+                            'name' => 'logo_admin',
+                            'label' => 'Admin Portal Logo',
+                            'current' => data_get($s, 'logos.admin'),
+                            'help' => 'Used on admin login and admin sidebar. Leave empty to use Main Logo.',
+                            'accept' => 'image/png,image/jpeg,image/webp',
+                            'reset' => 'reset_logo_admin',
+                        ],
+                        [
+                            'name' => 'logo_branch',
+                            'label' => 'Branch Portal Logo',
+                            'current' => data_get($s, 'logos.branch'),
+                            'help' => 'Used on branch login and branch portal. Leave empty to use Main Logo.',
+                            'accept' => 'image/png,image/jpeg,image/webp',
+                            'reset' => 'reset_logo_branch',
+                        ],
+                        [
+                            'name' => 'logo_client',
+                            'label' => 'Customer Portal Logo',
+                            'current' => data_get($s, 'logos.client'),
+                            'help' => 'Used on customer login/register and customer portal. Leave empty to use Main Logo.',
+                            'accept' => 'image/png,image/jpeg,image/webp',
+                            'reset' => 'reset_logo_client',
+                        ],
+                        [
+                            'name' => 'logo_landing',
+                            'label' => 'Landing Page Logo',
+                            'current' => data_get($s, 'logos.landing'),
+                            'help' => 'Used on the marketing/landing page header. Leave empty to use Main Logo.',
+                            'accept' => 'image/png,image/jpeg,image/webp',
+                            'reset' => 'reset_logo_landing',
+                        ],
+                        [
+                            'name' => 'logo_print',
+                            'label' => 'Print & PDF Logo',
+                            'current' => data_get($s, 'logos.print'),
+                            'help' => 'Used on labels, receipts and PDF printouts. Leave empty to use Main Logo.',
+                            'accept' => 'image/png,image/jpeg,image/webp',
+                            'reset' => 'reset_logo_print',
+                        ],
+                    ];
+                @endphp
 
-                    <!-- Favicon -->
-                    <div class="space-y-3">
-                        <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Favicon</label>
-                        <div class="relative group">
-                            <div class="w-full h-32 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 group-hover:border-purple-400 transition-colors">
-                                @if(!empty($s['favicon_url']))
-                                    <img src="{{ $s['favicon_url'] }}" alt="Favicon" class="max-h-16 max-w-full object-contain">
-                                @else
-                                    <div class="text-center">
-                                        <i class="bi bi-app text-3xl text-slate-400"></i>
-                                        <p class="text-xs text-slate-500 mt-1">Drop favicon here</p>
-                                    </div>
+                <div class="mb-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-lightbulb text-amber-500"></i>
+                        <div class="text-xs text-slate-600 dark:text-slate-300">
+                            <div class="font-semibold text-slate-700 dark:text-slate-200">Pro tip</div>
+                            <div>Admin/Branch/Customer portals use dark backgrounds — upload a light/white logo for best visibility. Any logo left unset will fall back to the Main Logo.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    @foreach($logoFields as $field)
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between gap-4">
+                                <label class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ $field['label'] }}</label>
+                                @if(!empty($field['reset']))
+                                    <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <input type="checkbox" name="{{ $field['reset'] }}" value="1" class="rounded border-slate-300 dark:border-slate-600">
+                                        Use Main Logo
+                                    </label>
                                 @endif
                             </div>
-                            <input type="file" name="favicon" accept="image/*,.ico" 
-                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <div class="relative group">
+                                <div class="w-full h-32 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 group-hover:border-purple-400 transition-colors">
+                                    @if(!empty($field['current']))
+                                        <img src="{{ $field['current'] }}" alt="{{ $field['label'] }}" class="max-h-24 max-w-full object-contain">
+                                    @else
+                                        <div class="text-center">
+                                            <i class="bi bi-cloud-arrow-up text-3xl text-slate-400"></i>
+                                            <p class="text-xs text-slate-500 mt-1">Drop image here</p>
+                                        </div>
+                                    @endif
+                                </div>
+                                <input type="file" name="{{ $field['name'] }}" accept="{{ $field['accept'] }}"
+                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            </div>
+                            <p class="text-xs text-slate-500">{{ $field['help'] }}</p>
                         </div>
-                        <p class="text-xs text-slate-500">ICO or PNG. Recommended: 32x32px or 64x64px</p>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>

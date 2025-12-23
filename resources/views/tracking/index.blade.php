@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Track Your Shipment - {{ config('app.name') }}</title>
+    <title>{{ trans_db('tracking.title', [], null, 'Track Your Shipment') }} - {{ config('app.name') }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -33,17 +33,20 @@
                 </div>
                 <span class="text-xl font-bold">{{ config('app.name') }}</span>
             </a>
-            <a href="{{ url('/') }}" class="text-sm text-slate-400 hover:text-white transition">
-                &larr; Back to Home
-            </a>
+            <div class="flex items-center gap-3">
+                <x-language-switcher style="dropdown" :show-flags="true" :show-labels="true" />
+                <a href="{{ url('/') }}" class="text-sm text-slate-400 hover:text-white transition">
+                    &larr; {{ trans_db('tracking.back_home', [], null, 'Back to Home') }}
+                </a>
+            </div>
         </div>
     </header>
 
     {{-- Main Content --}}
     <main class="max-w-4xl mx-auto px-4 py-16">
         <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold mb-4">Track Your Shipment</h1>
-            <p class="text-slate-400 text-lg">Enter your tracking number to see the current status of your delivery</p>
+            <h1 class="text-4xl font-bold mb-4">{{ trans_db('tracking.heading', [], null, 'Track Your Shipment') }}</h1>
+            <p class="text-slate-400 text-lg">{{ trans_db('tracking.subheading', [], null, 'Enter your tracking number to see the current status of your delivery') }}</p>
         </div>
 
         {{-- Tracking Form --}}
@@ -52,7 +55,7 @@
                 @csrf
                 <div>
                     <label for="tracking_number" class="block text-sm font-medium text-slate-300 mb-2">
-                        Tracking Number
+                        {{ trans_db('tracking.form.tracking_number', [], null, 'Tracking Number') }}
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -64,13 +67,13 @@
                                name="tracking_number" 
                                id="tracking_number"
                                value="{{ old('tracking_number', $tracking_number ?? '') }}"
-                               placeholder="Enter tracking number, waybill, or reference"
+                               placeholder="{{ trans_db('tracking.form.placeholder', [], null, 'Enter tracking number, waybill, or reference') }}"
                                class="tracking-input w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition text-lg"
                                required
                                autofocus>
                     </div>
                     <p class="mt-2 text-xs text-slate-500">
-                        Example: TRK-ABC123XYZ, BC-12345678
+                        {{ trans_db('tracking.form.example', [], null, 'Example: TRK-ABC123XYZ, BC-12345678') }}
                     </p>
                 </div>
 
@@ -88,7 +91,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
-                    Track Shipment
+                    {{ trans_db('tracking.form.submit', [], null, 'Track Shipment') }}
                 </button>
             </form>
         </div>
@@ -101,8 +104,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
                 </div>
-                <h3 class="font-semibold mb-2">Real-Time Updates</h3>
-                <p class="text-sm text-slate-400">Get instant updates on your shipment's location and status</p>
+                <h3 class="font-semibold mb-2">{{ trans_db('tracking.features.realtime.title', [], null, 'Real-Time Updates') }}</h3>
+                <p class="text-sm text-slate-400">{{ trans_db('tracking.features.realtime.body', [], null, 'Get instant updates on your shipment\\'s location and status') }}</p>
             </div>
             <div class="text-center p-6">
                 <div class="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -110,8 +113,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                     </svg>
                 </div>
-                <h3 class="font-semibold mb-2">Delivery Notifications</h3>
-                <p class="text-sm text-slate-400">Subscribe to receive alerts for status changes</p>
+                <h3 class="font-semibold mb-2">{{ trans_db('tracking.features.notifications.title', [], null, 'Delivery Notifications') }}</h3>
+                <p class="text-sm text-slate-400">{{ trans_db('tracking.features.notifications.body', [], null, 'Subscribe to receive alerts for status changes') }}</p>
             </div>
             <div class="text-center p-6">
                 <div class="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -119,8 +122,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                     </svg>
                 </div>
-                <h3 class="font-semibold mb-2">Proof of Delivery</h3>
-                <p class="text-sm text-slate-400">View signature and photo confirmation upon delivery</p>
+                <h3 class="font-semibold mb-2">{{ trans_db('tracking.features.pod.title', [], null, 'Proof of Delivery') }}</h3>
+                <p class="text-sm text-slate-400">{{ trans_db('tracking.features.pod.body', [], null, 'View signature and photo confirmation upon delivery') }}</p>
             </div>
         </div>
     </main>

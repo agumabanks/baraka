@@ -42,7 +42,7 @@
         <div class="w-full max-w-[420px] animate-slide-up">
             <!-- Logo Section -->
             <div class="mb-8 text-center">
-                <img src="{{ asset('images/default/light-logo1.png') }}" alt="{{ config('app.name') }}" class="mx-auto h-12 w-auto opacity-90 hover:opacity-100 transition-opacity">
+                <img src="{{ \App\Support\SystemSettings::branchLogo() }}" alt="{{ \App\Support\SystemSettings::companyName() }}" class="mx-auto h-12 w-auto opacity-90 hover:opacity-100 transition-opacity">
             </div>
 
             <!-- Login Card -->

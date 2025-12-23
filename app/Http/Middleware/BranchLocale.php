@@ -11,6 +11,16 @@ class BranchLocale
 {
     public function handle(Request $request, Closure $next)
     {
+        // Optional branch-level locale override (disabled by default).
+        // Global mode always forces the system locale.
+        if (! SystemSettings::enabled('localization.branch_override')) {
+            return $next($request);
+        }
+
+        if (SystemSettings::localizationMode() === 'global') {
+            return $next($request);
+        }
+
         $branch = $request->attributes->get('branch');
         // Start with current locale (set by LanguageManager or user preference)
         $locale = App::getLocale();

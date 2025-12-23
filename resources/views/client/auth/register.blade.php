@@ -411,7 +411,7 @@
             <div class="hero-grid"></div>
             <div class="hero-content">
                 <div>
-                    <img src="{{ asset('images/default/light-logo1.png') }}" alt="{{ config('app.name') }}" style="height: 28px;">
+                    <img src="{{ \App\Support\SystemSettings::clientPortalLogo() }}" alt="{{ \App\Support\SystemSettings::companyName() }}" style="height: 28px;">
                 </div>
 
                 <div class="hero-main">
@@ -464,7 +464,7 @@
         <!-- Form Section -->
         <div class="form-section">
             <div class="form-container">
-                <img src="{{ asset('images/default/light-logo1.png') }}" alt="{{ config('app.name') }}" class="logo">
+                <img src="{{ \App\Support\SystemSettings::clientPortalLogo() }}" alt="{{ \App\Support\SystemSettings::companyName() }}" class="logo">
 
                 <div class="form-header animate">
                     <h2 class="form-title">Create your account</h2>

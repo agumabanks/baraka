@@ -79,6 +79,15 @@ class ClientAuthController extends Controller
                 ->withInput();
         }
 
+        $supportedLocales = translation_supported_languages();
+        $preferredLocale = app()->getLocale();
+        if (!in_array($preferredLocale, $supportedLocales, true)) {
+            $preferredLocale = \App\Support\SystemSettings::defaultLocale();
+        }
+        if (!in_array($preferredLocale, $supportedLocales, true)) {
+            $preferredLocale = 'en';
+        }
+
         $customer = Customer::create([
             'customer_code' => Customer::generateCustomerCode(),
             'company_name' => $request->company_name,
@@ -90,6 +99,7 @@ class ClientAuthController extends Controller
             'status' => 'active',
             'customer_since' => now(),
             'source' => 'website',
+            'preferred_language' => $preferredLocale,
         ]);
 
         // Log in the customer

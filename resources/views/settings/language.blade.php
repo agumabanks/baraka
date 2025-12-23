@@ -80,6 +80,23 @@
                     </select>
                 </div>
 
+                <!-- Locale Mode Selector -->
+                <div class="flex items-center gap-3 pr-4 border-r border-slate-200 dark:border-slate-700">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">Mode:</label>
+                    <select id="languageModeSelect"
+                            class="px-3 py-1.5 text-sm border-none bg-slate-50 dark:bg-slate-900 rounded-lg focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-300">
+                        <option value="per_user" {{ ($languageMode ?? 'per_user') === 'per_user' ? 'selected' : '' }}>
+                            Per-user
+                        </option>
+                        <option value="global" {{ ($languageMode ?? 'per_user') === 'global' ? 'selected' : '' }}>
+                            Global
+                        </option>
+                    </select>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 hidden lg:inline">
+                        Global mode disables user switching.
+                    </span>
+                </div>
+
                 <!-- Export Dropdown -->
                 <div class="relative inline-block" id="exportDropdownWrapper">
                     <button type="button" class="export-toggle-btn btn-secondary text-sm">
@@ -525,6 +542,31 @@
             .catch(error => {
                 console.error('Error:', error);
                 showToast('Failed to update default language', 'error');
+            });
+        });
+
+        // Set localization mode
+        document.getElementById('languageModeSelect')?.addEventListener('change', function() {
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+            formData.append('mode', this.value);
+
+            fetch('{{ route('settings.language.mode') }}', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Language mode updated', 'success');
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showToast(data.message || 'Failed to update', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to update language mode', 'error');
             });
         });
 
